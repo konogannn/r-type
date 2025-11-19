@@ -16,4 +16,4 @@ Describe the bug and what needs to be fixed.
 - [ ] Identify root cause
 - [ ] Implement fix
 - [ ] Verify fix works
-- [ ] Verify tests works
+- [ ] Verify tests work
