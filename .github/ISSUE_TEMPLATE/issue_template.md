@@ -1,3 +1,4 @@
+---
 name: "Task / Issue"
 about: "Template for tasks, features, and issues"
 title: "[TASK] "
