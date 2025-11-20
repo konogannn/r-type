@@ -1,7 +1,7 @@
 # 🧭 How to Contribute to **R-Type**
 
 Welcome! 👋 
-Thank you for your interest in contributing to **R-Type** — [insert a short description of the project]  
+Thank you for your interest in contributing to **R-Type**.  
 This document explains the rules and best practices for contributing to this repository.
 
 ---
