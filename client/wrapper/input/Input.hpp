@@ -25,7 +25,8 @@ enum class Key {
 enum class MouseButton {
     Left,
     Right,
-    Middle
+    Middle,
+    Unknown
 };
 
 /**
