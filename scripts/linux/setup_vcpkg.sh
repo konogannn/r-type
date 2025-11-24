@@ -67,8 +67,13 @@ else
     print_ok "vcpkg installed"
 fi
 
-SHELL_RC="$HOME/.bashrc"
-[ -n "$ZSH_VERSION" ] && SHELL_RC="$HOME/.zshrc"
+# Detect user's default shell
+case "$(basename "$SHELL")" in
+    zsh) SHELL_RC="$HOME/.zshrc" ;;
+    bash) SHELL_RC="$HOME/.bashrc" ;;
+    fish) SHELL_RC="$HOME/.config/fish/config.fish" ;;
+    *) SHELL_RC="$HOME/.profile" ;;
+esac
 
 if ! grep -q "VCPKG_ROOT" "$SHELL_RC"; then
     echo "" >> "$SHELL_RC"
