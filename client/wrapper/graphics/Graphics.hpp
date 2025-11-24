@@ -5,8 +5,7 @@
 ** Graphics - Abstract interface
 */
 
-#ifndef GRAPHICS_HPP_
-#define GRAPHICS_HPP_
+#pragma once
 
 #include "Sprite.hpp"
 
@@ -53,5 +52,3 @@ public:
 };
 
 } // namespace rtype
-
-#endif /* !GRAPHICS_HPP_ */
