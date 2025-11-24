@@ -154,9 +154,10 @@ cmake --build build
 ```
 r-type/
 ├── client/                      # Client module (game client + SFML wrapper)
-├── server/                      # Server module (game server)
-├── engine/                      # Engine module (ECS, physics, core systems)
-├── common/                      # Common module (shared code between client/server)
+│   └── wrapper/                 # SFML abstraction layer
+├── server/                      # Server module (game server + backend)
+│   ├── engine/                  # Engine module (ECS, physics, core systems)
+│   └── src/                     # Server source files
 ├── scripts/                     # Installation and utility scripts
 │   ├── linux/                   # Linux-specific scripts
 │   │   └── install_dependencies.sh
@@ -214,10 +215,9 @@ cmake -S . -B build -DUSE_SYSTEM_SFML=ON
 ### Module Architecture
 
 The project uses a modular CMake architecture with separate modules:
-- **common**: Shared code (network protocol, utilities)
-- **engine**: Core game engine (ECS, physics)
 - **client**: Game client with SFML wrapper
-- **server**: Game server
+- **server**: Game server with backend logic
+- **engine**: Core game engine (ECS, physics) integrated in server
 
 Each module can be developed independently with its own CMakeLists.txt.
 
