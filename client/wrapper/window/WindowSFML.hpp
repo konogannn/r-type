@@ -5,8 +5,7 @@
 ** WindowSFML - SFML implementation
 */
 
-#ifndef WINDOWSFML_HPP_
-#define WINDOWSFML_HPP_
+#pragma once
 
 #include "Window.hpp"
 #include <SFML/Graphics.hpp>
@@ -64,5 +63,3 @@ private:
 };
 
 } // namespace rtype
-
-#endif /* !WINDOWSFML_HPP_ */
