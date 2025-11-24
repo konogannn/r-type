@@ -5,8 +5,7 @@
 ** Audio - Abstract interface
 */
 
-#ifndef AUDIO_HPP_
-#define AUDIO_HPP_
+#pragma once
 
 #include <string>
 
@@ -60,5 +59,3 @@ public:
 };
 
 } // namespace rtype
-
-#endif /* !AUDIO_HPP_ */
