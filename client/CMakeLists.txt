@@ -66,11 +66,7 @@ target_link_libraries(r-type-client
         sfml-system
 )
 
-# Optional: Link to common and engine modules when they have source files
-# target_link_libraries(r-type-client
-#     PRIVATE
-#         r-type-common
-#         r-type-engine
-# )
+# Note: Engine is part of the server module (backend architecture)
+# Client-server communication will be handled via network protocol
 
 # Executable will be output to project root (configured globally in root CMakeLists.txt)
