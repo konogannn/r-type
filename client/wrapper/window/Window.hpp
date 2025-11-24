@@ -5,8 +5,7 @@
 ** Window - Abstract interface
 */
 
-#ifndef WINDOW_HPP_
-#define WINDOW_HPP_
+#pragma once
 
 #include <string>
 #include <utility>
@@ -112,5 +111,3 @@ public:
 };
 
 } // namespace rtype
-
-#endif /* !WINDOW_HPP_ */
