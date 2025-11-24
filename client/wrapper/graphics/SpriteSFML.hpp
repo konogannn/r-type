@@ -5,8 +5,7 @@
 ** SpriteSFML - SFML implementation
 */
 
-#ifndef SPRITESFML_HPP_
-#define SPRITESFML_HPP_
+#pragma once
 
 #include "Sprite.hpp"
 #include <SFML/Graphics.hpp>
@@ -46,5 +45,3 @@ private:
 };
 
 } // namespace rtype
-
-#endif /* !SPRITESFML_HPP_ */
