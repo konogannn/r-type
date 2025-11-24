@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script requires Bash. Do not run with sh or other shells.
 set -e
 
 echo "=========================================="
