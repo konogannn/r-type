@@ -5,8 +5,7 @@
 ** Sprite - Abstract interface
 */
 
-#ifndef SPRITE_HPP_
-#define SPRITE_HPP_
+#pragma once
 
 #include <string>
 
@@ -68,5 +67,3 @@ public:
 };
 
 } // namespace rtype
-
-#endif /* !SPRITE_HPP_ */
