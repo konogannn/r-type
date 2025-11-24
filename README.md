@@ -70,7 +70,7 @@ cmake --build build --config Release
 
 ---
 
-## � Dependency Management
+## 📦 Dependency Management
 
 ### vcpkg (Recommended)
 
@@ -157,24 +157,6 @@ cmake --build build --config Release
 .\r-type-client.exe
 ```
 
-### Advanced Build Options
-
-#### Force SFML Download (Skip System SFML)
-If you want to always download SFML via CMake instead of using the system version:
-
-```bash
-cmake -S . -B build -DUSE_SYSTEM_SFML=OFF
-cmake --build build
-```
-
-#### Use System SFML (Default)
-The project tries to use system-installed SFML first, then falls back to automatic download:
-
-```bash
-cmake -S . -B build -DUSE_SYSTEM_SFML=ON
-cmake --build build
-```
-
 ### On Windows with Visual Studio Generator
 
 1. **Configure with Visual Studio:**
@@ -247,28 +229,9 @@ Remove-Item -Recurse -Force build, r-type-client.exe
 cmake -S . -B build
 cmake --build build --config Release
 ```
-
 ---
 
-## ⚙️ CMake Options
-
-### Available Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `USE_SYSTEM_SFML` | `ON` | Use system-installed SFML. If OFF, SFML will be downloaded automatically via FetchContent |
-
-### Usage Examples
-
-**Force download SFML (don't use system version):**
-```bash
-cmake -S . -B build -DUSE_SYSTEM_SFML=OFF
-```
-
-**Use system SFML (default behavior):**
-```bash
-cmake -S . -B build -DUSE_SYSTEM_SFML=ON
-```
+## ⚙️ Project Architecture
 
 ### Module Architecture
 
@@ -300,21 +263,33 @@ Set-ExecutionPolicy Bypass -Scope Process
 
 ### SFML Issues
 
-**SFML not found (system installation)**
-The project will automatically download SFML if not found. You can also force download:
+**SFML not found**
+Make sure vcpkg is properly configured:
 ```bash
-cmake -S . -B build -DUSE_SYSTEM_SFML=OFF
+export VCPKG_ROOT=$HOME/.vcpkg  # Linux
+# or set via environment variables on Windows
+cmake -S . -B build
 ```
 
-**Manual SFML path (advanced users only)**
-If you have SFML installed in a custom location:
+**Manual SFML path (if using system SFML)**
+If you prefer system-installed SFML instead of vcpkg:
 ```bash
 cmake -S . -B build -DSFML_DIR="/path/to/SFML/lib/cmake/SFML"
 ```
 
 ### Build Errors
 
-**"FetchContent not available"**
+**"vcpkg not found"**
+Install vcpkg using the setup script:
+```bash
+# Linux
+./scripts/linux/setup_vcpkg.sh
+
+# Windows (PowerShell as Administrator)
+.\scripts\windows\setup_vcpkg.ps1
+```
+
+**"FetchContent not available"** (if not using vcpkg)
 Update CMake to version 3.11 or higher:
 ```bash
 # Linux
@@ -379,9 +354,8 @@ cmake --build build
 ## 📖 Documentation
 
 For more detailed information about the architecture:
-- [SFML Wrapper Documentation](SFML_WRAPPER_README.md)
-- [Architecture Overview](ARCHITECTURE.md)
-- [Delta Time Guide](DELTA_TIME.md)
+- [SFML Wrapper Documentation](doc/SFML_WRAPPER_README.md)
+- [Architecture Overview](doc/ARCHITECTURE.md)
 
 ---
 
@@ -396,7 +370,6 @@ For more detailed information about the architecture:
 
 ### Dependency Management
 
-- System dependencies are installed via `install_dependencies.sh` (Linux) or `install_dependencies.ps1` (Windows)
-- SFML can be used from the system or downloaded automatically via CMake FetchContent
-- No manual SFML download needed for development
-
+- All dependencies, including SFML, are managed exclusively via vcpkg.
+- No CMake FetchContent fallback is provided; vcpkg is required.
+- No manual SFML download needed for development.
