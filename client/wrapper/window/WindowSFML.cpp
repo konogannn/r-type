@@ -6,6 +6,7 @@
 */
 
 #include "WindowSFML.hpp"
+#include "../input/Input.hpp"
 
 namespace rtype {
 
@@ -25,6 +26,60 @@ bool WindowSFML::isOpen() const
 bool WindowSFML::pollEvent()
 {
     return _window->pollEvent(_lastEvent);
+}
+
+EventType WindowSFML::getEventType() const
+{
+    switch (_lastEvent.type) {
+        case sf::Event::Closed:
+            return EventType::Closed;
+        case sf::Event::Resized:
+            return EventType::Resized;
+        case sf::Event::KeyPressed:
+            return EventType::KeyPressed;
+        case sf::Event::KeyReleased:
+            return EventType::KeyReleased;
+        case sf::Event::MouseButtonPressed:
+            return EventType::MouseButtonPressed;
+        case sf::Event::MouseButtonReleased:
+            return EventType::MouseButtonReleased;
+        case sf::Event::MouseMoved:
+            return EventType::MouseMoved;
+        default:
+            return EventType::None;
+    }
+}
+
+MouseButton WindowSFML::getEventMouseButton() const
+{
+    if (_lastEvent.type == sf::Event::MouseButtonPressed ||
+        _lastEvent.type == sf::Event::MouseButtonReleased) {
+        switch (_lastEvent.mouseButton.button) {
+            case sf::Mouse::Left:
+                return MouseButton::Left;
+            case sf::Mouse::Right:
+                return MouseButton::Right;
+            case sf::Mouse::Middle:
+                return MouseButton::Middle;
+            default:
+                return MouseButton::Unknown;
+        }
+    }
+    return MouseButton::Unknown;
+}
+
+std::pair<int, int> WindowSFML::getEventMousePosition() const
+{
+    if (_lastEvent.type == sf::Event::MouseButtonPressed ||
+        _lastEvent.type == sf::Event::MouseButtonReleased ||
+        _lastEvent.type == sf::Event::MouseMoved) {
+        if (_lastEvent.type == sf::Event::MouseMoved) {
+            return {_lastEvent.mouseMove.x, _lastEvent.mouseMove.y};
+        } else {
+            return {_lastEvent.mouseButton.x, _lastEvent.mouseButton.y};
+        }
+    }
+    return {0, 0};
 }
 
 void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b)
