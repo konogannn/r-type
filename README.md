@@ -5,9 +5,42 @@ A game engine that roars!
 
 This guide will help you build and run the R-Type project on both Linux and Windows.
 
-### 🎯 Quick Start (Automatic Installation)
+### 🎯 Quick Start (Recommended - vcpkg)
 
-We provide installation scripts that automatically install all dependencies for you!
+vcpkg automatically manages all dependencies, including SFML and future libraries.
+
+#### Linux
+```bash
+# 1. Setup vcpkg (one-time setup)
+./scripts/linux/setup_vcpkg.sh
+source ~/.bashrc  # or restart terminal
+
+# 2. Build the project (vcpkg handles SFML automatically)
+cmake -S . -B build
+cmake --build build
+
+# 3. Run the client
+./r-type-client
+```
+
+#### Windows (PowerShell as Administrator)
+```powershell
+# 1. Setup vcpkg (one-time setup)
+.\scripts\windows\setup_vcpkg.ps1
+
+# 2. Restart PowerShell, then build
+cmake -S . -B build
+cmake --build build --config Release
+
+# 3. Run the client
+.\r-type-client.exe
+```
+
+---
+
+### 📦 Alternative: System Dependencies
+
+If you prefer using system-installed packages instead of vcpkg:
 
 #### Linux
 ```bash
@@ -37,9 +70,34 @@ cmake --build build --config Release
 
 ---
 
-### 📋 Manual Installation (Optional)
+## � Dependency Management
 
-If you prefer to install dependencies manually or the scripts don't work for your system:
+### vcpkg (Recommended)
+
+This project uses **vcpkg manifest mode** to manage dependencies. All required libraries are declared in `vcpkg.json` and automatically installed when you build the project.
+
+**Current dependencies:**
+- SFML 2.5+ (graphics, audio, window, system)
+
+**Adding new dependencies:**
+Edit `vcpkg.json` and add your library:
+```json
+"dependencies": [
+  "sfml",
+  "boost-asio",
+  "nlohmann-json"
+]
+```
+
+**Benefits:**
+- ✅ Consistent versions across all platforms
+- ✅ No manual library installation
+- ✅ Easy to add new dependencies
+- ✅ Works on Linux, Windows, macOS
+
+### System Packages (Alternative)
+
+If you prefer not to use vcpkg, you can install system packages:
 
 #### Linux
 - **CMake** 3.11 or higher
