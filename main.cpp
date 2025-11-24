@@ -26,7 +26,6 @@ int main() {
 
     float rectX = 350.0f;
     float rectY = 250.0f;
-    float rectRotation = 0.0f;
     float speed = 200.0f;
 
     float circleX = 100.0f;
@@ -37,7 +36,6 @@ int main() {
     std::cout << "Frame-rate Independent Movement (Delta Time)" << std::endl;
     std::cout << "\nControls:" << std::endl;
     std::cout << "  - Arrow keys: Move green rectangle" << std::endl;
-    std::cout << "  - Space: Rotate rectangle" << std::endl;
     std::cout << "  - ESC: Close window" << std::endl;
     std::cout << "  - Mouse Left Click: Move blue circle to mouse position" << std::endl;
     std::cout << "====================================" << std::endl;
@@ -46,15 +44,17 @@ int main() {
         float deltaTime = window->getDeltaTime();
 
         while (window->pollEvent()) {
-            const sf::Event& event = window->getLastEvent();
+            EventType eventType = window->getEventType();
 
-            if (event.type == sf::Event::Closed)
+            if (eventType == EventType::Closed) {
                 window->close();
+            }
 
-            if (event.type == sf::Event::MouseButtonPressed) {
-                if (event.mouseButton.button == sf::Mouse::Left) {
-                    circleX = static_cast<float>(event.mouseButton.x - 50);
-                    circleY = static_cast<float>(event.mouseButton.y - 50);
+            if (eventType == EventType::MouseButtonPressed) {
+                if (window->getEventMouseButton() == MouseButton::Left) {
+                    auto [mouseX, mouseY] = window->getEventMousePosition();
+                    circleX = static_cast<float>(mouseX - 50);
+                    circleY = static_cast<float>(mouseY - 50);
                 }
             }
         }
@@ -73,9 +73,6 @@ int main() {
         }
         if (input->isKeyPressed(Key::Right)) {
             rectX += speed * deltaTime;
-        }
-        if (input->isKeyPressed(Key::Space)) {
-            rectRotation += 100.0f * deltaTime;
         }
 
         window->clear(30, 30, 30);
