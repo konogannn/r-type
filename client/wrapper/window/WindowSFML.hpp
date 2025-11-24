@@ -31,6 +31,9 @@ public:
 
     bool isOpen() const override;
     bool pollEvent() override;
+    EventType getEventType() const override;
+    MouseButton getEventMouseButton() const override;
+    std::pair<int, int> getEventMousePosition() const override;
     void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) override;
     void display() override;
     void close() override;
