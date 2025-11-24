@@ -1,9 +1,12 @@
 # Server module CMakeLists.txt
-# This module will contain the game server code
+# This module contains the game server code and engine (backend)
+
+# Add engine subdirectory
+add_subdirectory(engine)
 
 # Include directories for server headers (when they exist)
 # include_directories(
-#     ${CMAKE_CURRENT_SOURCE_DIR}/include
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src
 # )
 
 # Collect all server source files (placeholder - uncomment when files exist)
@@ -20,15 +23,11 @@
 # Link libraries to the server executable (uncomment when ready)
 # target_link_libraries(r-type-server
 #     PRIVATE
-#         r-type-common
 #         r-type-engine
 #     # Add network library (e.g., Asio, Boost.Asio) when needed
 # )
 
-# Set output directory for the server executable
-# set_target_properties(r-type-server PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-# )
+# Executable will be output to project root (configured globally in root CMakeLists.txt)
 
 # Placeholder message to indicate module structure is ready
 message(STATUS "Server module configured (no source files yet)")
