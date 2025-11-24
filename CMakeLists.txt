@@ -26,8 +26,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Add subdirectories for each module
 # Each module has its own CMakeLists.txt with specific configurations
-add_subdirectory(common)
-add_subdirectory(engine)
 add_subdirectory(client)
 add_subdirectory(server)
 
