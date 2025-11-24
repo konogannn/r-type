@@ -11,11 +11,12 @@ if(SFML_FOUND)
 endif()
 
 # Include directories for the wrapper interfaces (abstract classes)
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio
+target_include_directories(r-type-client
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio
 )
 
 # Collect all SFML wrapper implementation files
