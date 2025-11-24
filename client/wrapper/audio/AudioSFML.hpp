@@ -5,8 +5,7 @@
 ** AudioSFML - SFML implementation
 */
 
-#ifndef AUDIOSFML_HPP_
-#define AUDIOSFML_HPP_
+#pragma once
 
 #include "Audio.hpp"
 #include <SFML/Audio.hpp>
@@ -47,5 +46,3 @@ private:
 };
 
 } // namespace rtype
-
-#endif /* !AUDIOSFML_HPP_ */
