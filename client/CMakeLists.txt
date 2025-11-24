@@ -1,37 +1,13 @@
 # Client module CMakeLists.txt
 # This module contains the game client code and SFML wrapper
 
-# Handle SFML dependency
-if(USE_SYSTEM_SFML)
-    # Try to find SFML on the system
-    find_package(SFML 2.5 COMPONENTS graphics audio window system QUIET)
+# Find SFML package (installed via vcpkg manifest mode)
+# vcpkg will automatically install SFML from vcpkg.json
+find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
 
-    if(NOT SFML_FOUND)
-        message(STATUS "System SFML not found. Falling back to FetchContent...")
-        set(USE_SYSTEM_SFML OFF)
-    else()
-        message(STATUS "Using system-installed SFML ${SFML_VERSION}")
-    endif()
-endif()
-
-# If system SFML is not available or not requested, use FetchContent
-if(NOT USE_SYSTEM_SFML)
-    message(STATUS "Downloading SFML via FetchContent...")
-    include(FetchContent)
-
-    FetchContent_Declare(
-        SFML
-        GIT_REPOSITORY https://github.com/SFML/SFML.git
-        GIT_TAG 2.6.1
-    )
-
-    # Disable building examples, tests, and docs
-    set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
-    set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
-
-    FetchContent_MakeAvailable(SFML)
-    message(STATUS "SFML downloaded and configured successfully")
+if(SFML_FOUND)
+    message(STATUS "SFML found: ${SFML_VERSION}")
+    message(STATUS "SFML include dirs: ${SFML_INCLUDE_DIR}")
 endif()
 
 # Include directories for the wrapper interfaces (abstract classes)
