@@ -10,8 +10,10 @@ cmake_install.cmake
 Makefile
 CMakeLists.txt.user
 
-# FetchContent downloaded dependencies
-_deps/
+# vcpkg
+vcpkg/
+vcpkg_installed/
+.vcpkg-root
 
 # Compiled executables
 r-type-client
