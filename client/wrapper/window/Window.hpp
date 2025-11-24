@@ -9,8 +9,26 @@
 #define WINDOW_HPP_
 
 #include <string>
+#include <utility>
 
 namespace rtype {
+
+/**
+ * @brief Abstract event types (library-agnostic)
+ */
+enum class EventType {
+    None,
+    Closed,
+    Resized,
+    KeyPressed,
+    KeyReleased,
+    MouseButtonPressed,
+    MouseButtonReleased,
+    MouseMoved
+};
+
+// Forward declaration of MouseButton (defined in Input.hpp)
+enum class MouseButton;
 
 /**
  * @brief Abstract interface for window management
@@ -31,6 +49,24 @@ public:
      * @return true if an event was polled
      */
     virtual bool pollEvent() = 0;
+
+    /**
+     * @brief Get the type of the last polled event
+     * @return EventType of the last event
+     */
+    virtual EventType getEventType() const = 0;
+
+    /**
+     * @brief Get the mouse button from the last event (if applicable)
+     * @return MouseButton that was pressed/released
+     */
+    virtual MouseButton getEventMouseButton() const = 0;
+
+    /**
+     * @brief Get the mouse position from the last event
+     * @return Pair of (x, y) coordinates
+     */
+    virtual std::pair<int, int> getEventMousePosition() const = 0;
 
     /**
      * @brief Clear the window with a color
