@@ -5,8 +5,7 @@
 ** InputSFML - SFML implementation
 */
 
-#ifndef INPUTSFML_HPP_
-#define INPUTSFML_HPP_
+#pragma once
 
 #include "Input.hpp"
 #include <SFML/Graphics.hpp>
@@ -53,5 +52,3 @@ private:
 };
 
 } // namespace rtype
-
-#endif /* !INPUTSFML_HPP_ */
