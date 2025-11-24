@@ -7,6 +7,7 @@
 
 #include "GraphicsSFML.hpp"
 #include "../window/WindowSFML.hpp"
+#include <iostream>
 
 namespace rtype {
 
@@ -20,6 +21,9 @@ void GraphicsSFML::drawSprite(const ISprite& sprite)
     const SpriteSFML* spriteSFML = dynamic_cast<const SpriteSFML*>(&sprite);
     if (spriteSFML) {
         _window.getSFMLWindow().draw(spriteSFML->getSFMLSprite());
+    } else {
+        std::cerr << "Error: GraphicsSFML::drawSprite() - sprite is not a SpriteSFML instance. "
+                  << "Cannot render non-SFML sprites with SFML renderer." << std::endl;
     }
 }
 
