@@ -1,0 +1,50 @@
+/*
+** EPITECH PROJECT, 2025
+** R-type
+** File description:
+** SpriteSFML - SFML implementation
+*/
+
+#ifndef SPRITESFML_HPP_
+#define SPRITESFML_HPP_
+
+#include "Sprite.hpp"
+#include <SFML/Graphics.hpp>
+#include <memory>
+
+namespace rtype {
+
+/**
+ * @brief SFML implementation of ISprite interface
+ */
+class SpriteSFML : public ISprite {
+public:
+    /**
+     * @brief Construct a new SpriteSFML object
+     */
+    SpriteSFML();
+
+    ~SpriteSFML() override = default;
+
+    bool loadTexture(const std::string& filepath) override;
+    void setPosition(float x, float y) override;
+    void setScale(float scaleX, float scaleY) override;
+    void setRotation(float angle) override;
+    void move(float offsetX, float offsetY) override;
+    float getPositionX() const override;
+    float getPositionY() const override;
+
+    /**
+     * @brief Get the underlying SFML sprite
+     * @return Reference to sf::Sprite
+     */
+    const sf::Sprite& getSFMLSprite() const;
+
+private:
+    std::unique_ptr<sf::Texture> _texture;
+    std::unique_ptr<sf::Sprite> _sprite;
+};
+
+} // namespace rtype
+
+#endif /* !SPRITESFML_HPP_ */
