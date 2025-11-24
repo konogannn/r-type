@@ -5,8 +5,7 @@
 ** Input - Abstract interface
 */
 
-#ifndef INPUT_HPP_
-#define INPUT_HPP_
+#pragma once
 
 namespace rtype {
 
@@ -65,5 +64,3 @@ public:
 };
 
 } // namespace rtype
-
-#endif /* !INPUT_HPP_ */
