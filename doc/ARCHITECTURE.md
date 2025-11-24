@@ -401,7 +401,6 @@ common/
 ## 📚 References
 
 - [SFML Wrapper Documentation](../doc/SFML_WRAPPER_README.md)
-- [Dependencies Guide](../DEPENDENCIES.md)
 - [README](../README.md)
 
 ---
