@@ -1,46 +1,37 @@
-cmake_minimum_required(VERSION 3.10)
-project(r-type)
+cmake_minimum_required(VERSION 3.11)
 
-# Set C++ standard
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    if(DEFINED ENV{VCPKG_ROOT})
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING "Vcpkg toolchain file")
+        message(STATUS "Using vcpkg from VCPKG_ROOT: $ENV{VCPKG_ROOT}")
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+        set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING "Vcpkg toolchain file")
+        message(STATUS "Using local vcpkg: ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg")
+    else()
+        message(WARNING "vcpkg not found. Install vcpkg or set VCPKG_ROOT environment variable.")
+        message(WARNING "Falling back to system packages or FetchContent.")
+    endif()
+endif()
+
+project(r-type VERSION 1.0.0 LANGUAGES CXX)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Add compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+endif()
 
-# Find SFML
-find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Include directories for interfaces (abstract classes)
-include_directories(
-    ${CMAKE_SOURCE_DIR}/client/wrapper/window
-    ${CMAKE_SOURCE_DIR}/client/wrapper/graphics
-    ${CMAKE_SOURCE_DIR}/client/wrapper/input
-    ${CMAKE_SOURCE_DIR}/client/wrapper/audio
-)
+add_subdirectory(client)
+add_subdirectory(server)
 
-# Collect all SFML implementation files
-set(WRAPPER_SOURCES
-    ${CMAKE_SOURCE_DIR}/client/wrapper/window/WindowSFML.cpp
-    ${CMAKE_SOURCE_DIR}/client/wrapper/graphics/SpriteSFML.cpp
-    ${CMAKE_SOURCE_DIR}/client/wrapper/graphics/GraphicsSFML.cpp
-    ${CMAKE_SOURCE_DIR}/client/wrapper/input/InputSFML.cpp
-    ${CMAKE_SOURCE_DIR}/client/wrapper/audio/AudioSFML.cpp
-)
-
-# Create executable
-add_executable(r-type
-    ${CMAKE_SOURCE_DIR}/main.cpp
-    ${WRAPPER_SOURCES}
-)
-
-# Link SFML libraries
-target_link_libraries(r-type
-    sfml-graphics
-    sfml-audio
-    sfml-window
-    sfml-system
-)
-
-# Copy assets to build directory
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})

@@ -1,15 +1,23 @@
 # Build directories
 build/
 cmake-build-*/
+_deps/
 
 # CMake files
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+CMakeLists.txt.user
+
+# vcpkg
+vcpkg/
+vcpkg_installed/
+.vcpkg-root
 
 # Compiled executables
-r-type
+r-type-client
+r-type-server
 *.exe
 *.out
 *.app
