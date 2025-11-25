@@ -35,33 +35,24 @@ add_subdirectory(client)
 add_subdirectory(server)
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
-# ClangFormat Integration (Google C++ Style)
-# Find clang-format executable
+
 find_program(CLANG_FORMAT NAMES clang-format)
 
 if(CLANG_FORMAT)
-    message(STATUS "clang-format found: ${CLANG_FORMAT}")
-    
-    # Collect all source files to format
     file(GLOB_RECURSE ALL_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/*.cpp
         ${CMAKE_SOURCE_DIR}/*.hpp
+        ${CMAKE_SOURCE_DIR}/*.tpp
     )
-    
-    # Exclude build directory files
+
     list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
-    
-    # Target to automatically format all source files
+
     add_custom_target(format
         COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Formatting source files with clang-format (Google style)"
+        COMMENT "Formatting source files with clang-format"
         VERBATIM
     )
-    
-    message(STATUS "ClangFormat target added:")
-    message(STATUS "  - make format : Auto-format all C++ files")
 else()
     message(WARNING "clang-format not found! Formatting target will not be available.")
-    message(WARNING "Install it with: sudo apt-get install clang-format")
 endif()
