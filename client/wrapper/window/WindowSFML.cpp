@@ -19,13 +19,9 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _width(width),
       _height(height) {}
 
-bool WindowSFML::isOpen() const {
-  return _window->isOpen();
-}
+bool WindowSFML::isOpen() const { return _window->isOpen(); }
 
-bool WindowSFML::pollEvent() {
-  return _window->pollEvent(_lastEvent);
-}
+bool WindowSFML::pollEvent() { return _window->pollEvent(_lastEvent); }
 
 EventType WindowSFML::getEventType() const {
   switch (_lastEvent.type) {
@@ -82,21 +78,13 @@ void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b) {
   _window->clear(sf::Color(r, g, b));
 }
 
-void WindowSFML::display() {
-  _window->display();
-}
+void WindowSFML::display() { _window->display(); }
 
-void WindowSFML::close() {
-  _window->close();
-}
+void WindowSFML::close() { _window->close(); }
 
-unsigned int WindowSFML::getWidth() const {
-  return _width;
-}
+unsigned int WindowSFML::getWidth() const { return _width; }
 
-unsigned int WindowSFML::getHeight() const {
-  return _height;
-}
+unsigned int WindowSFML::getHeight() const { return _height; }
 
 void WindowSFML::setFramerateLimit(unsigned int fps) {
   _window->setFramerateLimit(fps);
@@ -107,12 +95,8 @@ float WindowSFML::getDeltaTime() {
   return _deltaTime;
 }
 
-sf::RenderWindow& WindowSFML::getSFMLWindow() {
-  return *_window;
-}
+sf::RenderWindow& WindowSFML::getSFMLWindow() { return *_window; }
 
-const sf::Event& WindowSFML::getLastEvent() const {
-  return _lastEvent;
-}
+const sf::Event& WindowSFML::getLastEvent() const { return _lastEvent; }
 
 }  // namespace rtype

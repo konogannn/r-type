@@ -24,32 +24,22 @@ bool SpriteSFML::loadTexture(const std::string& filepath) {
   return true;
 }
 
-void SpriteSFML::setPosition(float x, float y) {
-  _sprite->setPosition(x, y);
-}
+void SpriteSFML::setPosition(float x, float y) { _sprite->setPosition(x, y); }
 
 void SpriteSFML::setScale(float scaleX, float scaleY) {
   _sprite->setScale(scaleX, scaleY);
 }
 
-void SpriteSFML::setRotation(float angle) {
-  _sprite->setRotation(angle);
-}
+void SpriteSFML::setRotation(float angle) { _sprite->setRotation(angle); }
 
 void SpriteSFML::move(float offsetX, float offsetY) {
   _sprite->move(offsetX, offsetY);
 }
 
-float SpriteSFML::getPositionX() const {
-  return _sprite->getPosition().x;
-}
+float SpriteSFML::getPositionX() const { return _sprite->getPosition().x; }
 
-float SpriteSFML::getPositionY() const {
-  return _sprite->getPosition().y;
-}
+float SpriteSFML::getPositionY() const { return _sprite->getPosition().y; }
 
-const sf::Sprite& SpriteSFML::getSFMLSprite() const {
-  return *_sprite;
-}
+const sf::Sprite& SpriteSFML::getSFMLSprite() const { return *_sprite; }
 
 }  // namespace rtype
