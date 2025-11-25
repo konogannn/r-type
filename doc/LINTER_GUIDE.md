@@ -34,10 +34,6 @@ make format
 
 ### Quick Workflow
 ```bash
-# After making code changes
-cd build
-make format        # Auto-format all files
-cd ..
 git add .
 git commit -m "your message"
 git push
@@ -65,7 +61,7 @@ If formatting issues are detected, the CI will **fail** and display the errors.
 
 **To fix before pushing:**
 ```bash
-make format-fix
+make format
 git add .
 git commit -m "fix: apply clang-format"
 git push
