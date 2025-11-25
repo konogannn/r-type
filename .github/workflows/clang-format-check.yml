@@ -1,72 +1,20 @@
-name: ClangFormat Check
+name: clang-format Check
 
-on:
-  push:
-    branches: [ main, develop, "*" ]
-  pull_request:
-    branches: [ main, develop ]
+on: [push, pull_request]
 
 jobs:
-  format-check:
+  formatting-check:
+    name: Formatting Check
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        path:
+          - 'client'
+          - 'server'
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Install clang-format
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang-format
-    
-    - name: Check code formatting
-      run: |
-        echo "🔍 Checking C++ code formatting with Google style..."
-        
-        # Find all .cpp and .hpp files
-        FILES=$(find . -type f \( -name "*.cpp" -o -name "*.hpp" \) -not -path "./build/*" -not -path "./.git/*")
-        
-        EXIT_CODE=0
-        FILE_COUNT=0
-        ERROR_COUNT=0
-        
-        for file in $FILES; do
-          FILE_COUNT=$((FILE_COUNT + 1))
-          echo "Checking: $file"
-          
-          # Check if file needs formatting by comparing with formatted output
-          if ! diff -q "$file" <(clang-format "$file") > /dev/null 2>&1; then
-            echo "  ❌ $file has formatting issues"
-            
-            # Show diff
-            diff -u "$file" <(clang-format "$file") || true
-            
-            ERROR_COUNT=$((ERROR_COUNT + 1))
-            EXIT_CODE=1
-          else
-            echo "  ✓ $file is properly formatted"
-          fi
-        done
-        
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "Files checked: $FILE_COUNT"
-        
-        if [ $EXIT_CODE -eq 0 ]; then
-          echo "✅ All files are properly formatted!"
-        else
-          echo "❌ $ERROR_COUNT file(s) with formatting issues"
-          echo ""
-          echo "To fix, run locally:"
-          echo "  make format-fix"
-          echo "  git add ."
-          echo "  git commit -m \"style: apply clang-format\""
-          exit 1
-        fi
-        
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
-    - name: Formatting check summary
-      if: failure()
-      run: |
-        echo "::error::Code formatting check failed. Please run 'make format-fix' locally and commit the changes."
+    - uses: actions/checkout@v4
+    - name: Run clang-format style check for C/C++/Protobuf programs.
+      uses: jidicula/clang-format-action@v4.16.0
+      with:
+        clang-format-version: '13'
+        check-path: ${{ matrix.path }}
