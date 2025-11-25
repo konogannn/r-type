@@ -40,9 +40,12 @@ find_program(CLANG_FORMAT NAMES clang-format)
 
 if(CLANG_FORMAT)
     file(GLOB_RECURSE ALL_SOURCE_FILES
-        ${CMAKE_SOURCE_DIR}/*.cpp
-        ${CMAKE_SOURCE_DIR}/*.hpp
-        ${CMAKE_SOURCE_DIR}/*.tpp
+        ${CMAKE_SOURCE_DIR}/client/**/*.cpp  
+        ${CMAKE_SOURCE_DIR}/client/**/*.hpp  
+        ${CMAKE_SOURCE_DIR}/client/**/*.tpp  
+        ${CMAKE_SOURCE_DIR}/server/**/*.cpp  
+        ${CMAKE_SOURCE_DIR}/server/**/*.hpp  
+        ${CMAKE_SOURCE_DIR}/server/**/*.tpp  
     )
 
     list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
