@@ -1,0 +1,14 @@
+{
+  "editor.formatOnSave": true,
+  "C_Cpp.clang_format_style": "Google",
+  "C_Cpp.clang_format_fallbackStyle": "Google",
+  "C_Cpp.default.compilerPath": "/usr/bin/g++",
+  "clang-format.style": "Google",
+  "[cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "cmake.configureOnOpen": false
+}
