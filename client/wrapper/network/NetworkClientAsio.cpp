@@ -291,13 +291,17 @@ bool NetworkClientAsio::sendMessage(const void* data, size_t size) {
         return false;
     }
 
-    try {
-        _socket.send_to(boost::asio::buffer(data, size), _serverEndpoint);
-        return true;
-    } catch (const std::exception& e) {
-        callErrorCallback("Send error: " + std::string(e.what()));
-        return false;
-    }
+    auto buffer = std::make_shared<std::vector<uint8_t>>((uint8_t*)data,
+                                                         (uint8_t*)data + size);
+    _socket.async_send_to(
+        boost::asio::buffer(*buffer), _serverEndpoint,
+        [this, buffer](const boost::system::error_code& ec,
+                       std::size_t ) {
+            if (ec) {
+                callErrorCallback("Send error: " + ec.message());
+            }
+        });
+    return true;
 }
 
 template <typename T>
