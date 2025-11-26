@@ -7,25 +7,24 @@
 
 #pragma once
 
-#include "Component.hpp"
-#include "Entity.hpp"
+#include <algorithm>
+#include <memory>
+#include <stdexcept>
+#include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <memory>
-#include <typeindex>
-#include <stdexcept>
-#include <algorithm>
+
+#include "Component.hpp"
+#include "Entity.hpp"
 
 namespace engine {
 
-class ComponentManager
-{
-public:
+class ComponentManager {
+   public:
     /**
      * @brief Stores all components of a specific type for an archetype
      */
-    struct ComponentArray
-    {
+    struct ComponentArray {
         std::type_index type;
         std::vector<std::unique_ptr<Component>> components;
 
@@ -38,14 +37,14 @@ public:
      *
      * Archetypes store component data contiguously for cache-friendly access
      */
-    struct Archetype
-    {
+    struct Archetype {
         ArchetypeId id;
         ArchetypeSignature signature;
         std::unordered_map<std::type_index, ComponentArray> componentArrays;
-        std::vector<EntityId> entities; // Entities in this archetype
+        std::vector<EntityId> entities;  // Entities in this archetype
 
-        explicit Archetype(ArchetypeId archetypeId, const ArchetypeSignature &sig);
+        explicit Archetype(ArchetypeId archetypeId,
+                           const ArchetypeSignature &sig);
 
         /**
          * @brief Add an entity to this archetype
@@ -57,7 +56,8 @@ public:
         /**
          * @brief Remove an entity from this archetype
          * @param index Index of the entity in the archetype
-         * @return EntityId of the entity that was moved to fill the gap (or NULL_ENTITY)
+         * @return EntityId of the entity that was moved to fill the gap (or
+         * NULL_ENTITY)
          */
         EntityId removeEntity(uint32_t index);
 
@@ -74,20 +74,22 @@ public:
         /**
          * @brief Add component data for entity at index
          */
-        void addComponent(std::type_index type, std::unique_ptr<Component> component, uint32_t index);
+        void addComponent(std::type_index type,
+                          std::unique_ptr<Component> component, uint32_t index);
     };
 
-private:
+   private:
     // Archetype storage
     std::vector<std::unique_ptr<Archetype>> _archetypes;
     std::unordered_map<ArchetypeSignature, ArchetypeId> _signatureToArchetype;
-    std::unordered_map<ArchetypeId, size_t> _archetypeIdToIndex; // Fast O(1) archetype lookup
+    std::unordered_map<ArchetypeId, size_t>
+        _archetypeIdToIndex;  // Fast O(1) archetype lookup
     ArchetypeId _nextArchetypeId;
 
     // Empty archetype (for entities with no components)
     ArchetypeId _emptyArchetypeId;
 
-public:
+   public:
     /**
      * @brief Constructor
      */
@@ -132,9 +134,11 @@ public:
      * @brief Remove entity from an archetype
      * @param archetypeId The archetype ID
      * @param index Index of the entity in the archetype
-     * @return EntityId of the entity that was moved to fill the gap (NULL_ENTITY if none)
-     * @note When an entity is removed, the last entity in the archetype is moved to fill
-     *       the gap. The caller must update the moved entity's index accordingly.
+     * @return EntityId of the entity that was moved to fill the gap
+     * (NULL_ENTITY if none)
+     * @note When an entity is removed, the last entity in the archetype is
+     * moved to fill the gap. The caller must update the moved entity's index
+     * accordingly.
      */
     EntityId removeEntityFromArchetype(ArchetypeId archetypeId, uint32_t index);
 
@@ -183,7 +187,8 @@ public:
      * @return New archetype ID
      */
     template <typename T>
-    ArchetypeId getArchetypeWithRemovedComponent(ArchetypeId currentArchetypeId);
+    ArchetypeId getArchetypeWithRemovedComponent(
+        ArchetypeId currentArchetypeId);
 
     /**
      * @brief Move entity from one archetype to another
@@ -203,7 +208,8 @@ public:
      * @param archetypeId The archetype ID
      * @return Vector of entity IDs
      */
-    const std::vector<EntityId> &getEntitiesInArchetype(ArchetypeId archetypeId);
+    const std::vector<EntityId> &getEntitiesInArchetype(
+        ArchetypeId archetypeId);
 
     /**
      * @brief Get all archetypes
@@ -216,7 +222,8 @@ public:
      * @param signature The signature to match (must have all these components)
      * @return Vector of matching archetype pointers
      */
-    std::vector<Archetype *> getArchetypesWithComponents(const ArchetypeSignature &signature);
+    std::vector<Archetype *> getArchetypesWithComponents(
+        const ArchetypeSignature &signature);
 
     /**
      * @brief Clear all archetypes and components
@@ -224,6 +231,6 @@ public:
     void clear();
 };
 
-}
+}  // namespace engine
 
 #include "ComponentManager.tpp"

@@ -1,27 +1,29 @@
 #pragma once
 
+#include <algorithm>
+#include <functional>
+#include <typeindex>
+#include <unordered_map>
+#include <vector>
+
 #include "Entity.hpp"
 #include "EntityManager.hpp"
-#include <functional>
-#include <vector>
-#include <unordered_map>
-#include <typeindex>
-#include <algorithm>
 
 namespace engine {
 
 class EntityFactory {
-private:
+   private:
     EntityManager& _entityManager;
     std::unordered_map<size_t, ArchetypeId> _archetypeCache;
 
     /**
      * @brief Generate a hash for a set of component types
      */
-    template<typename... Components>
+    template <typename... Components>
     size_t getTypeHash() {
         size_t hash = 0;
-        std::vector<std::type_index> types = {std::type_index(typeid(Components))...};
+        std::vector<std::type_index> types = {
+            std::type_index(typeid(Components))...};
         std::sort(types.begin(), types.end());
         for (const auto& type : types) {
             hash ^= type.hash_code() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
@@ -29,7 +31,7 @@ private:
         return hash;
     }
 
-public:
+   public:
     /**
      * @brief Constructor
      * @param entityManager Reference to the entity manager
@@ -45,7 +47,7 @@ public:
      *
      * First call creates archetype, subsequent calls reuse it.
      */
-    template<typename... Components>
+    template <typename... Components>
     Entity create(Components&&... components) {
         size_t typeHash = getTypeHash<Components...>();
         ArchetypeId archetypeId;
@@ -66,25 +68,28 @@ public:
     }
 
     /**
-     * @brief Create multiple entities with the same component types (highly optimized)
+     * @brief Create multiple entities with the same component types (highly
+     * optimized)
      * @tparam Components Component types
      * @tparam ComponentFactories Function types that create components
      * @param count Number of entities to create
-     * @param factories Functions that create component instances for each entity
+     * @param factories Functions that create component instances for each
+     * entity
      * @return Vector of created entities
      *
      * This is the most efficient way to spawn many entities at once.
      * The archetype is created once and all entities are inserted directly.
      *
      * Example:
-     *   auto entities = factory.createBatch<HealthComponent, VelocityComponent>(
-     *       100,
+     *   auto entities = factory.createBatch<HealthComponent,
+     * VelocityComponent>( 100,
      *       []() { return HealthComponent(100, 100); },
      *       []() { return VelocityComponent(1.0f, 0.0f, 0.0f); }
      *   );
      */
-    template<typename... Components, typename... ComponentFactories>
-    std::vector<Entity> createBatch(size_t count, ComponentFactories&&... factories) {
+    template <typename... Components, typename... ComponentFactories>
+    std::vector<Entity> createBatch(size_t count,
+                                    ComponentFactories&&... factories) {
         std::vector<Entity> entities;
         entities.reserve(count);
 
@@ -117,18 +122,22 @@ public:
      * The archetype is created immediately, not on first use.
      *
      * Example:
-     *   auto createEnemy = factory.defineArchetype<HealthComponent, VelocityComponent, PositionComponent>();
-     *   Entity enemy1 = createEnemy(HealthComponent(50, 50), VelocityComponent(1, 0, 0), PositionComponent(0, 0, 0));
+     *   auto createEnemy = factory.defineArchetype<HealthComponent,
+     * VelocityComponent, PositionComponent>(); Entity enemy1 =
+     * createEnemy(HealthComponent(50, 50), VelocityComponent(1, 0, 0),
+     * PositionComponent(0, 0, 0));
      */
-    template<typename... Components>
+    template <typename... Components>
     auto defineArchetype() {
         size_t typeHash = getTypeHash<Components...>();
-        ArchetypeId archetypeId = _entityManager.getOrCreateArchetype<Components...>();
+        ArchetypeId archetypeId =
+            _entityManager.getOrCreateArchetype<Components...>();
         _archetypeCache[typeHash] = archetypeId;
 
         return [this, archetypeId](Components&&... components) -> Entity {
             Entity entity = _entityManager.createEntityInArchetype(archetypeId);
-            (setComponentHelper(entity, std::forward<Components>(components)), ...);
+            (setComponentHelper(entity, std::forward<Components>(components)),
+             ...);
             return entity;
         };
     }
@@ -137,22 +146,18 @@ public:
      * @brief Get statistics about cached archetypes
      * @return Number of cached archetypes
      */
-    size_t getCachedArchetypeCount() const {
-        return _archetypeCache.size();
-    }
+    size_t getCachedArchetypeCount() const { return _archetypeCache.size(); }
 
     /**
      * @brief Clear the archetype cache (archetypes in EntityManager remain)
      */
-    void clearCache() {
-        _archetypeCache.clear();
-    }
+    void clearCache() { _archetypeCache.clear(); }
 
-private:
-    template<typename T>
+   private:
+    template <typename T>
     void setComponentHelper(Entity& entity, T&& component) {
         _entityManager.setComponent(entity, std::forward<T>(component));
     }
 };
 
-}
+}  // namespace engine

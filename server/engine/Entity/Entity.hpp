@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-#include <typeindex>
 #include <algorithm>
+#include <cstdint>
+#include <typeindex>
+#include <vector>
 
 namespace engine {
 
@@ -40,15 +40,15 @@ constexpr ArchetypeId NULL_ARCHETYPE = 0;
  * The actual component data is stored in archetype chunks, and this
  * class maintains the entity's ID and archetype information.
  */
-class Entity
-{
-private:
-    EntityId _id;               ///< Unique identifier for this entity
-    ArchetypeId _archetypeId;   ///< ID of the archetype this entity belongs to
-    uint32_t _indexInArchetype; ///< Index of this entity within its archetype chunk
-    bool _active;               ///< Whether this entity is currently active
+class Entity {
+   private:
+    EntityId _id;              ///< Unique identifier for this entity
+    ArchetypeId _archetypeId;  ///< ID of the archetype this entity belongs to
+    uint32_t
+        _indexInArchetype;  ///< Index of this entity within its archetype chunk
+    bool _active;           ///< Whether this entity is currently active
 
-public:
+   public:
     /**
      * @brief Default constructor - creates an invalid entity
      */
@@ -144,17 +144,18 @@ public:
 };
 
 /**
- * @brief Archetype signature - represents a unique combination of component types
+ * @brief Archetype signature - represents a unique combination of component
+ * types
  *
- * This is used to identify and group entities with the same component composition.
- * Component types are stored as sorted type indices for efficient comparison.
+ * This is used to identify and group entities with the same component
+ * composition. Component types are stored as sorted type indices for efficient
+ * comparison.
  */
-class ArchetypeSignature
-{
-private:
+class ArchetypeSignature {
+   private:
     std::vector<std::type_index> _componentTypes;
 
-public:
+   public:
     /**
      * @brief Default constructor
      */
@@ -230,21 +231,18 @@ public:
     bool operator<(const ArchetypeSignature &other) const;
 };
 
-}
+}  // namespace engine
 
-namespace std
-{
-    template <>
-    struct hash<engine::ArchetypeSignature>
-    {
-        size_t operator()(const engine::ArchetypeSignature &signature) const
-        {
-            size_t result = 0;
-            for (const auto &type : signature.getTypes())
-            {
-                result ^= type.hash_code() + 0x9e3779b9 + (result << 6) + (result >> 2);
-            }
-            return result;
+namespace std {
+template <>
+struct hash<engine::ArchetypeSignature> {
+    size_t operator()(const engine::ArchetypeSignature &signature) const {
+        size_t result = 0;
+        for (const auto &type : signature.getTypes()) {
+            result ^=
+                type.hash_code() + 0x9e3779b9 + (result << 6) + (result >> 2);
         }
-    };
-}
+        return result;
+    }
+};
+}  // namespace std

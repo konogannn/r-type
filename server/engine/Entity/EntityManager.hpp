@@ -1,18 +1,19 @@
 #pragma once
 
-#include "Entity.hpp"
+#include <memory>
+#include <queue>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
+
 #include "Component.hpp"
 #include "ComponentManager.hpp"
-#include <vector>
-#include <queue>
-#include <unordered_map>
-#include <memory>
-#include <stdexcept>
+#include "Entity.hpp"
 
 namespace engine {
 
 class EntityManager {
-private:
+   private:
     std::unordered_map<EntityId, Entity> _entities;
     std::queue<EntityId> _availableIds;
     EntityId _nextEntityId;
@@ -25,7 +26,7 @@ private:
      */
     EntityId getNextEntityId();
 
-public:
+   public:
     /**
      * @brief Constructor
      */
@@ -54,7 +55,7 @@ public:
      *
      * This allows pre-creating archetypes for known entity types.
      */
-    template<typename... Components>
+    template <typename... Components>
     ArchetypeId getOrCreateArchetype();
 
     /**
@@ -89,7 +90,7 @@ public:
      * @param entity The entity
      * @param component The component to add
      */
-    template<typename T>
+    template <typename T>
     void addComponent(Entity& entity, T&& component);
 
     /**
@@ -97,7 +98,7 @@ public:
      * @tparam T Component type
      * @param entity The entity
      */
-    template<typename T>
+    template <typename T>
     void removeComponent(Entity& entity);
 
     /**
@@ -106,7 +107,7 @@ public:
      * @param entity The entity
      * @return Pointer to component or nullptr
      */
-    template<typename T>
+    template <typename T>
     T* getComponent(const Entity& entity);
 
     /**
@@ -115,7 +116,7 @@ public:
      * @param entity The entity
      * @return true if entity has the component
      */
-    template<typename T>
+    template <typename T>
     bool hasComponent(const Entity& entity);
 
     /**
@@ -123,7 +124,7 @@ public:
      * @tparam Components Component types to query
      * @return Vector of entities matching the query
      */
-    template<typename... Components>
+    template <typename... Components>
     std::vector<Entity> getEntitiesWith();
 
     /**
@@ -132,7 +133,7 @@ public:
      * @tparam Func Function type
      * @param func Function to execute (receives Entity& and Components*...)
      */
-    template<typename... Components, typename Func>
+    template <typename... Components, typename Func>
     void forEach(Func&& func);
 
     /**
@@ -144,7 +145,7 @@ public:
      * Use this when you know the entity already has space for this component
      * (e.g., created via createEntityInArchetype). Faster than addComponent.
      */
-    template<typename T>
+    template <typename T>
     void setComponent(Entity& entity, T&& component);
 
     /**
@@ -177,6 +178,6 @@ public:
     const ComponentManager& getComponentManager() const;
 };
 
-}
+}  // namespace engine
 
 #include "EntityManager.tpp"
