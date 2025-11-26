@@ -35,10 +35,8 @@ int main() {
     float circleX = 100.0f;
     float circleY = 100.0f;
 
-    // Initialize network client (optional - for testing network architecture)
     auto networkClient = std::make_unique<NetworkClientAsio>();
 
-    // Set up network callbacks (examples)
     networkClient->setOnConnectedCallback(
         []() { std::cout << "Network: Connected to server!" << std::endl; });
 
@@ -84,10 +82,8 @@ int main() {
             }
         }
 
-        // Network updates (process incoming messages)
         networkClient->update();
 
-        // Input handling
         if (input->isKeyPressed(Key::Escape)) {
             window->close();
         }
@@ -104,7 +100,6 @@ int main() {
             rectX += speed * deltaTime;
         }
 
-        // Network test controls
         static bool nKeyPressed = false;
         static bool dKeyPressed = false;
 
@@ -114,7 +109,6 @@ int main() {
                 std::cout << "Attempting to connect to localhost:8080..."
                           << std::endl;
                 if (networkClient->connect("127.0.0.1", 8080)) {
-                    // Try to login after connection
                     networkClient->sendLogin("TestPlayer");
                 }
             }
@@ -132,7 +126,6 @@ int main() {
             dKeyPressed = false;
         }
 
-        // Send input to server if connected
         if (networkClient->isConnected()) {
             uint8_t inputMask = 0;
             if (input->isKeyPressed(Key::Up)) inputMask |= InputMask::UP;
@@ -141,11 +134,8 @@ int main() {
             if (input->isKeyPressed(Key::Right)) inputMask |= InputMask::RIGHT;
             if (input->isKeyPressed(Key::Space)) inputMask |= InputMask::SHOOT;
 
-            // Only send if there's actual input
             if (inputMask != 0) {
-                // Affichage debug des inputs
                 std::cout << "[INPUT] Sending: 0b";
-                // Affichage binaire (8 bits)
                 for (int i = 7; i >= 0; --i) {
                     std::cout << ((inputMask >> i) & 1);
                 }
