@@ -295,8 +295,7 @@ bool NetworkClientAsio::sendMessage(const void* data, size_t size) {
                                                          (uint8_t*)data + size);
     _socket.async_send_to(
         boost::asio::buffer(*buffer), _serverEndpoint,
-        [this, buffer](const boost::system::error_code& ec,
-                       std::size_t ) {
+        [this, buffer](const boost::system::error_code& ec, std::size_t) {
             if (ec) {
                 callErrorCallback("Send error: " + ec.message());
             }
