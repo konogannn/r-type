@@ -8,14 +8,14 @@
   "clang-format.style": "file",
   "clang-format.fallbackStyle": "Google",
   "cmake.configureOnOpen": false,
-    "logViewer.watch": [
-      {
-          "title": "Log server",
-          "pattern": "**/r-type_server.log"
-      },
-      {
-          "title": "Log client",
-          "pattern": "**/r-type_client.log"
-      }
-    ]
+  "logViewer.watch": [
+    {
+        "title": "Log server",
+        "pattern": "**/r-type_server.log"
+    },
+    {
+        "title": "Log client",
+        "pattern": "**/r-type_client.log"
+    }
+  ]
 }
