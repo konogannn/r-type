@@ -35,3 +35,27 @@ add_subdirectory(client)
 add_subdirectory(server)
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
+
+find_program(CLANG_FORMAT NAMES clang-format)
+
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE ALL_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/client/**/*.cpp  
+        ${CMAKE_SOURCE_DIR}/client/**/*.hpp  
+        ${CMAKE_SOURCE_DIR}/client/**/*.tpp  
+        ${CMAKE_SOURCE_DIR}/server/**/*.cpp  
+        ${CMAKE_SOURCE_DIR}/server/**/*.hpp  
+        ${CMAKE_SOURCE_DIR}/server/**/*.tpp  
+    )
+
+    list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
+
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Formatting source files with clang-format"
+        VERBATIM
+    )
+else()
+    message(WARNING "clang-format not found! Formatting target will not be available.")
+endif()

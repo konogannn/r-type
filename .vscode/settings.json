@@ -1,0 +1,11 @@
+{
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "C_Cpp.clang_format_style": "file",
+  "C_Cpp.clang_format_fallbackStyle": "Google",
+  "C_Cpp.default.compilerPath": "/usr/bin/g++",
+  "clang-format.style": "file",
+  "clang-format.fallbackStyle": "Google",
+  "cmake.configureOnOpen": false
+}
