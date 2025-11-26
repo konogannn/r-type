@@ -109,6 +109,22 @@ class IWindow {
      * @return Delta time in seconds
      */
     virtual float getDeltaTime() = 0;
+
+    /**
+     * @brief Recreate the window (for fullscreen toggle)
+     * @param width Width of the window
+     * @param height Height of the window
+     * @param title Title of the window
+     * @param fullscreen true for fullscreen, false for windowed
+     */
+    virtual void recreate(unsigned int width, unsigned int height,
+                          const std::string& title, bool fullscreen) = 0;
+
+    /**
+     * @brief Get the key code from the last KeyPressed/KeyReleased event
+     * @return Key code (library-specific, e.g., sf::Keyboard::Key)
+     */
+    virtual int getEventKeyCode() const = 0;
 };
 
 }  // namespace rtype
