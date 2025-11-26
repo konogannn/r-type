@@ -13,7 +13,17 @@
 
 namespace rtype {
 
-GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {}
+GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {
+    if (!_defaultFont.loadFromFile(
+            "/usr/share/fonts/open-sans/OpenSans-Regular.ttf")) {
+        if (!_defaultFont.loadFromFile(
+                "/usr/share/fonts/google-noto/NotoSans-Regular.ttf")) {
+            std::cerr
+                << "Warning: Could not load default font for text rendering"
+                << std::endl;
+        }
+    }
+}
 
 void GraphicsSFML::drawSprite(const ISprite& sprite) {
     const SpriteSFML* spriteSFML = dynamic_cast<const SpriteSFML*>(&sprite);
@@ -42,6 +52,18 @@ void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
     circle.setPosition(x - radius, y - radius);
     circle.setFillColor(sf::Color(r, g, b));
     _window.getSFMLWindow().draw(circle);
+}
+
+void GraphicsSFML::drawText(const std::string& text, float x, float y,
+                            unsigned int fontSize, unsigned char r,
+                            unsigned char g, unsigned char b) {
+    sf::Text sfText;
+    sfText.setFont(_defaultFont);
+    sfText.setString(text);
+    sfText.setCharacterSize(fontSize);
+    sfText.setFillColor(sf::Color(r, g, b));
+    sfText.setPosition(x, y);
+    _window.getSFMLWindow().draw(sfText);
 }
 
 }  // namespace rtype
