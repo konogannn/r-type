@@ -12,13 +12,12 @@ Logger::Logger(const std::string& filename) {
     if (!_logFile.is_open())
         std::cerr << "[Logger] Failed to open log file: " << filename
                   << std::endl;
-    else
-        log("Logger initialized", DEBUG_L, "Logger");
 }
 
 Logger::~Logger() {
+    _closing.store(true, std::memory_order_release);
+
     std::lock_guard<std::mutex> lock(_mutex);
-    _closing.store(true);
     if (_logFile.is_open()) {
         _logFile.flush();
         _logFile.close();
@@ -26,12 +25,18 @@ Logger::~Logger() {
 }
 
 void Logger::log(const std::string& message, LogLevel level,
-                 const std::string& scope) noexcept {
+                 const std::string& scope) {
     try {
-        if (!isFileOpen()) return;
-        if (level == DEBUG_L && !isDebugMode()) return;
+        if (_closing.load(std::memory_order_acquire)) return;
+        if (level == LogLevel::DEBUG_L && !isDebugMode()) return;
 
         std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_logFile.is_open()) {
+            if (!_closing.load(std::memory_order_acquire))
+                std::cerr << "Logger error: Log file is not open." << std::endl;
+            return;
+        }
 
         _logFile << "[" << getTimestamp() << "][" << logLevelToString(level)
                  << "]";
@@ -63,27 +68,19 @@ std::string Logger::getTimestamp() const {
 
 constexpr const char* Logger::logLevelToString(LogLevel level) {
     switch (level) {
-        case DEBUG_L:
+        case LogLevel::DEBUG_L:
             return "DEBUG";
-        case INFO_L:
+        case LogLevel::INFO_L:
             return "INFO";
-        case WARNING_L:
+        case LogLevel::WARNING_L:
             return "WARNING";
-        case ERROR_L:
+        case LogLevel::ERROR_L:
             return "ERROR";
-        case CRITICAL_L:
+        case LogLevel::CRITICAL_L:
             return "CRITICAL";
         default:
             return "UNKNOWN";
     }
-}
-
-bool Logger::isFileOpen() const {
-    std::lock_guard<std::mutex> lock(_mutex);
-    if (_logFile.is_open()) return true;
-    if (!_closing.load())
-        std::cerr << "Logger error: Log file is not open." << std::endl;
-    return false;
 }
 
 bool Logger::isDebugMode() const {

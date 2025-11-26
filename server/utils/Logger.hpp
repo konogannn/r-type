@@ -26,13 +26,19 @@
 /**
  * @class Logger
  * @brief Simple thread-safe logger writing timestamped lines to a file.
+ *
+ * Notes:
+ * - The Logger is NOT copyable nor movable. Copying or moving a logger would
+ *   cause resource and synchronization issues (file handle, mutex).
  */
 class Logger {
    public:
     /**
      * @brief Log severity levels.
+     *
+     * Use LogLevel::INFO_L, LogLevel::DEBUG_L, ... for scoped names.
      */
-    enum LogLevel { DEBUG_L, INFO_L, WARNING_L, ERROR_L, CRITICAL_L };
+    enum class LogLevel { DEBUG_L, INFO_L, WARNING_L, ERROR_L, CRITICAL_L };
 
     /**
      * @brief Construct a Logger.
@@ -60,8 +66,14 @@ class Logger {
      * This method is noexcept and will swallow exceptions, printing an error
      * to std::cerr if something goes wrong. It is thread-safe.
      */
-    void log(const std::string& message, LogLevel level = INFO_L,
-             const std::string& scope = "") noexcept;
+    void log(const std::string& message, LogLevel level = LogLevel::INFO_L,
+             const std::string& scope = "");
+
+    // Explicitly disable copy and move to avoid resource/synchronization issues.
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
 
    protected:
     /**
@@ -76,14 +88,6 @@ class Logger {
      * @return Literal string for the level.
      */
     static constexpr const char* logLevelToString(LogLevel level);
-
-    /**
-     * @brief Check whether the log file is open.
-     * @return true if the file is open.
-     *
-     * This method acquires the internal mutex before checking state.
-     */
-    bool isFileOpen() const;
 
     /**
      * @brief Return whether the build enables debug logs.
