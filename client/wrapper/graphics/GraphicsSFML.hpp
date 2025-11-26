@@ -36,9 +36,13 @@ class GraphicsSFML : public IGraphics {
                        unsigned char b) override;
     void drawCircle(float x, float y, float radius, unsigned char r,
                     unsigned char g, unsigned char b) override;
+    void drawText(const std::string& text, float x, float y,
+                  unsigned int fontSize, unsigned char r, unsigned char g,
+                  unsigned char b) override;
 
    private:
     WindowSFML& _window;
+    sf::Font _defaultFont;
 };
 
 }  // namespace rtype
