@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include "Input.hpp"
 #include <SFML/Graphics.hpp>
+
+#include "Input.hpp"
 
 namespace rtype {
 
@@ -19,7 +20,7 @@ class WindowSFML;
  * @brief SFML implementation of IInput interface
  */
 class InputSFML : public IInput {
-public:
+   public:
     /**
      * @brief Construct a new InputSFML object
      * @param window Reference to the WindowSFML
@@ -33,7 +34,7 @@ public:
     int getMouseX() const override;
     int getMouseY() const override;
 
-private:
+   private:
     WindowSFML& _window;
 
     /**
@@ -51,4 +52,4 @@ private:
     sf::Mouse::Button convertMouseButton(MouseButton button) const;
 };
 
-} // namespace rtype
+}  // namespace rtype

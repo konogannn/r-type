@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "Sprite.hpp"
 #include <SFML/Graphics.hpp>
 #include <memory>
+
+#include "Sprite.hpp"
 
 namespace rtype {
 
@@ -17,7 +18,7 @@ namespace rtype {
  * @brief SFML implementation of ISprite interface
  */
 class SpriteSFML : public ISprite {
-public:
+   public:
     /**
      * @brief Construct a new SpriteSFML object
      */
@@ -39,9 +40,9 @@ public:
      */
     const sf::Sprite& getSFMLSprite() const;
 
-private:
+   private:
     std::unique_ptr<sf::Texture> _texture;
     std::unique_ptr<sf::Sprite> _sprite;
 };
 
-} // namespace rtype
+}  // namespace rtype

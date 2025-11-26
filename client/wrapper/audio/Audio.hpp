@@ -16,7 +16,7 @@ namespace rtype {
  * This interface is library-agnostic and can be implemented for SFML, SDL, etc.
  */
 class IAudio {
-public:
+   public:
     virtual ~IAudio() = default;
 
     /**
@@ -58,4 +58,4 @@ public:
     virtual void setMusicVolume(float volume) = 0;
 };
 
-} // namespace rtype
+}  // namespace rtype

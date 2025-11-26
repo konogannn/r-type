@@ -16,7 +16,7 @@ namespace rtype {
  * This interface is library-agnostic and can be implemented for SFML, SDL, etc.
  */
 class IGraphics {
-public:
+   public:
     virtual ~IGraphics() = default;
 
     /**
@@ -36,7 +36,8 @@ public:
      * @param b Blue component (0-255)
      */
     virtual void drawRectangle(float x, float y, float width, float height,
-                               unsigned char r, unsigned char g, unsigned char b) = 0;
+                               unsigned char r, unsigned char g,
+                               unsigned char b) = 0;
 
     /**
      * @brief Draw a circle
@@ -47,8 +48,8 @@ public:
      * @param g Green component (0-255)
      * @param b Blue component (0-255)
      */
-    virtual void drawCircle(float x, float y, float radius,
-                           unsigned char r, unsigned char g, unsigned char b) = 0;
+    virtual void drawCircle(float x, float y, float radius, unsigned char r,
+                            unsigned char g, unsigned char b) = 0;
 };
 
-} // namespace rtype
+}  // namespace rtype

@@ -7,10 +7,11 @@
 
 #pragma once
 
-#include "Audio.hpp"
 #include <SFML/Audio.hpp>
 #include <memory>
 #include <vector>
+
+#include "Audio.hpp"
 
 namespace rtype {
 
@@ -18,7 +19,7 @@ namespace rtype {
  * @brief SFML implementation of IAudio interface
  */
 class AudioSFML : public IAudio {
-public:
+   public:
     /**
      * @brief Construct a new AudioSFML object
      */
@@ -33,7 +34,7 @@ public:
     void setSoundVolume(float volume) override;
     void setMusicVolume(float volume) override;
 
-private:
+   private:
     struct SoundData {
         std::unique_ptr<sf::SoundBuffer> buffer;
         std::unique_ptr<sf::Sound> sound;
@@ -45,4 +46,4 @@ private:
     float _musicVolume;
 };
 
-} // namespace rtype
+}  // namespace rtype

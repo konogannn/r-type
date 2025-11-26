@@ -27,11 +27,12 @@ r-type-server
 *.obj
 
 # IDE files
-.vscode/
-.idea/
 *.swp
 *.swo
 *~
+
+# Log files
+*.log
 
 # OS files
 .DS_Store
