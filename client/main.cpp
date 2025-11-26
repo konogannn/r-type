@@ -143,6 +143,16 @@ int main() {
 
             // Only send if there's actual input
             if (inputMask != 0) {
+                // Affichage debug des inputs
+                std::cout << "[INPUT] Sending: 0b";
+                // Affichage binaire (8 bits)
+                for (int i = 7; i >= 0; --i) {
+                    std::cout << ((inputMask >> i) & 1);
+                }
+                std::cout << " (" << static_cast<int>(inputMask) << ") = "
+                          << NetworkMessage::inputMaskToString(inputMask)
+                          << std::endl;
+
                 networkClient->sendInput(inputMask);
             }
         }
