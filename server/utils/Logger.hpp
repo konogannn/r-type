@@ -69,7 +69,8 @@ class Logger {
     void log(const std::string& message, LogLevel level = LogLevel::INFO_L,
              const std::string& scope = "");
 
-    // Explicitly disable copy and move to avoid resource/synchronization issues.
+    // Explicitly disable copy and move to avoid resource/synchronization
+    // issues.
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
     Logger(Logger&&) = delete;
