@@ -40,18 +40,18 @@ find_program(CLANG_FORMAT NAMES clang-format)
 
 if(CLANG_FORMAT)
     file(GLOB_RECURSE ALL_SOURCE_FILES
-        ${CMAKE_SOURCE_DIR}/client/**/*.cpp  
-        ${CMAKE_SOURCE_DIR}/client/**/*.hpp  
-        ${CMAKE_SOURCE_DIR}/client/**/*.tpp  
-        ${CMAKE_SOURCE_DIR}/server/**/*.cpp  
-        ${CMAKE_SOURCE_DIR}/server/**/*.hpp  
-        ${CMAKE_SOURCE_DIR}/server/**/*.tpp  
+        ${CMAKE_SOURCE_DIR}/client/*.cpp
+        ${CMAKE_SOURCE_DIR}/client/*.hpp
+        ${CMAKE_SOURCE_DIR}/client/*.tpp
+        ${CMAKE_SOURCE_DIR}/server/*.cpp
+        ${CMAKE_SOURCE_DIR}/server/*.hpp
+        ${CMAKE_SOURCE_DIR}/server/*.tpp
     )
 
     list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
 
     add_custom_target(format
-        COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
+        COMMAND find ${CMAKE_SOURCE_DIR}/client ${CMAKE_SOURCE_DIR}/server -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.tpp" \) ! -path "*/CMakeFiles/*" -exec ${CLANG_FORMAT} -i {} +
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting source files with clang-format"
         VERBATIM
