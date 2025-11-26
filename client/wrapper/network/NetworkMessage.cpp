@@ -19,7 +19,6 @@ namespace rtype {
     packet.header.packetSize = sizeof(::LoginPacket);
     packet.header.sequenceId = sequenceId;
 
-    // Copy username (max 7 chars + null terminator)
     std::strncpy(packet.username, username.c_str(),
                  sizeof(packet.username) - 1);
     packet.username[sizeof(packet.username) - 1] = '\0';
@@ -64,17 +63,14 @@ bool NetworkMessage::validatePacket(const void* data, size_t size,
 
     const ::Header* header = static_cast<const ::Header*>(data);
 
-    // Check if packet size matches available data
     if (header->packetSize > size) {
         return false;
     }
 
-    // Check expected opcode if specified
     if (expectedOpCode != 0 && header->opCode != expectedOpCode) {
         return false;
     }
 
-    // Validate opcode is in valid range
     if (header->opCode == 0 ||
         header->opCode > static_cast<uint8_t>(::OpCode::S2C_SCORE_UPDATE)) {
         return false;
