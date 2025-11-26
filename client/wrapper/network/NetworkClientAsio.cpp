@@ -50,15 +50,20 @@ bool NetworkClientAsio::connect(const std::string& serverAddress,
 
         setState(NetworkState::Connected);
 
-        if (_onConnected) {
-            _onConnected();
-        }
-
         return true;
     } catch (const std::exception& e) {
         setState(NetworkState::Error);
         callErrorCallback("Connection failed: " + std::string(e.what()));
         return false;
+    }
+
+    if (_onConnected) {
+        try {
+            _onConnected();
+        } catch (const std::exception& e) {
+            std::cerr << "Error in _onConnected callback: " << e.what()
+                      << std::endl;
+        }
     }
 }
 
@@ -96,7 +101,6 @@ bool NetworkClientAsio::sendLogin(const std::string& username) {
     packet.header.packetSize = sizeof(::LoginPacket);
     packet.header.sequenceId = getNextSequenceId();
 
-    // Copy username (max 7 chars + null terminator)
     std::strncpy(packet.username, username.c_str(),
                  sizeof(packet.username) - 1);
     packet.username[sizeof(packet.username) - 1] = '\0';
@@ -145,7 +149,6 @@ bool NetworkClientAsio::sendAck(uint32_t sequenceId) {
 }
 
 void NetworkClientAsio::update() {
-    // Process pending messages from network thread
     std::lock_guard<std::mutex> lock(_messageQueueMutex);
 
     while (!_pendingMessages.empty()) {
@@ -155,7 +158,6 @@ void NetworkClientAsio::update() {
     }
 }
 
-// Callback setters
 void NetworkClientAsio::setOnConnectedCallback(OnConnectedCallback callback) {
     _onConnected = callback;
 }
@@ -207,7 +209,6 @@ void NetworkClientAsio::startReceive() {
 void NetworkClientAsio::handleReceive(const boost::system::error_code& error,
                                       size_t bytesTransferred) {
     if (!error && bytesTransferred > 0) {
-        // Queue message for main thread processing
         {
             std::lock_guard<std::mutex> lock(_messageQueueMutex);
             PendingMessage message;
@@ -217,14 +218,12 @@ void NetworkClientAsio::handleReceive(const boost::system::error_code& error,
             _pendingMessages.push(std::move(message));
         }
 
-        // Continue receiving
         if (_running) {
             startReceive();
         }
     } else if (error && _running) {
         callErrorCallback("Receive error: " + error.message());
 
-        // Continue receiving unless we're shutting down
         if (_running) {
             startReceive();
         }
@@ -233,7 +232,7 @@ void NetworkClientAsio::handleReceive(const boost::system::error_code& error,
 
 void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size) {
     if (size < sizeof(::Header)) {
-        return;  // Invalid packet
+        return;
     }
 
     const ::Header* header = reinterpret_cast<const ::Header*>(data);
@@ -255,7 +254,6 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size) {
             processScoreUpdate(data, size);
             break;
         default:
-            // Unknown opcode, ignore
             break;
     }
 }
@@ -352,7 +350,6 @@ void NetworkClientAsio::processEntityDead(const uint8_t* data, size_t size) {
         return;
     }
 
-    // EntityDead packet is just Header + entityId
     const uint32_t* entityId =
         reinterpret_cast<const uint32_t*>(data + sizeof(Header));
 
@@ -366,7 +363,6 @@ void NetworkClientAsio::processScoreUpdate(const uint8_t* data, size_t size) {
         return;
     }
 
-    // ScoreUpdate packet is just Header + score
     const uint32_t* score =
         reinterpret_cast<const uint32_t*>(data + sizeof(Header));
 
