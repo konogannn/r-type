@@ -27,8 +27,6 @@ r-type-server
 *.obj
 
 # IDE files
-.vscode/
-.idea/
 *.swp
 *.swo
 *~

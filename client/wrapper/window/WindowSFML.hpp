@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "Window.hpp"
 #include <SFML/Graphics.hpp>
 #include <memory>
+
+#include "Window.hpp"
 
 namespace rtype {
 
@@ -17,14 +18,15 @@ namespace rtype {
  * @brief SFML implementation of IWindow interface
  */
 class WindowSFML : public IWindow {
-public:
+   public:
     /**
      * @brief Construct a new WindowSFML object
      * @param width Width of the window
      * @param height Height of the window
      * @param title Title of the window
      */
-    WindowSFML(unsigned int width, unsigned int height, const std::string& title);
+    WindowSFML(unsigned int width, unsigned int height,
+               const std::string& title);
 
     ~WindowSFML() override = default;
 
@@ -33,7 +35,8 @@ public:
     EventType getEventType() const override;
     MouseButton getEventMouseButton() const override;
     std::pair<int, int> getEventMousePosition() const override;
-    void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) override;
+    void clear(unsigned char r = 0, unsigned char g = 0,
+               unsigned char b = 0) override;
     void display() override;
     void close() override;
     unsigned int getWidth() const override;
@@ -53,7 +56,7 @@ public:
      */
     const sf::Event& getLastEvent() const;
 
-private:
+   private:
     std::unique_ptr<sf::RenderWindow> _window;
     sf::Event _lastEvent;
     sf::Clock _clock;
@@ -62,4 +65,4 @@ private:
     unsigned int _height;
 };
 
-} // namespace rtype
+}  // namespace rtype

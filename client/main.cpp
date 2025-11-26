@@ -5,18 +5,20 @@
 ** main - POC for SFML wrapper with abstract interfaces
 */
 
-#include "WindowSFML.hpp"
-#include "GraphicsSFML.hpp"
-#include "SpriteSFML.hpp"
-#include "InputSFML.hpp"
-#include "AudioSFML.hpp"
 #include <iostream>
 #include <memory>
+
+#include "AudioSFML.hpp"
+#include "GraphicsSFML.hpp"
+#include "InputSFML.hpp"
+#include "SpriteSFML.hpp"
+#include "WindowSFML.hpp"
 
 using namespace rtype;
 
 int main() {
-    auto window = std::make_unique<WindowSFML>(800, 600, "R-Type - SFML Wrapper POC");
+    auto window =
+        std::make_unique<WindowSFML>(800, 600, "R-Type - SFML Wrapper POC");
 
     window->setFramerateLimit(60);
 
@@ -32,12 +34,14 @@ int main() {
     float circleY = 100.0f;
 
     std::cout << "=== R-Type SFML Wrapper POC v2 ===" << std::endl;
-    std::cout << "Architecture: Abstract Interfaces + SFML Implementation" << std::endl;
+    std::cout << "Architecture: Abstract Interfaces + SFML Implementation"
+              << std::endl;
     std::cout << "Frame-rate Independent Movement (Delta Time)" << std::endl;
     std::cout << "\nControls:" << std::endl;
     std::cout << "  - Arrow keys: Move green rectangle" << std::endl;
     std::cout << "  - ESC: Close window" << std::endl;
-    std::cout << "  - Mouse Left Click: Move blue circle to mouse position" << std::endl;
+    std::cout << "  - Mouse Left Click: Move blue circle to mouse position"
+              << std::endl;
     std::cout << "====================================" << std::endl;
 
     while (window->isOpen()) {

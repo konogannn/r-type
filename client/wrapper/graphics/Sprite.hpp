@@ -16,7 +16,7 @@ namespace rtype {
  * This interface is library-agnostic and can be implemented for SFML, SDL, etc.
  */
 class ISprite {
-public:
+   public:
     virtual ~ISprite() = default;
 
     /**
@@ -66,4 +66,4 @@ public:
     virtual float getPositionY() const = 0;
 };
 
-} // namespace rtype
+}  // namespace rtype

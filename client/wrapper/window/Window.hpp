@@ -34,7 +34,7 @@ enum class MouseButton;
  * This interface is library-agnostic and can be implemented for SFML, SDL, etc.
  */
 class IWindow {
-public:
+   public:
     virtual ~IWindow() = default;
 
     /**
@@ -73,7 +73,8 @@ public:
      * @param g Green component (0-255)
      * @param b Blue component (0-255)
      */
-    virtual void clear(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0) = 0;
+    virtual void clear(unsigned char r = 0, unsigned char g = 0,
+                       unsigned char b = 0) = 0;
 
     /**
      * @brief Display the window content
@@ -110,4 +111,4 @@ public:
     virtual float getDeltaTime() = 0;
 };
 
-} // namespace rtype
+}  // namespace rtype
