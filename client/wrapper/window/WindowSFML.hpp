@@ -43,6 +43,9 @@ class WindowSFML : public IWindow {
     unsigned int getHeight() const override;
     void setFramerateLimit(unsigned int fps) override;
     float getDeltaTime() override;
+    void recreate(unsigned int width, unsigned int height,
+                  const std::string& title, bool fullscreen) override;
+    int getEventKeyCode() const override;
 
     /**
      * @brief Get the underlying SFML window (for drawing)
