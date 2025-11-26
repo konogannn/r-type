@@ -64,6 +64,21 @@ class ISprite {
      * @return Y coordinate
      */
     virtual float getPositionY() const = 0;
+
+    /**
+     * @brief Set texture rectangle (for sprite sheets/animation)
+     * @param left Left coordinate of the rectangle
+     * @param top Top coordinate of the rectangle
+     * @param width Width of the rectangle
+     * @param height Height of the rectangle
+     */
+    virtual void setTextureRect(int left, int top, int width, int height) = 0;
+
+    /**
+     * @brief Enable or disable texture smoothing
+     * @param smooth true to enable smoothing, false for pixel-perfect
+     */
+    virtual void setSmooth(bool smooth) = 0;
 };
 
 }  // namespace rtype
