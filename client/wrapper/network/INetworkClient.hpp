@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-type
 ** File description:
-** INetworkClient - Abstract interface for network client
+** INetworkClient
 */
 
 #pragma once

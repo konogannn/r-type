@@ -1,14 +1,8 @@
 find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
 
 if(SFML_FOUND)
     message(STATUS "SFML found: ${SFML_VERSION}")
     message(STATUS "SFML include dirs: ${SFML_INCLUDE_DIR}")
-endif()
-
-if(Boost_FOUND)
-    message(STATUS "Boost found: ${Boost_VERSION}")
-    message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 endif()
 
 set(WRAPPER_SOURCES

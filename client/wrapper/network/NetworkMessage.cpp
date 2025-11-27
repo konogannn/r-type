@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-type
 ** File description:
-** NetworkMessage - Utilities for network message handling
+** NetworkMessage
 */
 
 #include "NetworkMessage.hpp"
