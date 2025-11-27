@@ -49,14 +49,14 @@ void Entity::setActive(bool active) { _active = active; }
 
 void Entity::destroy() { _active = false; }
 
-bool Entity::operator==(const Entity &other) const { return _id == other._id; }
+bool Entity::operator==(const Entity& other) const { return _id == other._id; }
 
-bool Entity::operator!=(const Entity &other) const { return _id != other._id; }
+bool Entity::operator!=(const Entity& other) const { return _id != other._id; }
 
-bool Entity::operator<(const Entity &other) const { return _id < other._id; }
+bool Entity::operator<(const Entity& other) const { return _id < other._id; }
 
 ArchetypeSignature::ArchetypeSignature(
-    const std::vector<std::type_index> &types)
+    const std::vector<std::type_index>& types)
     : _componentTypes(types) {
     std::sort(_componentTypes.begin(), _componentTypes.end());
 }
@@ -70,18 +70,19 @@ void ArchetypeSignature::addType(std::type_index type) {
 }
 
 void ArchetypeSignature::removeType(std::type_index type) {
-    auto it = std::find(_componentTypes.begin(), _componentTypes.end(), type);
-    if (it != _componentTypes.end()) {
+    auto it =
+        std::lower_bound(_componentTypes.begin(), _componentTypes.end(), type);
+    if (it != _componentTypes.end() && *it == type) {
         _componentTypes.erase(it);
     }
 }
 
 bool ArchetypeSignature::hasType(std::type_index type) const {
-    return std::find(_componentTypes.begin(), _componentTypes.end(), type) !=
-           _componentTypes.end();
+    return std::binary_search(_componentTypes.begin(), _componentTypes.end(),
+                              type);
 }
 
-const std::vector<std::type_index> &ArchetypeSignature::getTypes() const {
+const std::vector<std::type_index>& ArchetypeSignature::getTypes() const {
     return _componentTypes;
 }
 
@@ -91,15 +92,15 @@ bool ArchetypeSignature::empty() const { return _componentTypes.empty(); }
 
 void ArchetypeSignature::clear() { _componentTypes.clear(); }
 
-bool ArchetypeSignature::operator==(const ArchetypeSignature &other) const {
+bool ArchetypeSignature::operator==(const ArchetypeSignature& other) const {
     return _componentTypes == other._componentTypes;
 }
 
-bool ArchetypeSignature::operator!=(const ArchetypeSignature &other) const {
+bool ArchetypeSignature::operator!=(const ArchetypeSignature& other) const {
     return _componentTypes != other._componentTypes;
 }
 
-bool ArchetypeSignature::operator<(const ArchetypeSignature &other) const {
+bool ArchetypeSignature::operator<(const ArchetypeSignature& other) const {
     return _componentTypes < other._componentTypes;
 }
 
