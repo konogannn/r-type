@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-type
 ** File description:
-** NetworkClientAsio - Boost.Asio implementation of network client
+** NetworkClientAsio
 */
 
 #pragma once

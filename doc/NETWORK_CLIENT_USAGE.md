@@ -401,21 +401,6 @@ int main() {
 }
 ```
 
----
-
-## 🔧 Compilation
-
-```bash
-# S'assurer que les dépendances sont installées
-cmake -S . -B build
-cmake --build build
-
-# Lancer le client
-./r-type-client
-```
-
----
-
 ## 📋 Checklist d'Intégration
 
 - [ ] Inclure les headers nécessaires
