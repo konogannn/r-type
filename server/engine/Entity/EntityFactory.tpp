@@ -20,8 +20,13 @@ size_t EntityFactory::getTypeHash() {
     std::vector<std::type_index> types = {
         std::type_index(typeid(Components))...};
     std::sort(types.begin(), types.end());
+
+    constexpr size_t kGoldenRatio =
+        sizeof(size_t) == 8 ? 0x9e3779b97f4a7c15ULL  // 64-bit golden ratio
+                            : 0x9e3779b9UL;          // 32-bit golden ratio
+
     for (const auto& type : types) {
-        hash ^= type.hash_code() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        hash ^= type.hash_code() + kGoldenRatio + (hash << 6) + (hash >> 2);
     }
     return hash;
 }
