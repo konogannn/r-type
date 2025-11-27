@@ -5,6 +5,8 @@
 # Include directories for engine headers
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Component
+    ${CMAKE_CURRENT_SOURCE_DIR}/Entity
 )
 
 # Collect all engine source files
@@ -12,6 +14,7 @@ set(ENGINE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Component/ComponentManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Entity/Entity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Entity/EntityManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Entity/EntityFactory.cpp
 )
 
 # Create the engine library
@@ -23,6 +26,8 @@ add_library(r-type-engine STATIC
 target_include_directories(r-type-engine
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Component
+        ${CMAKE_CURRENT_SOURCE_DIR}/Entity
 )
 
 # Set output directory for the engine library
