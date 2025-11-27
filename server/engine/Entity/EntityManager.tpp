@@ -138,10 +138,27 @@ std::vector<Entity> EntityManager::getEntitiesWith() {
 
 template <typename... Components, typename Func>
 void EntityManager::forEach(Func&& func) {
-    auto entities = getEntitiesWith<Components...>();
-    for (auto& entity : entities) {
-        auto components = std::make_tuple(getComponent<Components>(entity)...);
-        if ((std::get<Components*>(components) && ...)) {
+    ArchetypeSignature signature;
+    (signature.addType(std::type_index(typeid(Components))), ...);
+
+    auto archetypes = _componentManager.getArchetypesWithComponents(signature);
+
+    for (auto* archetype : archetypes) {
+        const auto& entityIds =
+            _componentManager.getEntitiesInArchetype(archetype->id);
+
+        for (size_t i = 0; i < entityIds.size(); ++i) {
+            EntityId id = entityIds[i];
+            auto it = _entities.find(id);
+
+            if (it == _entities.end() || !it->second.isActive()) {
+                continue;
+            }
+
+            const Entity& entity = it->second;
+            auto components =
+                std::make_tuple(_componentManager.getComponent<Components>(
+                    archetype->id, static_cast<uint32_t>(i))...);
             func(entity, std::get<Components*>(components)...);
         }
     }
