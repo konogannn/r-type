@@ -1,4 +1,5 @@
 name: Build & Test (Windows & Linux)
+run-name: ${{ github.actor }} has run the build & test workflow
 
 on:
   pull_request:
@@ -11,7 +12,32 @@ on:
       - "vcpkg.json"
 
 jobs:
+  check_repository:
+    name: Check the repository
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.new.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if we are in the mirrored repository
+        id: new
+        run: |
+          if [[ "${{ github.repository }}" == *"Epitech"* ]]; then
+            echo "::notice::You are in the Epitech repository"
+            echo "value=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "value=0" >> "$GITHUB_OUTPUT"
+          exit 0
+
   build:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == 0 }}
+    name: Build and Test
     runs-on: ${{ matrix.os }}
 
     strategy:
