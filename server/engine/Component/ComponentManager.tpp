@@ -15,7 +15,8 @@ namespace engine {
 
 template <typename T>
 void ComponentManager::addComponent(ArchetypeId archetypeId, uint32_t index,
-                                    T &&component) {
+                                    T &&component)
+{
     static_assert(std::is_base_of<Component, T>::value,
                   "T must derive from Component");
 
@@ -34,7 +35,8 @@ void ComponentManager::addComponent(ArchetypeId archetypeId, uint32_t index,
 }
 
 template <typename T>
-T *ComponentManager::getComponent(ArchetypeId archetypeId, uint32_t index) {
+T *ComponentManager::getComponent(ArchetypeId archetypeId, uint32_t index)
+{
     Archetype *archetype = getArchetype(archetypeId);
     if (!archetype) {
         return nullptr;
@@ -46,7 +48,8 @@ T *ComponentManager::getComponent(ArchetypeId archetypeId, uint32_t index) {
 }
 
 template <typename T>
-bool ComponentManager::hasComponent(ArchetypeId archetypeId) {
+bool ComponentManager::hasComponent(ArchetypeId archetypeId)
+{
     Archetype *archetype = getArchetype(archetypeId);
     if (!archetype) {
         return false;
@@ -56,7 +59,8 @@ bool ComponentManager::hasComponent(ArchetypeId archetypeId) {
 
 template <typename T>
 ArchetypeId ComponentManager::getArchetypeWithAddedComponent(
-    ArchetypeId currentArchetypeId) {
+    ArchetypeId currentArchetypeId)
+{
     Archetype *currentArchetype = getArchetype(currentArchetypeId);
     if (!currentArchetype) {
         return NULL_ARCHETYPE;
@@ -69,7 +73,8 @@ ArchetypeId ComponentManager::getArchetypeWithAddedComponent(
 
 template <typename T>
 ArchetypeId ComponentManager::getArchetypeWithRemovedComponent(
-    ArchetypeId currentArchetypeId) {
+    ArchetypeId currentArchetypeId)
+{
     Archetype *currentArchetype = getArchetype(currentArchetypeId);
     if (!currentArchetype) {
         return NULL_ARCHETYPE;

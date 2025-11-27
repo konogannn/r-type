@@ -236,7 +236,8 @@ class ArchetypeSignature {
 namespace std {
 template <>
 struct hash<engine::ArchetypeSignature> {
-    size_t operator()(const engine::ArchetypeSignature& signature) const {
+    size_t operator()(const engine::ArchetypeSignature& signature) const
+    {
         size_t result = 0;
 
         constexpr size_t kGoldenRatio =

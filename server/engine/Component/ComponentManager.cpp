@@ -15,18 +15,21 @@ ComponentManager::ComponentArray::ComponentArray(std::type_index t) : type(t) {}
 
 ComponentManager::Archetype::Archetype(ArchetypeId archetypeId,
                                        const ArchetypeSignature& sig)
-    : id(archetypeId), signature(sig) {
+    : id(archetypeId), signature(sig)
+{
     for (const auto& type : sig.getTypes()) {
         componentArrays.emplace(type, ComponentArray(type));
     }
 }
 
-uint32_t ComponentManager::Archetype::addEntity(EntityId entityId) {
+uint32_t ComponentManager::Archetype::addEntity(EntityId entityId)
+{
     entities.push_back(entityId);
     return static_cast<uint32_t>(entities.size() - 1);
 }
 
-EntityId ComponentManager::Archetype::removeEntity(uint32_t index) {
+EntityId ComponentManager::Archetype::removeEntity(uint32_t index)
+{
     if (index >= entities.size() || entities.empty()) {
         return NULL_ENTITY;
     }
@@ -56,12 +59,14 @@ EntityId ComponentManager::Archetype::removeEntity(uint32_t index) {
     return movedEntity;
 }
 
-bool ComponentManager::Archetype::hasComponent(std::type_index type) const {
+bool ComponentManager::Archetype::hasComponent(std::type_index type) const
+{
     return componentArrays.find(type) != componentArrays.end();
 }
 
 Component* ComponentManager::Archetype::getComponent(std::type_index type,
-                                                     uint32_t index) {
+                                                     uint32_t index)
+{
     auto it = componentArrays.find(type);
     if (it == componentArrays.end() || index >= it->second.components.size()) {
         return nullptr;
@@ -70,8 +75,8 @@ Component* ComponentManager::Archetype::getComponent(std::type_index type,
 }
 
 void ComponentManager::Archetype::addComponent(
-    std::type_index type, std::unique_ptr<Component> component,
-    uint32_t index) {
+    std::type_index type, std::unique_ptr<Component> component, uint32_t index)
+{
     auto it = componentArrays.find(type);
     if (it == componentArrays.end()) {
         throw std::runtime_error(
@@ -89,12 +94,14 @@ void ComponentManager::Archetype::addComponent(
 }
 
 ComponentManager::ComponentManager()
-    : _nextArchetypeId(1), _emptyArchetypeId(NULL_ARCHETYPE) {
+    : _nextArchetypeId(1), _emptyArchetypeId(NULL_ARCHETYPE)
+{
     _emptyArchetypeId = createArchetype(ArchetypeSignature());
 }
 
 ArchetypeId ComponentManager::getOrCreateArchetype(
-    const ArchetypeSignature& signature) {
+    const ArchetypeSignature& signature)
+{
     auto it = _signatureToArchetype.find(signature);
 
     if (it != _signatureToArchetype.end()) {
@@ -104,7 +111,8 @@ ArchetypeId ComponentManager::getOrCreateArchetype(
 }
 
 ArchetypeId ComponentManager::createArchetype(
-    const ArchetypeSignature& signature) {
+    const ArchetypeSignature& signature)
+{
     ArchetypeId id = _nextArchetypeId++;
     auto archetype = std::make_unique<Archetype>(id, signature);
 
@@ -117,7 +125,8 @@ ArchetypeId ComponentManager::createArchetype(
 }
 
 ComponentManager::Archetype* ComponentManager::getArchetype(
-    ArchetypeId archetypeId) {
+    ArchetypeId archetypeId)
+{
     auto it = _archetypeIdToIndex.find(archetypeId);
     if (it == _archetypeIdToIndex.end()) {
         return nullptr;
@@ -125,12 +134,14 @@ ComponentManager::Archetype* ComponentManager::getArchetype(
     return _archetypes[it->second].get();
 }
 
-ArchetypeId ComponentManager::getEmptyArchetypeId() const {
+ArchetypeId ComponentManager::getEmptyArchetypeId() const
+{
     return _emptyArchetypeId;
 }
 
 uint32_t ComponentManager::addEntityToArchetype(EntityId entityId,
-                                                ArchetypeId archetypeId) {
+                                                ArchetypeId archetypeId)
+{
     Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         throw std::runtime_error("Invalid archetype ID");
@@ -139,7 +150,8 @@ uint32_t ComponentManager::addEntityToArchetype(EntityId entityId,
 }
 
 EntityId ComponentManager::removeEntityFromArchetype(ArchetypeId archetypeId,
-                                                     uint32_t index) {
+                                                     uint32_t index)
+{
     Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         return NULL_ENTITY;
@@ -149,7 +161,8 @@ EntityId ComponentManager::removeEntityFromArchetype(ArchetypeId archetypeId,
 
 uint32_t ComponentManager::moveEntityBetweenArchetypes(
     EntityId entityId, ArchetypeId fromArchetypeId, uint32_t fromIndex,
-    ArchetypeId toArchetypeId) {
+    ArchetypeId toArchetypeId)
+{
     Archetype* fromArchetype = getArchetype(fromArchetypeId);
     Archetype* toArchetype = getArchetype(toArchetypeId);
 
@@ -212,7 +225,8 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
 }
 
 const std::vector<EntityId>& ComponentManager::getEntitiesInArchetype(
-    ArchetypeId archetypeId) {
+    ArchetypeId archetypeId)
+{
     Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         throw std::runtime_error("Invalid archetype ID");
@@ -220,7 +234,8 @@ const std::vector<EntityId>& ComponentManager::getEntitiesInArchetype(
     return archetype->entities;
 }
 
-std::vector<ComponentManager::Archetype*> ComponentManager::getAllArchetypes() {
+std::vector<ComponentManager::Archetype*> ComponentManager::getAllArchetypes()
+{
     std::vector<Archetype*> result;
     result.reserve(_archetypes.size());
     for (auto& archetype : _archetypes) {
@@ -231,7 +246,8 @@ std::vector<ComponentManager::Archetype*> ComponentManager::getAllArchetypes() {
 
 std::vector<ComponentManager::Archetype*>
 ComponentManager::getArchetypesWithComponents(
-    const ArchetypeSignature& signature) {
+    const ArchetypeSignature& signature)
+{
     std::vector<Archetype*> result;
 
     for (auto& archetype : _archetypes) {
@@ -250,7 +266,8 @@ ComponentManager::getArchetypesWithComponents(
     return result;
 }
 
-void ComponentManager::clear() {
+void ComponentManager::clear()
+{
     _archetypes.clear();
     _signatureToArchetype.clear();
     _archetypeIdToIndex.clear();

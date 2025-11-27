@@ -10,9 +10,12 @@
 namespace engine {
 
 EntityFactory::EntityFactory(EntityManager& entityManager)
-    : _entityManager(entityManager) {}
+    : _entityManager(entityManager)
+{
+}
 
-size_t EntityFactory::getCachedArchetypeCount() const {
+size_t EntityFactory::getCachedArchetypeCount() const
+{
     return _archetypeCache.size();
 }
 

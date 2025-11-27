@@ -7,14 +7,16 @@
 
 #include "Logger.hpp"
 
-Logger::Logger(const std::string& filename) {
+Logger::Logger(const std::string& filename)
+{
     _logFile.open(filename, std::ios::app);
     if (!_logFile.is_open())
         std::cerr << "[Logger] Failed to open log file: " << filename
                   << std::endl;
 }
 
-Logger::~Logger() {
+Logger::~Logger()
+{
     _closing.store(true, std::memory_order_release);
 
     std::lock_guard<std::mutex> lock(_mutex);
@@ -25,7 +27,8 @@ Logger::~Logger() {
 }
 
 void Logger::log(const std::string& message, LogLevel level,
-                 const std::string& scope) {
+                 const std::string& scope)
+{
     try {
         if (_closing.load(std::memory_order_acquire)) return;
         if (level == LogLevel::DEBUG_L && !isDebugMode()) return;
@@ -51,7 +54,8 @@ void Logger::log(const std::string& message, LogLevel level,
     }
 }
 
-std::string Logger::getTimestamp() const {
+std::string Logger::getTimestamp() const
+{
     std::time_t now = std::time(nullptr);
     std::tm tm_buf{};
 
@@ -66,7 +70,8 @@ std::string Logger::getTimestamp() const {
     return buf;
 }
 
-constexpr const char* Logger::logLevelToString(LogLevel level) {
+constexpr const char* Logger::logLevelToString(LogLevel level)
+{
     switch (level) {
         case LogLevel::DEBUG_L:
             return "DEBUG";
@@ -83,7 +88,8 @@ constexpr const char* Logger::logLevelToString(LogLevel level) {
     }
 }
 
-bool Logger::isDebugMode() const {
+bool Logger::isDebugMode() const
+{
 #ifdef DEBUG
     return true;
 #else

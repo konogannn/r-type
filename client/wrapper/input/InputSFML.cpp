@@ -13,23 +13,28 @@ namespace rtype {
 
 InputSFML::InputSFML(WindowSFML& window) : _window(window) {}
 
-bool InputSFML::isKeyPressed(Key key) const {
+bool InputSFML::isKeyPressed(Key key) const
+{
     return sf::Keyboard::isKeyPressed(convertKey(key));
 }
 
-bool InputSFML::isMouseButtonPressed(MouseButton button) const {
+bool InputSFML::isMouseButtonPressed(MouseButton button) const
+{
     return sf::Mouse::isButtonPressed(convertMouseButton(button));
 }
 
-int InputSFML::getMouseX() const {
+int InputSFML::getMouseX() const
+{
     return sf::Mouse::getPosition(_window.getSFMLWindow()).x;
 }
 
-int InputSFML::getMouseY() const {
+int InputSFML::getMouseY() const
+{
     return sf::Mouse::getPosition(_window.getSFMLWindow()).y;
 }
 
-sf::Keyboard::Key InputSFML::convertKey(Key key) const {
+sf::Keyboard::Key InputSFML::convertKey(Key key) const
+{
     switch (key) {
         case Key::A:
             return sf::Keyboard::A;
@@ -136,7 +141,8 @@ sf::Keyboard::Key InputSFML::convertKey(Key key) const {
     }
 }
 
-sf::Mouse::Button InputSFML::convertMouseButton(MouseButton button) const {
+sf::Mouse::Button InputSFML::convertMouseButton(MouseButton button) const
+{
     switch (button) {
         case MouseButton::Left:
             return sf::Mouse::Left;

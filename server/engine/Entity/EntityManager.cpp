@@ -13,7 +13,8 @@ namespace engine {
 
 EntityManager::EntityManager() : _nextEntityId(1) {}
 
-Entity EntityManager::createEntity() {
+Entity EntityManager::createEntity()
+{
     EntityId id = getNextEntityId();
 
     ArchetypeId archetypeId = _componentManager.getEmptyArchetypeId();
@@ -25,7 +26,8 @@ Entity EntityManager::createEntity() {
     return entity;
 }
 
-Entity EntityManager::createEntityInArchetype(ArchetypeId archetypeId) {
+Entity EntityManager::createEntityInArchetype(ArchetypeId archetypeId)
+{
     EntityId id = getNextEntityId();
 
     uint32_t index = _componentManager.addEntityToArchetype(id, archetypeId);
@@ -36,7 +38,8 @@ Entity EntityManager::createEntityInArchetype(ArchetypeId archetypeId) {
     return entity;
 }
 
-void EntityManager::destroyEntity(Entity &entity) {
+void EntityManager::destroyEntity(Entity &entity)
+{
     if (!entity.isValid()) {
         return;
     }
@@ -64,14 +67,16 @@ void EntityManager::destroyEntity(Entity &entity) {
     _availableIds.push(id);
 }
 
-void EntityManager::destroyEntity(EntityId entityId) {
+void EntityManager::destroyEntity(EntityId entityId)
+{
     auto it = _entities.find(entityId);
     if (it != _entities.end()) {
         destroyEntity(it->second);
     }
 }
 
-Entity *EntityManager::getEntity(EntityId entityId) {
+Entity *EntityManager::getEntity(EntityId entityId)
+{
     auto it = _entities.find(entityId);
     if (it != _entities.end()) {
         return &it->second;
@@ -79,7 +84,8 @@ Entity *EntityManager::getEntity(EntityId entityId) {
     return nullptr;
 }
 
-bool EntityManager::isEntityValid(const Entity &entity) const {
+bool EntityManager::isEntityValid(const Entity &entity) const
+{
     if (!entity.isValid() || !entity.isActive()) {
         return false;
     }
@@ -88,7 +94,8 @@ bool EntityManager::isEntityValid(const Entity &entity) const {
 
 size_t EntityManager::getEntityCount() const { return _entities.size(); }
 
-std::vector<Entity> EntityManager::getAllEntities() {
+std::vector<Entity> EntityManager::getAllEntities()
+{
     std::vector<Entity> result;
     result.reserve(_entities.size());
     for (const auto &[id, entity] : _entities) {
@@ -99,7 +106,8 @@ std::vector<Entity> EntityManager::getAllEntities() {
     return result;
 }
 
-void EntityManager::clear() {
+void EntityManager::clear()
+{
     _entities.clear();
     while (!_availableIds.empty()) {
         _availableIds.pop();
@@ -108,15 +116,18 @@ void EntityManager::clear() {
     _componentManager.clear();
 }
 
-ComponentManager &EntityManager::getComponentManager() {
+ComponentManager &EntityManager::getComponentManager()
+{
     return _componentManager;
 }
 
-const ComponentManager &EntityManager::getComponentManager() const {
+const ComponentManager &EntityManager::getComponentManager() const
+{
     return _componentManager;
 }
 
-EntityId EntityManager::getNextEntityId() {
+EntityId EntityManager::getNextEntityId()
+{
     if (!_availableIds.empty()) {
         EntityId id = _availableIds.front();
         _availableIds.pop();

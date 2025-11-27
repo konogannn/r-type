@@ -17,13 +17,16 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
                                                  title)),
       _deltaTime(0.0f),
       _width(width),
-      _height(height) {}
+      _height(height)
+{
+}
 
 bool WindowSFML::isOpen() const { return _window->isOpen(); }
 
 bool WindowSFML::pollEvent() { return _window->pollEvent(_lastEvent); }
 
-EventType WindowSFML::getEventType() const {
+EventType WindowSFML::getEventType() const
+{
     switch (_lastEvent.type) {
         case sf::Event::Closed:
             return EventType::Closed;
@@ -44,7 +47,8 @@ EventType WindowSFML::getEventType() const {
     }
 }
 
-MouseButton WindowSFML::getEventMouseButton() const {
+MouseButton WindowSFML::getEventMouseButton() const
+{
     if (_lastEvent.type == sf::Event::MouseButtonPressed ||
         _lastEvent.type == sf::Event::MouseButtonReleased) {
         switch (_lastEvent.mouseButton.button) {
@@ -61,7 +65,8 @@ MouseButton WindowSFML::getEventMouseButton() const {
     return MouseButton::Unknown;
 }
 
-std::pair<int, int> WindowSFML::getEventMousePosition() const {
+std::pair<int, int> WindowSFML::getEventMousePosition() const
+{
     if (_lastEvent.type == sf::Event::MouseButtonPressed ||
         _lastEvent.type == sf::Event::MouseButtonReleased ||
         _lastEvent.type == sf::Event::MouseMoved) {
@@ -74,7 +79,8 @@ std::pair<int, int> WindowSFML::getEventMousePosition() const {
     return {0, 0};
 }
 
-void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b) {
+void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b)
+{
     _window->clear(sf::Color(r, g, b));
 }
 
@@ -86,11 +92,13 @@ unsigned int WindowSFML::getWidth() const { return _width; }
 
 unsigned int WindowSFML::getHeight() const { return _height; }
 
-void WindowSFML::setFramerateLimit(unsigned int fps) {
+void WindowSFML::setFramerateLimit(unsigned int fps)
+{
     _window->setFramerateLimit(fps);
 }
 
-float WindowSFML::getDeltaTime() {
+float WindowSFML::getDeltaTime()
+{
     _deltaTime = _clock.restart().asSeconds();
     return _deltaTime;
 }

@@ -16,7 +16,8 @@
 
 using namespace rtype;
 
-int main() {
+int main()
+{
     auto window =
         std::make_unique<WindowSFML>(800, 600, "R-Type - SFML Wrapper POC");
 

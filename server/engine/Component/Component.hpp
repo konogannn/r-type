@@ -38,11 +38,13 @@ class Component {
 template <typename T>
 class ComponentBase : public Component {
    public:
-    std::type_index getType() const override {
+    std::type_index getType() const override
+    {
         return std::type_index(typeid(T));
     }
 
-    std::unique_ptr<Component> clone() const override {
+    std::unique_ptr<Component> clone() const override
+    {
         return std::make_unique<T>(static_cast<const T &>(*this));
     }
 
@@ -50,7 +52,8 @@ class ComponentBase : public Component {
      * @brief Get the static type index for this component type
      * @return std::type_index representing the component type
      */
-    static std::type_index getStaticType() {
+    static std::type_index getStaticType()
+    {
         return std::type_index(typeid(T));
     }
 };

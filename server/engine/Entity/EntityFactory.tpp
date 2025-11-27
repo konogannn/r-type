@@ -15,7 +15,8 @@
 namespace engine {
 
 template <typename... Components>
-size_t EntityFactory::getTypeHash() {
+size_t EntityFactory::getTypeHash()
+{
     size_t hash = 0;
     std::vector<std::type_index> types = {
         std::type_index(typeid(Components))...};
@@ -32,7 +33,8 @@ size_t EntityFactory::getTypeHash() {
 }
 
 template <typename... Components>
-Entity EntityFactory::create(Components&&... components) {
+Entity EntityFactory::create(Components&&... components)
+{
     size_t typeHash = getTypeHash<Components...>();
     ArchetypeId archetypeId;
 
@@ -53,7 +55,8 @@ Entity EntityFactory::create(Components&&... components) {
 
 template <typename... Components, typename... ComponentFactories>
 std::vector<Entity> EntityFactory::createBatch(
-    size_t count, ComponentFactories&&... factories) {
+    size_t count, ComponentFactories&&... factories)
+{
     std::vector<Entity> entities;
     entities.reserve(count);
 
@@ -78,7 +81,8 @@ std::vector<Entity> EntityFactory::createBatch(
 }
 
 template <typename... Components>
-auto EntityFactory::defineArchetype() {
+auto EntityFactory::defineArchetype()
+{
     size_t typeHash = getTypeHash<Components...>();
     ArchetypeId archetypeId =
         _entityManager.getOrCreateArchetype<Components...>();
@@ -92,7 +96,8 @@ auto EntityFactory::defineArchetype() {
 }
 
 template <typename T>
-void EntityFactory::setComponentHelper(Entity& entity, T&& component) {
+void EntityFactory::setComponentHelper(Entity& entity, T&& component)
+{
     _entityManager.setComponent(entity, std::forward<T>(component));
 }
 

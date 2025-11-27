@@ -14,7 +14,8 @@
 namespace engine {
 
 template <typename T>
-void EntityManager::addComponent(Entity& entity, T&& component) {
+void EntityManager::addComponent(Entity& entity, T&& component)
+{
     static_assert(std::is_base_of<Component, T>::value,
                   "T must derive from Component");
 
@@ -56,7 +57,8 @@ void EntityManager::addComponent(Entity& entity, T&& component) {
 }
 
 template <typename T>
-void EntityManager::removeComponent(Entity& entity) {
+void EntityManager::removeComponent(Entity& entity)
+{
     static_assert(std::is_base_of<Component, T>::value,
                   "T must derive from Component");
 
@@ -95,7 +97,8 @@ void EntityManager::removeComponent(Entity& entity) {
 }
 
 template <typename T>
-T* EntityManager::getComponent(const Entity& entity) {
+T* EntityManager::getComponent(const Entity& entity)
+{
     if (!isEntityValid(entity)) {
         return nullptr;
     }
@@ -105,7 +108,8 @@ T* EntityManager::getComponent(const Entity& entity) {
 }
 
 template <typename T>
-bool EntityManager::hasComponent(const Entity& entity) {
+bool EntityManager::hasComponent(const Entity& entity)
+{
     if (!isEntityValid(entity)) {
         return false;
     }
@@ -114,7 +118,8 @@ bool EntityManager::hasComponent(const Entity& entity) {
 }
 
 template <typename... Components>
-std::vector<Entity> EntityManager::getEntitiesWith() {
+std::vector<Entity> EntityManager::getEntitiesWith()
+{
     std::vector<Entity> result;
 
     ArchetypeSignature signature;
@@ -137,7 +142,8 @@ std::vector<Entity> EntityManager::getEntitiesWith() {
 }
 
 template <typename... Components, typename Func>
-void EntityManager::forEach(Func&& func) {
+void EntityManager::forEach(Func&& func)
+{
     ArchetypeSignature signature;
     (signature.addType(std::type_index(typeid(Components))), ...);
 
@@ -165,7 +171,8 @@ void EntityManager::forEach(Func&& func) {
 }
 
 template <typename... Components>
-ArchetypeId EntityManager::getOrCreateArchetype() {
+ArchetypeId EntityManager::getOrCreateArchetype()
+{
     ArchetypeSignature signature;
     (signature.addType(std::type_index(typeid(Components))), ...);
 
@@ -173,7 +180,8 @@ ArchetypeId EntityManager::getOrCreateArchetype() {
 }
 
 template <typename T>
-void EntityManager::setComponent(Entity& entity, T&& component) {
+void EntityManager::setComponent(Entity& entity, T&& component)
+{
     static_assert(std::is_base_of<Component, T>::value,
                   "T must derive from Component");
 
