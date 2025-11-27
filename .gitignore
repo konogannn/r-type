@@ -16,6 +16,7 @@ vcpkg_installed/
 .vcpkg-root
 
 # Compiled executables
+lib
 r-type-client
 r-type-server
 *.exe
