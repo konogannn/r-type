@@ -107,6 +107,10 @@ uint8_t NetworkMessage::getOpCode(const void* data, size_t dataSize) {
 }
 
 std::string NetworkMessage::inputMaskToString(uint8_t inputMask) {
+    if (inputMask == 0) {
+        return "NONE";
+    }
+
     std::vector<std::string> inputs;
 
     if (inputMask & InputMask::UP) {
@@ -123,10 +127,6 @@ std::string NetworkMessage::inputMaskToString(uint8_t inputMask) {
     }
     if (inputMask & InputMask::SHOOT) {
         inputs.push_back("SHOOT");
-    }
-
-    if (inputs.empty()) {
-        return "NONE";
     }
 
     std::ostringstream oss;
