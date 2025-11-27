@@ -51,8 +51,7 @@ void EntityManager::addComponent(Entity& entity, T&& component) {
     entity.setIndexInArchetype(newIndex);
     _entities[entity.getId()] = entity;
 
-    _componentManager.addComponent(entity.getId(), newArchetypeId, newIndex,
-                                   std::forward<T>(component));
+    _componentManager.addComponent(newArchetypeId, newIndex, std::forward<T>(component));
 }
 
 template <typename T>
@@ -164,9 +163,7 @@ void EntityManager::setComponent(Entity& entity, T&& component) {
         throw std::runtime_error("Invalid entity");
     }
 
-    _componentManager.addComponent(entity.getId(), entity.getArchetypeId(),
-                                   entity.getIndexInArchetype(),
-                                   std::forward<T>(component));
+    _componentManager.addComponent(entity.getArchetypeId(), entity.getIndexInArchetype(), std::forward<T>(component));
 }
 
 }  // namespace engine
