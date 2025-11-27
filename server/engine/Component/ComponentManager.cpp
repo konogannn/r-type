@@ -173,8 +173,13 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
                 clonedComponents.push_back(nullptr);
             }
         }
+    } catch (...) {
+        throw std::runtime_error("Failed to clone components during move");
+    }
 
-        uint32_t newIndex = toArchetype->addEntity(entityId);
+    uint32_t newIndex;
+    try {
+        newIndex = toArchetype->addEntity(entityId);
 
         size_t componentIndex = 0;
         for (const auto& type : toArchetype->signature.getTypes()) {
@@ -185,12 +190,25 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
             }
             componentIndex++;
         }
-
-        fromArchetype->removeEntity(fromIndex);
-        return newIndex;
     } catch (...) {
-        throw std::runtime_error("Failed to move entity between archetypes");
+        if (newIndex < toArchetype->entities.size() &&
+            toArchetype->entities[newIndex] == entityId) {
+            toArchetype->removeEntity(newIndex);
+        }
+        throw std::runtime_error(
+            "Failed to add entity to new archetype during move");
     }
+
+    try {
+        fromArchetype->removeEntity(fromIndex);
+    } catch (...) {
+        toArchetype->removeEntity(newIndex);
+        throw std::runtime_error(
+            "Failed to remove entity from old archetype during move - state "
+            "rolled back");
+    }
+
+    return newIndex;
 }
 
 const std::vector<EntityId>& ComponentManager::getEntitiesInArchetype(
