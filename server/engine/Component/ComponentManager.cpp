@@ -14,9 +14,9 @@ namespace engine {
 ComponentManager::ComponentArray::ComponentArray(std::type_index t) : type(t) {}
 
 ComponentManager::Archetype::Archetype(ArchetypeId archetypeId,
-                                       const ArchetypeSignature &sig)
+                                       const ArchetypeSignature& sig)
     : id(archetypeId), signature(sig) {
-    for (const auto &type : sig.getTypes()) {
+    for (const auto& type : sig.getTypes()) {
         componentArrays.emplace(type, ComponentArray(type));
     }
 }
@@ -27,28 +27,32 @@ uint32_t ComponentManager::Archetype::addEntity(EntityId entityId) {
 }
 
 EntityId ComponentManager::Archetype::removeEntity(uint32_t index) {
-    if (index >= entities.size()) {
+    if (index >= entities.size() || entities.empty()) {
         return NULL_ENTITY;
     }
 
+    for (const auto& [type, array] : componentArrays) {
+        if (array.components.size() != entities.size()) {
+            throw std::runtime_error(
+                "Component array size mismatch with entities in removeEntity");
+        }
+    }
+
     EntityId movedEntity = NULL_ENTITY;
+
     if (index < entities.size() - 1) {
         movedEntity = entities.back();
         entities[index] = movedEntity;
-
-        for (auto &[type, array] : componentArrays) {
-            if (index < array.components.size() - 1) {
-                array.components[index] = std::move(array.components.back());
-            }
-            array.components.pop_back();
-        }
-    } else {
-        for (auto &[type, array] : componentArrays) {
-            array.components.pop_back();
+        for (auto& [type, array] : componentArrays) {
+            array.components[index] = std::move(array.components.back());
         }
     }
 
     entities.pop_back();
+    for (auto& [type, array] : componentArrays) {
+        array.components.pop_back();
+    }
+
     return movedEntity;
 }
 
@@ -56,7 +60,7 @@ bool ComponentManager::Archetype::hasComponent(std::type_index type) const {
     return componentArrays.find(type) != componentArrays.end();
 }
 
-Component *ComponentManager::Archetype::getComponent(std::type_index type,
+Component* ComponentManager::Archetype::getComponent(std::type_index type,
                                                      uint32_t index) {
     auto it = componentArrays.find(type);
     if (it == componentArrays.end() || index >= it->second.components.size()) {
@@ -74,7 +78,7 @@ void ComponentManager::Archetype::addComponent(
             "Component type not found in archetype signature");
     }
 
-    auto &array = it->second.components;
+    auto& array = it->second.components;
     if (index < array.size()) {
         array[index] = std::move(component);
     } else if (index == array.size()) {
@@ -90,7 +94,7 @@ ComponentManager::ComponentManager()
 }
 
 ArchetypeId ComponentManager::getOrCreateArchetype(
-    const ArchetypeSignature &signature) {
+    const ArchetypeSignature& signature) {
     auto it = _signatureToArchetype.find(signature);
 
     if (it != _signatureToArchetype.end()) {
@@ -100,7 +104,7 @@ ArchetypeId ComponentManager::getOrCreateArchetype(
 }
 
 ArchetypeId ComponentManager::createArchetype(
-    const ArchetypeSignature &signature) {
+    const ArchetypeSignature& signature) {
     ArchetypeId id = _nextArchetypeId++;
     auto archetype = std::make_unique<Archetype>(id, signature);
 
@@ -112,7 +116,7 @@ ArchetypeId ComponentManager::createArchetype(
     return id;
 }
 
-ComponentManager::Archetype *ComponentManager::getArchetype(
+ComponentManager::Archetype* ComponentManager::getArchetype(
     ArchetypeId archetypeId) {
     auto it = _archetypeIdToIndex.find(archetypeId);
     if (it == _archetypeIdToIndex.end()) {
@@ -127,7 +131,7 @@ ArchetypeId ComponentManager::getEmptyArchetypeId() const {
 
 uint32_t ComponentManager::addEntityToArchetype(EntityId entityId,
                                                 ArchetypeId archetypeId) {
-    Archetype *archetype = getArchetype(archetypeId);
+    Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         throw std::runtime_error("Invalid archetype ID");
     }
@@ -136,7 +140,7 @@ uint32_t ComponentManager::addEntityToArchetype(EntityId entityId,
 
 EntityId ComponentManager::removeEntityFromArchetype(ArchetypeId archetypeId,
                                                      uint32_t index) {
-    Archetype *archetype = getArchetype(archetypeId);
+    Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         return NULL_ENTITY;
     }
@@ -146,8 +150,8 @@ EntityId ComponentManager::removeEntityFromArchetype(ArchetypeId archetypeId,
 uint32_t ComponentManager::moveEntityBetweenArchetypes(
     EntityId entityId, ArchetypeId fromArchetypeId, uint32_t fromIndex,
     ArchetypeId toArchetypeId) {
-    Archetype *fromArchetype = getArchetype(fromArchetypeId);
-    Archetype *toArchetype = getArchetype(toArchetypeId);
+    Archetype* fromArchetype = getArchetype(fromArchetypeId);
+    Archetype* toArchetype = getArchetype(toArchetypeId);
 
     if (!fromArchetype || !toArchetype) {
         throw std::runtime_error("Invalid archetype ID in move operation");
@@ -157,9 +161,9 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
     clonedComponents.reserve(toArchetype->signature.getTypes().size());
 
     try {
-        for (const auto &type : toArchetype->signature.getTypes()) {
+        for (const auto& type : toArchetype->signature.getTypes()) {
             if (fromArchetype->hasComponent(type)) {
-                Component *comp = fromArchetype->getComponent(type, fromIndex);
+                Component* comp = fromArchetype->getComponent(type, fromIndex);
                 if (comp) {
                     clonedComponents.push_back(comp->clone());
                 } else {
@@ -173,7 +177,7 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
         uint32_t newIndex = toArchetype->addEntity(entityId);
 
         size_t componentIndex = 0;
-        for (const auto &type : toArchetype->signature.getTypes()) {
+        for (const auto& type : toArchetype->signature.getTypes()) {
             if (clonedComponents[componentIndex]) {
                 toArchetype->addComponent(
                     type, std::move(clonedComponents[componentIndex]),
@@ -189,33 +193,32 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
     }
 }
 
-const std::vector<EntityId> &ComponentManager::getEntitiesInArchetype(
+const std::vector<EntityId>& ComponentManager::getEntitiesInArchetype(
     ArchetypeId archetypeId) {
-    Archetype *archetype = getArchetype(archetypeId);
+    Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         throw std::runtime_error("Invalid archetype ID");
     }
     return archetype->entities;
 }
 
-std::vector<ComponentManager::Archetype *>
-ComponentManager::getAllArchetypes() {
-    std::vector<Archetype *> result;
+std::vector<ComponentManager::Archetype*> ComponentManager::getAllArchetypes() {
+    std::vector<Archetype*> result;
     result.reserve(_archetypes.size());
-    for (auto &archetype : _archetypes) {
+    for (auto& archetype : _archetypes) {
         result.push_back(archetype.get());
     }
     return result;
 }
 
-std::vector<ComponentManager::Archetype *>
+std::vector<ComponentManager::Archetype*>
 ComponentManager::getArchetypesWithComponents(
-    const ArchetypeSignature &signature) {
-    std::vector<Archetype *> result;
+    const ArchetypeSignature& signature) {
+    std::vector<Archetype*> result;
 
-    for (auto &archetype : _archetypes) {
+    for (auto& archetype : _archetypes) {
         bool matches = true;
-        for (const auto &type : signature.getTypes()) {
+        for (const auto& type : signature.getTypes()) {
             if (!archetype->hasComponent(type)) {
                 matches = false;
                 break;
