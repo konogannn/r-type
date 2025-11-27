@@ -26,23 +26,23 @@ void EntityManager::addComponent(Entity& entity, T&& component) {
         throw std::runtime_error("Entity already has this component type");
     }
 
+    ArchetypeId oldArchetypeId = entity.getArchetypeId();
+    uint32_t oldIndex = entity.getIndexInArchetype();
+
     ArchetypeId newArchetypeId =
-        _componentManager.getArchetypeWithAddedComponent<T>(
-            entity.getArchetypeId());
+        _componentManager.getArchetypeWithAddedComponent<T>(oldArchetypeId);
 
     uint32_t newIndex = _componentManager.moveEntityBetweenArchetypes(
-        entity.getId(), entity.getArchetypeId(), entity.getIndexInArchetype(),
-        newArchetypeId);
+        entity.getId(), oldArchetypeId, oldIndex, newArchetypeId);
 
     const auto& oldArchetypeEntities =
-        _componentManager.getEntitiesInArchetype(entity.getArchetypeId());
-    if (entity.getIndexInArchetype() < oldArchetypeEntities.size()) {
-        EntityId movedEntityId =
-            oldArchetypeEntities[entity.getIndexInArchetype()];
+        _componentManager.getEntitiesInArchetype(oldArchetypeId);
+    if (oldIndex < oldArchetypeEntities.size()) {
+        EntityId movedEntityId = oldArchetypeEntities[oldIndex];
         if (movedEntityId != entity.getId()) {
             Entity* movedEntity = getEntity(movedEntityId);
             if (movedEntity) {
-                movedEntity->setIndexInArchetype(entity.getIndexInArchetype());
+                movedEntity->setIndexInArchetype(oldIndex);
             }
         }
     }
@@ -51,7 +51,8 @@ void EntityManager::addComponent(Entity& entity, T&& component) {
     entity.setIndexInArchetype(newIndex);
     _entities[entity.getId()] = entity;
 
-    _componentManager.addComponent(newArchetypeId, newIndex, std::forward<T>(component));
+    _componentManager.addComponent(newArchetypeId, newIndex,
+                                   std::forward<T>(component));
 }
 
 template <typename T>
@@ -67,23 +68,23 @@ void EntityManager::removeComponent(Entity& entity) {
         return;
     }
 
+    ArchetypeId oldArchetypeId = entity.getArchetypeId();
+    uint32_t oldIndex = entity.getIndexInArchetype();
+
     ArchetypeId newArchetypeId =
-        _componentManager.getArchetypeWithRemovedComponent<T>(
-            entity.getArchetypeId());
+        _componentManager.getArchetypeWithRemovedComponent<T>(oldArchetypeId);
 
     uint32_t newIndex = _componentManager.moveEntityBetweenArchetypes(
-        entity.getId(), entity.getArchetypeId(), entity.getIndexInArchetype(),
-        newArchetypeId);
+        entity.getId(), oldArchetypeId, oldIndex, newArchetypeId);
 
     const auto& oldArchetypeEntities =
-        _componentManager.getEntitiesInArchetype(entity.getArchetypeId());
-    if (entity.getIndexInArchetype() < oldArchetypeEntities.size()) {
-        EntityId movedEntityId =
-            oldArchetypeEntities[entity.getIndexInArchetype()];
+        _componentManager.getEntitiesInArchetype(oldArchetypeId);
+    if (oldIndex < oldArchetypeEntities.size()) {
+        EntityId movedEntityId = oldArchetypeEntities[oldIndex];
         if (movedEntityId != entity.getId()) {
             Entity* movedEntity = getEntity(movedEntityId);
             if (movedEntity) {
-                movedEntity->setIndexInArchetype(entity.getIndexInArchetype());
+                movedEntity->setIndexInArchetype(oldIndex);
             }
         }
     }
@@ -163,7 +164,9 @@ void EntityManager::setComponent(Entity& entity, T&& component) {
         throw std::runtime_error("Invalid entity");
     }
 
-    _componentManager.addComponent(entity.getArchetypeId(), entity.getIndexInArchetype(), std::forward<T>(component));
+    _componentManager.addComponent(entity.getArchetypeId(),
+                                   entity.getIndexInArchetype(),
+                                   std::forward<T>(component));
 }
 
 }  // namespace engine
