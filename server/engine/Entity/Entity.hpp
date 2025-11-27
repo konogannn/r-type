@@ -126,21 +126,21 @@ class Entity {
      * @param other The entity to compare with
      * @return true if entities have the same ID
      */
-    bool operator==(const Entity &other) const;
+    bool operator==(const Entity& other) const;
 
     /**
      * @brief Inequality operator
      * @param other The entity to compare with
      * @return true if entities have different IDs
      */
-    bool operator!=(const Entity &other) const;
+    bool operator!=(const Entity& other) const;
 
     /**
      * @brief Less-than operator for ordering
      * @param other The entity to compare with
      * @return true if this entity's ID is less than other's ID
      */
-    bool operator<(const Entity &other) const;
+    bool operator<(const Entity& other) const;
 };
 
 /**
@@ -165,7 +165,7 @@ class ArchetypeSignature {
      * @brief Constructor with component types
      * @param types Vector of type indices representing component types
      */
-    explicit ArchetypeSignature(const std::vector<std::type_index> &types);
+    explicit ArchetypeSignature(const std::vector<std::type_index>& types);
 
     /**
      * @brief Add a component type to the signature
@@ -190,7 +190,7 @@ class ArchetypeSignature {
      * @brief Get all component types in this signature
      * @return const reference to vector of type indices
      */
-    const std::vector<std::type_index> &getTypes() const;
+    const std::vector<std::type_index>& getTypes() const;
 
     /**
      * @brief Get the number of component types
@@ -214,21 +214,21 @@ class ArchetypeSignature {
      * @param other The signature to compare with
      * @return true if signatures contain the same component types
      */
-    bool operator==(const ArchetypeSignature &other) const;
+    bool operator==(const ArchetypeSignature& other) const;
 
     /**
      * @brief Inequality operator
      * @param other The signature to compare with
      * @return true if signatures differ
      */
-    bool operator!=(const ArchetypeSignature &other) const;
+    bool operator!=(const ArchetypeSignature& other) const;
 
     /**
      * @brief Less-than operator for ordering (used in maps)
      * @param other The signature to compare with
      * @return true if this signature is less than other
      */
-    bool operator<(const ArchetypeSignature &other) const;
+    bool operator<(const ArchetypeSignature& other) const;
 };
 
 }  // namespace engine
@@ -236,11 +236,16 @@ class ArchetypeSignature {
 namespace std {
 template <>
 struct hash<engine::ArchetypeSignature> {
-    size_t operator()(const engine::ArchetypeSignature &signature) const {
+    size_t operator()(const engine::ArchetypeSignature& signature) const {
         size_t result = 0;
-        for (const auto &type : signature.getTypes()) {
+
+        constexpr size_t kGoldenRatio =
+            sizeof(size_t) == 8 ? 0x9e3779b97f4a7c15ULL  // 64-bit golden ratio
+                                : 0x9e3779b9UL;          // 32-bit golden ratio
+
+        for (const auto& type : signature.getTypes()) {
             result ^=
-                type.hash_code() + 0x9e3779b9 + (result << 6) + (result >> 2);
+                type.hash_code() + kGoldenRatio + (result << 6) + (result >> 2);
         }
         return result;
     }
