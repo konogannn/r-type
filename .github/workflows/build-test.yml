@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Check if we are in the mirrored repository
         id: new
@@ -37,41 +35,48 @@ jobs:
   build:
     needs: check_repository
     if: ${{ needs.check_repository.outputs.target == 0 }}
-    name: Build and Test
+    name: ${{ matrix.os }} - ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
-
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
         include:
           - os: windows-latest
-            cpp_compiler: cl
+            vcpkg_triplet: x64-windows
           - os: ubuntu-latest
-            cpp_compiler: g++
+            vcpkg_triplet: x64-linux
+
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+      - name: Get CMake and Ninja
+        uses: lukka/get-cmake@latest
 
-    - name: Configure CMake
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/vcpkg
+          vcpkgJsonGlob: 'vcpkg.json'
+          runVcpkgInstall: false
 
-    - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      - name: Run CMake with Presets
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          configurePreset: 'ci-${{ (matrix.build_type == "Release") && "release" || "debug" }}'
+          buildPreset: 'ci-${{ (matrix.build_type == "Release") && "release" || "debug" }}-build'
 
-    # - name: Test
-    #   if: ${{ matrix.os == 'ubuntu-latest' }}
-    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
-    #   run: ctest --build-config ${{ matrix.build_type }}
+      # - name: Run Tests
+      #   uses: lukka/run-cmake@v10
+      #   with:
+      #     testPreset: 'ci-tests'
