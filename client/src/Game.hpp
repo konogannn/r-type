@@ -19,8 +19,7 @@
 #include "Projectile.hpp"
 
 /**
- * @brief Classe principale du jeu - Game loop, update, render (utilise le
- * wrapper)
+ * @brief Main game class - Game loop, update, render (uses the wrapper)
  */
 class Game {
    public:
