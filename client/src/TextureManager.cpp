@@ -40,17 +40,6 @@ rtype::ISprite* TextureManager::getSprite(const std::string& id) {
     return nullptr;
 }
 
-std::unique_ptr<rtype::SpriteSFML> TextureManager::createClone(
-    const std::string& id) {
-    auto* original = getSprite(id);
-    if (!original) {
-        return nullptr;
-    }
-
-    auto clone = std::make_unique<rtype::SpriteSFML>();
-    return clone;
-}
-
 void TextureManager::loadAll() {
     loadSprite("bg_back", "assets/background/bg-back.png", false);
     loadSprite("bg_stars", "assets/background/bg-stars.png", false);
