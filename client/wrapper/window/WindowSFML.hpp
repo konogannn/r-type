@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** WindowSFML - SFML implementation
+** WindowSFML
 */
 
 #pragma once
