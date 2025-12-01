@@ -12,7 +12,7 @@
 #include "../wrapper/graphics/Sprite.hpp"
 
 /**
- * @brief Ennemi boss avec animation (5 frames, 48x48) - utilise le wrapper
+ * @brief Boss enemy with animation (5 frames, 48x48) - uses the wrapper
  */
 class Enemy {
    public:
