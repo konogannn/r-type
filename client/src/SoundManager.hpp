@@ -5,8 +5,7 @@
 ** SoundManager - Gestionnaire de sons du jeu
 */
 
-#ifndef SOUNDMANAGER_HPP_
-#define SOUNDMANAGER_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -15,29 +14,29 @@
 #include "../wrapper/SoundSFML.hpp"
 
 /**
- * @brief Singleton pour gérer les sons du jeu
+ * @brief Singleton to manage game sounds
  */
 class SoundManager {
    public:
     /**
-     * @brief Récupère l'instance unique du manager
+     * @brief Gets the unique instance of the manager
      */
     static SoundManager& getInstance();
 
     /**
-     * @brief Charge tous les sons du jeu
+     * @brief Loads all game sounds
      */
     void loadAll();
 
     /**
-     * @brief Joue un son par son nom
-     * @param name Nom du son (shot, hit, explosion)
+     * @brief Plays a sound by its name
+     * @param name Name of the sound (shot, hit, explosion)
      */
     void playSound(const std::string& name);
 
     /**
-     * @brief Définit le volume global
-     * @param volume Volume entre 0.0f et 100.0f
+     * @brief Sets the global volume
+     * @param volume Volume between 0.0f and 100.0f
      */
     void setVolume(float volume);
 
@@ -54,5 +53,3 @@ class SoundManager {
     std::unordered_map<std::string, std::unique_ptr<rtype::SoundSFML>> _sounds;
     float _volume = 50.0f;
 };
-
-#endif /* !SOUNDMANAGER_HPP_ */
