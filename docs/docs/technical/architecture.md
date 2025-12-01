@@ -1,4 +1,11 @@
-# R-Type Project Architecture
+---
+id: architecture
+title: Architecture
+description: An overview of the R-Type architecture
+sidebar_position: 3
+---
+
+# R-Type Architecture
 
 This document describes the architecture and organization of the R-Type project.
 
@@ -25,6 +32,7 @@ The R-Type project follows a **client-server architecture** with a clear separat
     └─────────────┘                └─────────────┘
 ```
 
+
 ---
 
 ## 📁 Module Structure
@@ -37,7 +45,7 @@ The R-Type project follows a **client-server architecture** with a clear separat
 ```
 client/
 ├── CMakeLists.txt          # Client build configuration
-├── src/                    # Client source files (future)
+├── src/                    # Client source files
 └── wrapper/                # SFML abstraction layer
     ├── window/             # Window management (IWindow)
     ├── graphics/           # Rendering (IGraphics, ISprite)
@@ -69,8 +77,8 @@ server/
 └── engine/                 # Game engine (core systems)
     ├── CMakeLists.txt      # Engine build configuration
     └── src/                # Engine source files
-        ├── ecs/            # Entity-Component-System (future)
-        ├── physics/        # Physics engine (future)
+        ├── ecs/            # Entity-Component-System
+        ├── physics/        # Physics engine
         └── ...             # Other engine systems
 ```
 
@@ -149,16 +157,9 @@ R-Type Approach (USED):
      Clean separation
 ```
 
-### Why No Common Module?
+### Common Module is coming
 
-We removed the `common/` module because:
-
-1. **YAGNI Principle:** "You Aren't Gonna Need It" - no shared code yet
-2. **Simplicity:** Fewer modules = easier to understand
-3. **Flexibility:** Can add it later when actually needed
-4. **Clear Ownership:** All logic belongs to either client or server
-
-**Future Consideration:** If we need shared code (e.g., network protocol definitions), we can add:
+The `common/` module stands for shared files:
 ```
 common/
 ├── protocol/      # Network message definitions
@@ -186,52 +187,13 @@ common/
         └──► Client renders new frame
 ```
 
-### Network Protocol (Future)
-
-```
-Client ──► Server
-    ┌─────────────────────┐
-    │ INPUT_MESSAGE       │
-    │ - Player ID         │
-    │ - Input type        │
-    │ - Timestamp         │
-    └─────────────────────┘
-
-Server ──► Client
-    ┌─────────────────────┐
-    │ STATE_MESSAGE       │
-    │ - Game entities     │
-    │ - Positions         │
-    │ - Velocities        │
-    │ - Timestamp         │
-    └─────────────────────┘
-```
-
 ---
-
-## 🛠️ Build System
-
-### CMake Structure
-
-```
-CMakeLists.txt (root)
-    ├── Sets global C++ standard (C++17)
-    ├── Defines compiler flags (MSVC/GCC)
-    ├── Configures output directories
-    └── Includes subdirectories
-        ├── client/CMakeLists.txt
-        │   ├── Manages SFML dependency
-        │   └── Builds r-type-client executable
-        └── server/CMakeLists.txt
-            ├── Includes engine/CMakeLists.txt
-            └── Builds r-type-server executable (future)
-```
 
 ### Dependency Management
 
 - **System SFML:** Used if available (faster builds)
 - **FetchContent:** Automatic SFML download if not found
-- **Cross-platform:** Works on Linux, Windows, macOS
+- **Cross-platform:** Works on Linux, Windows
 
 ---
 
@@ -320,24 +282,6 @@ class MovementSystem {
 - ✅ Server determines game outcomes
 - ❌ Client cannot cheat by modifying state
 
-### Input Validation
-
-```cpp
-// Server side
-void Server::handleInput(PlayerInput input) {
-    // Validate input
-    if (!isValidInput(input)) {
-        logSuspiciousActivity(input.playerId);
-        return;
-    }
-    
-    // Process only if valid
-    engine.processInput(input);
-}
-```
-
----
-
 ## 📊 Performance Considerations
 
 ### Client
@@ -348,61 +292,6 @@ void Server::handleInput(PlayerInput input) {
 
 ### Server
 
-- **Tick Rate:** Fixed update rate (e.g., 60 TPS)
+- **Tick Rate:** Fixed update rate (60 TPS)
 - **Entity Culling:** Only update active entities
 - **Network Optimization:** Delta compression, interpolation
-
----
-
-## 🚀 Future Extensions
-
-### Planned Features
-
-1. **Network Module**
-   - UDP/TCP networking with Asio
-   - Client-server communication protocol
-   - Lag compensation and prediction
-
-2. **ECS System**
-   - Entity manager
-   - Component registry
-   - System scheduler
-
-3. **Physics Engine**
-   - Collision detection (AABB, circle)
-   - Rigid body dynamics
-   - Spatial partitioning (quadtree)
-
-4. **Asset Pipeline**
-   - Asset loading system
-   - Texture atlas generation
-   - Sound mixing
-
-### Potential Common Module
-
-If needed, we can introduce a `common/` module for:
-
-```
-common/
-├── protocol/          # Network message definitions
-│   ├── Messages.hpp
-│   └── Serialization.hpp
-├── math/              # Math utilities
-│   ├── Vector2.hpp
-│   └── Rectangle.hpp
-└── utils/             # General utilities
-    └── Logger.hpp
-```
-
-**When to add:** When we find code duplicated between client and server
-
----
-
-## 📚 References
-
-- [SFML Wrapper Documentation](../doc/SFML_WRAPPER_README.md)
-- [README](../README.md)
-
----
-
-*This architecture document is maintained as the project evolves. Last updated: November 2025*

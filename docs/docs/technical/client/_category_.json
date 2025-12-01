@@ -1,0 +1,9 @@
+{
+  "label": "Technical - Client",
+  "description": "Client-side technical documentation and guides.",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Comprehensive technical documentation for developers and engineers."
+    }
+}
