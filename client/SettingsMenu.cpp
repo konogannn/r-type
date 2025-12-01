@@ -167,8 +167,10 @@ bool SettingsMenu::update() {
             slider.update(mouseX, mouseY, isMousePressed);
         }
     }
-    for (auto& button : _keyBindingButtons) {
-        button.update(mouseX, mouseY, isMousePressed);
+    if (!anyInEditMode) {
+        for (auto& button : _keyBindingButtons) {
+            button.isClicked(mouseX, mouseY, isMousePressed);
+        }
     }
     if (!anyInEditMode) {
         _fullscreenToggle.update(mouseX, mouseY);
