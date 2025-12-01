@@ -1,0 +1,92 @@
+{
+  "version": 6,
+
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default (Debug)",
+      "description": "Local debug build using Ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/default",
+      "architecture": {
+        "value": "x64"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+
+    {
+      "name": "with-vcpkg",
+      "displayName": "Use vcpkg toolchain (if VCPKG_ROOT set)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+
+    {
+      "name": "ci-debug",
+      "displayName": "CI Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/ci-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+
+    {
+      "name": "ci-release",
+      "displayName": "CI Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/ci-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "default-build",
+      "configurePreset": "default"
+    },
+    {
+      "name": "release-build",
+      "configurePreset": "release"
+    },
+    {
+      "name": "vcpkg-build",
+      "configurePreset": "with-vcpkg"
+    },
+    {
+      "name": "ci-debug-build",
+      "configurePreset": "ci-debug"
+    },
+    {
+      "name": "ci-release-build",
+      "configurePreset": "ci-release"
+    }
+  ],
+
+  "testPresets": [
+    {
+      "name": "ci-tests",
+      "configurePreset": "ci-debug"
+    }
+  ]
+}
