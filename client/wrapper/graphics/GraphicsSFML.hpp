@@ -45,6 +45,8 @@ class GraphicsSFML : public IGraphics {
                        const std::string& fontPath) override;
 
    private:
+    sf::Font* loadFont(const std::string& fontPath);
+
     WindowSFML& _window;
     mutable std::map<std::string, sf::Font> _fontCache;
 };

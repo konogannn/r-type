@@ -44,22 +44,30 @@ void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
     _window.getSFMLWindow().draw(circle);
 }
 
-void GraphicsSFML::drawText(const std::string& text, float x, float y,
-                            unsigned int fontSize, unsigned char r,
-                            unsigned char g, unsigned char b,
-                            const std::string& fontPath) {
+sf::Font* GraphicsSFML::loadFont(const std::string& fontPath) {
     if (_fontCache.find(fontPath) == _fontCache.end()) {
         sf::Font font;
         if (!font.loadFromFile(fontPath)) {
             std::cerr << "Error: Failed to load font: " << fontPath
                       << std::endl;
-            return;
+            return nullptr;
         }
         _fontCache[fontPath] = font;
     }
+    return &_fontCache[fontPath];
+}
+
+void GraphicsSFML::drawText(const std::string& text, float x, float y,
+                            unsigned int fontSize, unsigned char r,
+                            unsigned char g, unsigned char b,
+                            const std::string& fontPath) {
+    sf::Font* font = loadFont(fontPath);
+    if (!font) {
+        return;
+    }
 
     sf::Text sfText;
-    sfText.setFont(_fontCache[fontPath]);
+    sfText.setFont(*font);
     sfText.setString(text);
     sfText.setCharacterSize(fontSize);
     sfText.setFillColor(sf::Color(r, g, b));
@@ -70,18 +78,13 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
 
 float GraphicsSFML::getTextWidth(const std::string& text, unsigned int fontSize,
                                  const std::string& fontPath) {
-    if (_fontCache.find(fontPath) == _fontCache.end()) {
-        sf::Font font;
-        if (!font.loadFromFile(fontPath)) {
-            std::cerr << "Error: Failed to load font: " << fontPath
-                      << std::endl;
-            return 0.0f;
-        }
-        _fontCache[fontPath] = font;
+    sf::Font* font = loadFont(fontPath);
+    if (!font) {
+        return 0.0f;
     }
 
     sf::Text sfText;
-    sfText.setFont(_fontCache[fontPath]);
+    sfText.setFont(*font);
     sfText.setString(text);
     sfText.setCharacterSize(fontSize);
 
