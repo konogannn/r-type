@@ -61,6 +61,8 @@ class WindowSFML : public IWindow {
     const sf::Event& getLastEvent() const;
 
    private:
+    void recreateWindow();
+
     std::unique_ptr<sf::RenderWindow> _window;
     sf::Event _lastEvent;
     sf::Clock _clock;

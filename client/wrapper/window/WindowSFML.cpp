@@ -7,6 +7,8 @@
 
 #include "WindowSFML.hpp"
 
+#include <iostream>
+
 #include "../input/Input.hpp"
 
 namespace rtype {
@@ -212,35 +214,34 @@ float WindowSFML::getDeltaTime() {
 }
 
 void WindowSFML::setFullscreen(bool fullscreen) {
-    if (_isFullscreen == fullscreen) return;  // No change needed
+    if (_isFullscreen == fullscreen) return;
 
     _isFullscreen = fullscreen;
-
-    _window->close();
-
-    if (_isFullscreen) {
-        sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
-        _window = std::make_unique<sf::RenderWindow>(desktopMode, _title,
-                                                     sf::Style::Fullscreen);
-        _width = desktopMode.width;
-        _height = desktopMode.height;
-    } else {
-        _window = std::make_unique<sf::RenderWindow>(
-            sf::VideoMode(_windowedWidth, _windowedHeight), _title,
-            sf::Style::Default);
-        _width = _windowedWidth;
-        _height = _windowedHeight;
-    }
-
-    _window->setFramerateLimit(60);
+    recreateWindow();
 }
 
 bool WindowSFML::isFullscreen() const { return _isFullscreen; }
 
 void WindowSFML::setResolution(unsigned int width, unsigned int height) {
+    if (width == 0 || height == 0) {
+        std::cerr << "WindowSFML: Invalid resolution " << width << "x" << height
+                  << ", ignoring" << std::endl;
+        return;
+    }
+
+    if (width > 7680 || height > 4320) {
+        std::cerr << "WindowSFML: Resolution " << width << "x" << height
+                  << " too large, capping to 7680x4320" << std::endl;
+        width = std::min(width, 7680u);
+        height = std::min(height, 4320u);
+    }
+
     _windowedWidth = width;
     _windowedHeight = height;
+    recreateWindow();
+}
 
+void WindowSFML::recreateWindow() {
     _window->close();
 
     if (_isFullscreen) {
