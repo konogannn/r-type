@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** GraphicsSFML - SFML implementation
+** GraphicsSFML
 */
 
 #include "GraphicsSFML.hpp"
@@ -14,14 +14,11 @@
 namespace rtype {
 
 GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {
-    if (!_defaultFont.loadFromFile(
-            "/usr/share/fonts/open-sans/OpenSans-Regular.ttf")) {
-        if (!_defaultFont.loadFromFile(
-                "/usr/share/fonts/google-noto/NotoSans-Regular.ttf")) {
-            std::cerr
-                << "Warning: Could not load default font for text rendering"
-                << std::endl;
-        }
+    if (!_defaultFont.loadFromFile("assets/fonts/Retro_Gaming.ttf")) {
+        std::cerr << "Warning: Could not load default font for text rendering"
+                  << std::endl;
+        std::cerr << "Please ensure assets/fonts/Retro_Gaming.ttf exists"
+                  << std::endl;
     }
 }
 
