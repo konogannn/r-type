@@ -5,7 +5,6 @@
 ** ToggleButton
 */
 
-
 #pragma once
 
 #include <functional>
