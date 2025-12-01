@@ -9,10 +9,10 @@
 #include <memory>
 #include <string>
 
+#include "network/ClientGameState.hpp"
 #include "wrapper/audio/AudioSFML.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/input/InputSFML.hpp"
-#include "wrapper/network/ClientGameState.hpp"
 #include "wrapper/window/WindowSFML.hpp"
 
 using namespace rtype;

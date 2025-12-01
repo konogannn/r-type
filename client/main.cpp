@@ -11,10 +11,10 @@
 #include "AudioSFML.hpp"
 #include "GraphicsSFML.hpp"
 #include "InputSFML.hpp"
-#include "NetworkClientAsio.hpp"
-#include "NetworkMessage.hpp"
 #include "SpriteSFML.hpp"
 #include "WindowSFML.hpp"
+#include "network/NetworkClientAsio.hpp"
+#include "network/NetworkMessage.hpp"
 
 using namespace rtype;
 
