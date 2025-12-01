@@ -32,20 +32,16 @@ bool NetworkClientAsio::connect(const std::string& serverAddress,
     try {
         setState(NetworkState::Connecting);
 
-        // Resolve server address
         boost::asio::ip::udp::resolver resolver(_ioContext);
         auto endpoints = resolver.resolve(serverAddress, std::to_string(port));
         _serverEndpoint = *endpoints.begin();
 
-        // Open socket
         _socket.open(boost::asio::ip::udp::v4());
 
-        // Start network thread
         _running = true;
         _networkThread =
             std::thread(&NetworkClientAsio::runNetworkThread, this);
 
-        // Start receiving
         startReceive();
 
         setState(NetworkState::Connected);
@@ -72,7 +68,6 @@ void NetworkClientAsio::disconnect() {
         return;
     }
 
-    // Send disconnect message if connected
     if (_state == NetworkState::Connected) {
         sendDisconnect();
     }
@@ -195,8 +190,6 @@ void NetworkClientAsio::setOnErrorCallback(OnErrorCallback callback) {
     _onError = callback;
 }
 
-// Private methods
-
 void NetworkClientAsio::startReceive() {
     _socket.async_receive_from(boost::asio::buffer(_receiveBuffer),
                                _senderEndpoint,
@@ -261,11 +254,16 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size) {
 void NetworkClientAsio::runNetworkThread() {
     while (_running) {
         try {
-            _ioContext.run();
+            size_t handlersRun = _ioContext.run();
+
+            if (handlersRun == 0 && _running) {
+                break;
+            }
         } catch (const std::exception& e) {
             if (_running) {
                 callErrorCallback("Network thread error: " +
                                   std::string(e.what()));
+                break;
             }
         }
     }
@@ -291,8 +289,9 @@ bool NetworkClientAsio::sendMessage(const void* data, size_t size) {
         return false;
     }
 
-    auto buffer = std::make_shared<std::vector<uint8_t>>((uint8_t*)data,
-                                                         (uint8_t*)data + size);
+    auto buffer = std::make_shared<std::vector<uint8_t>>(
+        static_cast<const uint8_t*>(data),
+        static_cast<const uint8_t*>(data) + size);
     _socket.async_send_to(
         boost::asio::buffer(*buffer), _serverEndpoint,
         [this, buffer](const boost::system::error_code& ec, std::size_t) {
