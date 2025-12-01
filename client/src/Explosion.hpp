@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Explosion - Animation d'explosion (8 frames, 64x64)
+** Explosion
 */
 
 #pragma once
@@ -14,7 +14,7 @@
 namespace rtype {
 
 /**
- * @brief Animation d'explosion avec spritesheet (8 frames de 64x64)
+ * @brief Explosion animation with spritesheet (8 frames of 64x64)
  */
 class Explosion {
    public:
