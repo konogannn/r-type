@@ -18,6 +18,7 @@ target_include_directories(r-type-client
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network
 )
 
 target_link_libraries(r-type-client
@@ -26,4 +27,5 @@ target_link_libraries(r-type-client
         sfml-audio
         sfml-window
         sfml-system
+        Boost::system
 )
