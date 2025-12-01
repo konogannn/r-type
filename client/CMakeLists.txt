@@ -11,9 +11,9 @@ set(WRAPPER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics/GraphicsSFML.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input/InputSFML.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio/AudioSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network/NetworkClientAsio.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network/NetworkMessage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network/ClientGameState.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/network/NetworkClientAsio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/network/NetworkMessage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/network/ClientGameState.cpp
 )
 
 add_executable(r-type-client
@@ -27,7 +27,7 @@ target_include_directories(r-type-client
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network
+        ${CMAKE_CURRENT_SOURCE_DIR}/network
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}
 )
@@ -53,7 +53,7 @@ target_include_directories(r-type-client-enhanced
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network
+        ${CMAKE_CURRENT_SOURCE_DIR}/network
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/server
