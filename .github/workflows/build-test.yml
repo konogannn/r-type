@@ -77,7 +77,7 @@ jobs:
         with:
           vcpkgDirectory: ${{ github.workspace }}/vcpkg
           vcpkgJsonGlob: "vcpkg.json"
-          runVcpkgInstall: false
+          runVcpkgInstall: true
 
       - name: Run CMake with Presets
         uses: lukka/run-cmake@v10
