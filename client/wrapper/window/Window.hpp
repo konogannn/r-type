@@ -28,6 +28,7 @@ enum class EventType {
 
 // Forward declaration of MouseButton (defined in Input.hpp)
 enum class MouseButton;
+enum class Key;
 
 /**
  * @brief Abstract interface for window management
@@ -66,6 +67,12 @@ class IWindow {
      * @return Pair of (x, y) coordinates
      */
     virtual std::pair<int, int> getEventMousePosition() const = 0;
+
+    /**
+     * @brief Get the key from the last KeyPressed/KeyReleased event
+     * @return Key that was pressed/released
+     */
+    virtual Key getEventKey() const = 0;
 
     /**
      * @brief Clear the window with a color
@@ -109,6 +116,25 @@ class IWindow {
      * @return Delta time in seconds
      */
     virtual float getDeltaTime() = 0;
+
+    /**
+     * @brief Toggle fullscreen mode
+     * @param fullscreen True for fullscreen, false for windowed
+     */
+    virtual void setFullscreen(bool fullscreen) = 0;
+
+    /**
+     * @brief Check if window is in fullscreen mode
+     * @return True if fullscreen
+     */
+    virtual bool isFullscreen() const = 0;
+
+    /**
+     * @brief Set window resolution
+     * @param width New width in pixels
+     * @param height New height in pixels
+     */
+    virtual void setResolution(unsigned int width, unsigned int height) = 0;
 };
 
 }  // namespace rtype

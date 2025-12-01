@@ -35,6 +35,7 @@ class WindowSFML : public IWindow {
     EventType getEventType() const override;
     MouseButton getEventMouseButton() const override;
     std::pair<int, int> getEventMousePosition() const override;
+    Key getEventKey() const override;
     void clear(unsigned char r = 0, unsigned char g = 0,
                unsigned char b = 0) override;
     void display() override;
@@ -43,6 +44,9 @@ class WindowSFML : public IWindow {
     unsigned int getHeight() const override;
     void setFramerateLimit(unsigned int fps) override;
     float getDeltaTime() override;
+    void setFullscreen(bool fullscreen) override;
+    bool isFullscreen() const override;
+    void setResolution(unsigned int width, unsigned int height) override;
 
     /**
      * @brief Get the underlying SFML window (for drawing)
@@ -63,6 +67,10 @@ class WindowSFML : public IWindow {
     float _deltaTime;
     unsigned int _width;
     unsigned int _height;
+    unsigned int _windowedWidth;
+    unsigned int _windowedHeight;
+    bool _isFullscreen;
+    std::string _title;
 };
 
 }  // namespace rtype
