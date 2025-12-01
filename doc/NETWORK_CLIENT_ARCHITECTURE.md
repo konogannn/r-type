@@ -1,10 +1,10 @@
-# R-Type - Client Network Architecture
+# R-Type - Architecture Réseau Client
 
-This documentation describes the client-side network architecture that has been implemented for the R-Type project.
+Cette documentation décrit l'architecture réseau côté client qui a été implémentée pour le projet R-Type.
 
-## 🎯 Overview
+## 🎯 Vue d'Ensemble
 
-The client network architecture follows the same pattern as the rest of the project: **abstract interfaces + concrete implementations**. This allows easily changing the networking library (Boost.Asio → other) without impacting client code.
+L'architecture réseau client suit le même pattern que le reste du projet : **interfaces abstraites + implémentations concrètes**. Cela permet de changer facilement de bibliothèque réseau (Boost.Asio → autre) sans impacter le code client.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -34,22 +34,22 @@ The client network architecture follows the same pattern as the rest of the proj
 
 ---
 
-## 📁 File Structure
+## 📁 Structure des Fichiers
 
 ```
-client/network/
-├── INetworkClient.hpp          # Abstract interface
-├── NetworkClientAsio.hpp       # Boost.Asio implementation (header)
-├── NetworkClientAsio.cpp       # Boost.Asio implementation (source)
-├── NetworkMessage.hpp          # Message utilities
-└── NetworkMessage.cpp          # Utilities implementation
+client/wrapper/network/
+├── INetworkClient.hpp          # Interface abstraite
+├── NetworkClientAsio.hpp       # Implémentation Boost.Asio (header)
+├── NetworkClientAsio.cpp       # Implémentation Boost.Asio (source)
+├── NetworkMessage.hpp          # Utilitaires pour messages
+└── NetworkMessage.cpp          # Implémentation utilitaires
 ```
 
 ---
 
-## 🏗️ Detailed Architecture
+## 🏗️ Architecture Détaillée
 
-### 1. Abstract Interface (`INetworkClient`)
+### 1. Interface Abstraite (`INetworkClient`)
 
 ```cpp
 ┌─────────────────────────────────────────┐
@@ -77,14 +77,14 @@ client/network/
 └─────────────────────────────────────────┘
 ```
 
-**Responsibilities:**
-- 🔌 Connection/disconnection management
-- 📤 Sending messages to server
-- 📥 Receiving messages from server
-- 🔄 Callbacks for network events
-- 📊 Connection state management
+**Responsabilités :**
+- 🔌 Gestion de la connexion/déconnexion
+- 📤 Envoi des messages vers le serveur
+- 📥 Réception des messages du serveur
+- 🔄 Callbacks pour les événements réseau
+- 📊 Gestion d'état de la connexion
 
-### 2. Boost.Asio Implementation (`NetworkClientAsio`)
+### 2. Implémentation Boost.Asio (`NetworkClientAsio`)
 
 ```cpp
 ┌─────────────────────────────────────────┐
@@ -106,7 +106,7 @@ client/network/
 └─────────────────────────────────────────┘
 ```
 
-**Thread Architecture:**
+**Architecture Thread :**
 
 ```
 Main Thread                    Network Thread
@@ -127,7 +127,7 @@ Main Thread                    Network Thread
 └─────────────┘               └─────────────────┘
 ```
 
-### 3. Utilities (`NetworkMessage`)
+### 3. Utilitaires (`NetworkMessage`)
 
 ```cpp
 ┌─────────────────────────────────────────┐
@@ -150,7 +150,7 @@ Main Thread                    Network Thread
 └─────────────────────────────────────────┘
 ```
 
-**Defined Constants:**
+**Constantes Définies :**
 
 ```cpp
 InputMask:
@@ -168,9 +168,9 @@ EntityType:
 
 ---
 
-## 🔄 Communication Flow
+## 🔄 Flow de Communication
 
-### 1. Server Connection
+### 1. Connexion au Serveur
 
 ```
 Client                          Server
@@ -192,7 +192,7 @@ Client                          Server
   │                               │
 ```
 
-### 2. Input Sending
+### 2. Envoi d'Input
 
 ```
 Main Thread              Network Thread           Server
@@ -218,7 +218,7 @@ Main Thread              Network Thread           Server
     │                         │                     │
 ```
 
-### 3. Message Reception
+### 3. Réception de Message
 
 ```
 Network Thread                    Main Thread
@@ -242,9 +242,9 @@ Network Thread                    Main Thread
 
 ---
 
-## 🎮 Client Integration
+## 🎮 Intégration avec le Client
 
-### Added Controls
+### Contrôles Ajoutés
 
 ```cpp
 Main Game Loop:
@@ -278,7 +278,7 @@ Main Game Loop:
 └─────────────────────────────────────────┘
 ```
 
-### Example Callbacks
+### Callbacks d'Exemple
 
 ```cpp
 // Connection successful
@@ -303,9 +303,9 @@ networkClient->setOnErrorCallback([](const std::string& error) {
 
 ---
 
-## 📦 Supported Network Protocol
+## 📦 Protocol Réseau Supporté
 
-### Client → Server Messages (C2S)
+### Messages Client → Serveur (C2S)
 
 ```
 C2S_LOGIN (1):
@@ -336,7 +336,7 @@ C2S_DISCONNECT (3):
 └─────────────────┘
 ```
 
-### Server → Client Messages (S2C)
+### Messages Serveur → Client (S2C)
 
 ```
 S2C_LOGIN_OK (10):
@@ -369,25 +369,25 @@ S2C_ENTITY_POS (12):
 
 ---
 
-## 🔧 CMake Configuration
+## 🔧 Configuration CMake
 
 ```cmake
-# Added dependencies
+# Dépendances ajoutées
 find_package(Boost REQUIRED COMPONENTS system)
 
-# Network sources
+# Sources réseau
 set(WRAPPER_SOURCES
     # ... existing sources ...
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/NetworkClientAsio.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/NetworkMessage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network/NetworkClientAsio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network/NetworkMessage.cpp
 )
 
 # Include directories
 target_include_directories(r-type-client
     PRIVATE
         # ... existing dirs ...
-        ${CMAKE_CURRENT_SOURCE_DIR}/network
-        ${CMAKE_SOURCE_DIR}  # To access server/network/Protocol.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network
+        ${CMAKE_SOURCE_DIR}  # Pour accéder à server/network/Protocol.hpp
 )
 
 # Libraries
@@ -400,30 +400,30 @@ target_link_libraries(r-type-client
 
 ---
 
-## 🧪 Testing and Debugging
+## 🧪 Test et Debugging
 
-### Test Commands
+### Commandes de Test
 
-- **N** : Connect to localhost:8080
-- **D** : Disconnect
-- **Arrow keys + Space** : Automatic input sending
+- **N** : Se connecter à localhost:8080
+- **D** : Se déconnecter
+- **Flèches + Space** : Envoi automatique des inputs
 
-### Debug Messages
+### Messages de Debug
 
 ```cpp
-// Convert inputs to string for debugging
+// Conversion des inputs en string pour debug
 std::string inputStr = NetworkMessage::inputMaskToString(inputMask);
 // Output: "UP+RIGHT+SHOOT"
 
-// Convert opcodes
+// Conversion des opcodes
 std::string opcodeStr = NetworkMessage::opCodeToString(packet.opCode);
 // Output: "C2S_LOGIN"
 
-// Packet validation
+// Validation des paquets
 bool valid = NetworkMessage::validatePacket(data, size, expectedOpCode);
 ```
 
-### Connection States
+### États de Connexion
 
 ```cpp
 enum class NetworkState {
@@ -436,40 +436,40 @@ enum class NetworkState {
 
 ---
 
-## 🚀 Architecture Advantages
+## 🚀 Avantages de cette Architecture
 
-### ✅ **Modular**
-- Abstract interface allows changing network library
-- Clear separation of responsibilities
+### ✅ **Modulaire**
+- Interface abstraite permet de changer de bibliothèque réseau
+- Séparation claire des responsabilités
 
 ### ✅ **Thread-Safe**
-- Network thread separated from main thread
-- Thread-safe queue for messages
-- Callbacks executed in main thread
+- Thread réseau séparé du thread principal
+- Queue thread-safe pour les messages
+- Callbacks exécutés dans le thread principal
 
-### ✅ **Asynchronous**
-- Non-blocking for the game
-- Optimal performance with Boost.Asio
+### ✅ **Asynchrone**
+- Non-bloquant pour le jeu
+- Performance optimale avec Boost.Asio
 
 ### ✅ **Extensible**
-- Easy to add new message types
-- Configurable callbacks for all events
+- Facile d'ajouter de nouveaux types de messages
+- Callbacks configurables pour tous les événements
 
 ### ✅ **Debuggable**
-- String conversion utilities
-- Clear error messages
-- Packet validation
+- Utilitaires de conversion string
+- Messages d'erreur clairs
+- Validation des paquets
 
 ---
 
-## 🔜 Next Steps
+## 🔜 Prochaines Étapes
 
-1. **Server** : Implement server to test complete communication
-2. **Synchronization** : Add game entity synchronization
-3. **Reliability** : Add timeout and reconnection handling
-4. **Performance** : Optimize message serialization
-5. **Tests** : Create unit tests for network architecture
+1. **Serveur** : Implémenter le serveur pour tester la communication complète
+2. **Synchronisation** : Ajouter la synchronisation des entités de jeu
+3. **Fiabilité** : Ajouter la gestion des timeouts et reconnexions
+4. **Performance** : Optimiser la sérialisation des messages
+5. **Tests** : Créer des tests unitaires pour l'architecture réseau
 
 ---
 
-*R-Type client network architecture - Implemented November 26, 2025*
+*Architecture réseau client R-Type - Implémentée le 26 novembre 2025*
