@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** SoundSFML - Implémentation SFML du système audio
+** SoundSFML
 */
 
 #include "SoundSFML.hpp"
