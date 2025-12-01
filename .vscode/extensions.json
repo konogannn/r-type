@@ -4,6 +4,7 @@
     "xaver.clang-format",
     "ms-vscode.cmake-tools",
     "nicolaspolomack.epitech-c-cpp-headers",
-    "zainchen.json"
+    "zainchen.json",
+    "berublan.vscode-log-viewer"
   ]
 }
