@@ -1,57 +1,54 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** ISound - Interface pour le son
+** ISound
 */
 
-#ifndef ISOUND_HPP_
-#define ISOUND_HPP_
+#pragma once
 
 #include <string>
 
 namespace rtype {
 
 /**
- * @brief Interface pour un buffer de son
+ * @brief Interface for a sound buffer
  */
 class ISoundBuffer {
    public:
     virtual ~ISoundBuffer() = default;
 
     /**
-     * @brief Charge un son depuis un fichier
-     * @param filename Chemin vers le fichier audio
-     * @return true si le chargement a réussi
+     * @brief Loads a sound from a file
+     * @param filename Path to the audio file
+     * @return true if loading succeeded
      */
     virtual bool loadFromFile(const std::string& filename) = 0;
 };
 
 /**
- * @brief Interface pour jouer un son
+ * @brief Interface for playing a sound
  */
 class ISound {
    public:
     virtual ~ISound() = default;
 
     /**
-     * @brief Définit le buffer de son à jouer
-     * @param buffer Référence vers le buffer
+     * @brief Sets the sound buffer to play
+     * @param buffer Reference to the buffer
      */
     virtual void setBuffer(const ISoundBuffer& buffer) = 0;
 
     /**
-     * @brief Joue le son
+     * @brief Plays the sound
      */
     virtual void play() = 0;
 
     /**
-     * @brief Définit le volume du son
-     * @param volume Volume entre 0.0f (silence) et 100.0f (maximum)
+     * @brief Sets the sound volume
+     * @param volume Volume between 0.0f (silence) and 100.0f (maximum)
      */
     virtual void setVolume(float volume) = 0;
 };
 
 }  // namespace rtype
-
-#endif /* !ISOUND_HPP_ */
