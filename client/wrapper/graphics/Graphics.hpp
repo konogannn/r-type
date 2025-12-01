@@ -1,11 +1,13 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Graphics - Abstract interface
+** Graphics
 */
 
 #pragma once
+
+#include <string>
 
 #include "Sprite.hpp"
 
@@ -50,6 +52,20 @@ class IGraphics {
      */
     virtual void drawCircle(float x, float y, float radius, unsigned char r,
                             unsigned char g, unsigned char b) = 0;
+
+    /**
+     * @brief Draw text on screen
+     * @param text Text to display
+     * @param x X position
+     * @param y Y position
+     * @param fontSize Font size
+     * @param r Red component (0-255)
+     * @param g Green component (0-255)
+     * @param b Blue component (0-255)
+     */
+    virtual void drawText(const std::string& text, float x, float y,
+                          unsigned int fontSize, unsigned char r,
+                          unsigned char g, unsigned char b) = 0;
 };
 
 }  // namespace rtype

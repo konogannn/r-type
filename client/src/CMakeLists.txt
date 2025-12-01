@@ -1,0 +1,11 @@
+set(GAME_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Background.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Player.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Projectile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Enemy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Explosion.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SoundManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Game.cpp
+    PARENT_SCOPE
+)
