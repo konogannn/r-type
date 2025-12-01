@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Resolution - Available screen resolutions (16:9 format)
+** Resolution
 */
 
 #pragma once

@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** KeyBinding - Key binding system for game controls
+** KeyBinding
 */
 
 #include "KeyBinding.hpp"

@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** ToggleButton - Toggle button for settings
+** ToggleButton
 */
 
 #include "ToggleButton.hpp"

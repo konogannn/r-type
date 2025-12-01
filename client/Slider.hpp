@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Slider - Interactive slider for volume control
+** Slider
 */
 
 #pragma once

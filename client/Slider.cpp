@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Slider - Interactive slider for volume control
+** Slider
 */
 
 #include "Slider.hpp"
@@ -28,7 +28,6 @@ Slider::Slider(float x, float y, float width, const std::string& label,
 
 void Slider::update(int mouseX, int mouseY, bool isMousePressed) {
     float mx = static_cast<float>(mouseX);
-    float my = static_cast<float>(mouseY);
     _isHovered = isPointInHandle(mouseX, mouseY);
 
     if (_isHovered && isMousePressed && !_isDragging) {

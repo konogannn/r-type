@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** SettingsMenu - Settings menu with volume controls
+** SettingsMenu
 */
 
 #include "SettingsMenu.hpp"

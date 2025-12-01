@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** ResolutionButton - Button for selecting screen resolution
+** ResolutionButton
 */
 
 #include "ResolutionButton.hpp"
@@ -28,7 +28,7 @@ bool ResolutionButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
         _wasPressed = true;
     } else if (!isMousePressed && _wasPressed && isInBounds) {
         _wasPressed = false;
-        return true;  // Click detected
+        return true;
     } else if (!isMousePressed) {
         _wasPressed = false;
     }

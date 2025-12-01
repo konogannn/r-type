@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** ResolutionButton - Button for selecting screen resolution
+** ResolutionButton
 */
 
 #pragma once

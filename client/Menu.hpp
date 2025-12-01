@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Menu - Main menu system
+** Menu
 */
 
 #pragma once

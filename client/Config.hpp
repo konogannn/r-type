@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Config - Configuration manager with JSON persistence
+** Config
 */
 
 #pragma once

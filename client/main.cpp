@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** main - POC for SFML wrapper with abstract interfaces
+** main
 */
 
 #include <iostream>
