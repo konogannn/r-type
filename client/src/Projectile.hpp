@@ -12,13 +12,13 @@
 #include "../wrapper/graphics/Sprite.hpp"
 
 /**
- * @brief Projectile du joueur (utilise le wrapper)
+ * @brief Player projectile (uses the wrapper)
  */
 class Projectile {
    public:
     Projectile(const std::string& texturePath, float x, float y);
 
-    void update(float deltaTime);
+    void update(float deltaTime, float windowWidth);
     void draw(rtype::IGraphics& graphics);
 
     bool isAlive() const;
