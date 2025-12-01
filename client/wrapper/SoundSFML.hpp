@@ -1,12 +1,11 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** SoundSFML - Implémentation SFML du système audio
+** SoundSFML
 */
 
-#ifndef SOUNDSFML_HPP_
-#define SOUNDSFML_HPP_
+#pragma once
 
 #include <SFML/Audio.hpp>
 #include <memory>
@@ -16,7 +15,7 @@
 namespace rtype {
 
 /**
- * @brief Implémentation SFML d'ISoundBuffer
+ * @brief SFML implementation of ISoundBuffer
  */
 class SoundBufferSFML : public ISoundBuffer {
    public:
@@ -32,7 +31,7 @@ class SoundBufferSFML : public ISoundBuffer {
 };
 
 /**
- * @brief Implémentation SFML d'ISound
+ * @brief SFML implementation of ISound
  */
 class SoundSFML : public ISound {
    public:
@@ -48,5 +47,3 @@ class SoundSFML : public ISound {
 };
 
 }  // namespace rtype
-
-#endif /* !SOUNDSFML_HPP_ */
