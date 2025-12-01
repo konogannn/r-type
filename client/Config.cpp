@@ -68,11 +68,14 @@ bool Config::save(const std::string& filepath) {
     for (const auto& [key, value] : _data) {
         file << "  \"" << key << "\": ";
 
-        bool isNumber = true;
-        for (char c : value) {
-            if (!isdigit(c) && c != '.' && c != '-') {
+        bool isNumber = false;
+        if (!value.empty()) {
+            try {
+                size_t pos;
+                std::stod(value, &pos);
+                isNumber = (pos == value.length());
+            } catch (...) {
                 isNumber = false;
-                break;
             }
         }
 
