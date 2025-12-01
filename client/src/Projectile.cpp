@@ -19,13 +19,13 @@ Projectile::Projectile(const std::string& texturePath, float x, float y)
     }
 }
 
-void Projectile::update(float deltaTime) {
+void Projectile::update(float deltaTime, float windowWidth) {
     _x += _speed * deltaTime;
     if (_sprite) {
         _sprite->setPosition(_x, _y);
     }
 
-    if (_x > 850) {
+    if (_x > windowWidth + 50) {
         _alive = false;
     }
 }
@@ -44,6 +44,6 @@ float Projectile::getX() const { return _x; }
 
 float Projectile::getY() const { return _y; }
 
-float Projectile::getWidth() const { return 32.0f; }
+float Projectile::getWidth() const { return 64.0f; }
 
-float Projectile::getHeight() const { return 32.0f; }
+float Projectile::getHeight() const { return 64.0f; }
