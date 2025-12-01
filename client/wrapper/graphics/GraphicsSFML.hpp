@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** GraphicsSFML - SFML implementation
+** GraphicsSFML
 */
 
 #pragma once
