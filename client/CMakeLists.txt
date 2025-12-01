@@ -13,9 +13,22 @@ set(WRAPPER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio/AudioSFML.cpp
 )
 
+set(MENU_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Button.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Menu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Slider.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SettingsMenu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/KeyBinding.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/KeyBindingButton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ToggleButton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResolutionButton.cpp
+)
+
 add_executable(r-type-client
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${WRAPPER_SOURCES}
+    ${MENU_SOURCES}
 )
 
 target_include_directories(r-type-client
