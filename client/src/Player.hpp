@@ -11,7 +11,7 @@
 #include "../wrapper/input/Input.hpp"
 
 /**
- * @brief Joueur avec 3 sprites selon le mouvement vertical (utilise le wrapper)
+ * @brief Player with 3 sprites based on vertical movement (uses the wrapper)
  */
 class Player {
    public:
