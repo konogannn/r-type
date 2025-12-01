@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** WindowSFML - SFML implementation
+** WindowSFML
 */
 
 #include "WindowSFML.hpp"
@@ -93,6 +93,29 @@ void WindowSFML::setFramerateLimit(unsigned int fps) {
 float WindowSFML::getDeltaTime() {
     _deltaTime = _clock.restart().asSeconds();
     return _deltaTime;
+}
+
+void WindowSFML::recreate(unsigned int width, unsigned int height,
+                          const std::string& title, bool fullscreen) {
+    _width = width;
+    _height = height;
+    _window->close();
+
+    if (fullscreen) {
+        _window->create(sf::VideoMode::getDesktopMode(), title,
+                        sf::Style::Fullscreen);
+    } else {
+        _window->create(sf::VideoMode(width, height), title,
+                        sf::Style::Default);
+    }
+}
+
+int WindowSFML::getEventKeyCode() const {
+    if (_lastEvent.type == sf::Event::KeyPressed ||
+        _lastEvent.type == sf::Event::KeyReleased) {
+        return static_cast<int>(_lastEvent.key.code);
+    }
+    return -1;
 }
 
 sf::RenderWindow& WindowSFML::getSFMLWindow() { return *_window; }

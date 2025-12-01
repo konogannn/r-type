@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** InputSFML - SFML implementation
+** InputSFML
 */
 
 #pragma once

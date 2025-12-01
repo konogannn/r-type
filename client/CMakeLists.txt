@@ -5,25 +5,19 @@ if(SFML_FOUND)
     message(STATUS "SFML include dirs: ${SFML_INCLUDE_DIR}")
 endif()
 
-set(WRAPPER_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window/WindowSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics/SpriteSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics/GraphicsSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input/InputSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio/AudioSFML.cpp
-)
+add_subdirectory(src)
+add_subdirectory(wrapper)
 
 add_executable(r-type-client
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${GAME_SOURCES}
     ${WRAPPER_SOURCES}
 )
 
 target_include_directories(r-type-client
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper
 )
 
 target_link_libraries(r-type-client
