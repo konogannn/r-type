@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** SoundManager - Gestionnaire de sons du jeu
+** SoundManager
 */
 
 #include "SoundManager.hpp"
