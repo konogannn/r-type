@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} has run the build & test workflow
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "server/**"
       - "client/**"
@@ -66,15 +66,15 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: ${{ github.workspace }}/vcpkg
-          vcpkgJsonGlob: 'vcpkg.json'
+          vcpkgJsonGlob: "vcpkg.json"
           runVcpkgInstall: false
 
       - name: Run CMake with Presets
         uses: lukka/run-cmake@v10
         with:
-          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
-          configurePreset: 'ci-${{ (matrix.build_type == "Release") && "release" || "debug" }}'
-          buildPreset: 'ci-${{ (matrix.build_type == "Release") && "release" || "debug" }}-build'
+          cmakeListsTxtPath: "${{ github.workspace }}/CMakeLists.txt"
+          configurePreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}"
+          buildPreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}-build"
 
       # - name: Run Tests
       #   uses: lukka/run-cmake@v10
