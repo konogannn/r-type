@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Explosion - Animation d'explosion implementation
+** Explosion
 */
 
 #include "Explosion.hpp"
