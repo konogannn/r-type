@@ -20,7 +20,7 @@ KeyBindingButton::KeyBindingButton(float x, float y, float width, float height,
       _isInEditMode(false),
       _wasPressed(false) {}
 
-void KeyBindingButton::update(int mouseX, int mouseY, bool isMousePressed) {
+void KeyBindingButton::update(int mouseX, int mouseY, bool) {
     float mx = static_cast<float>(mouseX);
     float my = static_cast<float>(mouseY);
 

@@ -321,7 +321,7 @@ void SettingsMenu::renderBackButton(float scale) {
                        255, _fontPath);
 }
 
-void SettingsMenu::renderSlider(const Slider& slider, float scale) {
+void SettingsMenu::renderSlider(const Slider& slider, float) {
     float windowHeight = static_cast<float>(_window.getHeight());
     float baseUnit = windowHeight / 18.0f;
 
