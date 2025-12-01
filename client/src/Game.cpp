@@ -67,13 +67,11 @@ void Game::handleEvents() {
         }
 
         if (_window->getEventType() == rtype::EventType::KeyPressed) {
-            int keyCode = _window->getEventKeyCode();
-
-            if (keyCode == 36) {
+            if (_input->isKeyPressed(rtype::Key::Escape)) {
                 _running = false;
                 _window->close();
             }
-            if (keyCode == 87) {
+            if (_input->isKeyPressed(rtype::Key::F11)) {
                 static bool isFullscreen = false;
                 isFullscreen = !isFullscreen;
 
@@ -94,7 +92,9 @@ void Game::update(float deltaTime) {
     }
 
     if (_player) {
-        _player->handleInput(*_input, deltaTime, 800.0f, 600.0f);
+        _player->handleInput(*_input, deltaTime,
+                             static_cast<float>(_window->getWidth()),
+                             static_cast<float>(_window->getHeight()));
 
         if (_player->wantsToShoot()) {
             spawnProjectile(_player->getX() + 60, _player->getY() + 30);
@@ -103,8 +103,9 @@ void Game::update(float deltaTime) {
         _player->update(deltaTime);
     }
 
+    float windowWidth = static_cast<float>(_window->getWidth());
     for (auto& projectile : _projectiles) {
-        projectile->update(deltaTime);
+        projectile->update(deltaTime, windowWidth);
     }
 
     _projectiles.erase(std::remove_if(_projectiles.begin(), _projectiles.end(),
