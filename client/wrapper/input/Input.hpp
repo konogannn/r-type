@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** Input - Abstract interface
+** Input
 */
 
 #pragma once
