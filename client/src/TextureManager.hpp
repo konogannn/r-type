@@ -13,8 +13,7 @@
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
 /**
- * @brief Singleton pour gérer les sprites (utilise le wrapper au lieu de SFML
- * direct)
+ * @brief Singleton to manage sprites (uses the wrapper instead of direct SFML)
  */
 class TextureManager {
    public:
@@ -26,7 +25,6 @@ class TextureManager {
     bool loadSprite(const std::string& id, const std::string& filepath,
                     bool smooth = false);
     rtype::ISprite* getSprite(const std::string& id);
-    std::unique_ptr<rtype::SpriteSFML> createClone(const std::string& id);
     void loadAll();
 
    private:
