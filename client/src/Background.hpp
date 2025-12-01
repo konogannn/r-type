@@ -12,7 +12,7 @@
 #include "../wrapper/graphics/Sprite.hpp"
 
 /**
- * @brief Couche de background avec scrolling parallax (utilise le wrapper)
+ * @brief Background layer with parallax scrolling (uses the wrapper)
  */
 class BackgroundLayer {
    public:
@@ -33,7 +33,7 @@ class BackgroundLayer {
 };
 
 /**
- * @brief Système de background avec parallax (3 couches)
+ * @brief Background system with parallax (3 layers)
  */
 class Background {
    public:
