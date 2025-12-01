@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** main - Prototype simple du jeu R-Type
+** main
 */
 
 #include <iostream>
