@@ -194,12 +194,18 @@ std::string KeyBinding::actionToString(GameAction action) {
 }
 
 Key KeyBinding::stringToKey(const std::string& str) {
+    static const Key letterKeys[26] = {
+        Key::A, Key::B, Key::C, Key::D, Key::E, Key::F, Key::G, Key::H, Key::I,
+        Key::J, Key::K, Key::L, Key::M, Key::N, Key::O, Key::P, Key::Q, Key::R,
+        Key::S, Key::T, Key::U, Key::V, Key::W, Key::X, Key::Y, Key::Z};
+    static const Key digitKeys[10] = {
+        Key::Num0, Key::Num1, Key::Num2, Key::Num3, Key::Num4,
+        Key::Num5, Key::Num6, Key::Num7, Key::Num8, Key::Num9};
+
     if (str.length() == 1) {
         char c = str[0];
-        if (c >= 'A' && c <= 'Z')
-            return static_cast<Key>(static_cast<int>(Key::A) + (c - 'A'));
-        if (c >= '0' && c <= '9')
-            return static_cast<Key>(static_cast<int>(Key::Num0) + (c - '0'));
+        if (c >= 'A' && c <= 'Z') return letterKeys[c - 'A'];
+        if (c >= '0' && c <= '9') return digitKeys[c - '0'];
     }
 
     if (str == "Space") return Key::Space;

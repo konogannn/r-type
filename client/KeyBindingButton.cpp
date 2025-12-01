@@ -29,16 +29,12 @@ void KeyBindingButton::update(int mouseX, int mouseY, bool isMousePressed) {
 }
 
 bool KeyBindingButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
-    float mx = static_cast<float>(mouseX);
-    float my = static_cast<float>(mouseY);
-
-    bool hovered =
-        (mx >= _x && mx <= _x + _width && my >= _y && my <= _y + _height);
+    update(mouseX, mouseY, isMousePressed);
 
     bool clicked = false;
-    if (hovered && isMousePressed) {
+    if (_isHovered && isMousePressed) {
         _wasPressed = true;
-    } else if (hovered && !isMousePressed && _wasPressed) {
+    } else if (_isHovered && !isMousePressed && _wasPressed) {
         clicked = true;
         _wasPressed = false;
         _isInEditMode = true;
