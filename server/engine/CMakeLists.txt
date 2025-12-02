@@ -2,19 +2,14 @@
 # This module contains the core game engine code (ECS, physics, etc.)
 # Part of the server/backend architecture
 
-# Include directories for engine headers
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Component
-    ${CMAKE_CURRENT_SOURCE_DIR}/Entity
-)
+# Add subdirectories
+add_subdirectory(Component)
+add_subdirectory(Entity)
 
-# Collect all engine source files
+# Collect all engine source files from subdirectories
 set(ENGINE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Component/ComponentManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Entity/Entity.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Entity/EntityManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Entity/EntityFactory.cpp
+    ${COMPONENT_MODULE_SOURCES}
+    ${ENTITY_MODULE_SOURCES}
 )
 
 # Create the engine library
