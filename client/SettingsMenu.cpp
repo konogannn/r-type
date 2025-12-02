@@ -21,7 +21,7 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
       _backButton(960.0f - (BUTTON_WIDTH / 2.0f), 900.0f, BUTTON_WIDTH,
                   BUTTON_HEIGHT, "BACK"),
       _fullscreenToggle(1100.0f, 485.0f, 200.0f, 50.0f, "Fullscreen", false),
-      _fontPath("assets/arial.ttf"),
+      _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
       _currentResolution(Resolution::R1920x1080) {
