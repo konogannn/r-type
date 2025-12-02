@@ -31,3 +31,8 @@ set_target_properties(r-type-engine PROPERTIES
 )
 
 message(STATUS "Engine module configured with ECS components")
+
+# Add tests subdirectory if testing is enabled
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
