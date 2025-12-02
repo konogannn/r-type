@@ -1,3 +1,5 @@
+find_package(fmt CONFIG REQUIRED)
+find_package(OpenAL CONFIG REQUIRED)
 find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
 
 if(SFML_FOUND)
@@ -41,4 +43,8 @@ target_link_libraries(r-type-client
         sfml-window
         sfml-system
         Boost::system
+        OpenAL::OpenAL
+        fmt::fmt
 )
+
+target_link_options(r-type-client PRIVATE "-Wl,--copy-dt-needed-entries")
