@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** SpriteSFML - SFML implementation
+** SpriteSFML
 */
 
 #pragma once
@@ -33,6 +33,8 @@ class SpriteSFML : public ISprite {
     void move(float offsetX, float offsetY) override;
     float getPositionX() const override;
     float getPositionY() const override;
+    void setTextureRect(int left, int top, int width, int height) override;
+    void setSmooth(bool smooth) override;
 
     /**
      * @brief Get the underlying SFML sprite

@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** InputSFML - SFML implementation
+** InputSFML
 */
 
 #include "InputSFML.hpp"
@@ -136,6 +136,30 @@ sf::Keyboard::Key InputSFML::convertKey(Key key) const
             return sf::Keyboard::RShift;
         case Key::RAlt:
             return sf::Keyboard::RAlt;
+        case Key::F1:
+            return sf::Keyboard::F1;
+        case Key::F2:
+            return sf::Keyboard::F2;
+        case Key::F3:
+            return sf::Keyboard::F3;
+        case Key::F4:
+            return sf::Keyboard::F4;
+        case Key::F5:
+            return sf::Keyboard::F5;
+        case Key::F6:
+            return sf::Keyboard::F6;
+        case Key::F7:
+            return sf::Keyboard::F7;
+        case Key::F8:
+            return sf::Keyboard::F8;
+        case Key::F9:
+            return sf::Keyboard::F9;
+        case Key::F10:
+            return sf::Keyboard::F10;
+        case Key::F11:
+            return sf::Keyboard::F11;
+        case Key::F12:
+            return sf::Keyboard::F12;
         default:
             return sf::Keyboard::Unknown;
     }

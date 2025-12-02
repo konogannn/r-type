@@ -27,6 +27,14 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
 
+# Find packages used by multiple modules
+find_package(Boost REQUIRED COMPONENTS system)
+
+if(Boost_FOUND)
+    message(STATUS "Boost found: ${Boost_VERSION}")
+    message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** WindowSFML - SFML implementation
+** WindowSFML
 */
 
 #pragma once
@@ -43,6 +43,9 @@ class WindowSFML : public IWindow {
     unsigned int getHeight() const override;
     void setFramerateLimit(unsigned int fps) override;
     float getDeltaTime() override;
+    void recreate(unsigned int width, unsigned int height,
+                  const std::string& title, bool fullscreen) override;
+    int getEventKeyCode() const override;
 
     /**
      * @brief Get the underlying SFML window (for drawing)
