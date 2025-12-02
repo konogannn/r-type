@@ -79,7 +79,6 @@ void ClientGameState::disconnect() {
     std::cout << "[INFO] Disconnecting from server" << std::endl;
     _networkClient->disconnect();
 
-    // Reset game state
     _playerId = 0;
     _mapWidth = 0;
     _mapHeight = 0;
@@ -93,7 +92,6 @@ bool ClientGameState::isConnected() const {
 }
 
 void ClientGameState::update(float deltaTime) {
-    // Update connection timeout
     if (_connectionAttempting && !isConnected()) {
         _connectionTimeout += deltaTime;
         if (_connectionTimeout > MAX_CONNECTION_TIMEOUT) {
@@ -103,7 +101,6 @@ void ClientGameState::update(float deltaTime) {
         }
     }
 
-    // Process network messages using existing API
     if (_networkClient) {
         _networkClient->update();
     }
@@ -114,7 +111,6 @@ void ClientGameState::render(IGraphics& graphics) {
         return;
     }
 
-    // Render all entities
     for (const auto& [entityId, entity] : _entities) {
         if (entity->sprite) {
             entity->sprite->setPosition(entity->x, entity->y);
@@ -123,8 +119,6 @@ void ClientGameState::render(IGraphics& graphics) {
             // graphics.drawSprite(*entity->sprite);
         }
     }
-
-    // TODO: Add UI rendering (player ID, connection status, etc.)
 }
 
 void ClientGameState::sendInput(uint8_t inputMask) {
@@ -132,7 +126,6 @@ void ClientGameState::sendInput(uint8_t inputMask) {
         return;
     }
 
-    // Use the existing sendInput method
     _networkClient->sendInput(inputMask);
 }
 
@@ -150,7 +143,6 @@ ClientEntity* ClientGameState::getLocalPlayer() {
     return nullptr;
 }
 
-// Private callback implementations
 
 void ClientGameState::onConnected() {
     std::cout << "[INFO] Connected to server successfully" << std::endl;
@@ -181,16 +173,12 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
               << ", Type=" << static_cast<int>(type) << ", Position=(" << x
               << "," << y << ")" << std::endl;
 
-    // Create new entity
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
 
-    // Check if this is the local player
     entity->isLocalPlayer = (entityId == _playerId);
 
-    // Create sprite based on entity type
     createEntitySprite(*entity);
 
-    // Store entity
     _entities[entityId] = std::move(entity);
 }
 
@@ -199,7 +187,6 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y) {
     if (entity) {
         entity->x = x;
         entity->y = y;
-        // Position will be updated in render()
     }
 }
 
@@ -213,30 +200,24 @@ void ClientGameState::onError(const std::string& error) {
     std::cout << "[ERROR] Network error: " << error << std::endl;
 }
 
-// Private helper methods
 
 void ClientGameState::createEntitySprite(ClientEntity& entity) {
-    // TODO: Load appropriate sprite based on entity.type
-    // For now, create a basic sprite
 
     std::string texturePath;
     switch (entity.type) {
-        case 1:  // Player
-            texturePath = "assets/player.png";
+        case 1:
+            texturePath = "assets/sprites/player1.png";
             break;
-        case 2:  // Enemy
-            texturePath = "assets/enemy.png";
+        case 2:
+            texturePath = "assets/sprites/boss1.png";
             break;
-        case 3:  // Projectile
-            texturePath = "assets/projectile.png";
+        case 3:
+            texturePath = "assets/sprites/projectile_player_1.png";
             break;
         default:
             texturePath = "assets/default.png";
             break;
     }
-
-    // Load texture (assuming SpriteSFML has a loadTexture method)
-    // entity.sprite->loadTexture(texturePath);
 
     std::cout << "[DEBUG] Created sprite for entity type "
               << static_cast<int>(entity.type) << std::endl;
