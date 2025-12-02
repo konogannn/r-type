@@ -1,7 +1,6 @@
 find_package(fmt CONFIG REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
 find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
-find_package(fmt CONFIG REQUIRED)
 
 if(SFML_FOUND)
     message(STATUS "SFML found: ${SFML_VERSION}")
