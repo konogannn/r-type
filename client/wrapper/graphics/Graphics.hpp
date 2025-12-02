@@ -54,7 +54,7 @@ class IGraphics {
                             unsigned char g, unsigned char b) = 0;
 
     /**
-     * @brief Draw text on screen
+     * @brief Draw text
      * @param text Text to display
      * @param x X position
      * @param y Y position
@@ -62,10 +62,22 @@ class IGraphics {
      * @param r Red component (0-255)
      * @param g Green component (0-255)
      * @param b Blue component (0-255)
+     * @param fontPath Path to the font file
      */
     virtual void drawText(const std::string& text, float x, float y,
                           unsigned int fontSize, unsigned char r,
-                          unsigned char g, unsigned char b) = 0;
+                          unsigned char g, unsigned char b,
+                          const std::string& fontPath) = 0;
+
+    /**
+     * @brief Get text width for centering
+     * @param text Text to measure
+     * @param fontSize Font size
+     * @param fontPath Path to the font file
+     * @return Width of the text in pixels
+     */
+    virtual float getTextWidth(const std::string& text, unsigned int fontSize,
+                               const std::string& fontPath) = 0;
 };
 
 }  // namespace rtype

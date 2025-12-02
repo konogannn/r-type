@@ -23,8 +23,9 @@
  */
 class Game {
    public:
-    Game();
-    void run();
+    Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
+         rtype::InputSFML& input);
+    bool run();
 
    private:
     void handleEvents();
@@ -35,10 +36,11 @@ class Game {
     void checkCollisions();
 
    private:
-    std::unique_ptr<rtype::WindowSFML> _window;
-    std::unique_ptr<rtype::InputSFML> _input;
-    std::unique_ptr<rtype::GraphicsSFML> _graphics;
+    rtype::WindowSFML& _window;
+    rtype::InputSFML& _input;
+    rtype::GraphicsSFML& _graphics;
     bool _running;
+    bool _returnToMenu;
 
     std::unique_ptr<Background> _background;
     std::unique_ptr<Player> _player;
@@ -49,4 +51,5 @@ class Game {
     float _fpsUpdateTime;
     int _fpsCounter;
     int _currentFps;
+    float _scale;
 };

@@ -16,7 +16,8 @@
  */
 class Projectile {
    public:
-    Projectile(const std::string& texturePath, float x, float y);
+    Projectile(const std::string& texturePath, float x, float y,
+               float scale = 1.0f);
 
     void update(float deltaTime, float windowWidth);
     void draw(rtype::IGraphics& graphics);
@@ -33,5 +34,6 @@ class Projectile {
     std::unique_ptr<rtype::ISprite> _sprite;
     float _x, _y;
     float _speed;
+    float _scale;
     bool _alive;
 };

@@ -1,10 +1,10 @@
-# Guide d'Utilisation - Réseau Client R-Type
+# R-Type Client Network Usage Guide
 
-Ce guide montre comment utiliser l'architecture réseau client dans vos propres développements.
+This guide shows how to use the client network architecture in your own development.
 
-## 🚀 Démarrage Rapide
+## 🚀 Quick Start
 
-### 1. Inclure les Headers
+### 1. Include Headers
 
 ```cpp
 #include "NetworkClientAsio.hpp"
@@ -13,81 +13,81 @@ Ce guide montre comment utiliser l'architecture réseau client dans vos propres 
 using namespace rtype;
 ```
 
-### 2. Créer une Instance
+### 2. Create an Instance
 
 ```cpp
 auto networkClient = std::make_unique<NetworkClientAsio>();
 ```
 
-### 3. Configurer les Callbacks
+### 3. Configure Callbacks
 
 ```cpp
-// Connexion réussie
+// Successful connection
 networkClient->setOnConnectedCallback([]() {
-    std::cout << "✅ Connecté au serveur!" << std::endl;
+    std::cout << "✅ Connected to server!" << std::endl;
 });
 
-// Déconnexion
+// Disconnection
 networkClient->setOnDisconnectedCallback([]() {
-    std::cout << "❌ Déconnecté du serveur." << std::endl;
+    std::cout << "❌ Disconnected from server." << std::endl;
 });
 
-// Réponse de login
+// Login response
 networkClient->setOnLoginResponseCallback([](const LoginResponsePacket& packet) {
-    std::cout << "🎮 Login réussi! ID Joueur: " << packet.playerId << std::endl;
-    std::cout << "🗺️  Taille de la map: " << packet.mapWidth << "x" << packet.mapHeight << std::endl;
+    std::cout << "🎮 Login successful! Player ID: " << packet.playerId << std::endl;
+    std::cout << "🗺️  Map size: " << packet.mapWidth << "x" << packet.mapHeight << std::endl;
 });
 
-// Nouvelle entité
+// New entity
 networkClient->setOnEntitySpawnCallback([](const EntitySpawnPacket& packet) {
-    std::cout << "✨ Nouvelle entité: " 
+    std::cout << "✨ New entity: " 
               << NetworkMessage::entityTypeToString(packet.type)
               << " (ID=" << packet.entityId << ") "
-              << "à (" << packet.x << "," << packet.y << ")" << std::endl;
+              << "at (" << packet.x << "," << packet.y << ")" << std::endl;
 });
 
-// Position d'entité
+// Entity position
 networkClient->setOnEntityPositionCallback([](const EntityPositionPacket& packet) {
-    // Mettre à jour la position de l'entité dans votre jeu
+    // Update entity position in your game
     updateEntityPosition(packet.entityId, packet.x, packet.y);
 });
 
-// Entité morte
+// Entity death
 networkClient->setOnEntityDeadCallback([](uint32_t entityId) {
-    std::cout << "💀 Entité " << entityId << " est morte" << std::endl;
+    std::cout << "💀 Entity " << entityId << " is dead" << std::endl;
     removeEntity(entityId);
 });
 
-// Erreurs
+// Errors
 networkClient->setOnErrorCallback([](const std::string& error) {
-    std::cerr << "🚨 Erreur réseau: " << error << std::endl;
+    std::cerr << "🚨 Network error: " << error << std::endl;
 });
 ```
 
-### 4. Se Connecter
+### 4. Connect
 
 ```cpp
 if (networkClient->connect("127.0.0.1", 8080)) {
-    // Connexion initiée avec succès
-    networkClient->sendLogin("MonPseudo");
+    // Connection initiated successfully
+    networkClient->sendLogin("MyUsername");
 } else {
-    std::cerr << "Impossible d'initier la connexion" << std::endl;
+    std::cerr << "Cannot initiate connection" << std::endl;
 }
 ```
 
-### 5. Boucle de Jeu
+### 5. Game Loop
 
 ```cpp
 while (gameRunning) {
-    // ⚠️ IMPORTANT: Traiter les messages réseau
+    // ⚠️ IMPORTANT: Process network messages
     networkClient->update();
     
-    // Vos updates de jeu
+    // Your game updates
     handleInput();
     updateGame();
     render();
     
-    // Envoyer les inputs si connecté
+    // Send inputs if connected
     if (networkClient->isConnected()) {
         sendPlayerInput();
     }
@@ -96,21 +96,21 @@ while (gameRunning) {
 
 ---
 
-## 📤 Envoi des Messages
+## 📤 Sending Messages
 
 ### Login
 
 ```cpp
-// Se connecter avec un nom d'utilisateur
+// Connect with a username
 if (networkClient->isConnected()) {
-    networkClient->sendLogin("MonPseudo");
+    networkClient->sendLogin("MyUsername");
 }
 ```
 
-### Input du Joueur
+### Player Input
 
 ```cpp
-// Construction du masque d'input
+// Build input mask
 uint8_t inputMask = 0;
 
 if (keyPressed(KEY_UP))    inputMask |= InputMask::UP;
@@ -119,33 +119,33 @@ if (keyPressed(KEY_LEFT))  inputMask |= InputMask::LEFT;
 if (keyPressed(KEY_RIGHT)) inputMask |= InputMask::RIGHT;
 if (keyPressed(KEY_SPACE)) inputMask |= InputMask::SHOOT;
 
-// Envoyer seulement s'il y a des inputs
+// Send only if there are inputs
 if (inputMask != 0) {
     networkClient->sendInput(inputMask);
 }
 ```
 
-### Déconnexion
+### Disconnection
 
 ```cpp
 if (networkClient->isConnected()) {
     networkClient->sendDisconnect();
 }
-// ou simplement
+// or simply
 networkClient->disconnect();
 ```
 
 ---
 
-## 📥 Réception des Messages
+## 📥 Receiving Messages
 
-### Gestion des Entités
+### Entity Management
 
 ```cpp
-// Système d'entités simple
+// Simple entity system
 std::unordered_map<uint32_t, Entity> entities;
 
-// Callback pour nouvelle entité
+// Callback for new entity
 networkClient->setOnEntitySpawnCallback([&](const EntitySpawnPacket& packet) {
     Entity entity;
     entity.id = packet.entityId;
@@ -153,7 +153,7 @@ networkClient->setOnEntitySpawnCallback([&](const EntitySpawnPacket& packet) {
     entity.x = packet.x;
     entity.y = packet.y;
     
-    // Créer le sprite selon le type
+    // Create sprite according to type
     switch (packet.type) {
         case EntityType::PLAYER:
             entity.sprite = createPlayerSprite();
@@ -169,7 +169,7 @@ networkClient->setOnEntitySpawnCallback([&](const EntitySpawnPacket& packet) {
     entities[packet.entityId] = entity;
 });
 
-// Callback pour position
+// Callback for position
 networkClient->setOnEntityPositionCallback([&](const EntityPositionPacket& packet) {
     auto it = entities.find(packet.entityId);
     if (it != entities.end()) {
@@ -179,7 +179,7 @@ networkClient->setOnEntityPositionCallback([&](const EntityPositionPacket& packe
     }
 });
 
-// Callback pour mort
+// Callback for death
 networkClient->setOnEntityDeadCallback([&](uint32_t entityId) {
     entities.erase(entityId);
 });
@@ -187,62 +187,62 @@ networkClient->setOnEntityDeadCallback([&](uint32_t entityId) {
 
 ---
 
-## 🔍 États et Debugging
+## 🔍 States and Debugging
 
-### Vérifier l'État de Connexion
+### Check Connection State
 
 ```cpp
 switch (networkClient->getState()) {
     case NetworkState::Disconnected:
-        showMessage("Non connecté");
+        showMessage("Not connected");
         break;
     case NetworkState::Connecting:
-        showMessage("Connexion en cours...");
+        showMessage("Connecting...");
         break;
     case NetworkState::Connected:
-        showMessage("Connecté ✅");
+        showMessage("Connected ✅");
         break;
     case NetworkState::Error:
-        showMessage("Erreur de connexion ❌");
+        showMessage("Connection error ❌");
         break;
 }
 ```
 
-### Debug des Messages
+### Message Debugging
 
 ```cpp
-// Convertir un masque d'input en string
+// Convert input mask to string
 uint8_t mask = InputMask::UP | InputMask::SHOOT;
 std::string inputStr = NetworkMessage::inputMaskToString(mask);
-std::cout << "Input envoyé: " << inputStr << std::endl;
+std::cout << "Input sent: " << inputStr << std::endl;
 // Output: "UP+SHOOT"
 
-// Debug des entités
+// Debug entities
 std::string typeStr = NetworkMessage::entityTypeToString(EntityType::PLAYER);
-std::cout << "Type d'entité: " << typeStr << std::endl;
+std::cout << "Entity type: " << typeStr << std::endl;
 // Output: "PLAYER"
 ```
 
-### Validation des Messages
+### Message Validation
 
 ```cpp
-// Valider un paquet reçu
+// Validate received packet
 bool isValid = NetworkMessage::validatePacket(data, size, OpCode::S2C_LOGIN_OK);
 if (!isValid) {
-    std::cerr << "Paquet invalide reçu!" << std::endl;
+    std::cerr << "Invalid packet received!" << std::endl;
     return;
 }
 
-// Extraire des informations
+// Extract information
 uint32_t sequenceId = NetworkMessage::getSequenceId(data, size);
 uint8_t opCode = NetworkMessage::getOpCode(data, size);
 ```
 
 ---
 
-## ⚙️ Configuration Avancée
+## ⚙️ Advanced Configuration
 
-### Timeouts et Reconnexion
+### Timeouts and Reconnection
 
 ```cpp
 class NetworkManager {
@@ -255,12 +255,12 @@ public:
     void update() {
         client->update();
         
-        // Vérifier le timeout
+        // Check timeout
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - lastMessage);
         
         if (client->isConnected() && elapsed.count() > 30) {
-            std::cout << "Timeout détecté, reconnexion..." << std::endl;
+            std::cout << "Timeout detected, reconnecting..." << std::endl;
             reconnect();
         }
     }
@@ -273,7 +273,7 @@ public:
 };
 ```
 
-### Statistiques de Performance
+### Performance Statistics
 
 ```cpp
 class NetworkStats {
@@ -292,18 +292,18 @@ public:
         auto elapsed = std::chrono::steady_clock::now() - startTime;
         auto seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
         
-        std::cout << "📊 Stats réseau:" << std::endl;
-        std::cout << "   Messages reçus: " << messagesReceived << std::endl;
-        std::cout << "   Messages envoyés: " << messagesSent << std::endl;
-        std::cout << "   Durée: " << seconds << "s" << std::endl;
-        std::cout << "   Taux: " << (messagesReceived + messagesSent) / seconds << " msg/s" << std::endl;
+        std::cout << "📊 Network stats:" << std::endl;
+        std::cout << "   Messages received: " << messagesReceived << std::endl;
+        std::cout << "   Messages sent: " << messagesSent << std::endl;
+        std::cout << "   Duration: " << seconds << "s" << std::endl;
+        std::cout << "   Rate: " << (messagesReceived + messagesSent) / seconds << " msg/s" << std::endl;
     }
 };
 ```
 
 ---
 
-## 🧪 Exemple Complet
+## 🧪 Complete Example
 
 ```cpp
 #include "NetworkClientAsio.hpp"
@@ -326,13 +326,13 @@ public:
         
         // Setup callbacks
         network->setOnConnectedCallback([this]() {
-            std::cout << "✅ Connecté! Envoi du login..." << std::endl;
+            std::cout << "✅ Connected! Sending login..." << std::endl;
             network->sendLogin("Player1");
         });
         
         network->setOnLoginResponseCallback([this](const LoginResponsePacket& packet) {
             playerId = packet.playerId;
-            std::cout << "🎮 Login réussi! ID: " << playerId << std::endl;
+            std::cout << "🎮 Login successful! ID: " << playerId << std::endl;
         });
         
         network->setOnEntitySpawnCallback([](const EntitySpawnPacket& packet) {
@@ -342,15 +342,15 @@ public:
         });
         
         network->setOnErrorCallback([](const std::string& error) {
-            std::cerr << "🚨 Erreur: " << error << std::endl;
+            std::cerr << "🚨 Error: " << error << std::endl;
         });
     }
     
     void connect() {
         if (network->connect("127.0.0.1", 8080)) {
-            std::cout << "🔌 Connexion initiée..." << std::endl;
+            std::cout << "🔌 Connection initiated..." << std::endl;
         } else {
-            std::cerr << "❌ Impossible de se connecter" << std::endl;
+            std::cerr << "❌ Cannot connect" << std::endl;
         }
     }
     
@@ -365,7 +365,7 @@ public:
                 if (++counter % 60 == 0) { // Every second at 60 FPS
                     uint8_t input = InputMask::UP | InputMask::SHOOT;
                     network->sendInput(input);
-                    std::cout << "📤 Input envoyé: " 
+                    std::cout << "📤 Input sent: " 
                               << NetworkMessage::inputMaskToString(input) << std::endl;
                 }
             }
@@ -388,7 +388,7 @@ int main() {
     game.initialize();
     game.connect();
     
-    std::cout << "🎮 Jeu démarré. Ctrl+C pour quitter." << std::endl;
+    std::cout << "🎮 Game started. Ctrl+C to quit." << std::endl;
     
     try {
         game.gameLoop();
@@ -401,18 +401,18 @@ int main() {
 }
 ```
 
-## 📋 Checklist d'Intégration
+## 📋 Integration Checklist
 
-- [ ] Inclure les headers nécessaires
-- [ ] Créer une instance de NetworkClientAsio
-- [ ] Configurer tous les callbacks nécessaires
-- [ ] Appeler `update()` dans la boucle de jeu
-- [ ] Gérer les états de connexion
-- [ ] Implémenter l'envoi d'inputs
-- [ ] Tester avec un serveur de développement
-- [ ] Ajouter la gestion d'erreurs
-- [ ] Documenter votre intégration
+- [ ] Include necessary headers
+- [ ] Create NetworkClientAsio instance
+- [ ] Configure all necessary callbacks
+- [ ] Call `update()` in game loop
+- [ ] Handle connection states
+- [ ] Implement input sending
+- [ ] Test with development server
+- [ ] Add error handling
+- [ ] Document your integration
 
 ---
 
-*Guide d'utilisation réseau client R-Type - Version 1.0*
+*R-Type client network usage guide - Version 1.0*

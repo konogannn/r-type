@@ -13,15 +13,7 @@
 
 namespace rtype {
 
-GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window)
-{
-    if (!_defaultFont.loadFromFile("assets/fonts/Retro_Gaming.ttf")) {
-        std::cerr << "Warning: Could not load default font for text rendering"
-                  << std::endl;
-        std::cerr << "Please ensure assets/fonts/Retro_Gaming.ttf exists"
-                  << std::endl;
-    }
-}
+GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {}
 
 void GraphicsSFML::drawSprite(const ISprite& sprite)
 {
@@ -55,17 +47,57 @@ void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
     _window.getSFMLWindow().draw(circle);
 }
 
+sf::Font* GraphicsSFML::loadFont(const std::string& fontPath) {
+    if (_fontCache.find(fontPath) == _fontCache.end()) {
+        sf::Font font;
+        if (!font.loadFromFile(fontPath)) {
+            std::cerr << "Error: Failed to load font: " << fontPath
+                      << std::endl;
+            return nullptr;
+        }
+        _fontCache[fontPath] = font;
+    }
+    return &_fontCache[fontPath];
+}
+
 void GraphicsSFML::drawText(const std::string& text, float x, float y,
                             unsigned int fontSize, unsigned char r,
-                            unsigned char g, unsigned char b)
-{
+                            unsigned char g, unsigned char b,
+                            const std::string& fontPath) {
+    sf::Font* font = loadFont(fontPath);
+    if (!font) {
+        std::cerr << "Warning: GraphicsSFML::drawText() - Failed to load font, "
+                     "text not rendered: "
+                  << text << std::endl;
+        return;
+    }
+
     sf::Text sfText;
-    sfText.setFont(_defaultFont);
+    sfText.setFont(*font);
     sfText.setString(text);
     sfText.setCharacterSize(fontSize);
     sfText.setFillColor(sf::Color(r, g, b));
     sfText.setPosition(x, y);
+
     _window.getSFMLWindow().draw(sfText);
+}
+
+float GraphicsSFML::getTextWidth(const std::string& text, unsigned int fontSize,
+                                 const std::string& fontPath) {
+    sf::Font* font = loadFont(fontPath);
+    if (!font) {
+        std::cerr << "Warning: GraphicsSFML::getTextWidth() - Failed to load "
+                     "font, returning 0.0f"
+                  << std::endl;
+        return 0.0f;
+    }
+
+    sf::Text sfText;
+    sfText.setFont(*font);
+    sfText.setString(text);
+    sfText.setCharacterSize(fontSize);
+
+    return sfText.getLocalBounds().width;
 }
 
 }  // namespace rtype

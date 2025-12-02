@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../Config.hpp"
+#include "../KeyBinding.hpp"
 #include "Background.hpp"
 #include "Enemy.hpp"
 #include "Player.hpp"
@@ -17,41 +19,76 @@
 #include "SoundManager.hpp"
 #include "TextureManager.hpp"
 
-Game::Game()
-    : _running(false), _fpsUpdateTime(0.0f), _fpsCounter(0), _currentFps(0)
-{
-    _window = std::make_unique<rtype::WindowSFML>(800, 600, "R-Type Prototype");
-    _window->setFramerateLimit(60);
+Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
+           rtype::InputSFML& input)
+    : _window(window),
+      _input(input),
+      _graphics(graphics),
+      _running(false),
+      _returnToMenu(false),
+      _fpsUpdateTime(0.0f),
+      _fpsCounter(0),
+      _currentFps(0),
+      _scale(1.0f) {
+    rtype::Config& config = rtype::Config::getInstance();
+    config.load();
 
-    _input = std::make_unique<rtype::InputSFML>(*_window);
-    _graphics = std::make_unique<rtype::GraphicsSFML>(*_window);
+    int width = config.getInt("resolutionWidth", 1920);
+    int height = config.getInt("resolutionHeight", 1080);
+    _window.setResolution(width, height);
+
+    int fullscreenState = config.getInt("fullscreen", 0);
+    if (fullscreenState == 1) {
+        _window.setFullscreen(true);
+    }
+
+    _window.setFramerateLimit(60);
+
+    int actualWidth = _window.getWidth();
+    int actualHeight = _window.getHeight();
+    float scaleX = static_cast<float>(actualWidth) / 800.0f;
+    float scaleY = static_cast<float>(actualHeight) / 600.0f;
+    _scale = std::min(scaleX, scaleY);
 
     TextureManager::getInstance().loadAll();
     SoundManager::getInstance().loadAll();
 
+    float sfxVolume = config.getFloat("sfxVolume", 100.0f);
+    SoundManager::getInstance().setVolume(sfxVolume);
+
     _background = std::make_unique<Background>(
         "assets/background/bg-back.png", "assets/background/bg-stars.png",
-        "assets/background/bg-planet.png");
+        "assets/background/bg-planet.png", static_cast<float>(actualWidth),
+        static_cast<float>(actualHeight));
 
     auto* playerStatic =
         TextureManager::getInstance().getSprite("player_static");
     auto* playerDown = TextureManager::getInstance().getSprite("player_down");
     auto* playerUp = TextureManager::getInstance().getSprite("player_up");
     if (playerStatic && playerDown && playerUp) {
-        _player = std::make_unique<Player>(playerStatic, playerDown, playerUp,
-                                           100.0f, 300.0f);
+        _player =
+            std::make_unique<Player>(playerStatic, playerDown, playerUp,
+                                     100.0f * _scale, 300.0f * _scale, _scale);
+
+        rtype::KeyBinding& keyBindings = rtype::KeyBinding::getInstance();
+        keyBindings.loadFromConfig();
+        _player->setKeys(keyBindings.getKey(rtype::GameAction::MoveUp),
+                         keyBindings.getKey(rtype::GameAction::MoveDown),
+                         keyBindings.getKey(rtype::GameAction::MoveLeft),
+                         keyBindings.getKey(rtype::GameAction::MoveRight),
+                         keyBindings.getKey(rtype::GameAction::Shoot));
     }
 
-    _enemy =
-        std::make_unique<Enemy>("assets/sprites/boss_1.png", 600.0f, 250.0f);
+    _enemy = std::make_unique<Enemy>("assets/sprites/boss_1.png",
+                                     600.0f * _scale, 250.0f * _scale, _scale);
 }
 
-void Game::run()
-{
+bool Game::run() {
     _running = true;
+    _returnToMenu = false;
 
-    while (_running && _window->isOpen()) {
-        float deltaTime = _window->getDeltaTime();
+    while (_running && _window.isOpen()) {
+        float deltaTime = _window.getDeltaTime();
 
         handleEvents();
         update(deltaTime);
@@ -59,31 +96,21 @@ void Game::run()
 
         updateFps(deltaTime);
     }
+
+    return _returnToMenu;
 }
 
-void Game::handleEvents()
-{
-    while (_window->pollEvent()) {
-        if (_window->getEventType() == rtype::EventType::Closed) {
+void Game::handleEvents() {
+    while (_window.pollEvent()) {
+        if (_window.getEventType() == rtype::EventType::Closed) {
             _running = false;
-            _window->close();
+            _window.close();
         }
 
-        if (_window->getEventType() == rtype::EventType::KeyPressed) {
-            if (_input->isKeyPressed(rtype::Key::Escape)) {
+        if (_window.getEventType() == rtype::EventType::KeyPressed) {
+            if (_input.isKeyPressed(rtype::Key::Escape)) {
                 _running = false;
-                _window->close();
-            }
-            if (_input->isKeyPressed(rtype::Key::F11)) {
-                static bool isFullscreen = false;
-                isFullscreen = !isFullscreen;
-
-                if (isFullscreen) {
-                    _window->recreate(1920, 1080, "R-Type Prototype", true);
-                } else {
-                    _window->recreate(800, 600, "R-Type Prototype", false);
-                }
-                _window->setFramerateLimit(60);
+                _returnToMenu = true;
             }
         }
     }
@@ -96,18 +123,19 @@ void Game::update(float deltaTime)
     }
 
     if (_player) {
-        _player->handleInput(*_input, deltaTime,
-                             static_cast<float>(_window->getWidth()),
-                             static_cast<float>(_window->getHeight()));
+        _player->handleInput(_input, deltaTime,
+                             static_cast<float>(_window.getWidth()),
+                             static_cast<float>(_window.getHeight()));
 
         if (_player->wantsToShoot()) {
-            spawnProjectile(_player->getX() + 60, _player->getY() + 30);
+            spawnProjectile(_player->getX() + 60 * _scale,
+                            _player->getY() + 30 * _scale);
             SoundManager::getInstance().playSound("shot");
         }
         _player->update(deltaTime);
     }
 
-    float windowWidth = static_cast<float>(_window->getWidth());
+    float windowWidth = static_cast<float>(_window.getWidth());
     for (auto& projectile : _projectiles) {
         projectile->update(deltaTime, windowWidth);
     }
@@ -164,7 +192,7 @@ void Game::checkCollisions()
             projectile->kill();
             SoundManager::getInstance().playSound("hit");
             _explosions.push_back(std::make_unique<rtype::Explosion>(
-                "assets/sprites/blowup_2.png", enemyX, enemyY));
+                "assets/sprites/blowup_2.png", enemyX, enemyY, _scale));
             SoundManager::getInstance().playSound("explosion");
             _enemy.reset();
             break;
@@ -172,40 +200,40 @@ void Game::checkCollisions()
     }
 }
 
-void Game::render()
-{
-    _window->clear(0, 0, 0);
+void Game::render() {
+    _window.clear(0, 0, 0);
 
     if (_background) {
-        _background->draw(*_graphics);
+        _background->draw(_graphics);
     }
 
     if (_player) {
-        _player->draw(*_graphics);
+        _player->draw(_graphics);
     }
 
     for (auto& projectile : _projectiles) {
-        projectile->draw(*_graphics);
+        projectile->draw(_graphics);
     }
 
     if (_enemy) {
-        _enemy->draw(*_graphics);
+        _enemy->draw(_graphics);
     }
 
     for (auto& explosion : _explosions) {
-        explosion->draw(*_graphics);
+        explosion->draw(_graphics);
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
-    _graphics->drawText(fpsStr, 10, 10, 20, 0, 255, 0);
+    _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale, 20 * _scale, 0, 255, 0,
+                       "assets/fonts/Retro_Gaming.ttf");
 
-    _window->display();
+    _window.display();
 }
 
 void Game::spawnProjectile(float x, float y)
 {
     _projectiles.push_back(std::make_unique<Projectile>(
-        "assets/sprites/projectile_player_1.png", x, y));
+        "assets/sprites/projectile_player_1.png", x, y, _scale));
 }
 
 void Game::updateFps(float deltaTime)

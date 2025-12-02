@@ -12,7 +12,8 @@
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
 BackgroundLayer::BackgroundLayer(const std::string& texturePath,
-                                 float scrollSpeed)
+                                 float scrollSpeed, float windowWidth,
+                                 float windowHeight)
     : _scrollSpeed(scrollSpeed),
       _offset(0.0f),
       _scale(1.0f),
@@ -30,8 +31,8 @@ BackgroundLayer::BackgroundLayer(const std::string& texturePath,
 
         _textureWidth = 272.0f;
         float textureHeight = 160.0f;
-        float scaleX = 800.0f / _textureWidth;
-        float scaleY = 600.0f / textureHeight;
+        float scaleX = windowWidth / _textureWidth;
+        float scaleY = windowHeight / textureHeight;
 
         _scale = std::max(scaleX, scaleY);
         _scaledWidth = _textureWidth * _scale;
@@ -65,11 +66,14 @@ void BackgroundLayer::draw(rtype::IGraphics& graphics)
 
 Background::Background(const std::string& backPath,
                        const std::string& starsPath,
-                       const std::string& planetPath)
-{
-    _backLayer = std::make_unique<BackgroundLayer>(backPath, 10.0f);
-    _starsLayer = std::make_unique<BackgroundLayer>(starsPath, 20.0f);
-    _planetLayer = std::make_unique<BackgroundLayer>(planetPath, 30.0f);
+                       const std::string& planetPath, float windowWidth,
+                       float windowHeight) {
+    _backLayer = std::make_unique<BackgroundLayer>(backPath, 10.0f, windowWidth,
+                                                   windowHeight);
+    _starsLayer = std::make_unique<BackgroundLayer>(starsPath, 20.0f,
+                                                    windowWidth, windowHeight);
+    _planetLayer = std::make_unique<BackgroundLayer>(planetPath, 30.0f,
+                                                     windowWidth, windowHeight);
 }
 
 Background::~Background() = default;
