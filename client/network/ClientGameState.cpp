@@ -143,7 +143,6 @@ ClientEntity* ClientGameState::getLocalPlayer() {
     return nullptr;
 }
 
-
 void ClientGameState::onConnected() {
     std::cout << "[INFO] Connected to server successfully" << std::endl;
     _connectionAttempting = false;
@@ -200,9 +199,7 @@ void ClientGameState::onError(const std::string& error) {
     std::cout << "[ERROR] Network error: " << error << std::endl;
 }
 
-
 void ClientGameState::createEntitySprite(ClientEntity& entity) {
-
     std::string texturePath;
     switch (entity.type) {
         case 1:
