@@ -5,8 +5,8 @@
   "keyMoveRight": "D",
   "keyMoveUp": "Z",
   "keyShoot": "Space",
-  "musicVolume": 80.000000,
-  "resolutionHeight": 1080,
-  "resolutionWidth": 1920,
-  "sfxVolume": 58.000000
+  "musicVolume": 0.000000,
+  "resolutionHeight": 900,
+  "resolutionWidth": 1600,
+  "sfxVolume": 0.000000
 }
