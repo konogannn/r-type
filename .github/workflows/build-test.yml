@@ -63,7 +63,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install Linux Dependencies
+      - name: Install Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -91,7 +91,8 @@ jobs:
           configurePreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}"
           buildPreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}-build"
 
-      # - name: Run Tests
-      #   uses: lukka/run-cmake@v10
-      #   with:
-      #     testPreset: 'ci-tests'
+      - name: Run Tests (Linux)
+        if: runner.os == 'Linux'
+        uses: lukka/run-cmake@v10
+        with:
+          testPreset: 'ci-tests'
