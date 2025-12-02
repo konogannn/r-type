@@ -51,14 +51,17 @@ void KeyBinding::loadFromConfig() {
 void KeyBinding::saveToConfig() {
     Config& config = Config::getInstance();
 
-    config.setString("keyMoveUp", keyToString(_bindings[GameAction::MoveUp]));
-    config.setString("keyMoveDown",
-                     keyToString(_bindings[GameAction::MoveDown]));
-    config.setString("keyMoveLeft",
-                     keyToString(_bindings[GameAction::MoveLeft]));
-    config.setString("keyMoveRight",
-                     keyToString(_bindings[GameAction::MoveRight]));
-    config.setString("keyShoot", keyToString(_bindings[GameAction::Shoot]));
+    auto saveBinding = [&](const std::string& configKey, GameAction action) {
+        Key key = _bindings[action];
+        std::string keyStr = keyToString(key);
+        config.setString(configKey, keyStr);
+    };
+
+    saveBinding("keyMoveUp", GameAction::MoveUp);
+    saveBinding("keyMoveDown", GameAction::MoveDown);
+    saveBinding("keyMoveLeft", GameAction::MoveLeft);
+    saveBinding("keyMoveRight", GameAction::MoveRight);
+    saveBinding("keyShoot", GameAction::Shoot);
 }
 
 Key KeyBinding::getKey(GameAction action) const {
@@ -69,7 +72,15 @@ Key KeyBinding::getKey(GameAction action) const {
     return Key::Unknown;
 }
 
-void KeyBinding::setKey(GameAction action, Key key) { _bindings[action] = key; }
+void KeyBinding::setKey(GameAction action, Key key) {
+    for (auto& pair : _bindings) {
+        if (pair.first != action && pair.second == key) {
+            pair.second = Key::Unknown;
+        }
+    }
+
+    _bindings[action] = key;
+}
 
 std::string KeyBinding::keyToString(Key key) {
     switch (key) {
@@ -173,8 +184,10 @@ std::string KeyBinding::keyToString(Key key) {
             return "LAlt";
         case Key::RAlt:
             return "RAlt";
+        case Key::Unknown:
+            return "Empty";
         default:
-            return "Unknown";
+            return "Empty";
     }
 }
 
@@ -196,6 +209,10 @@ std::string KeyBinding::actionToString(GameAction action) {
 }
 
 Key KeyBinding::stringToKey(const std::string& str) {
+    if (str.empty() || str == "Empty" || str == "Unknown") {
+        return Key::Unknown;
+    }
+
     static const Key letterKeys[26] = {
         Key::A, Key::B, Key::C, Key::D, Key::E, Key::F, Key::G, Key::H, Key::I,
         Key::J, Key::K, Key::L, Key::M, Key::N, Key::O, Key::P, Key::Q, Key::R,
@@ -211,13 +228,13 @@ Key KeyBinding::stringToKey(const std::string& str) {
     }
 
     static const std::unordered_map<std::string, Key> specialKeys = {
-        {"Space", Key::Space},       {"Enter", Key::Enter},
-        {"Escape", Key::Escape},     {"Backspace", Key::Backspace},
-        {"Left", Key::Left},         {"Right", Key::Right},
-        {"Up", Key::Up},             {"Down", Key::Down},
-        {"LCtrl", Key::LControl},    {"RCtrl", Key::RControl},
-        {"LShift", Key::LShift},     {"RShift", Key::RShift},
-        {"LAlt", Key::LAlt},         {"RAlt", Key::RAlt}};
+        {"Space", Key::Space},    {"Enter", Key::Enter},
+        {"Escape", Key::Escape},  {"Backspace", Key::Backspace},
+        {"Left", Key::Left},      {"Right", Key::Right},
+        {"Up", Key::Up},          {"Down", Key::Down},
+        {"LCtrl", Key::LControl}, {"RCtrl", Key::RControl},
+        {"LShift", Key::LShift},  {"RShift", Key::RShift},
+        {"LAlt", Key::LAlt},      {"RAlt", Key::RAlt}};
 
     auto it = specialKeys.find(str);
     if (it != specialKeys.end()) {
