@@ -9,13 +9,18 @@
 
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
-Enemy::Enemy(const std::string& texturePath, float x, float y)
-    : _x(x), _y(y), _currentFrame(0), _frameTimer(0.0f), _frameDuration(0.15f) {
+Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
+    : _x(x),
+      _y(y),
+      _scale(scale),
+      _currentFrame(0),
+      _frameTimer(0.0f),
+      _frameDuration(0.15f) {
     _sprite = std::make_unique<rtype::SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);
         _sprite->setTextureRect(0, 0, 48, 48);
-        _sprite->setScale(2.0f, 2.0f);
+        _sprite->setScale(2.0f * scale, 2.0f * scale);
         _sprite->setPosition(_x, _y);
     }
 }
@@ -43,6 +48,6 @@ float Enemy::getX() const { return _x; }
 
 float Enemy::getY() const { return _y; }
 
-float Enemy::getWidth() const { return 48.0f * 2.0f; }
+float Enemy::getWidth() const { return 48.0f * 2.0f * _scale; }
 
-float Enemy::getHeight() const { return 48.0f * 2.0f; }
+float Enemy::getHeight() const { return 48.0f * 2.0f * _scale; }
