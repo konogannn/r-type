@@ -27,6 +27,18 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
 
+# Coverage option
+option(ENABLE_COVERAGE "Enable code coverage" OFF)
+if(ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+        message(STATUS "Code coverage enabled")
+    else()
+        message(WARNING "Code coverage not supported for this compiler")
+    endif()
+endif()
+
 # Find packages used by multiple modules
 find_package(Boost REQUIRED COMPONENTS system)
 
@@ -38,6 +50,10 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# Enable testing
+include(CTest)
+enable_testing()
 
 add_subdirectory(client)
 add_subdirectory(server)
@@ -67,4 +83,29 @@ if(CLANG_FORMAT)
     )
 else()
     message(WARNING "clang-format not found! Formatting target will not be available.")
+endif()
+
+# Coverage target
+if(ENABLE_COVERAGE)
+    find_program(LCOV_PATH lcov)
+    find_program(GENHTML_PATH genhtml)
+    
+    if(LCOV_PATH AND GENHTML_PATH)
+        add_custom_target(coverage
+            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+            COMMAND ${LCOV_PATH} --capture --directory . --output-file coverage.info
+                    --rc geninfo_unexecuted_blocks=0 --ignore-errors mismatch,gcov,source
+            COMMAND ${LCOV_PATH} --extract coverage.info '${CMAKE_SOURCE_DIR}/server/*' 
+                    --output-file coverage_filtered.info --ignore-errors unused
+            COMMAND ${LCOV_PATH} --remove coverage_filtered.info '*/tests/*'
+                    --output-file coverage_final.info --ignore-errors unused
+            COMMAND ${GENHTML_PATH} coverage_final.info --output-directory coverage_html
+            COMMAND ${LCOV_PATH} --summary coverage_final.info
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMENT "Generating coverage report (server source files only)..."
+        )
+        message(STATUS "Coverage target added. Run 'make coverage' to generate reports.")
+    else()
+        message(WARNING "lcov/genhtml not found. Install with: sudo dnf install lcov")
+    endif()
 endif()
