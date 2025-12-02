@@ -37,6 +37,9 @@ jobs:
     if: ${{ needs.check_repository.outputs.target == 0 }}
     name: ${{ matrix.os }} - ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
+    container:
+      image: epitechcontent/epitest-docker:latest
+      options: --user root
 
     strategy:
       fail-fast: false
@@ -66,8 +69,8 @@ jobs:
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
             libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
             libgl1-mesa-dev \
             libglu1-mesa-dev \
