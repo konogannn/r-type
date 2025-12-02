@@ -46,7 +46,8 @@ float SpriteSFML::getPositionX() const { return _sprite->getPosition().x; }
 
 float SpriteSFML::getPositionY() const { return _sprite->getPosition().y; }
 
-void SpriteSFML::setTextureRect(int left, int top, int width, int height) {
+void SpriteSFML::setTextureRect(int left, int top, int width, int height)
+{
     _sprite->setTextureRect(sf::IntRect(left, top, width, height));
 }
 

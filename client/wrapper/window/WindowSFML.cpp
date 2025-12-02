@@ -104,7 +104,8 @@ float WindowSFML::getDeltaTime()
 }
 
 void WindowSFML::recreate(unsigned int width, unsigned int height,
-                          const std::string& title, bool fullscreen) {
+                          const std::string& title, bool fullscreen)
+{
     _width = width;
     _height = height;
     _window->close();
@@ -118,7 +119,8 @@ void WindowSFML::recreate(unsigned int width, unsigned int height,
     }
 }
 
-int WindowSFML::getEventKeyCode() const {
+int WindowSFML::getEventKeyCode() const
+{
     if (_lastEvent.type == sf::Event::KeyPressed ||
         _lastEvent.type == sf::Event::KeyReleased) {
         return static_cast<int>(_lastEvent.key.code);

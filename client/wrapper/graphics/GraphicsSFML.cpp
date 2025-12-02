@@ -13,7 +13,8 @@
 
 namespace rtype {
 
-GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {
+GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window)
+{
     if (!_defaultFont.loadFromFile("assets/fonts/Retro_Gaming.ttf")) {
         std::cerr << "Warning: Could not load default font for text rendering"
                   << std::endl;
@@ -56,7 +57,8 @@ void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
 
 void GraphicsSFML::drawText(const std::string& text, float x, float y,
                             unsigned int fontSize, unsigned char r,
-                            unsigned char g, unsigned char b) {
+                            unsigned char g, unsigned char b)
+{
     sf::Text sfText;
     sfText.setFont(_defaultFont);
     sfText.setString(text);

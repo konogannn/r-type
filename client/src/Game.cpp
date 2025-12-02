@@ -18,7 +18,8 @@
 #include "TextureManager.hpp"
 
 Game::Game()
-    : _running(false), _fpsUpdateTime(0.0f), _fpsCounter(0), _currentFps(0) {
+    : _running(false), _fpsUpdateTime(0.0f), _fpsCounter(0), _currentFps(0)
+{
     _window = std::make_unique<rtype::WindowSFML>(800, 600, "R-Type Prototype");
     _window->setFramerateLimit(60);
 
@@ -45,7 +46,8 @@ Game::Game()
         std::make_unique<Enemy>("assets/sprites/boss_1.png", 600.0f, 250.0f);
 }
 
-void Game::run() {
+void Game::run()
+{
     _running = true;
 
     while (_running && _window->isOpen()) {
@@ -59,7 +61,8 @@ void Game::run() {
     }
 }
 
-void Game::handleEvents() {
+void Game::handleEvents()
+{
     while (_window->pollEvent()) {
         if (_window->getEventType() == rtype::EventType::Closed) {
             _running = false;
@@ -86,7 +89,8 @@ void Game::handleEvents() {
     }
 }
 
-void Game::update(float deltaTime) {
+void Game::update(float deltaTime)
+{
     if (_background) {
         _background->update(deltaTime);
     }
@@ -132,7 +136,8 @@ void Game::update(float deltaTime) {
         _explosions.end());
 }
 
-void Game::checkCollisions() {
+void Game::checkCollisions()
+{
     if (!_enemy) {
         return;
     }
@@ -167,7 +172,8 @@ void Game::checkCollisions() {
     }
 }
 
-void Game::render() {
+void Game::render()
+{
     _window->clear(0, 0, 0);
 
     if (_background) {
@@ -196,12 +202,14 @@ void Game::render() {
     _window->display();
 }
 
-void Game::spawnProjectile(float x, float y) {
+void Game::spawnProjectile(float x, float y)
+{
     _projectiles.push_back(std::make_unique<Projectile>(
         "assets/sprites/projectile_player_1.png", x, y));
 }
 
-void Game::updateFps(float deltaTime) {
+void Game::updateFps(float deltaTime)
+{
     _fpsCounter++;
     _fpsUpdateTime += deltaTime;
 

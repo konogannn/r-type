@@ -19,7 +19,8 @@ Player::Player(rtype::ISprite* spriteStatic, rtype::ISprite* spriteDown,
       _canShoot(true),
       _shootCooldown(0.0f),
       _wantsToShoot(false),
-      _currentState(MovementState::STATIC) {
+      _currentState(MovementState::STATIC)
+{
     if (_currentSprite) {
         _currentSprite->setScale(3.0f, 3.0f);
         _currentSprite->setPosition(_x, _y);
@@ -27,7 +28,8 @@ Player::Player(rtype::ISprite* spriteStatic, rtype::ISprite* spriteDown,
 }
 
 void Player::handleInput(const rtype::IInput& input, float deltaTime,
-                         float worldWidth, float worldHeight) {
+                         float worldWidth, float worldHeight)
+{
     MovementState newState = MovementState::STATIC;
     if (input.isKeyPressed(rtype::Key::Z)) {
         _y -= _speed * deltaTime;
@@ -84,7 +86,8 @@ void Player::handleInput(const rtype::IInput& input, float deltaTime,
     }
 }
 
-void Player::update(float deltaTime) {
+void Player::update(float deltaTime)
+{
     if (!_canShoot) {
         _shootCooldown -= deltaTime;
         if (_shootCooldown <= 0.0f) {
@@ -95,7 +98,8 @@ void Player::update(float deltaTime) {
     _wantsToShoot = false;
 }
 
-void Player::draw(rtype::IGraphics& graphics) {
+void Player::draw(rtype::IGraphics& graphics)
+{
     if (_currentSprite) {
         graphics.drawSprite(*_currentSprite);
     }

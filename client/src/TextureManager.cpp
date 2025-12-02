@@ -9,13 +9,15 @@
 
 #include <iostream>
 
-TextureManager& TextureManager::getInstance() {
+TextureManager& TextureManager::getInstance()
+{
     static TextureManager instance;
     return instance;
 }
 
 bool TextureManager::loadSprite(const std::string& id,
-                                const std::string& filepath, bool smooth) {
+                                const std::string& filepath, bool smooth)
+{
     if (_sprites.find(id) != _sprites.end()) {
         return true;
     }
@@ -32,7 +34,8 @@ bool TextureManager::loadSprite(const std::string& id,
     return true;
 }
 
-rtype::ISprite* TextureManager::getSprite(const std::string& id) {
+rtype::ISprite* TextureManager::getSprite(const std::string& id)
+{
     auto it = _sprites.find(id);
     if (it != _sprites.end()) {
         return it->second.get();
@@ -40,7 +43,8 @@ rtype::ISprite* TextureManager::getSprite(const std::string& id) {
     return nullptr;
 }
 
-void TextureManager::loadAll() {
+void TextureManager::loadAll()
+{
     loadSprite("bg_back", "assets/background/bg-back.png", false);
     loadSprite("bg_stars", "assets/background/bg-stars.png", false);
     loadSprite("bg_planet", "assets/background/bg-planet.png", false);

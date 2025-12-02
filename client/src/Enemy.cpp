@@ -10,7 +10,8 @@
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
 Enemy::Enemy(const std::string& texturePath, float x, float y)
-    : _x(x), _y(y), _currentFrame(0), _frameTimer(0.0f), _frameDuration(0.15f) {
+    : _x(x), _y(y), _currentFrame(0), _frameTimer(0.0f), _frameDuration(0.15f)
+{
     _sprite = std::make_unique<rtype::SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);
@@ -20,7 +21,8 @@ Enemy::Enemy(const std::string& texturePath, float x, float y)
     }
 }
 
-void Enemy::update(float deltaTime) {
+void Enemy::update(float deltaTime)
+{
     _frameTimer += deltaTime;
 
     if (_frameTimer >= _frameDuration) {
@@ -33,7 +35,8 @@ void Enemy::update(float deltaTime) {
     }
 }
 
-void Enemy::draw(rtype::IGraphics& graphics) {
+void Enemy::draw(rtype::IGraphics& graphics)
+{
     if (_sprite) {
         graphics.drawSprite(*_sprite);
     }
