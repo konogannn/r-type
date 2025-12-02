@@ -11,9 +11,11 @@
 
 namespace rtype {
 
-Explosion::Explosion(const std::string& texturePath, float x, float y)
+Explosion::Explosion(const std::string& texturePath, float x, float y,
+                     float scale)
     : _x(x),
       _y(y),
+      _scale(scale),
       _currentFrame(0),
       _frameTimer(0.0f),
       _frameDuration(0.08f),
@@ -22,7 +24,7 @@ Explosion::Explosion(const std::string& texturePath, float x, float y)
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);
         _sprite->setTextureRect(0, 0, 64, 64);
-        _sprite->setScale(2.0f, 2.0f);
+        _sprite->setScale(2.0f * scale, 2.0f * scale);
         _sprite->setPosition(_x, _y);
     }
 }

@@ -8,7 +8,9 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <map>
 #include <memory>
+#include <string>
 
 #include "Graphics.hpp"
 #include "SpriteSFML.hpp"
@@ -38,11 +40,15 @@ class GraphicsSFML : public IGraphics {
                     unsigned char g, unsigned char b) override;
     void drawText(const std::string& text, float x, float y,
                   unsigned int fontSize, unsigned char r, unsigned char g,
-                  unsigned char b) override;
+                  unsigned char b, const std::string& fontPath) override;
+    float getTextWidth(const std::string& text, unsigned int fontSize,
+                       const std::string& fontPath) override;
 
    private:
+    sf::Font* loadFont(const std::string& fontPath);
+
     WindowSFML& _window;
-    sf::Font _defaultFont;
+    mutable std::map<std::string, sf::Font> _fontCache;
 };
 
 }  // namespace rtype

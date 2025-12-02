@@ -16,7 +16,7 @@
  */
 class Enemy {
    public:
-    Enemy(const std::string& texturePath, float x, float y);
+    Enemy(const std::string& texturePath, float x, float y, float scale = 1.0f);
 
     void update(float deltaTime);
     void draw(rtype::IGraphics& graphics);
@@ -29,6 +29,7 @@ class Enemy {
    private:
     std::unique_ptr<rtype::ISprite> _sprite;
     float _x, _y;
+    float _scale;
     int _currentFrame;
     float _frameTimer;
     float _frameDuration;

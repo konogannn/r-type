@@ -28,6 +28,7 @@ enum class EventType {
 
 // Forward declaration of MouseButton (defined in Input.hpp)
 enum class MouseButton;
+enum class Key;
 
 /**
  * @brief Abstract interface for window management
@@ -66,6 +67,12 @@ class IWindow {
      * @return Pair of (x, y) coordinates
      */
     virtual std::pair<int, int> getEventMousePosition() const = 0;
+
+    /**
+     * @brief Get the key from the last KeyPressed/KeyReleased event
+     * @return Key that was pressed/released
+     */
+    virtual Key getEventKey() const = 0;
 
     /**
      * @brief Clear the window with a color
@@ -111,20 +118,23 @@ class IWindow {
     virtual float getDeltaTime() = 0;
 
     /**
-     * @brief Recreate the window (for fullscreen toggle)
-     * @param width Width of the window
-     * @param height Height of the window
-     * @param title Title of the window
-     * @param fullscreen true for fullscreen, false for windowed
+     * @brief Toggle fullscreen mode
+     * @param fullscreen True for fullscreen, false for windowed
      */
-    virtual void recreate(unsigned int width, unsigned int height,
-                          const std::string& title, bool fullscreen) = 0;
+    virtual void setFullscreen(bool fullscreen) = 0;
 
     /**
-     * @brief Get the key code from the last KeyPressed/KeyReleased event
-     * @return Key code (library-specific, e.g., sf::Keyboard::Key)
+     * @brief Check if window is in fullscreen mode
+     * @return True if fullscreen
      */
-    virtual int getEventKeyCode() const = 0;
+    virtual bool isFullscreen() const = 0;
+
+    /**
+     * @brief Set window resolution
+     * @param width New width in pixels
+     * @param height New height in pixels
+     */
+    virtual void setResolution(unsigned int width, unsigned int height) = 0;
 };
 
 }  // namespace rtype

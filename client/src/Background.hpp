@@ -16,7 +16,8 @@
  */
 class BackgroundLayer {
    public:
-    BackgroundLayer(const std::string& texturePath, float scrollSpeed);
+    BackgroundLayer(const std::string& texturePath, float scrollSpeed,
+                    float windowWidth, float windowHeight);
 
     void update(float deltaTime);
     void draw(rtype::IGraphics& graphics);
@@ -38,7 +39,8 @@ class BackgroundLayer {
 class Background {
    public:
     Background(const std::string& backPath, const std::string& starsPath,
-               const std::string& planetPath);
+               const std::string& planetPath, float windowWidth,
+               float windowHeight);
     ~Background();
 
     void update(float deltaTime);

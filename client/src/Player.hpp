@@ -16,12 +16,15 @@
 class Player {
    public:
     Player(rtype::ISprite* spriteStatic, rtype::ISprite* spriteDown,
-           rtype::ISprite* spriteUp, float x, float y);
+           rtype::ISprite* spriteUp, float x, float y, float scale = 1.0f);
 
     void handleInput(const rtype::IInput& input, float deltaTime,
                      float worldWidth, float worldHeight);
     void update(float deltaTime);
     void draw(rtype::IGraphics& graphics);
+
+    void setKeys(rtype::Key up, rtype::Key down, rtype::Key left,
+                 rtype::Key right, rtype::Key shoot);
 
     float getX() const;
     float getY() const;
@@ -34,9 +37,16 @@ class Player {
     rtype::ISprite* _currentSprite;
     float _x, _y;
     float _speed;
+    float _scale;
     bool _canShoot;
     float _shootCooldown;
     bool _wantsToShoot;
+
+    rtype::Key _keyUp;
+    rtype::Key _keyDown;
+    rtype::Key _keyLeft;
+    rtype::Key _keyRight;
+    rtype::Key _keyShoot;
 
     enum class MovementState { STATIC, MOVING_UP, MOVING_DOWN };
     MovementState _currentState;

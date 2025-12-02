@@ -1,0 +1,104 @@
+/*
+** EPITECH PROJECT, 2025
+** r-type
+** File description:
+** SettingsMenu
+*/
+
+#pragma once
+
+#include <memory>
+#include <vector>
+
+#include "Button.hpp"
+#include "Config.hpp"
+#include "KeyBinding.hpp"
+#include "KeyBindingButton.hpp"
+#include "Resolution.hpp"
+#include "ResolutionButton.hpp"
+#include "Slider.hpp"
+#include "ToggleButton.hpp"
+#include "wrapper/graphics/GraphicsSFML.hpp"
+#include "wrapper/graphics/SpriteSFML.hpp"
+#include "wrapper/input/InputSFML.hpp"
+#include "wrapper/window/WindowSFML.hpp"
+
+namespace rtype {
+
+/**
+ * @brief Settings menu for R-Type
+ */
+class SettingsMenu {
+   public:
+    /**
+     * @brief Construct a new SettingsMenu
+     * @param window Window reference
+     * @param graphics Graphics renderer reference
+     * @param input Input handler reference
+     */
+    SettingsMenu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input);
+
+    /**
+     * @brief Update settings menu state
+     * @return true if should return to main menu
+     */
+    bool update();
+
+    /**
+     * @brief Handle key press event for key binding
+     * @param key The key that was pressed
+     */
+    void handleKeyPress(Key key);
+
+    /**
+     * @brief Check if any key binding button is waiting for input
+     */
+    bool isWaitingForKeyPress() const;
+
+    /**
+     * @brief Render the settings menu
+     */
+    void render();
+
+    /**
+     * @brief Save current settings to config file
+     */
+    void saveSettings();
+
+   private:
+    WindowSFML& _window;
+    GraphicsSFML& _graphics;
+    InputSFML& _input;
+
+    std::unique_ptr<SpriteSFML> _background;
+    std::vector<Slider> _sliders;
+    std::vector<KeyBindingButton> _keyBindingButtons;
+    std::vector<ResolutionButton> _resolutionButtons;
+    Button _backButton;
+    ToggleButton _fullscreenToggle;
+    std::string _fontPath;
+
+    Config& _config;
+    KeyBinding& _keyBinding;
+    Resolution _currentResolution;
+
+    static constexpr float SLIDER_WIDTH = 400.0f;
+    static constexpr float SLIDER_SPACING = 100.0f;
+    static constexpr float BUTTON_WIDTH = 200.0f;
+    static constexpr float BUTTON_HEIGHT = 60.0f;
+    static constexpr unsigned int FONT_SIZE = 24;
+    static constexpr unsigned int TITLE_SIZE = 48;
+
+    void setupBackground();
+    void setupSliders();
+    void setupKeyBindings();
+    void setupResolutionButtons();
+    void updateLayout();
+    void renderSlider(const Slider& slider, float scale);
+    void renderKeyBindingButton(const KeyBindingButton& button, float scale);
+    void renderToggleButton(float scale);
+    void renderResolutionButton(const ResolutionButton& button, float scale);
+    void renderBackButton(float scale);
+};
+
+}  // namespace rtype
