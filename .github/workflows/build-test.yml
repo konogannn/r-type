@@ -32,34 +32,21 @@ jobs:
           echo "value=0" >> "$GITHUB_OUTPUT"
           exit 0
 
-  build:
+  build-linux:
     needs: check_repository
     if: ${{ needs.check_repository.outputs.target == 0 }}
-    name: ${{ matrix.os }} - ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
+    name: Ubuntu - Release
+    runs-on: ubuntu-latest
+
     container:
       image: epitechcontent/epitest-docker:latest
       options: --user root
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        build_type: [Release]
-        include:
-          - os: windows-latest
-            vcpkg_triplet: x64-windows
-          - os: ubuntu-latest
-            vcpkg_triplet: x64-linux
-
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_TRIPLET: x64-linux
 
     steps:
-      - name: Support Long Paths (Windows)
-        if: runner.os == 'Windows'
-        run: git config --system core.longpaths true
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -67,7 +54,6 @@ jobs:
           fetch-depth: 0
 
       - name: Install Linux Dependencies
-        if: runner.os == 'Linux'
         run: |
           apt-get update
           apt-get install -y \
@@ -91,10 +77,47 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           cmakeListsTxtPath: "${{ github.workspace }}/CMakeLists.txt"
-          configurePreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}"
-          buildPreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}-build"
+          configurePreset: "ci-release"
+          buildPreset: "ci-release-build"
 
       # - name: Run Tests
       #   uses: lukka/run-cmake@v10
       #   with:
       #     testPreset: 'ci-tests'
+
+  build-windows:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == 0 }}
+    name: Windows - Release
+    runs-on: windows-latest
+
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_TRIPLET: x64-windows
+
+    steps:
+      - name: Support Long Paths (Windows)
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Get CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/vcpkg
+          vcpkgJsonGlob: "vcpkg.json"
+          runVcpkgInstall: true
+
+      - name: Run CMake with Presets
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: "${{ github.workspace }}/CMakeLists.txt"
+          configurePreset: "ci-release"
+          buildPreset: "ci-release-build"
