@@ -18,7 +18,8 @@ namespace rtype {
  */
 class Explosion {
    public:
-    Explosion(const std::string& texturePath, float x, float y);
+    Explosion(const std::string& texturePath, float x, float y,
+              float scale = 1.0f);
 
     void update(float deltaTime);
     void draw(IGraphics& graphics);
@@ -28,6 +29,7 @@ class Explosion {
    private:
     std::unique_ptr<ISprite> _sprite;
     float _x, _y;
+    float _scale;
     int _currentFrame;
     float _frameTimer;
     float _frameDuration;
