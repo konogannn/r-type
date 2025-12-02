@@ -22,23 +22,6 @@ using namespace rtype;
 
 enum class GameState { Menu, Settings, Playing };
 
-void runGame() {
-    try {
-        std::cout << "=== Starting R-Type Game ===" << std::endl;
-        std::cout << "Controls:" << std::endl;
-        std::cout << "  ZQSD: Move player" << std::endl;
-        std::cout << "  SPACE: Shoot" << std::endl;
-        std::cout << "  ESC: Return to menu" << std::endl;
-        std::cout << "===========================" << std::endl;
-
-        Game game;
-        game.run();
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error in game: " << e.what() << std::endl;
-    }
-}
-
 int main() {
     Config& config = Config::getInstance();
     config.load();
@@ -85,8 +68,6 @@ int main() {
             switch (action) {
                 case MenuAction::StartGame:
                     state = GameState::Playing;
-                    runGame();
-                    state = GameState::Menu;
                     break;
                 case MenuAction::Settings:
                     state = GameState::Settings;
@@ -97,6 +78,27 @@ int main() {
                 case MenuAction::ConnectServer:
                 case MenuAction::None:
                     break;
+            }
+        } else if (state == GameState::Playing) {
+            try {
+                std::cout << "=== Starting R-Type Game ===" << std::endl;
+                std::cout << "Controls:" << std::endl;
+                std::cout << "  ZQSD: Move player" << std::endl;
+                std::cout << "  SPACE: Shoot" << std::endl;
+                std::cout << "  ESC: Return to menu" << std::endl;
+                std::cout << "===========================" << std::endl;
+
+                Game game(*window, *graphics, *input);
+                bool returnToMenu = game.run();
+
+                if (returnToMenu) {
+                    state = GameState::Menu;
+                    config.load();
+                    menu->updateLayout();
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error in game: " << e.what() << std::endl;
+                state = GameState::Menu;
             }
         } else if (state == GameState::Settings) {
             while (window->pollEvent()) {
