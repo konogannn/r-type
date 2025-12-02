@@ -40,7 +40,6 @@ coverage_html/
 ecs_tests*
 
 # IDE files
-.vscode
 *.swp
 *.swo
 *~
