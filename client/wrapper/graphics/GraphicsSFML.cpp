@@ -63,6 +63,9 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
                             const std::string& fontPath) {
     sf::Font* font = loadFont(fontPath);
     if (!font) {
+        std::cerr << "Warning: GraphicsSFML::drawText() - Failed to load font, "
+                     "text not rendered: "
+                  << text << std::endl;
         return;
     }
 
@@ -80,6 +83,9 @@ float GraphicsSFML::getTextWidth(const std::string& text, unsigned int fontSize,
                                  const std::string& fontPath) {
     sf::Font* font = loadFont(fontPath);
     if (!font) {
+        std::cerr << "Warning: GraphicsSFML::getTextWidth() - Failed to load "
+                     "font, returning 0.0f"
+                  << std::endl;
         return 0.0f;
     }
 
