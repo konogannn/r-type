@@ -1,12 +1,12 @@
 {
-  "fullscreen": 1,
+  "fullscreen": 0,
   "keyMoveDown": "S",
   "keyMoveLeft": "Q",
   "keyMoveRight": "D",
   "keyMoveUp": "Z",
-  "keyShoot": "Space",
-  "musicVolume": 0.000000,
+  "keyShoot": "Empty",
+  "musicVolume": 55.399990,
   "resolutionHeight": 900,
   "resolutionWidth": 1600,
-  "sfxVolume": 0.000000
+  "sfxVolume": 40.699993
 }
