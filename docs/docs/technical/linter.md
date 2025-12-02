@@ -30,7 +30,7 @@ This command modifies files in place. It's recommended to commit your changes be
 
 ## 📐 Google Style Configuration
 
-The `.clang-format` file at the root of the project defines our presonal rules overloading Google ones
+The `.clang-format` file at the root of the project defines our personal rules overloading Google ones
 
 ## 🔄 CI/CD Integration
 
