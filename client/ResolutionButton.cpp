@@ -18,9 +18,12 @@ ResolutionButton::ResolutionButton(float x, float y, float width, float height,
       _resolution(resolution),
       _isActive(false),
       _isHovered(false),
-      _wasPressed(false) {}
+      _wasPressed(false)
+{
+}
 
-bool ResolutionButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
+bool ResolutionButton::isClicked(int mouseX, int mouseY, bool isMousePressed)
+{
     bool isInBounds = mouseX >= _x && mouseX <= _x + _width && mouseY >= _y &&
                       mouseY <= _y + _height;
 
@@ -36,7 +39,8 @@ bool ResolutionButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
     return false;
 }
 
-void ResolutionButton::update(int mouseX, int mouseY) {
+void ResolutionButton::update(int mouseX, int mouseY)
+{
     _isHovered = mouseX >= _x && mouseX <= _x + _width && mouseY >= _y &&
                  mouseY <= _y + _height;
 }

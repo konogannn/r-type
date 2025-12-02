@@ -22,7 +22,8 @@ using namespace rtype;
 
 enum class GameState { Menu, Settings, Playing };
 
-int main() {
+int main()
+{
     Config& config = Config::getInstance();
     config.load();
 

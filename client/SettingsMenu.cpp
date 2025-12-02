@@ -24,7 +24,8 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
       _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
-      _currentResolution(Resolution::R1920x1080) {
+      _currentResolution(Resolution::R1920x1080)
+{
     setupBackground();
     setupSliders();
     setupKeyBindings();
@@ -49,7 +50,8 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     updateLayout();
 }
 
-void SettingsMenu::setupBackground() {
+void SettingsMenu::setupBackground()
+{
     _background = std::make_unique<SpriteSFML>();
     if (!_background->loadTexture("assets/sprite_fond.jpg")) {
         std::cerr << "Warning: Failed to load background image" << std::endl;
@@ -57,7 +59,8 @@ void SettingsMenu::setupBackground() {
     }
 }
 
-void SettingsMenu::setupSliders() {
+void SettingsMenu::setupSliders()
+{
     _sliders.clear();
     _sliders.emplace_back(0, 0, SLIDER_WIDTH, "Music Volume", 0.0f, 100.0f,
                           80.0f);
@@ -65,7 +68,8 @@ void SettingsMenu::setupSliders() {
                           100.0f);
 }
 
-void SettingsMenu::setupKeyBindings() {
+void SettingsMenu::setupKeyBindings()
+{
     _keyBindingButtons.clear();
     _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::MoveUp);
     _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::MoveDown);
@@ -74,7 +78,8 @@ void SettingsMenu::setupKeyBindings() {
     _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::Shoot);
 }
 
-void SettingsMenu::setupResolutionButtons() {
+void SettingsMenu::setupResolutionButtons()
+{
     _resolutionButtons.clear();
     _resolutionButtons.emplace_back(0, 0, 250.0f, 50.0f, Resolution::R1280x720);
     _resolutionButtons.emplace_back(0, 0, 250.0f, 50.0f, Resolution::R1600x900);
@@ -84,7 +89,8 @@ void SettingsMenu::setupResolutionButtons() {
                                     Resolution::R2560x1440);
 }
 
-void SettingsMenu::updateLayout() {
+void SettingsMenu::updateLayout()
+{
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
 
@@ -156,7 +162,8 @@ void SettingsMenu::updateLayout() {
                          backButtonHeight, "BACK");
 }
 
-bool SettingsMenu::update() {
+bool SettingsMenu::update()
+{
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
@@ -209,7 +216,8 @@ bool SettingsMenu::update() {
     return false;
 }
 
-void SettingsMenu::handleKeyPress(Key key) {
+void SettingsMenu::handleKeyPress(Key key)
+{
     for (auto& button : _keyBindingButtons) {
         if (button.tryAssignKey(key)) {
             saveSettings();
@@ -218,7 +226,8 @@ void SettingsMenu::handleKeyPress(Key key) {
     }
 }
 
-bool SettingsMenu::isWaitingForKeyPress() const {
+bool SettingsMenu::isWaitingForKeyPress() const
+{
     for (const auto& button : _keyBindingButtons) {
         if (button.isInEditMode()) {
             return true;
@@ -227,7 +236,8 @@ bool SettingsMenu::isWaitingForKeyPress() const {
     return false;
 }
 
-void SettingsMenu::render() {
+void SettingsMenu::render()
+{
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
     float scale = windowHeight / 1080.0f;
@@ -277,7 +287,8 @@ void SettingsMenu::render() {
     renderBackButton(scale);
 }
 
-void SettingsMenu::renderBackButton(float scale) {
+void SettingsMenu::renderBackButton(float scale)
+{
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
     unsigned char r, g, b;
@@ -321,7 +332,8 @@ void SettingsMenu::renderBackButton(float scale) {
                        255, _fontPath);
 }
 
-void SettingsMenu::renderSlider(const Slider& slider, float) {
+void SettingsMenu::renderSlider(const Slider& slider, float)
+{
     float windowHeight = static_cast<float>(_window.getHeight());
     float baseUnit = windowHeight / 18.0f;
 
@@ -369,7 +381,8 @@ void SettingsMenu::renderSlider(const Slider& slider, float) {
                        fontSize, 255, 255, 255, _fontPath);
 }
 
-void SettingsMenu::saveSettings() {
+void SettingsMenu::saveSettings()
+{
     _config.setFloat("musicVolume", _sliders[0].getValue());
     _config.setFloat("sfxVolume", _sliders[1].getValue());
     _keyBinding.saveToConfig();
@@ -377,7 +390,8 @@ void SettingsMenu::saveSettings() {
 }
 
 void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
-                                          float scale) {
+                                          float scale)
+{
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
     unsigned char r, g, b;
@@ -429,7 +443,8 @@ void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
                        _fontPath);
 }
 
-void SettingsMenu::renderToggleButton(float scale) {
+void SettingsMenu::renderToggleButton(float scale)
+{
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
     unsigned char r, g, b;
@@ -484,7 +499,8 @@ void SettingsMenu::renderToggleButton(float scale) {
 }
 
 void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
-                                          float scale) {
+                                          float scale)
+{
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
     unsigned char r, g, b;

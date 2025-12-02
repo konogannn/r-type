@@ -9,12 +9,14 @@
 
 #include <iostream>
 
-SoundManager& SoundManager::getInstance() {
+SoundManager& SoundManager::getInstance()
+{
     static SoundManager instance;
     return instance;
 }
 
-void SoundManager::loadAll() {
+void SoundManager::loadAll()
+{
     std::cout << "Loading sounds..." << std::endl;
 
     loadSound("shot", "assets/sound/shot_1.wav");
@@ -25,7 +27,8 @@ void SoundManager::loadAll() {
 }
 
 void SoundManager::loadSound(const std::string& name,
-                             const std::string& filename) {
+                             const std::string& filename)
+{
     auto buffer = std::make_unique<rtype::SoundBufferSFML>();
 
     if (buffer->loadFromFile(filename)) {
@@ -42,7 +45,8 @@ void SoundManager::loadSound(const std::string& name,
     }
 }
 
-void SoundManager::playSound(const std::string& name) {
+void SoundManager::playSound(const std::string& name)
+{
     auto it = _sounds.find(name);
     if (it != _sounds.end()) {
         it->second->play();
@@ -51,7 +55,8 @@ void SoundManager::playSound(const std::string& name) {
     }
 }
 
-void SoundManager::setVolume(float volume) {
+void SoundManager::setVolume(float volume)
+{
     _volume = volume;
     for (auto& pair : _sounds) {
         pair.second->setVolume(volume);

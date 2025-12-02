@@ -11,7 +11,8 @@
 
 Projectile::Projectile(const std::string& texturePath, float x, float y,
                        float scale)
-    : _x(x), _y(y), _speed(400.0f * scale), _scale(scale), _alive(true) {
+    : _x(x), _y(y), _speed(400.0f * scale), _scale(scale), _alive(true)
+{
     _sprite = std::make_unique<rtype::SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);
@@ -20,7 +21,8 @@ Projectile::Projectile(const std::string& texturePath, float x, float y,
     }
 }
 
-void Projectile::update(float deltaTime, float windowWidth) {
+void Projectile::update(float deltaTime, float windowWidth)
+{
     _x += _speed * deltaTime;
     if (_sprite) {
         _sprite->setPosition(_x, _y);
@@ -31,7 +33,8 @@ void Projectile::update(float deltaTime, float windowWidth) {
     }
 }
 
-void Projectile::draw(rtype::IGraphics& graphics) {
+void Projectile::draw(rtype::IGraphics& graphics)
+{
     if (_alive && _sprite) {
         graphics.drawSprite(*_sprite);
     }

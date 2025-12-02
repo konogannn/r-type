@@ -13,7 +13,8 @@
 namespace rtype {
 
 ::LoginPacket NetworkMessage::createLoginPacket(const std::string& username,
-                                                uint32_t sequenceId) {
+                                                uint32_t sequenceId)
+{
     ::LoginPacket packet;
     packet.header.opCode = static_cast<uint8_t>(::OpCode::C2S_LOGIN);
     packet.header.packetSize = sizeof(::LoginPacket);
@@ -27,7 +28,8 @@ namespace rtype {
 }
 
 ::InputPacket NetworkMessage::createInputPacket(uint8_t inputMask,
-                                                uint32_t sequenceId) {
+                                                uint32_t sequenceId)
+{
     ::InputPacket packet;
     packet.header.opCode = static_cast<uint8_t>(::OpCode::C2S_INPUT);
     packet.header.packetSize = sizeof(::InputPacket);
@@ -37,7 +39,8 @@ namespace rtype {
     return packet;
 }
 
-::Header NetworkMessage::createDisconnectPacket(uint32_t sequenceId) {
+::Header NetworkMessage::createDisconnectPacket(uint32_t sequenceId)
+{
     ::Header packet;
     packet.opCode = static_cast<uint8_t>(::OpCode::C2S_DISCONNECT);
     packet.packetSize = sizeof(::Header);
@@ -46,7 +49,8 @@ namespace rtype {
     return packet;
 }
 
-::Header NetworkMessage::createAckPacket(uint32_t sequenceId) {
+::Header NetworkMessage::createAckPacket(uint32_t sequenceId)
+{
     ::Header packet;
     packet.opCode = static_cast<uint8_t>(::OpCode::C2S_ACK);
     packet.packetSize = sizeof(::Header);
@@ -56,7 +60,8 @@ namespace rtype {
 }
 
 bool NetworkMessage::validatePacket(const void* data, size_t size,
-                                    uint8_t expectedOpCode) {
+                                    uint8_t expectedOpCode)
+{
     if (!data || size < sizeof(::Header)) {
         return false;
     }
@@ -79,7 +84,8 @@ bool NetworkMessage::validatePacket(const void* data, size_t size,
     return true;
 }
 
-uint16_t NetworkMessage::getPacketSize(const void* data, size_t dataSize) {
+uint16_t NetworkMessage::getPacketSize(const void* data, size_t dataSize)
+{
     if (!data || dataSize < sizeof(::Header)) {
         return 0;
     }
@@ -88,7 +94,8 @@ uint16_t NetworkMessage::getPacketSize(const void* data, size_t dataSize) {
     return header->packetSize;
 }
 
-uint32_t NetworkMessage::getSequenceId(const void* data, size_t dataSize) {
+uint32_t NetworkMessage::getSequenceId(const void* data, size_t dataSize)
+{
     if (!data || dataSize < sizeof(::Header)) {
         return 0;
     }
@@ -97,7 +104,8 @@ uint32_t NetworkMessage::getSequenceId(const void* data, size_t dataSize) {
     return header->sequenceId;
 }
 
-uint8_t NetworkMessage::getOpCode(const void* data, size_t dataSize) {
+uint8_t NetworkMessage::getOpCode(const void* data, size_t dataSize)
+{
     if (!data || dataSize < sizeof(::Header)) {
         return 0;
     }
@@ -106,7 +114,8 @@ uint8_t NetworkMessage::getOpCode(const void* data, size_t dataSize) {
     return header->opCode;
 }
 
-std::string NetworkMessage::inputMaskToString(uint8_t inputMask) {
+std::string NetworkMessage::inputMaskToString(uint8_t inputMask)
+{
     if (inputMask == 0) {
         return "NONE";
     }
@@ -140,7 +149,8 @@ std::string NetworkMessage::inputMaskToString(uint8_t inputMask) {
     return oss.str();
 }
 
-std::string NetworkMessage::entityTypeToString(uint8_t entityType) {
+std::string NetworkMessage::entityTypeToString(uint8_t entityType)
+{
     switch (entityType) {
         case EntityType::PLAYER:
             return "PLAYER";
@@ -153,7 +163,8 @@ std::string NetworkMessage::entityTypeToString(uint8_t entityType) {
     }
 }
 
-std::string NetworkMessage::opCodeToString(uint8_t opCode) {
+std::string NetworkMessage::opCodeToString(uint8_t opCode)
+{
     switch (static_cast<::OpCode>(opCode)) {
         case ::OpCode::C2S_LOGIN:
             return "C2S_LOGIN";

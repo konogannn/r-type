@@ -1,5 +1,6 @@
 # Build directories
 build/
+build_coverage/
 cmake-build-*/
 _deps/
 
@@ -9,6 +10,8 @@ CMakeFiles/
 cmake_install.cmake
 Makefile
 CMakeLists.txt.user
+CTestTestfile.cmake
+DartConfiguration.tcl
 
 # vcpkg
 vcpkg/
@@ -16,6 +19,7 @@ vcpkg_installed/
 .vcpkg-root
 
 # Compiled executables
+lib
 r-type-client
 r-type-server
 *.exe
@@ -25,6 +29,15 @@ r-type-server
 # Object files
 *.o
 *.obj
+
+# Coverage files
+*.gcda
+*.gcno
+*.gcov
+coverage.info
+coverage_filtered.info
+coverage_html/
+ecs_tests*
 
 # IDE files
 *.swp

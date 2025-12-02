@@ -1,13 +1,18 @@
 # Server module CMakeLists.txt
 # This module contains the game server code and engine (backend)
 
-# Add engine subdirectory
+# Add subdirectories
 add_subdirectory(engine)
+add_subdirectory(network)
+add_subdirectory(utils)
 
-# Include directories for server headers (when they exist)
-# include_directories(
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
+# Include directories for server headers
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/network
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils
+)
 
 # Collect all server source files (placeholder - uncomment when files exist)
 # set(SERVER_SOURCES
@@ -30,4 +35,3 @@ add_subdirectory(engine)
 # Executable will be output to project root (configured globally in root CMakeLists.txt)
 
 # Placeholder message to indicate module structure is ready
-message(STATUS "Server module configured (no source files yet)")

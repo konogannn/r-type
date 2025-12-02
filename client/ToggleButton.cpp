@@ -18,9 +18,12 @@ ToggleButton::ToggleButton(float x, float y, float width, float height,
       _label(label),
       _isOn(initialState),
       _isHovered(false),
-      _wasPressed(false) {}
+      _wasPressed(false)
+{
+}
 
-void ToggleButton::update(int mouseX, int mouseY) {
+void ToggleButton::update(int mouseX, int mouseY)
+{
     float mx = static_cast<float>(mouseX);
     float my = static_cast<float>(mouseY);
 
@@ -28,7 +31,8 @@ void ToggleButton::update(int mouseX, int mouseY) {
         (mx >= _x && mx <= _x + _width && my >= _y && my <= _y + _height);
 }
 
-bool ToggleButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
+bool ToggleButton::isClicked(int mouseX, int mouseY, bool isMousePressed)
+{
     float mx = static_cast<float>(mouseX);
     float my = static_cast<float>(mouseY);
 

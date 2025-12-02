@@ -22,11 +22,13 @@ Slider::Slider(float x, float y, float width, const std::string& label,
       _maxValue(maxValue),
       _value(initialValue),
       _isHovered(false),
-      _isDragging(false) {
+      _isDragging(false)
+{
     _value = std::clamp(_value, _minValue, _maxValue);
 }
 
-void Slider::update(int mouseX, int mouseY, bool isMousePressed) {
+void Slider::update(int mouseX, int mouseY, bool isMousePressed)
+{
     float mx = static_cast<float>(mouseX);
     _isHovered = isPointInHandle(mouseX, mouseY);
 
@@ -45,11 +47,13 @@ void Slider::update(int mouseX, int mouseY, bool isMousePressed) {
     }
 }
 
-void Slider::setValue(float value) {
+void Slider::setValue(float value)
+{
     _value = std::clamp(value, _minValue, _maxValue);
 }
 
-bool Slider::isPointInHandle(int mouseX, int mouseY) const {
+bool Slider::isPointInHandle(int mouseX, int mouseY) const
+{
     float handleX = getHandleX();
     float handleY = _y - (HANDLE_HEIGHT - TRACK_HEIGHT) / 2.0f;
 
@@ -60,7 +64,8 @@ bool Slider::isPointInHandle(int mouseX, int mouseY) const {
             my <= handleY + HANDLE_HEIGHT);
 }
 
-float Slider::getHandleX() const {
+float Slider::getHandleX() const
+{
     float normalizedValue = getNormalizedValue();
     return _x + (normalizedValue * _width) - (HANDLE_WIDTH / 2.0f);
 }

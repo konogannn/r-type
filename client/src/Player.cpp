@@ -25,7 +25,8 @@ Player::Player(rtype::ISprite* spriteStatic, rtype::ISprite* spriteDown,
       _keyLeft(rtype::Key::Q),
       _keyRight(rtype::Key::D),
       _keyShoot(rtype::Key::Space),
-      _currentState(MovementState::STATIC) {
+      _currentState(MovementState::STATIC)
+{
     if (_currentSprite) {
         _currentSprite->setScale(3.0f * scale, 3.0f * scale);
         _currentSprite->setPosition(_x, _y);
@@ -33,7 +34,8 @@ Player::Player(rtype::ISprite* spriteStatic, rtype::ISprite* spriteDown,
 }
 
 void Player::setKeys(rtype::Key up, rtype::Key down, rtype::Key left,
-                     rtype::Key right, rtype::Key shoot) {
+                     rtype::Key right, rtype::Key shoot)
+{
     _keyUp = up;
     _keyDown = down;
     _keyLeft = left;
@@ -42,7 +44,8 @@ void Player::setKeys(rtype::Key up, rtype::Key down, rtype::Key left,
 }
 
 void Player::handleInput(const rtype::IInput& input, float deltaTime,
-                         float worldWidth, float worldHeight) {
+                         float worldWidth, float worldHeight)
+{
     MovementState newState = MovementState::STATIC;
     if (_keyUp != rtype::Key::Unknown && input.isKeyPressed(_keyUp)) {
         _y -= _speed * deltaTime;
@@ -101,7 +104,8 @@ void Player::handleInput(const rtype::IInput& input, float deltaTime,
     }
 }
 
-void Player::update(float deltaTime) {
+void Player::update(float deltaTime)
+{
     if (!_canShoot) {
         _shootCooldown -= deltaTime;
         if (_shootCooldown <= 0.0f) {
@@ -112,7 +116,8 @@ void Player::update(float deltaTime) {
     _wantsToShoot = false;
 }
 
-void Player::draw(rtype::IGraphics& graphics) {
+void Player::draw(rtype::IGraphics& graphics)
+{
     if (_currentSprite) {
         graphics.drawSprite(*_currentSprite);
     }

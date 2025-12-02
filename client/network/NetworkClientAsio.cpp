@@ -18,12 +18,14 @@ NetworkClientAsio::NetworkClientAsio()
     : _socket(_ioContext),
       _state(NetworkState::Disconnected),
       _running(false),
-      _sequenceId(0) {}
+      _sequenceId(0)
+{
+}
 
 NetworkClientAsio::~NetworkClientAsio() { disconnect(); }
 
-bool NetworkClientAsio::connect(const std::string& serverAddress,
-                                uint16_t port) {
+bool NetworkClientAsio::connect(const std::string& serverAddress, uint16_t port)
+{
     if (_state != NetworkState::Disconnected) {
         callErrorCallback("Already connected or connecting");
         return false;
@@ -63,7 +65,8 @@ bool NetworkClientAsio::connect(const std::string& serverAddress,
     }
 }
 
-void NetworkClientAsio::disconnect() {
+void NetworkClientAsio::disconnect()
+{
     if (_state == NetworkState::Disconnected) {
         return;
     }
@@ -80,13 +83,15 @@ void NetworkClientAsio::disconnect() {
     }
 }
 
-bool NetworkClientAsio::isConnected() const {
+bool NetworkClientAsio::isConnected() const
+{
     return _state == NetworkState::Connected;
 }
 
 NetworkState NetworkClientAsio::getState() const { return _state.load(); }
 
-bool NetworkClientAsio::sendLogin(const std::string& username) {
+bool NetworkClientAsio::sendLogin(const std::string& username)
+{
     if (!isConnected()) {
         return false;
     }
@@ -103,7 +108,8 @@ bool NetworkClientAsio::sendLogin(const std::string& username) {
     return sendPacket(packet);
 }
 
-bool NetworkClientAsio::sendInput(uint8_t inputMask) {
+bool NetworkClientAsio::sendInput(uint8_t inputMask)
+{
     if (!isConnected()) {
         return false;
     }
@@ -117,7 +123,8 @@ bool NetworkClientAsio::sendInput(uint8_t inputMask) {
     return sendPacket(packet);
 }
 
-bool NetworkClientAsio::sendDisconnect() {
+bool NetworkClientAsio::sendDisconnect()
+{
     if (!isConnected()) {
         return false;
     }
@@ -130,7 +137,8 @@ bool NetworkClientAsio::sendDisconnect() {
     return sendPacket(packet);
 }
 
-bool NetworkClientAsio::sendAck(uint32_t sequenceId) {
+bool NetworkClientAsio::sendAck(uint32_t sequenceId)
+{
     if (!isConnected()) {
         return false;
     }
@@ -143,7 +151,8 @@ bool NetworkClientAsio::sendAck(uint32_t sequenceId) {
     return sendPacket(packet);
 }
 
-void NetworkClientAsio::update() {
+void NetworkClientAsio::update()
+{
     std::lock_guard<std::mutex> lock(_messageQueueMutex);
 
     while (!_pendingMessages.empty()) {
@@ -153,44 +162,51 @@ void NetworkClientAsio::update() {
     }
 }
 
-void NetworkClientAsio::setOnConnectedCallback(OnConnectedCallback callback) {
+void NetworkClientAsio::setOnConnectedCallback(OnConnectedCallback callback)
+{
     _onConnected = callback;
 }
 
 void NetworkClientAsio::setOnDisconnectedCallback(
-    OnDisconnectedCallback callback) {
+    OnDisconnectedCallback callback)
+{
     _onDisconnected = callback;
 }
 
 void NetworkClientAsio::setOnLoginResponseCallback(
-    OnLoginResponseCallback callback) {
+    OnLoginResponseCallback callback)
+{
     _onLoginResponse = callback;
 }
 
-void NetworkClientAsio::setOnEntitySpawnCallback(
-    OnEntitySpawnCallback callback) {
+void NetworkClientAsio::setOnEntitySpawnCallback(OnEntitySpawnCallback callback)
+{
     _onEntitySpawn = callback;
 }
 
 void NetworkClientAsio::setOnEntityPositionCallback(
-    OnEntityPositionCallback callback) {
+    OnEntityPositionCallback callback)
+{
     _onEntityPosition = callback;
 }
 
-void NetworkClientAsio::setOnEntityDeadCallback(OnEntityDeadCallback callback) {
+void NetworkClientAsio::setOnEntityDeadCallback(OnEntityDeadCallback callback)
+{
     _onEntityDead = callback;
 }
 
-void NetworkClientAsio::setOnScoreUpdateCallback(
-    OnScoreUpdateCallback callback) {
+void NetworkClientAsio::setOnScoreUpdateCallback(OnScoreUpdateCallback callback)
+{
     _onScoreUpdate = callback;
 }
 
-void NetworkClientAsio::setOnErrorCallback(OnErrorCallback callback) {
+void NetworkClientAsio::setOnErrorCallback(OnErrorCallback callback)
+{
     _onError = callback;
 }
 
-void NetworkClientAsio::startReceive() {
+void NetworkClientAsio::startReceive()
+{
     _socket.async_receive_from(boost::asio::buffer(_receiveBuffer),
                                _senderEndpoint,
                                [this](const boost::system::error_code& error,
@@ -200,7 +216,8 @@ void NetworkClientAsio::startReceive() {
 }
 
 void NetworkClientAsio::handleReceive(const boost::system::error_code& error,
-                                      size_t bytesTransferred) {
+                                      size_t bytesTransferred)
+{
     if (!error && bytesTransferred > 0) {
         {
             std::lock_guard<std::mutex> lock(_messageQueueMutex);
@@ -223,7 +240,8 @@ void NetworkClientAsio::handleReceive(const boost::system::error_code& error,
     }
 }
 
-void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size) {
+void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
+{
     if (size < sizeof(::Header)) {
         return;
     }
@@ -251,7 +269,8 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size) {
     }
 }
 
-void NetworkClientAsio::runNetworkThread() {
+void NetworkClientAsio::runNetworkThread()
+{
     while (_running) {
         try {
             size_t handlersRun = _ioContext.run();
@@ -269,7 +288,8 @@ void NetworkClientAsio::runNetworkThread() {
     }
 }
 
-void NetworkClientAsio::stopNetworkThread() {
+void NetworkClientAsio::stopNetworkThread()
+{
     _running = false;
     _ioContext.stop();
 
@@ -284,7 +304,8 @@ void NetworkClientAsio::stopNetworkThread() {
     _ioContext.reset();
 }
 
-bool NetworkClientAsio::sendMessage(const void* data, size_t size) {
+bool NetworkClientAsio::sendMessage(const void* data, size_t size)
+{
     if (!isConnected()) {
         return false;
     }
@@ -303,11 +324,13 @@ bool NetworkClientAsio::sendMessage(const void* data, size_t size) {
 }
 
 template <typename T>
-bool NetworkClientAsio::sendPacket(const T& packet) {
+bool NetworkClientAsio::sendPacket(const T& packet)
+{
     return sendMessage(&packet, sizeof(T));
 }
 
-void NetworkClientAsio::processLoginResponse(const uint8_t* data, size_t size) {
+void NetworkClientAsio::processLoginResponse(const uint8_t* data, size_t size)
+{
     if (size < sizeof(::LoginResponsePacket)) {
         return;
     }
@@ -320,7 +343,8 @@ void NetworkClientAsio::processLoginResponse(const uint8_t* data, size_t size) {
     }
 }
 
-void NetworkClientAsio::processEntitySpawn(const uint8_t* data, size_t size) {
+void NetworkClientAsio::processEntitySpawn(const uint8_t* data, size_t size)
+{
     if (size < sizeof(::EntitySpawnPacket)) {
         return;
     }
@@ -333,8 +357,8 @@ void NetworkClientAsio::processEntitySpawn(const uint8_t* data, size_t size) {
     }
 }
 
-void NetworkClientAsio::processEntityPosition(const uint8_t* data,
-                                              size_t size) {
+void NetworkClientAsio::processEntityPosition(const uint8_t* data, size_t size)
+{
     if (size < sizeof(::EntityPositionPacket)) {
         return;
     }
@@ -347,7 +371,8 @@ void NetworkClientAsio::processEntityPosition(const uint8_t* data,
     }
 }
 
-void NetworkClientAsio::processEntityDead(const uint8_t* data, size_t size) {
+void NetworkClientAsio::processEntityDead(const uint8_t* data, size_t size)
+{
     if (size < sizeof(Header) + sizeof(uint32_t)) {
         return;
     }
@@ -360,7 +385,8 @@ void NetworkClientAsio::processEntityDead(const uint8_t* data, size_t size) {
     }
 }
 
-void NetworkClientAsio::processScoreUpdate(const uint8_t* data, size_t size) {
+void NetworkClientAsio::processScoreUpdate(const uint8_t* data, size_t size)
+{
     if (size < sizeof(Header) + sizeof(uint32_t)) {
         return;
     }
@@ -377,7 +403,8 @@ uint32_t NetworkClientAsio::getNextSequenceId() { return ++_sequenceId; }
 
 void NetworkClientAsio::setState(NetworkState newState) { _state = newState; }
 
-void NetworkClientAsio::callErrorCallback(const std::string& error) {
+void NetworkClientAsio::callErrorCallback(const std::string& error)
+{
     std::cerr << "NetworkClientAsio Error: " << error << std::endl;
 
     if (_onError) {

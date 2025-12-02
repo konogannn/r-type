@@ -19,7 +19,8 @@ Explosion::Explosion(const std::string& texturePath, float x, float y,
       _currentFrame(0),
       _frameTimer(0.0f),
       _frameDuration(0.08f),
-      _finished(false) {
+      _finished(false)
+{
     _sprite = std::make_unique<SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);
@@ -29,7 +30,8 @@ Explosion::Explosion(const std::string& texturePath, float x, float y,
     }
 }
 
-void Explosion::update(float deltaTime) {
+void Explosion::update(float deltaTime)
+{
     if (_finished) {
         return;
     }
@@ -50,7 +52,8 @@ void Explosion::update(float deltaTime) {
     }
 }
 
-void Explosion::draw(IGraphics& graphics) {
+void Explosion::draw(IGraphics& graphics)
+{
     if (!_finished && _sprite) {
         graphics.drawSprite(*_sprite);
     }

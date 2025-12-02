@@ -2,34 +2,35 @@
 # This module contains the core game engine code (ECS, physics, etc.)
 # Part of the server/backend architecture
 
-# Include directories for engine headers (when they exist)
-# include_directories(
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
+# Add subdirectories
+add_subdirectory(Component)
+add_subdirectory(Entity)
 
-# Collect all engine source files (placeholder - uncomment when files exist)
-# set(ENGINE_SOURCES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/Entity.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/System.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/physics/Physics.cpp
-#     # Add other engine source files here
-# )
+# Collect all engine source files from subdirectories
+set(ENGINE_SOURCES
+    ${COMPONENT_MODULE_SOURCES}
+    ${ENTITY_MODULE_SOURCES}
+)
 
-# Create the engine library (placeholder - uncomment when ready to build)
-# add_library(r-type-engine STATIC
-#     ${ENGINE_SOURCES}
-# )
+# Create the engine library
+add_library(r-type-engine STATIC
+    ${ENGINE_SOURCES}
+)
 
-# Make engine headers available to server module (uncomment when headers exist)
-# target_include_directories(r-type-engine
-#     PUBLIC
-#         ${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
+# Make engine headers available to server module
+target_include_directories(r-type-engine
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Component
+        ${CMAKE_CURRENT_SOURCE_DIR}/Entity
+)
 
 # Set output directory for the engine library
-# set_target_properties(r-type-engine PROPERTIES
-#     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-# )
+set_target_properties(r-type-engine PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+)
 
-# Placeholder message to indicate module structure is ready
-message(STATUS "Engine module configured (no source files yet)")
+# Add tests subdirectory if testing is enabled
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

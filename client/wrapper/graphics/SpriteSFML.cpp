@@ -13,9 +13,12 @@ namespace rtype {
 
 SpriteSFML::SpriteSFML()
     : _texture(std::make_unique<sf::Texture>()),
-      _sprite(std::make_unique<sf::Sprite>()) {}
+      _sprite(std::make_unique<sf::Sprite>())
+{
+}
 
-bool SpriteSFML::loadTexture(const std::string& filepath) {
+bool SpriteSFML::loadTexture(const std::string& filepath)
+{
     if (!_texture->loadFromFile(filepath)) {
         std::cerr << "Error: Failed to load texture from " << filepath
                   << std::endl;
@@ -27,13 +30,15 @@ bool SpriteSFML::loadTexture(const std::string& filepath) {
 
 void SpriteSFML::setPosition(float x, float y) { _sprite->setPosition(x, y); }
 
-void SpriteSFML::setScale(float scaleX, float scaleY) {
+void SpriteSFML::setScale(float scaleX, float scaleY)
+{
     _sprite->setScale(scaleX, scaleY);
 }
 
 void SpriteSFML::setRotation(float angle) { _sprite->setRotation(angle); }
 
-void SpriteSFML::move(float offsetX, float offsetY) {
+void SpriteSFML::move(float offsetX, float offsetY)
+{
     _sprite->move(offsetX, offsetY);
 }
 
@@ -41,7 +46,8 @@ float SpriteSFML::getPositionX() const { return _sprite->getPosition().x; }
 
 float SpriteSFML::getPositionY() const { return _sprite->getPosition().y; }
 
-void SpriteSFML::setTextureRect(int left, int top, int width, int height) {
+void SpriteSFML::setTextureRect(int left, int top, int width, int height)
+{
     _sprite->setTextureRect(sf::IntRect(left, top, width, height));
 }
 
