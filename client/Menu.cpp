@@ -15,7 +15,7 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/arial.ttf") {
+      _fontPath("assets/fonts/Retro_Gaming.ttf") {
     setupBackground();
     setupButtons();
     updateLayout();
