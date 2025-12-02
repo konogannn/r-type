@@ -67,7 +67,8 @@ class KeyBindingButton {
     float getHeight() const { return _height; }
     GameAction getAction() const { return _action; }
     std::string getLabel() const { return KeyBinding::actionToString(_action); }
-    std::string getCurrentKey() const {
+    std::string getCurrentKey() const
+    {
         return KeyBinding::keyToString(
             KeyBinding::getInstance().getKey(_action));
     }

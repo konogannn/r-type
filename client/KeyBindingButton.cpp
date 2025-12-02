@@ -18,9 +18,12 @@ KeyBindingButton::KeyBindingButton(float x, float y, float width, float height,
       _action(action),
       _isHovered(false),
       _isInEditMode(false),
-      _wasPressed(false) {}
+      _wasPressed(false)
+{
+}
 
-void KeyBindingButton::update(int mouseX, int mouseY, bool) {
+void KeyBindingButton::update(int mouseX, int mouseY, bool)
+{
     float mx = static_cast<float>(mouseX);
     float my = static_cast<float>(mouseY);
 
@@ -28,7 +31,8 @@ void KeyBindingButton::update(int mouseX, int mouseY, bool) {
         (mx >= _x && mx <= _x + _width && my >= _y && my <= _y + _height);
 }
 
-bool KeyBindingButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
+bool KeyBindingButton::isClicked(int mouseX, int mouseY, bool isMousePressed)
+{
     update(mouseX, mouseY, isMousePressed);
 
     bool clicked = false;
@@ -45,7 +49,8 @@ bool KeyBindingButton::isClicked(int mouseX, int mouseY, bool isMousePressed) {
     return clicked;
 }
 
-bool KeyBindingButton::tryAssignKey(Key key) {
+bool KeyBindingButton::tryAssignKey(Key key)
+{
     if (!_isInEditMode) return false;
 
     if (key == Key::Escape) {

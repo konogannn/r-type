@@ -22,7 +22,8 @@ enum class Resolution {
 /**
  * @brief Get width for a resolution
  */
-inline int getResolutionWidth(Resolution res) {
+inline int getResolutionWidth(Resolution res)
+{
     switch (res) {
         case Resolution::R1280x720:
             return 1280;
@@ -40,7 +41,8 @@ inline int getResolutionWidth(Resolution res) {
 /**
  * @brief Get height for a resolution
  */
-inline int getResolutionHeight(Resolution res) {
+inline int getResolutionHeight(Resolution res)
+{
     switch (res) {
         case Resolution::R1280x720:
             return 720;
@@ -58,7 +60,8 @@ inline int getResolutionHeight(Resolution res) {
 /**
  * @brief Get display name for a resolution
  */
-inline const char* getResolutionName(Resolution res) {
+inline const char* getResolutionName(Resolution res)
+{
     switch (res) {
         case Resolution::R1280x720:
             return "1280x720 (HD)";
@@ -76,7 +79,8 @@ inline const char* getResolutionName(Resolution res) {
 /**
  * @brief Get resolution from width and height
  */
-inline Resolution getResolutionFromSize(int width, int height) {
+inline Resolution getResolutionFromSize(int width, int height)
+{
     if (width == 1280 && height == 720) return Resolution::R1280x720;
     if (width == 1600 && height == 900) return Resolution::R1600x900;
     if (width == 1920 && height == 1080) return Resolution::R1920x1080;

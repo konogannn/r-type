@@ -29,7 +29,8 @@ class GameUI {
     float _messageTimer = 0.0f;
 
    public:
-    void update(const ClientGameState& gameState, float deltaTime) {
+    void update(const ClientGameState& gameState, float deltaTime)
+    {
         _messageTimer -= deltaTime;
 
         // Update state based on game state
@@ -55,7 +56,8 @@ class GameUI {
         }
     }
 
-    void render(IGraphics& graphics) {
+    void render(IGraphics& graphics)
+    {
         // Simple text rendering (you may need to implement text rendering in
         // GraphicsSFML) For now, we'll use console output for status
 
@@ -69,7 +71,8 @@ class GameUI {
     GameState getState() const { return _state; }
 };
 
-int main() {
+int main()
+{
     std::cout << "=== R-Type Client with ECS Integration ===" << std::endl;
     std::cout << "Enhanced architecture with network game state management"
               << std::endl;

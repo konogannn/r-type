@@ -13,14 +13,16 @@
 
 namespace rtype {
 
-KeyBinding& KeyBinding::getInstance() {
+KeyBinding& KeyBinding::getInstance()
+{
     static KeyBinding instance;
     return instance;
 }
 
 KeyBinding::KeyBinding() { setDefaults(); }
 
-void KeyBinding::setDefaults() {
+void KeyBinding::setDefaults()
+{
     _bindings[GameAction::MoveUp] = Key::Z;
     _bindings[GameAction::MoveDown] = Key::S;
     _bindings[GameAction::MoveLeft] = Key::Q;
@@ -28,7 +30,8 @@ void KeyBinding::setDefaults() {
     _bindings[GameAction::Shoot] = Key::Space;
 }
 
-void KeyBinding::loadFromConfig() {
+void KeyBinding::loadFromConfig()
+{
     Config& config = Config::getInstance();
 
     auto loadBinding = [&](GameAction action, const std::string& configKey,
@@ -48,7 +51,8 @@ void KeyBinding::loadFromConfig() {
     loadBinding(GameAction::Shoot, "keyShoot", Key::Space);
 }
 
-void KeyBinding::saveToConfig() {
+void KeyBinding::saveToConfig()
+{
     Config& config = Config::getInstance();
 
     auto saveBinding = [&](const std::string& configKey, GameAction action) {
@@ -64,7 +68,8 @@ void KeyBinding::saveToConfig() {
     saveBinding("keyShoot", GameAction::Shoot);
 }
 
-Key KeyBinding::getKey(GameAction action) const {
+Key KeyBinding::getKey(GameAction action) const
+{
     auto it = _bindings.find(action);
     if (it != _bindings.end()) {
         return it->second;
@@ -72,7 +77,8 @@ Key KeyBinding::getKey(GameAction action) const {
     return Key::Unknown;
 }
 
-void KeyBinding::setKey(GameAction action, Key key) {
+void KeyBinding::setKey(GameAction action, Key key)
+{
     for (auto& pair : _bindings) {
         if (pair.first != action && pair.second == key) {
             pair.second = Key::Unknown;
@@ -82,7 +88,8 @@ void KeyBinding::setKey(GameAction action, Key key) {
     _bindings[action] = key;
 }
 
-std::string KeyBinding::keyToString(Key key) {
+std::string KeyBinding::keyToString(Key key)
+{
     switch (key) {
         case Key::A:
             return "A";
@@ -191,7 +198,8 @@ std::string KeyBinding::keyToString(Key key) {
     }
 }
 
-std::string KeyBinding::actionToString(GameAction action) {
+std::string KeyBinding::actionToString(GameAction action)
+{
     switch (action) {
         case GameAction::MoveUp:
             return "Move Up";
@@ -208,7 +216,8 @@ std::string KeyBinding::actionToString(GameAction action) {
     }
 }
 
-Key KeyBinding::stringToKey(const std::string& str) {
+Key KeyBinding::stringToKey(const std::string& str)
+{
     if (str.empty() || str == "Empty" || str == "Unknown") {
         return Key::Unknown;
     }
