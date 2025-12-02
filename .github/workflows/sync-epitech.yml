@@ -1,0 +1,47 @@
+name: Synchronize the Epitech mirror repository
+run-name: ${{ github.actor }} has run the synchronize Epitech mirror repository workflow
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  MIRROR_URL: "git@github.com:EpitechPGE3-2025/G-CPP-500-NAN-5-2-rtype-7.git"
+
+jobs:
+  check_repository:
+    name: Check the repository
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.new.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if we are in the mirrored repository
+        id: new
+        run: |
+          if [[ "${{ github.repository }}" == *"Epitech"* ]]; then
+            echo "::notice::You are in the Epitech repository"
+            echo "value=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "value=0" >> "$GITHUB_OUTPUT"
+          exit 0
+
+  push_to_mirror:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == 0 }}
+    name: Push to the mirror repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to mirror
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: ${{ env.MIRROR_URL }}
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
