@@ -12,5 +12,3 @@ set(UTILS_HEADERS
 # Export sources to parent scope
 set(UTILS_MODULE_SOURCES ${UTILS_SOURCES} PARENT_SCOPE)
 set(UTILS_MODULE_HEADERS ${UTILS_HEADERS} PARENT_SCOPE)
-
-message(STATUS "Utils module configured")

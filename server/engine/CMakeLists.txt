@@ -30,8 +30,6 @@ set_target_properties(r-type-engine PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
 )
 
-message(STATUS "Engine module configured with ECS components")
-
 # Add tests subdirectory if testing is enabled
 if(BUILD_TESTING)
     add_subdirectory(tests)

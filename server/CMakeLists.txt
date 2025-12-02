@@ -35,4 +35,3 @@ include_directories(
 # Executable will be output to project root (configured globally in root CMakeLists.txt)
 
 # Placeholder message to indicate module structure is ready
-message(STATUS "Server module configured (no source files yet)")

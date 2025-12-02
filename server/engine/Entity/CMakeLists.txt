@@ -18,5 +18,3 @@ set(ENTITY_HEADERS
 # Export sources to parent scope
 set(ENTITY_MODULE_SOURCES ${ENTITY_SOURCES} PARENT_SCOPE)
 set(ENTITY_MODULE_HEADERS ${ENTITY_HEADERS} PARENT_SCOPE)
-
-message(STATUS "Entity module configured")

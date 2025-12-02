@@ -7,5 +7,3 @@ set(NETWORK_HEADERS
 
 # Export headers to parent scope
 set(NETWORK_MODULE_HEADERS ${NETWORK_HEADERS} PARENT_SCOPE)
-
-message(STATUS "Network module configured")
