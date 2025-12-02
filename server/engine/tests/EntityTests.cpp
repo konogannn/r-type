@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** EntityTests.cpp - Unit tests for Entity class
+** EntityTests
 */
 
 #include <gtest/gtest.h>

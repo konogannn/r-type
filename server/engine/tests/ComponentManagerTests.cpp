@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ComponentManagerTests.cpp - Unit tests for ComponentManager class
+** ComponentManagerTests
 */
 
 #include <gtest/gtest.h>

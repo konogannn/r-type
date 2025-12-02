@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ComponentManager.cpp
+** ComponentManager
 */
 
 #include "ComponentManager.hpp"

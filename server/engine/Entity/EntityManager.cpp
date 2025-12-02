@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** EntityManager.cpp
+** EntityManager
 */
 
 #include "EntityManager.hpp"

@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ArchetypeSignatureTests.cpp - Unit tests for ArchetypeSignature class
+** ArchetypeSignatureTests
 */
 
 #include <gtest/gtest.h>

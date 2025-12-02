@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ComponentTests.cpp - Unit tests for Component and ComponentBase classes
+** ComponentTests
 */
 
 #include <gtest/gtest.h>

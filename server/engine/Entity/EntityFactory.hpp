@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** EntityFactory.hpp
+** EntityFactory
 */
 
 #pragma once

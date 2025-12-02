@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** EntityManagerTests.cpp - Unit tests for EntityManager class
+** EntityManagerTests
 */
 
 #include <gtest/gtest.h>
