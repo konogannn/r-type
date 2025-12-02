@@ -23,7 +23,9 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _windowedWidth(width),
       _windowedHeight(height),
       _isFullscreen(false),
-      _title(title) {}
+      _title(title)
+{
+}
 
 bool WindowSFML::isOpen() const { return _window->isOpen(); }
 
@@ -83,7 +85,8 @@ std::pair<int, int> WindowSFML::getEventMousePosition() const
     return {0, 0};
 }
 
-Key WindowSFML::getEventKey() const {
+Key WindowSFML::getEventKey() const
+{
     if (_lastEvent.type != sf::Event::KeyPressed &&
         _lastEvent.type != sf::Event::KeyReleased) {
         return Key::Unknown;
@@ -195,7 +198,8 @@ Key WindowSFML::getEventKey() const {
     }
 }
 
-void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b) {
+void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b)
+{
     _window->clear(sf::Color(r, g, b));
 }
 
@@ -218,7 +222,8 @@ float WindowSFML::getDeltaTime()
     return _deltaTime;
 }
 
-void WindowSFML::setFullscreen(bool fullscreen) {
+void WindowSFML::setFullscreen(bool fullscreen)
+{
     if (_isFullscreen == fullscreen) return;
 
     _isFullscreen = fullscreen;
@@ -227,7 +232,8 @@ void WindowSFML::setFullscreen(bool fullscreen) {
 
 bool WindowSFML::isFullscreen() const { return _isFullscreen; }
 
-void WindowSFML::setResolution(unsigned int width, unsigned int height) {
+void WindowSFML::setResolution(unsigned int width, unsigned int height)
+{
     if (width == 0 || height == 0) {
         std::cerr << "WindowSFML: Invalid resolution " << width << "x" << height
                   << ", ignoring" << std::endl;
@@ -246,7 +252,8 @@ void WindowSFML::setResolution(unsigned int width, unsigned int height) {
     recreateWindow();
 }
 
-void WindowSFML::recreateWindow() {
+void WindowSFML::recreateWindow()
+{
     _window->close();
 
     if (_isFullscreen) {

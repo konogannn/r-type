@@ -15,7 +15,8 @@ Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
       _scale(scale),
       _currentFrame(0),
       _frameTimer(0.0f),
-      _frameDuration(0.15f) {
+      _frameDuration(0.15f)
+{
     _sprite = std::make_unique<rtype::SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);

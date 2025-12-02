@@ -67,7 +67,8 @@ void BackgroundLayer::draw(rtype::IGraphics& graphics)
 Background::Background(const std::string& backPath,
                        const std::string& starsPath,
                        const std::string& planetPath, float windowWidth,
-                       float windowHeight) {
+                       float windowHeight)
+{
     _backLayer = std::make_unique<BackgroundLayer>(backPath, 10.0f, windowWidth,
                                                    windowHeight);
     _starsLayer = std::make_unique<BackgroundLayer>(starsPath, 20.0f,

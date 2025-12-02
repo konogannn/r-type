@@ -11,7 +11,8 @@
 
 Projectile::Projectile(const std::string& texturePath, float x, float y,
                        float scale)
-    : _x(x), _y(y), _speed(400.0f * scale), _scale(scale), _alive(true) {
+    : _x(x), _y(y), _speed(400.0f * scale), _scale(scale), _alive(true)
+{
     _sprite = std::make_unique<rtype::SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
         _sprite->setSmooth(false);

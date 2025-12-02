@@ -29,7 +29,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
-      _scale(1.0f) {
+      _scale(1.0f)
+{
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
@@ -83,7 +84,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
                                      600.0f * _scale, 250.0f * _scale, _scale);
 }
 
-bool Game::run() {
+bool Game::run()
+{
     _running = true;
     _returnToMenu = false;
 
@@ -100,7 +102,8 @@ bool Game::run() {
     return _returnToMenu;
 }
 
-void Game::handleEvents() {
+void Game::handleEvents()
+{
     while (_window.pollEvent()) {
         if (_window.getEventType() == rtype::EventType::Closed) {
             _running = false;
@@ -200,7 +203,8 @@ void Game::checkCollisions()
     }
 }
 
-void Game::render() {
+void Game::render()
+{
     _window.clear(0, 0, 0);
 
     if (_background) {
