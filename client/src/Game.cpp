@@ -112,11 +112,6 @@ void Game::handleEvents() {
                 _running = false;
                 _returnToMenu = true;
             }
-            if (_input.isKeyPressed(rtype::Key::F11)) {
-                static bool isFullscreen = false;
-                isFullscreen = !isFullscreen;
-                _window.setFullscreen(isFullscreen);
-            }
         }
     }
 }
