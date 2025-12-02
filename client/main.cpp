@@ -6,71 +6,36 @@
 */
 
 #include <iostream>
-#include <memory>
 
-#include "AudioSFML.hpp"
 #include "Config.hpp"
-#include "GraphicsSFML.hpp"
-#include "InputSFML.hpp"
 #include "Menu.hpp"
 #include "Resolution.hpp"
 #include "SettingsMenu.hpp"
-#include "SpriteSFML.hpp"
-#include "WindowSFML.hpp"
+#include "src/Game.hpp"
+#include "wrapper/audio/AudioSFML.hpp"
+#include "wrapper/graphics/GraphicsSFML.hpp"
+#include "wrapper/graphics/SpriteSFML.hpp"
+#include "wrapper/input/InputSFML.hpp"
+#include "wrapper/window/WindowSFML.hpp"
 
 using namespace rtype;
 
 enum class GameState { Menu, Settings, Playing };
 
-void runGame(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input) {
-    float rectX = 350.0f;
-    float rectY = 250.0f;
-    float speed = 200.0f;
+void runGame() {
+    try {
+        std::cout << "=== Starting R-Type Game ===" << std::endl;
+        std::cout << "Controls:" << std::endl;
+        std::cout << "  ZQSD: Move player" << std::endl;
+        std::cout << "  SPACE: Shoot" << std::endl;
+        std::cout << "  ESC: Return to menu" << std::endl;
+        std::cout << "===========================" << std::endl;
 
-    float circleX = 100.0f;
-    float circleY = 100.0f;
+        Game game;
+        game.run();
 
-    while (window.isOpen()) {
-        float deltaTime = window.getDeltaTime();
-
-        while (window.pollEvent()) {
-            EventType eventType = window.getEventType();
-
-            if (eventType == EventType::Closed) {
-                window.close();
-                return;
-            }
-
-            if (eventType == EventType::MouseButtonPressed) {
-                if (window.getEventMouseButton() == MouseButton::Left) {
-                    auto [mouseX, mouseY] = window.getEventMousePosition();
-                    circleX = static_cast<float>(mouseX - 50);
-                    circleY = static_cast<float>(mouseY - 50);
-                }
-            }
-        }
-
-        if (input.isKeyPressed(Key::Escape)) {
-            return;
-        }
-
-        if (input.isKeyPressed(Key::Up)) {
-            rectY -= speed * deltaTime;
-        }
-        if (input.isKeyPressed(Key::Down)) {
-            rectY += speed * deltaTime;
-        }
-        if (input.isKeyPressed(Key::Left)) {
-            rectX -= speed * deltaTime;
-        }
-        if (input.isKeyPressed(Key::Right)) {
-            rectX += speed * deltaTime;
-        }
-
-        window.clear(30, 30, 30);
-        graphics.drawCircle(circleX + 50, circleY + 50, 50, 0, 0, 255);
-        graphics.drawRectangle(rectX, rectY, 100, 100, 0, 255, 0);
-        window.display();
+    } catch (const std::exception& e) {
+        std::cerr << "Error in game: " << e.what() << std::endl;
     }
 }
 
@@ -120,7 +85,7 @@ int main() {
             switch (action) {
                 case MenuAction::StartGame:
                     state = GameState::Playing;
-                    runGame(*window, *graphics, *input);
+                    runGame();
                     state = GameState::Menu;
                     break;
                 case MenuAction::Settings:

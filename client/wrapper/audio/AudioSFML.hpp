@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** AudioSFML - SFML implementation
+** AudioSFML
 */
 
 #pragma once

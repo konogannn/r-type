@@ -5,13 +5,8 @@ if(SFML_FOUND)
     message(STATUS "SFML include dirs: ${SFML_INCLUDE_DIR}")
 endif()
 
-set(WRAPPER_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window/WindowSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics/SpriteSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics/GraphicsSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input/InputSFML.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio/AudioSFML.cpp
-)
+add_subdirectory(src)
+add_subdirectory(wrapper)
 
 set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Button.cpp
@@ -27,16 +22,16 @@ set(MENU_SOURCES
 
 add_executable(r-type-client
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${GAME_SOURCES}
     ${WRAPPER_SOURCES}
     ${MENU_SOURCES}
 )
 
 target_include_directories(r-type-client
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
-        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/audio
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper
+        ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/network
 )
 
 target_link_libraries(r-type-client
@@ -45,4 +40,5 @@ target_link_libraries(r-type-client
         sfml-audio
         sfml-window
         sfml-system
+        Boost::system
 )

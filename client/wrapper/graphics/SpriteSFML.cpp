@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** R-type
+** r-type
 ** File description:
-** SpriteSFML - SFML implementation
+** SpriteSFML
 */
 
 #include "SpriteSFML.hpp"
@@ -40,6 +40,12 @@ void SpriteSFML::move(float offsetX, float offsetY) {
 float SpriteSFML::getPositionX() const { return _sprite->getPosition().x; }
 
 float SpriteSFML::getPositionY() const { return _sprite->getPosition().y; }
+
+void SpriteSFML::setTextureRect(int left, int top, int width, int height) {
+    _sprite->setTextureRect(sf::IntRect(left, top, width, height));
+}
+
+void SpriteSFML::setSmooth(bool smooth) { _texture->setSmooth(smooth); }
 
 const sf::Sprite& SpriteSFML::getSFMLSprite() const { return *_sprite; }
 
