@@ -7,6 +7,8 @@
 
 #include "KeyBinding.hpp"
 
+#include <unordered_map>
+
 #include "Config.hpp"
 
 namespace rtype {
@@ -208,20 +210,19 @@ Key KeyBinding::stringToKey(const std::string& str) {
         if (c >= '0' && c <= '9') return digitKeys[c - '0'];
     }
 
-    if (str == "Space") return Key::Space;
-    if (str == "Enter") return Key::Enter;
-    if (str == "Escape") return Key::Escape;
-    if (str == "Backspace") return Key::Backspace;
-    if (str == "Left") return Key::Left;
-    if (str == "Right") return Key::Right;
-    if (str == "Up") return Key::Up;
-    if (str == "Down") return Key::Down;
-    if (str == "LCtrl") return Key::LControl;
-    if (str == "RCtrl") return Key::RControl;
-    if (str == "LShift") return Key::LShift;
-    if (str == "RShift") return Key::RShift;
-    if (str == "LAlt") return Key::LAlt;
-    if (str == "RAlt") return Key::RAlt;
+    static const std::unordered_map<std::string, Key> specialKeys = {
+        {"Space", Key::Space},       {"Enter", Key::Enter},
+        {"Escape", Key::Escape},     {"Backspace", Key::Backspace},
+        {"Left", Key::Left},         {"Right", Key::Right},
+        {"Up", Key::Up},             {"Down", Key::Down},
+        {"LCtrl", Key::LControl},    {"RCtrl", Key::RControl},
+        {"LShift", Key::LShift},     {"RShift", Key::RShift},
+        {"LAlt", Key::LAlt},         {"RAlt", Key::RAlt}};
+
+    auto it = specialKeys.find(str);
+    if (it != specialKeys.end()) {
+        return it->second;
+    }
 
     return Key::Unknown;
 }
