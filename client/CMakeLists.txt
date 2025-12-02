@@ -42,6 +42,7 @@ target_link_libraries(r-type-client
         sfml-audio
         sfml-window
         sfml-system
+        fmt::fmt
         Boost::system
         OpenAL::OpenAL
         fmt::fmt
