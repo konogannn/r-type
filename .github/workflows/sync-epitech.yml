@@ -4,6 +4,7 @@ run-name: ${{ github.actor }} has run the synchronize Epitech mirror repository 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 env:
   MIRROR_URL: "git@github.com:EpitechPGE3-2025/G-CPP-500-NAN-5-2-rtype-7.git"
