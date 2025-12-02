@@ -74,13 +74,7 @@ void Game::handleEvents() {
             if (_input->isKeyPressed(rtype::Key::F11)) {
                 static bool isFullscreen = false;
                 isFullscreen = !isFullscreen;
-
-                if (isFullscreen) {
-                    _window->recreate(1920, 1080, "R-Type Prototype", true);
-                } else {
-                    _window->recreate(800, 600, "R-Type Prototype", false);
-                }
-                _window->setFramerateLimit(60);
+                _window->setFullscreen(isFullscreen);
             }
         }
     }
@@ -191,7 +185,8 @@ void Game::render() {
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
-    _graphics->drawText(fpsStr, 10, 10, 20, 0, 255, 0);
+    _graphics->drawText(fpsStr, 10, 10, 20, 0, 255, 0,
+                        "assets/fonts/Retro_Gaming.ttf");
 
     _window->display();
 }
