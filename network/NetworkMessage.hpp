@@ -82,9 +82,9 @@ class NetworkMessage {
      * @return LoginResponsePacket ready to send
      */
     static ::LoginResponsePacket createLoginResponsePacket(uint32_t playerId,
-                                                          uint16_t mapWidth,
-                                                          uint16_t mapHeight,
-                                                          uint32_t sequenceId);
+                                                           uint16_t mapWidth,
+                                                           uint16_t mapHeight,
+                                                           uint32_t sequenceId);
 
     /**
      * @brief Create entity spawn packet
@@ -96,8 +96,8 @@ class NetworkMessage {
      * @return EntitySpawnPacket ready to send
      */
     static ::EntitySpawnPacket createEntitySpawnPacket(uint32_t entityId,
-                                                       uint8_t type,
-                                                       float x, float y,
+                                                       uint8_t type, float x,
+                                                       float y,
                                                        uint32_t sequenceId);
 
     /**
@@ -108,9 +108,8 @@ class NetworkMessage {
      * @param sequenceId Sequence ID for the packet
      * @return EntityPositionPacket ready to send
      */
-    static ::EntityPositionPacket createEntityPositionPacket(uint32_t entityId,
-                                                             float x, float y,
-                                                             uint32_t sequenceId);
+    static ::EntityPositionPacket createEntityPositionPacket(
+        uint32_t entityId, float x, float y, uint32_t sequenceId);
 
     /**
      * @brief Validate packet header
