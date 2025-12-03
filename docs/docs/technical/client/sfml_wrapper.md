@@ -1,4 +1,11 @@
-# R-Type SFML Wrapper
+---
+id: sfml-wrapper
+title: SFML Wrapper
+description: An explanation of our wrapping philosophy
+sidebar_position: 1
+---
+
+# SFML Wrapper
 
 This wrapper provides an abstraction layer over SFML (Simple and Fast Multimedia Library), allowing the game code to remain independent of the underlying graphics/audio/input library.
 
@@ -315,23 +322,3 @@ When modifying the wrapper:
    - Interfaces: `I*` prefix (e.g., `ISprite`, `IWindow`)
    - SFML implementations: `*SFML` suffix (e.g., `SpriteSFML`, `WindowSFML`)
    - Enums: PascalCase (e.g., `EventType`, `Key`)
-
----
-
-## FAQ
-
-**Q: Why not use SFML directly?**
-A: The wrapper provides flexibility to switch libraries, easier testing, and cleaner game code.
-
-**Q: Does the wrapper add overhead?**
-A: Minimal. Most methods are thin wrappers that inline well. Virtual call overhead is negligible for rendering operations.
-
-**Q: Can I mix SFML and wrapper code?**
-A: Only in wrapper implementations (`.cpp` files). Game code (`src/`) must never include SFML headers.
-
-**Q: How do I add a new SFML feature?**
-A: Add a method to the interface, implement it in the SFML version, update game code to use the new method.
-
----
-
-For more details on each module, see the individual README files in each subdirectory.

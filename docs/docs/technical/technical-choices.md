@@ -1,3 +1,10 @@
+---
+id: technical-choices
+title: Technical Choices
+description: Overview of the key technical decisions made for the R-Type project.
+sidebar_position: 7
+---
+
 # Technical Choices
 
 This document explains the key technical decisions for the R-Type project.
@@ -26,19 +33,6 @@ This document explains the key technical decisions for the R-Type project.
 - Reproducible builds with `vcpkg.json`
 - Team members get same library versions
 
-**Example:**
-```json
-{
-  "dependencies": [
-    "sfml",
-    { "name": "boost-asio", "features": ["core"] }
-  ],
-  "overrides": [
-    { "name": "sfml", "version": "2.6.1" }
-  ]
-}
-```
-
 ---
 
 ## 🔨 CMake (Build System)
@@ -50,14 +44,6 @@ This document explains the key technical decisions for the R-Type project.
 - One configuration works everywhere
 - Modular: client, server, engine as separate modules
 - Finds libraries automatically with vcpkg
-
-**Project structure:**
-```
-CMakeLists.txt (root)
-├── client/CMakeLists.txt
-├── server/CMakeLists.txt
-└── engine/CMakeLists.txt
-```
 
 ---
 
@@ -71,12 +57,6 @@ CMakeLists.txt (root)
 - Cross-platform (Windows, Linux, macOS)
 - Hardware-accelerated (OpenGL)
 - Version 2.6.1 is stable (v3 has breaking changes)
-
-**What we use:**
-- Graphics: sprites, textures, drawing
-- Audio: sounds and music
-- Window: creation and events
-- Input: keyboard and mouse
 
 ### Wrapper Pattern
 
@@ -112,10 +92,6 @@ class GraphicsSFML : public IGraphics {
 - Mature and well-tested
 - Better than SFML's basic networking
 
-**Usage in R-Type:**
-- Server: Accept connections, broadcast game state
-- Client: Send inputs, receive entity updates
-
 ---
 
 ## 🧩 ECS (Entity Component System)
@@ -148,82 +124,3 @@ void MovementSystem::update(float dt) {
     }
 }
 ```
-
-**Example:**
-```cpp
-// Create player
-Entity player = registry.create();
-registry.add<PositionComponent>(player, {100, 300});
-registry.add<VelocityComponent>(player, {0, 0});
-registry.add<HealthComponent>(player, {100, 100});
-```
-
----
-
-## 🏛️ Frontend Architecture
-
-The client is organized in **layers**:
-
-```
-Application Layer    → main.cpp, Menu, Game
-       ↓
-Game Logic Layer     → Player, Enemy, Projectile
-       ↓
-Wrapper Layer        → IWindow, IGraphics, IInput (interfaces)
-       ↓
-Implementation       → WindowSFML, GraphicsSFML (SFML code)
-       ↓
-SFML Library
-```
-
-### Key Components:
-
-**1. Application**
-- `main.cpp`: Manages states (Menu → Settings → Game)
-- `Menu`: Main menu UI
-- `SettingsMenu`: Resolution, controls, volume
-- `Game`: Game loop
-
-**2. Game Logic**
-- `Player`: Movement, shooting, input
-- `Enemy`: AI behavior
-- `Projectile`: Bullets and collision
-- `Background`: Parallax scrolling
-
-**3. Configuration**
-- `config.json`: Saves all settings
-- `Config`: Reads/writes JSON
-- `KeyBinding`: Custom key mappings
-
-**Example config:**
-```json
-{
-  "resolutionWidth": 1920,
-  "resolutionHeight": 1080,
-  "fullscreen": 1,
-  "keyMoveUp": "Z",
-  "keyShoot": "Space",
-  "sfxVolume": 100.0
-}
-```
-
-### Rendering Flow:
-
-```
-1. Update game logic (input, movement, collisions)
-2. Clear screen
-3. Draw background
-4. Draw entities (player, enemies, projectiles)
-5. Draw UI (FPS, health)
-6. Display frame
-```
-
----
-
-## 📚 Documentation Links
-
-- [vcpkg](https://vcpkg.io/)
-- [CMake](https://cmake.org/documentation/)
-- [SFML 2.6](https://www.sfml-dev.org/documentation/2.6.0/)
-- [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)
-- [ECS Pattern](https://en.wikipedia.org/wiki/Entity_component_system)

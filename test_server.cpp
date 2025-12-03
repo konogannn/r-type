@@ -37,12 +37,14 @@ class SimpleTestServer {
 
    public:
     SimpleTestServer(uint16_t port)
-        : _socket(_ioContext, udp::endpoint(udp::v4(), port)) {
+        : _socket(_ioContext, udp::endpoint(udp::v4(), port))
+    {
         std::cout << "Test server started on port " << port << std::endl;
         startReceive();
     }
 
-    void run() {
+    void run()
+    {
         std::thread ioThread([this]() {
             while (_running) {
                 try {
@@ -62,7 +64,8 @@ class SimpleTestServer {
     }
 
    private:
-    void startReceive() {
+    void startReceive()
+    {
         _socket.async_receive_from(
             boost::asio::buffer(_receiveBuffer), _clientEndpoint,
             [this](boost::system::error_code ec, std::size_t bytes_recvd) {
@@ -73,7 +76,8 @@ class SimpleTestServer {
             });
     }
 
-    void handleMessage(size_t bytes) {
+    void handleMessage(size_t bytes)
+    {
         if (bytes < sizeof(Header)) return;
 
         Header* header = reinterpret_cast<Header*>(_receiveBuffer.data());
@@ -106,7 +110,8 @@ class SimpleTestServer {
         }
     }
 
-    void handleLogin(const LoginPacket& packet) {
+    void handleLogin(const LoginPacket& packet)
+    {
         std::string username(packet.username, 8);
         username = username.substr(0, username.find('\0'));
 
@@ -151,7 +156,8 @@ class SimpleTestServer {
         std::cout << "Sent player entity spawn" << std::endl;
     }
 
-    void handleInput(const InputPacket& packet) {
+    void handleInput(const InputPacket& packet)
+    {
         std::cout << "Input received: 0x" << std::hex
                   << static_cast<int>(packet.inputMask) << std::dec;
         std::cout << " (";
@@ -210,7 +216,8 @@ class SimpleTestServer {
         }
     }
 
-    void handleDisconnect() {
+    void handleDisconnect()
+    {
         auto it = std::find_if(_clients.begin(), _clients.end(),
                                [this](const TestClient& c) {
                                    return c.endpoint == _clientEndpoint;
@@ -223,7 +230,8 @@ class SimpleTestServer {
         }
     }
 
-    TestClient* findClient(const udp::endpoint& endpoint) {
+    TestClient* findClient(const udp::endpoint& endpoint)
+    {
         auto it = std::find_if(_clients.begin(), _clients.end(),
                                [&endpoint](const TestClient& c) {
                                    return c.endpoint == endpoint;
@@ -232,7 +240,8 @@ class SimpleTestServer {
     }
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     std::cout << "=== R-Type Test Server ===" << std::endl;
     std::cout << "Simple UDP server for testing client communication"
               << std::endl;

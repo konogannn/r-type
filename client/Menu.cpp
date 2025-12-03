@@ -15,13 +15,15 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/fonts/Retro_Gaming.ttf") {
+      _fontPath("assets/fonts/Retro_Gaming.ttf")
+{
     setupBackground();
     setupButtons();
     updateLayout();
 }
 
-void Menu::setupBackground() {
+void Menu::setupBackground()
+{
     _background = std::make_unique<SpriteSFML>();
     if (!_background->loadTexture("assets/sprite_fond.jpg")) {
         std::cerr << "Warning: Failed to load background image" << std::endl;
@@ -29,7 +31,8 @@ void Menu::setupBackground() {
     }
 }
 
-void Menu::setupButtons() {
+void Menu::setupButtons()
+{
     _buttons.clear();
     _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, "PLAY");
     _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, "SETTINGS");
@@ -38,7 +41,8 @@ void Menu::setupButtons() {
     _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, "QUIT");
 }
 
-void Menu::updateLayout() {
+void Menu::updateLayout()
+{
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
 
@@ -67,7 +71,8 @@ void Menu::updateLayout() {
                          buttonHeight, "QUIT");
 }
 
-MenuAction Menu::update() {
+MenuAction Menu::update()
+{
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
@@ -90,7 +95,8 @@ MenuAction Menu::update() {
     return MenuAction::None;
 }
 
-void Menu::render() {
+void Menu::render()
+{
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
     float scaleW = windowWidth / 1920.0f;

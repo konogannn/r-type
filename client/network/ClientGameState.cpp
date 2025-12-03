@@ -12,7 +12,8 @@
 namespace rtype {
 
 ClientGameState::ClientGameState()
-    : _networkClient(std::make_unique<NetworkClientAsio>()) {
+    : _networkClient(std::make_unique<NetworkClientAsio>())
+{
     _networkClient->setOnConnectedCallback([this]() { onConnected(); });
     _networkClient->setOnDisconnectedCallback([this]() { onDisconnected(); });
     _networkClient->setOnLoginResponseCallback(
@@ -33,8 +34,8 @@ ClientGameState::ClientGameState()
         [this](const std::string& error) { onError(error); });
 }
 
-bool ClientGameState::connectToServer(const std::string& address,
-                                      uint16_t port) {
+bool ClientGameState::connectToServer(const std::string& address, uint16_t port)
+{
     if (_connectionAttempting) {
         return false;
     }
@@ -53,7 +54,8 @@ bool ClientGameState::connectToServer(const std::string& address,
     }
 }
 
-bool ClientGameState::sendLogin(const std::string& username) {
+bool ClientGameState::sendLogin(const std::string& username)
+{
     if (!isConnected()) {
         _lastError = "Not connected to server";
         return false;
@@ -75,7 +77,8 @@ bool ClientGameState::sendLogin(const std::string& username) {
     return result;
 }
 
-void ClientGameState::disconnect() {
+void ClientGameState::disconnect()
+{
     std::cout << "[INFO] Disconnecting from server" << std::endl;
     _networkClient->disconnect();
 
@@ -87,11 +90,13 @@ void ClientGameState::disconnect() {
     _entities.clear();
 }
 
-bool ClientGameState::isConnected() const {
+bool ClientGameState::isConnected() const
+{
     return _networkClient->isConnected();
 }
 
-void ClientGameState::update(float deltaTime) {
+void ClientGameState::update(float deltaTime)
+{
     if (_connectionAttempting && !isConnected()) {
         _connectionTimeout += deltaTime;
         if (_connectionTimeout > MAX_CONNECTION_TIMEOUT) {
@@ -106,7 +111,8 @@ void ClientGameState::update(float deltaTime) {
     }
 }
 
-void ClientGameState::render(IGraphics& graphics) {
+void ClientGameState::render(IGraphics& graphics)
+{
     if (!_gameStarted) {
         return;
     }
@@ -121,7 +127,8 @@ void ClientGameState::render(IGraphics& graphics) {
     }
 }
 
-void ClientGameState::sendInput(uint8_t inputMask) {
+void ClientGameState::sendInput(uint8_t inputMask)
+{
     if (!_gameStarted || !isConnected()) {
         return;
     }
@@ -129,12 +136,14 @@ void ClientGameState::sendInput(uint8_t inputMask) {
     _networkClient->sendInput(inputMask);
 }
 
-ClientEntity* ClientGameState::getEntity(uint32_t entityId) {
+ClientEntity* ClientGameState::getEntity(uint32_t entityId)
+{
     auto it = _entities.find(entityId);
     return (it != _entities.end()) ? it->second.get() : nullptr;
 }
 
-ClientEntity* ClientGameState::getLocalPlayer() {
+ClientEntity* ClientGameState::getLocalPlayer()
+{
     for (const auto& [entityId, entity] : _entities) {
         if (entity->isLocalPlayer) {
             return entity.get();
@@ -143,20 +152,23 @@ ClientEntity* ClientGameState::getLocalPlayer() {
     return nullptr;
 }
 
-void ClientGameState::onConnected() {
+void ClientGameState::onConnected()
+{
     std::cout << "[INFO] Connected to server successfully" << std::endl;
     _connectionAttempting = false;
     _connectionTimeout = 0.0f;
 }
 
-void ClientGameState::onDisconnected() {
+void ClientGameState::onDisconnected()
+{
     std::cout << "[INFO] Disconnected from server" << std::endl;
     _gameStarted = false;
     _entities.clear();
 }
 
 void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
-                                      uint16_t mapHeight) {
+                                      uint16_t mapHeight)
+{
     _playerId = playerId;
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
@@ -167,7 +179,8 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
 }
 
 void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
-                                    float y) {
+                                    float y)
+{
     std::cout << "[INFO] Entity spawned: ID=" << entityId
               << ", Type=" << static_cast<int>(type) << ", Position=(" << x
               << "," << y << ")" << std::endl;
@@ -181,7 +194,8 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     _entities[entityId] = std::move(entity);
 }
 
-void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y) {
+void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
+{
     auto* entity = getEntity(entityId);
     if (entity) {
         entity->x = x;
@@ -189,17 +203,20 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y) {
     }
 }
 
-void ClientGameState::onEntityDead(uint32_t entityId) {
+void ClientGameState::onEntityDead(uint32_t entityId)
+{
     std::cout << "[INFO] Entity died: ID=" << entityId << std::endl;
     removeEntity(entityId);
 }
 
-void ClientGameState::onError(const std::string& error) {
+void ClientGameState::onError(const std::string& error)
+{
     _lastError = error;
     std::cout << "[ERROR] Network error: " << error << std::endl;
 }
 
-void ClientGameState::createEntitySprite(ClientEntity& entity) {
+void ClientGameState::createEntitySprite(ClientEntity& entity)
+{
     std::string texturePath;
     switch (entity.type) {
         case 1:
@@ -220,7 +237,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity) {
               << static_cast<int>(entity.type) << std::endl;
 }
 
-void ClientGameState::removeEntity(uint32_t entityId) {
+void ClientGameState::removeEntity(uint32_t entityId)
+{
     auto it = _entities.find(entityId);
     if (it != _entities.end()) {
         _entities.erase(it);

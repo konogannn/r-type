@@ -36,24 +36,24 @@ case "$DISTRO" in
     ubuntu|debian|linuxmint|pop)
         sudo apt update
         cmd_exists cmake || sudo apt install -y cmake
-        sudo apt install -y build-essential g++ libsfml-dev
+        sudo apt install -y build-essential g++ libsfml-dev lcov
         ;;
     fedora|rhel|centos|rocky|almalinux)
         cmd_exists cmake || sudo dnf install -y cmake
-        sudo dnf install -y gcc-c++ make SFML-devel
+        sudo dnf install -y gcc-c++ make SFML-devel lcov
         ;;
     arch|manjaro)
         sudo pacman -Sy
         cmd_exists cmake || sudo pacman -S --noconfirm cmake
-        sudo pacman -S --noconfirm base-devel sfml
+        sudo pacman -S --noconfirm base-devel sfml lcov
         ;;
     opensuse*|suse)
         cmd_exists cmake || sudo zypper install -y cmake
-        sudo zypper install -y gcc-c++ make libsfml2 sfml2-devel
+        sudo zypper install -y gcc-c++ make libsfml2 sfml2-devel lcov
         ;;
     *)
         print_err "Unsupported: $DISTRO"
-        print_info "Install manually: CMake 3.11+, GCC/G++, SFML 2.5+"
+        print_info "Install manually: CMake 3.11+, GCC/G++, SFML 2.5+, lcov"
         exit 1
         ;;
 esac

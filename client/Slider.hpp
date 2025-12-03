@@ -54,7 +54,8 @@ class Slider {
      * @brief Get normalized value (0.0 to 1.0)
      * @return Normalized value
      */
-    float getNormalizedValue() const {
+    float getNormalizedValue() const
+    {
         return (_value - _minValue) / (_maxValue - _minValue);
     }
 

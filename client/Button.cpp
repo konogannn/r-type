@@ -18,9 +18,12 @@ Button::Button(float x, float y, float width, float height,
       _text(text),
       _callback(nullptr),
       _isHovered(false),
-      _wasPressed(false) {}
+      _wasPressed(false)
+{
+}
 
-bool Button::isHovered(int mouseX, int mouseY) const {
+bool Button::isHovered(int mouseX, int mouseY) const
+{
     float mx = static_cast<float>(mouseX);
     float my = static_cast<float>(mouseY);
 
@@ -30,7 +33,8 @@ bool Button::isHovered(int mouseX, int mouseY) const {
     return hovered;
 }
 
-bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed) {
+bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed)
+{
     _isHovered = isHovered(mouseX, mouseY);
 
     bool clicked = false;
@@ -46,11 +50,13 @@ bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed) {
     return clicked;
 }
 
-void Button::setCallback(std::function<void()> callback) {
+void Button::setCallback(std::function<void()> callback)
+{
     _callback = callback;
 }
 
-void Button::execute() const {
+void Button::execute() const
+{
     if (_callback) {
         _callback();
     }

@@ -33,7 +33,9 @@ struct ClientEntity {
           type(entityType),
           x(posX),
           y(posY),
-          sprite(std::make_unique<SpriteSFML>()) {}
+          sprite(std::make_unique<SpriteSFML>())
+    {
+    }
 };
 
 /**
@@ -86,7 +88,8 @@ class ClientGameState {
     ClientEntity* getEntity(uint32_t entityId);
     ClientEntity* getLocalPlayer();
     const std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>>&
-    getAllEntities() const {
+    getAllEntities() const
+    {
         return _entities;
     }
 

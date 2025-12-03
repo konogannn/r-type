@@ -19,7 +19,8 @@ BackgroundLayer::BackgroundLayer(const std::string& texturePath,
       _scale(1.0f),
       _scaledWidth(0.0f),
       _yOffset(0.0f),
-      _textureWidth(0.0f) {
+      _textureWidth(0.0f)
+{
     _sprite1 = std::make_unique<rtype::SpriteSFML>();
     _sprite2 = std::make_unique<rtype::SpriteSFML>();
 
@@ -45,7 +46,8 @@ BackgroundLayer::BackgroundLayer(const std::string& texturePath,
     }
 }
 
-void BackgroundLayer::update(float deltaTime) {
+void BackgroundLayer::update(float deltaTime)
+{
     _offset -= _scrollSpeed * deltaTime;
 
     if (_offset <= -_scaledWidth) {
@@ -56,7 +58,8 @@ void BackgroundLayer::update(float deltaTime) {
     _sprite2->setPosition(_offset + _scaledWidth, _yOffset);
 }
 
-void BackgroundLayer::draw(rtype::IGraphics& graphics) {
+void BackgroundLayer::draw(rtype::IGraphics& graphics)
+{
     graphics.drawSprite(*_sprite1);
     graphics.drawSprite(*_sprite2);
 }
@@ -64,7 +67,8 @@ void BackgroundLayer::draw(rtype::IGraphics& graphics) {
 Background::Background(const std::string& backPath,
                        const std::string& starsPath,
                        const std::string& planetPath, float windowWidth,
-                       float windowHeight) {
+                       float windowHeight)
+{
     _backLayer = std::make_unique<BackgroundLayer>(backPath, 10.0f, windowWidth,
                                                    windowHeight);
     _starsLayer = std::make_unique<BackgroundLayer>(starsPath, 20.0f,
@@ -75,13 +79,15 @@ Background::Background(const std::string& backPath,
 
 Background::~Background() = default;
 
-void Background::update(float deltaTime) {
+void Background::update(float deltaTime)
+{
     _backLayer->update(deltaTime);
     _starsLayer->update(deltaTime);
     _planetLayer->update(deltaTime);
 }
 
-void Background::draw(rtype::IGraphics& graphics) {
+void Background::draw(rtype::IGraphics& graphics)
+{
     _backLayer->draw(graphics);
     _starsLayer->draw(graphics);
     _planetLayer->draw(graphics);

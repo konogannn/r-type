@@ -29,7 +29,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
-      _scale(1.0f) {
+      _scale(1.0f)
+{
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
@@ -83,7 +84,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
                                      600.0f * _scale, 250.0f * _scale, _scale);
 }
 
-bool Game::run() {
+bool Game::run()
+{
     _running = true;
     _returnToMenu = false;
 
@@ -100,7 +102,8 @@ bool Game::run() {
     return _returnToMenu;
 }
 
-void Game::handleEvents() {
+void Game::handleEvents()
+{
     while (_window.pollEvent()) {
         if (_window.getEventType() == rtype::EventType::Closed) {
             _running = false;
@@ -116,7 +119,8 @@ void Game::handleEvents() {
     }
 }
 
-void Game::update(float deltaTime) {
+void Game::update(float deltaTime)
+{
     if (_background) {
         _background->update(deltaTime);
     }
@@ -163,7 +167,8 @@ void Game::update(float deltaTime) {
         _explosions.end());
 }
 
-void Game::checkCollisions() {
+void Game::checkCollisions()
+{
     if (!_enemy) {
         return;
     }
@@ -198,7 +203,8 @@ void Game::checkCollisions() {
     }
 }
 
-void Game::render() {
+void Game::render()
+{
     _window.clear(0, 0, 0);
 
     if (_background) {
@@ -228,12 +234,14 @@ void Game::render() {
     _window.display();
 }
 
-void Game::spawnProjectile(float x, float y) {
+void Game::spawnProjectile(float x, float y)
+{
     _projectiles.push_back(std::make_unique<Projectile>(
         "assets/sprites/projectile_player_1.png", x, y, _scale));
 }
 
-void Game::updateFps(float deltaTime) {
+void Game::updateFps(float deltaTime)
+{
     _fpsCounter++;
     _fpsUpdateTime += deltaTime;
 

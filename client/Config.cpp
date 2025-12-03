@@ -14,12 +14,14 @@
 
 namespace rtype {
 
-Config& Config::getInstance() {
+Config& Config::getInstance()
+{
     static Config instance;
     return instance;
 }
 
-bool Config::load(const std::string& filepath) {
+bool Config::load(const std::string& filepath)
+{
     std::ifstream file(filepath);
     if (!file.is_open()) {
         std::cerr << "Config: Could not open " << filepath << ", using defaults"
@@ -56,7 +58,8 @@ bool Config::load(const std::string& filepath) {
     return true;
 }
 
-bool Config::save(const std::string& filepath) {
+bool Config::save(const std::string& filepath)
+{
     std::ofstream file(filepath);
     if (!file.is_open()) {
         std::cerr << "Config: Could not save to " << filepath << std::endl;
@@ -96,7 +99,8 @@ bool Config::save(const std::string& filepath) {
     return true;
 }
 
-float Config::getFloat(const std::string& key, float defaultValue) {
+float Config::getFloat(const std::string& key, float defaultValue)
+{
     auto it = _data.find(key);
     if (it == _data.end()) {
         return defaultValue;
@@ -108,11 +112,13 @@ float Config::getFloat(const std::string& key, float defaultValue) {
     }
 }
 
-void Config::setFloat(const std::string& key, float value) {
+void Config::setFloat(const std::string& key, float value)
+{
     _data[key] = std::to_string(value);
 }
 
-int Config::getInt(const std::string& key, int defaultValue) {
+int Config::getInt(const std::string& key, int defaultValue)
+{
     auto it = _data.find(key);
     if (it == _data.end()) {
         return defaultValue;
@@ -124,12 +130,14 @@ int Config::getInt(const std::string& key, int defaultValue) {
     }
 }
 
-void Config::setInt(const std::string& key, int value) {
+void Config::setInt(const std::string& key, int value)
+{
     _data[key] = std::to_string(value);
 }
 
 std::string Config::getString(const std::string& key,
-                              const std::string& defaultValue) {
+                              const std::string& defaultValue)
+{
     auto it = _data.find(key);
     if (it == _data.end()) {
         return defaultValue;
@@ -137,7 +145,8 @@ std::string Config::getString(const std::string& key,
     return it->second;
 }
 
-void Config::setString(const std::string& key, const std::string& value) {
+void Config::setString(const std::string& key, const std::string& value)
+{
     _data[key] = value;
 }
 

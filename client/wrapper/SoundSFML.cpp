@@ -11,7 +11,8 @@
 
 namespace rtype {
 
-bool SoundBufferSFML::loadFromFile(const std::string& filename) {
+bool SoundBufferSFML::loadFromFile(const std::string& filename)
+{
     if (!_buffer.loadFromFile(filename)) {
         std::cerr << "Failed to load sound: " << filename << std::endl;
         return false;
@@ -19,7 +20,8 @@ bool SoundBufferSFML::loadFromFile(const std::string& filename) {
     return true;
 }
 
-void SoundSFML::setBuffer(const ISoundBuffer& buffer) {
+void SoundSFML::setBuffer(const ISoundBuffer& buffer)
+{
     const auto& sfmlBuffer = dynamic_cast<const SoundBufferSFML&>(buffer);
     _sound.setBuffer(sfmlBuffer.getBuffer());
 }

@@ -1,0 +1,98 @@
+name: Build & Test (Windows & Linux)
+run-name: ${{ github.actor }} has run the build & test workflow
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "server/**"
+      - "client/**"
+      - "common/**"
+      - "CMakeLists.txt"
+      - "vcpkg.json"
+
+jobs:
+  check_repository:
+    name: Check the repository
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.new.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if we are in the mirrored repository
+        id: new
+        run: |
+          if [[ "${{ github.repository }}" == *"Epitech"* ]]; then
+            echo "::notice::You are in the Epitech repository"
+            echo "value=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "value=0" >> "$GITHUB_OUTPUT"
+          exit 0
+
+  build:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == 0 }}
+    name: ${{ matrix.os }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        include:
+          - os: windows-latest
+            vcpkg_triplet: x64-windows
+          - os: ubuntu-latest
+            vcpkg_triplet: x64-linux
+
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
+    steps:
+      - name: Support Long Paths (Windows)
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libfreetype6-dev
+
+      - name: Get CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/vcpkg
+          vcpkgJsonGlob: "vcpkg.json"
+          runVcpkgInstall: true
+
+      - name: Run CMake with Presets
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: "${{ github.workspace }}/CMakeLists.txt"
+          configurePreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}"
+          buildPreset: "ci-${{ matrix.build_type == 'Release' && 'release' || 'debug' }}-build"
+
+      - name: Run Tests (Linux)
+        if: runner.os == 'Linux'
+        uses: lukka/run-cmake@v10
+        with:
+          testPreset: 'ci-tests'

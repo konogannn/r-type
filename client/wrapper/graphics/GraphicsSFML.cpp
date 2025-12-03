@@ -15,7 +15,8 @@ namespace rtype {
 
 GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {}
 
-void GraphicsSFML::drawSprite(const ISprite& sprite) {
+void GraphicsSFML::drawSprite(const ISprite& sprite)
+{
     const SpriteSFML* spriteSFML = dynamic_cast<const SpriteSFML*>(&sprite);
     if (spriteSFML) {
         _window.getSFMLWindow().draw(spriteSFML->getSFMLSprite());
@@ -29,7 +30,8 @@ void GraphicsSFML::drawSprite(const ISprite& sprite) {
 
 void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
                                  unsigned char r, unsigned char g,
-                                 unsigned char b) {
+                                 unsigned char b)
+{
     sf::RectangleShape rectangle(sf::Vector2f(width, height));
     rectangle.setPosition(x, y);
     rectangle.setFillColor(sf::Color(r, g, b));
@@ -37,14 +39,16 @@ void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
 }
 
 void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
-                              unsigned char g, unsigned char b) {
+                              unsigned char g, unsigned char b)
+{
     sf::CircleShape circle(radius);
     circle.setPosition(x - radius, y - radius);
     circle.setFillColor(sf::Color(r, g, b));
     _window.getSFMLWindow().draw(circle);
 }
 
-sf::Font* GraphicsSFML::loadFont(const std::string& fontPath) {
+sf::Font* GraphicsSFML::loadFont(const std::string& fontPath)
+{
     if (_fontCache.find(fontPath) == _fontCache.end()) {
         sf::Font font;
         if (!font.loadFromFile(fontPath)) {
@@ -60,7 +64,8 @@ sf::Font* GraphicsSFML::loadFont(const std::string& fontPath) {
 void GraphicsSFML::drawText(const std::string& text, float x, float y,
                             unsigned int fontSize, unsigned char r,
                             unsigned char g, unsigned char b,
-                            const std::string& fontPath) {
+                            const std::string& fontPath)
+{
     sf::Font* font = loadFont(fontPath);
     if (!font) {
         std::cerr << "Warning: GraphicsSFML::drawText() - Failed to load font, "
@@ -80,7 +85,8 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
 }
 
 float GraphicsSFML::getTextWidth(const std::string& text, unsigned int fontSize,
-                                 const std::string& fontPath) {
+                                 const std::string& fontPath)
+{
     sf::Font* font = loadFont(fontPath);
     if (!font) {
         std::cerr << "Warning: GraphicsSFML::getTextWidth() - Failed to load "
