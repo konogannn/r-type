@@ -1,13 +1,6 @@
 # ECS Unit Tests CMakeLists.txt
 
-find_package(GTest REQUIRED)
-
-# Include directories
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Component
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Entity
-)
+find_package(GTest REQUIRED NO_CMAKE_SYSTEM_PATH)
 
 # Test executable
 add_executable(ecs_tests
@@ -16,6 +9,11 @@ add_executable(ecs_tests
     ComponentTests.cpp
     ComponentManagerTests.cpp
     EntityManagerTests.cpp
+)
+
+# Include directories
+target_include_directories(ecs_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 # Link libraries
