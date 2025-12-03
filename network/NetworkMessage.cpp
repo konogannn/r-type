@@ -65,10 +65,8 @@ namespace rtype {
     return packet;
 }
 
-::EntitySpawnPacket NetworkMessage::createEntitySpawnPacket(uint32_t entityId,
-                                                           uint8_t type,
-                                                           float x, float y,
-                                                           uint32_t sequenceId) {
+::EntitySpawnPacket NetworkMessage::createEntitySpawnPacket(
+    uint32_t entityId, uint8_t type, float x, float y, uint32_t sequenceId) {
     ::EntitySpawnPacket packet = {};
     packet.header.opCode = OpCode::S2C_ENTITY_NEW;
     packet.header.packetSize = sizeof(EntitySpawnPacket);
