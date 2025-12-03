@@ -16,12 +16,7 @@ namespace rtype {
 /**
  * @brief Network connection state
  */
-enum class NetworkState {
-    Disconnected,
-    Connecting,
-    Connected,
-    Error
-};
+enum class NetworkState { Disconnected, Connecting, Connected, Error };
 
 /**
  * @brief Base interface for network communication
