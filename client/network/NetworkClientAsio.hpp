@@ -14,8 +14,8 @@
 #include <queue>
 #include <thread>
 
-#include "INetworkClient.hpp"
-#include "server/network/Protocol.hpp"
+#include "../../network/INetworkClient.hpp"
+#include "../../network/Protocol.hpp"
 
 namespace rtype {
 
@@ -57,7 +57,7 @@ class NetworkClientAsio : public INetworkClient {
         OnEntityPositionCallback callback) override;
     void setOnEntityDeadCallback(OnEntityDeadCallback callback) override;
     void setOnScoreUpdateCallback(OnScoreUpdateCallback callback) override;
-    void setOnErrorCallback(OnErrorCallback callback) override;
+    void setOnErrorCallback(std::function<void(const std::string&)> callback) override;
 
    private:
     // Network components
@@ -92,7 +92,7 @@ class NetworkClientAsio : public INetworkClient {
     OnEntityPositionCallback _onEntityPosition;
     OnEntityDeadCallback _onEntityDead;
     OnScoreUpdateCallback _onScoreUpdate;
-    OnErrorCallback _onError;
+    std::function<void(const std::string&)> _onError;
 
     // Private methods
     void startReceive();
