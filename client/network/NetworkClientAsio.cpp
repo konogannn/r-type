@@ -302,7 +302,7 @@ void NetworkClientAsio::stopNetworkThread()
         _networkThread.join();
     }
 
-    _ioContext.reset();
+    _ioContext.restart();
 }
 
 bool NetworkClientAsio::sendMessage(const void* data, size_t size)
