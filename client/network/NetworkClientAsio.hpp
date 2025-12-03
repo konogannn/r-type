@@ -14,8 +14,8 @@
 #include <queue>
 #include <thread>
 
-#include "../../common/network/INetworkClient.hpp"
-#include "../../common/network/Protocol.hpp"
+#include "common/network/INetworkClient.hpp"
+#include "common/network/Protocol.hpp"
 
 namespace rtype {
 
