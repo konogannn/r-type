@@ -13,7 +13,7 @@
 #include <thread>
 #include <unordered_map>
 
-#include "../../network/INetworkServer.hpp"
+#include "../../common/network/INetworkServer.hpp"
 
 namespace rtype {
 
@@ -34,13 +34,11 @@ class NetworkServerAsio : public INetworkServer {
     NetworkServerAsio();
     ~NetworkServerAsio() override;
 
-    // INetworkBase interface
     NetworkState getState() const override;
     void update() override;
     void setOnErrorCallback(
         std::function<void(const std::string&)> callback) override;
 
-    // INetworkServer interface
     bool start(uint16_t port) override;
     void stop() override;
     bool isRunning() const override;
@@ -76,29 +74,23 @@ class NetworkServerAsio : public INetworkServer {
 
     bool sendToClient(uint32_t clientId, const void* data, size_t size);
 
-    // Network components
     boost::asio::io_context _ioContext;
     std::unique_ptr<boost::asio::ip::udp::socket> _socket;
     boost::asio::ip::udp::endpoint _senderEndpoint;
     std::unique_ptr<std::thread> _networkThread;
 
-    // State
     NetworkState _state;
     uint32_t _nextSequenceId;
     uint32_t _nextClientId;
     uint32_t _nextPlayerId;
 
-    // Client management
     std::unordered_map<uint32_t, ClientData> _clients;
-    std::unordered_map<std::string, uint32_t>
-        _endpointToClientId;  // For quick lookup
+    std::unordered_map<std::string, uint32_t> _endpointToClientId;
     mutable std::mutex _clientsMutex;
 
-    // Buffers
     static constexpr size_t BUFFER_SIZE = 1024;
     uint8_t _receiveBuffer[BUFFER_SIZE];
 
-    // Callbacks
     std::function<void(const std::string&)> _onErrorCallback;
     OnClientConnectedCallback _onClientConnectedCallback;
     OnClientDisconnectedCallback _onClientDisconnectedCallback;

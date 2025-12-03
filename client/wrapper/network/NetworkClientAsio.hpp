@@ -15,7 +15,7 @@
 #include <thread>
 
 #include "INetworkClient.hpp"
-#include "server/network/Protocol.hpp"
+#include "common/network/Protocol.hpp"
 
 namespace rtype {
 

@@ -31,10 +31,11 @@ add_executable(r-type-client
 
 target_include_directories(r-type-client
     PRIVATE
+        ${CMAKE_SOURCE_DIR}  # Project root - allows absolute includes
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper
         ${CMAKE_CURRENT_SOURCE_DIR}/network
-        ${CMAKE_SOURCE_DIR}/network  # Access to shared network library
+        ${NETWORK_INCLUDE_DIR}
 )
 
 target_link_libraries(r-type-client
@@ -61,6 +62,7 @@ add_executable(r-type-client-enhanced
 
 target_include_directories(r-type-client-enhanced
     PRIVATE
+        ${CMAKE_SOURCE_DIR}  # Project root - allows absolute includes
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/graphics
@@ -68,7 +70,7 @@ target_include_directories(r-type-client-enhanced
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/input
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper/window
         ${CMAKE_CURRENT_SOURCE_DIR}/network
-        ${CMAKE_SOURCE_DIR}/network  # Access to shared network library
+        ${NETWORK_INCLUDE_DIR}
 )
 
 target_link_libraries(r-type-client-enhanced

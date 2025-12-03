@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "common/network/Protocol.hpp"
+#include "Protocol.hpp"
 
 namespace rtype {
 
@@ -37,6 +37,7 @@ constexpr uint8_t MISSILE = 3;
 
 /**
  * @brief Utility class for network message operations
+ * Shared between client and server
  */
 class NetworkMessage {
    public:
@@ -71,6 +72,62 @@ class NetworkMessage {
      * @return Header packet for ACK
      */
     static ::Header createAckPacket(uint32_t sequenceId);
+
+    /**
+     * @brief Create login response packet
+     * @param playerId Player ID assigned by server
+     * @param mapWidth Map width
+     * @param mapHeight Map height
+     * @param sequenceId Sequence ID for the packet
+     * @return LoginResponsePacket ready to send
+     */
+    static ::LoginResponsePacket createLoginResponsePacket(uint32_t playerId,
+                                                           uint16_t mapWidth,
+                                                           uint16_t mapHeight,
+                                                           uint32_t sequenceId);
+
+    /**
+     * @brief Create entity spawn packet
+     * @param entityId Entity unique ID
+     * @param type Entity type (player, enemy, missile...)
+     * @param x Initial X position
+     * @param y Initial Y position
+     * @param sequenceId Sequence ID for the packet
+     * @return EntitySpawnPacket ready to send
+     */
+    static ::EntitySpawnPacket createEntitySpawnPacket(uint32_t entityId,
+                                                       uint8_t type, float x,
+                                                       float y,
+                                                       uint32_t sequenceId);
+
+    /**
+     * @brief Create entity position packet
+     * @param entityId Entity unique ID
+     * @param x New X position
+     * @param y New Y position
+     * @param sequenceId Sequence ID for the packet
+     * @return EntityPositionPacket ready to send
+     */
+    static ::EntityPositionPacket createEntityPositionPacket(
+        uint32_t entityId, float x, float y, uint32_t sequenceId);
+
+    /**
+     * @brief Create entity dead packet
+     * @param entityId Entity unique ID
+     * @param sequenceId Sequence ID for the packet
+     * @return EntityDeadPacket ready to send
+     */
+    static ::EntityDeadPacket createEntityDeadPacket(uint32_t entityId,
+                                                      uint32_t sequenceId);
+
+    /**
+     * @brief Create score update packet
+     * @param score New score value
+     * @param sequenceId Sequence ID for the packet
+     * @return ScoreUpdatePacket ready to send
+     */
+    static ::ScoreUpdatePacket createScoreUpdatePacket(uint32_t score,
+                                                            uint32_t sequenceId);
 
     /**
      * @brief Validate packet header

@@ -10,7 +10,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "../../network/NetworkMessage.hpp"
+#include "common/network/NetworkMessage.hpp"
 
 namespace rtype {
 
@@ -201,7 +201,8 @@ void NetworkClientAsio::setOnScoreUpdateCallback(OnScoreUpdateCallback callback)
 }
 
 void NetworkClientAsio::setOnErrorCallback(
-    std::function<void(const std::string&)> callback) {
+    std::function<void(const std::string&)> callback)
+{
     _onError = callback;
 }
 

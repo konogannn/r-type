@@ -40,7 +40,21 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 include(CTest)
 enable_testing()
 
-add_subdirectory(network)
+# Suppress developer warnings (e.g. CMP0167 about FindBoost removal)
+set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1)
+
+# Locate the shared network directory. The project historically used `network/` but
+# some repository layouts move it to `common/network/`.
+if(EXISTS "${CMAKE_SOURCE_DIR}/network/CMakeLists.txt")
+    add_subdirectory(network)
+    set(NETWORK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/network")
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/common/network/CMakeLists.txt")
+    add_subdirectory(common/network)
+    set(NETWORK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/common/network")
+else()
+    message(FATAL_ERROR "Could not find network subdirectory (expected 'network/' or 'common/network/')")
+endif()
+
 add_subdirectory(client)
 add_subdirectory(server)
 
@@ -51,7 +65,7 @@ add_executable(test-server
 
 target_include_directories(test-server
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/network
+    ${NETWORK_INCLUDE_DIR}
 )
 
 target_link_libraries(test-server
