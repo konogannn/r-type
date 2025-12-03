@@ -57,7 +57,8 @@ class NetworkClientAsio : public INetworkClient {
         OnEntityPositionCallback callback) override;
     void setOnEntityDeadCallback(OnEntityDeadCallback callback) override;
     void setOnScoreUpdateCallback(OnScoreUpdateCallback callback) override;
-    void setOnErrorCallback(std::function<void(const std::string&)> callback) override;
+    void setOnErrorCallback(
+        std::function<void(const std::string&)> callback) override;
 
    private:
     // Network components
