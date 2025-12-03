@@ -9,6 +9,7 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(wrapper)
+add_subdirectory(network)
 
 set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Button.cpp
@@ -22,14 +23,14 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ResolutionButton.cpp
 )
 
-add_executable(r-type-client
+add_executable(r-type_client
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${GAME_SOURCES}
     ${WRAPPER_SOURCES}
     ${MENU_SOURCES}
 )
 
-target_include_directories(r-type-client
+target_include_directories(r-type_client
     PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -38,7 +39,7 @@ target_include_directories(r-type-client
         ${NETWORK_INCLUDE_DIR}
 )
 
-target_link_libraries(r-type-client
+target_link_libraries(r-type_client
     PRIVATE
         network
         sfml-graphics
@@ -50,16 +51,15 @@ target_link_libraries(r-type-client
         fmt::fmt
 )
 
-target_link_options(r-type-client PRIVATE "-Wl,--copy-dt-needed-entries")
+target_link_options(r-type_client PRIVATE "-Wl,--copy-dt-needed-entries")
 
-add_executable(r-type-client-enhanced
+add_executable(r-type_client-enhanced
     ${CMAKE_CURRENT_SOURCE_DIR}/main_enhanced.cpp
     ${WRAPPER_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/NetworkClientAsio.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/ClientGameState.cpp
+    ${CLIENT_NETWORK_SOURCES}
 )
 
-target_include_directories(r-type-client-enhanced
+target_include_directories(r-type_client-enhanced
     PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -72,7 +72,7 @@ target_include_directories(r-type-client-enhanced
         ${NETWORK_INCLUDE_DIR}
 )
 
-target_link_libraries(r-type-client-enhanced
+target_link_libraries(r-type_client-enhanced
     PRIVATE
         network
         sfml-graphics
@@ -83,4 +83,4 @@ target_link_libraries(r-type-client-enhanced
         OpenAL::OpenAL
 )
 
-target_link_options(r-type-client-enhanced PRIVATE "-Wl,--copy-dt-needed-entries")
+target_link_options(r-type_client-enhanced PRIVATE "-Wl,--copy-dt-needed-entries")

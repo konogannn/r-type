@@ -40,17 +40,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 include(CTest)
 enable_testing()
 
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/network/CMakeLists.txt")
-    add_subdirectory(network)
-    set(NETWORK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/network")
-elseif(EXISTS "${CMAKE_SOURCE_DIR}/common/network/CMakeLists.txt")
-    add_subdirectory(common/network)
-    set(NETWORK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/common/network")
-else()
-    message(FATAL_ERROR "Could not find network subdirectory (expected 'network/' or 'common/network/')")
-endif()
-
+add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
 
