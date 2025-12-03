@@ -46,15 +46,15 @@ class NetworkServerAsio : public INetworkServer {
     bool isRunning() const override;
 
     bool sendLoginResponse(uint32_t clientId, uint32_t playerId,
-                          uint16_t mapWidth, uint16_t mapHeight) override;
+                           uint16_t mapWidth, uint16_t mapHeight) override;
     bool sendEntitySpawn(uint32_t clientId, uint32_t entityId, uint8_t type,
-                        float x, float y) override;
+                         float x, float y) override;
     bool sendEntityPosition(uint32_t clientId, uint32_t entityId, float x,
-                           float y) override;
+                            float y) override;
     bool sendEntityDead(uint32_t clientId, uint32_t entityId) override;
 
     size_t broadcast(const void* data, size_t size,
-                    uint32_t excludeClient = 0) override;
+                     uint32_t excludeClient = 0) override;
     std::vector<ClientInfo> getConnectedClients() const override;
 
     void setOnClientConnectedCallback(
@@ -67,12 +67,12 @@ class NetworkServerAsio : public INetworkServer {
    private:
     void runNetworkThread();
     void handleReceive(const boost::system::error_code& error,
-                      std::size_t bytes_transferred);
+                       std::size_t bytes_transferred);
     void startReceive();
 
     uint32_t getOrCreateClient(const boost::asio::ip::udp::endpoint& endpoint);
     void processReceivedData(const uint8_t* data, size_t size,
-                           const boost::asio::ip::udp::endpoint& sender);
+                             const boost::asio::ip::udp::endpoint& sender);
 
     bool sendToClient(uint32_t clientId, const void* data, size_t size);
 
@@ -90,7 +90,8 @@ class NetworkServerAsio : public INetworkServer {
 
     // Client management
     std::unordered_map<uint32_t, ClientData> _clients;
-    std::unordered_map<std::string, uint32_t> _endpointToClientId;  // For quick lookup
+    std::unordered_map<std::string, uint32_t>
+        _endpointToClientId;  // For quick lookup
     mutable std::mutex _clientsMutex;
 
     // Buffers
