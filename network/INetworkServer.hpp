@@ -29,14 +29,13 @@ struct ClientInfo {
 /**
  * @brief Callback types for server network events
  */
-using OnClientConnectedCallback = std::function<void(uint32_t clientId,
-                                                   const std::string& address,
-                                                   uint16_t port)>;
+using OnClientConnectedCallback = std::function<void(
+    uint32_t clientId, const std::string& address, uint16_t port)>;
 using OnClientDisconnectedCallback = std::function<void(uint32_t clientId)>;
-using OnClientLoginCallback = std::function<void(uint32_t clientId,
-                                               const ::LoginPacket&)>;
-using OnClientInputCallback = std::function<void(uint32_t clientId,
-                                                const ::InputPacket&)>;
+using OnClientLoginCallback =
+    std::function<void(uint32_t clientId, const ::LoginPacket&)>;
+using OnClientInputCallback =
+    std::function<void(uint32_t clientId, const ::InputPacket&)>;
 
 /**
  * @brief Server-specific network interface
@@ -71,7 +70,7 @@ class INetworkServer : public INetworkBase {
      * @return true if sent successfully
      */
     virtual bool sendLoginResponse(uint32_t clientId, uint32_t playerId,
-                                  uint16_t mapWidth, uint16_t mapHeight) = 0;
+                                   uint16_t mapWidth, uint16_t mapHeight) = 0;
 
     /**
      * @brief Send entity spawn to specific client
@@ -83,7 +82,7 @@ class INetworkServer : public INetworkBase {
      * @return true if sent successfully
      */
     virtual bool sendEntitySpawn(uint32_t clientId, uint32_t entityId,
-                                uint8_t type, float x, float y) = 0;
+                                 uint8_t type, float x, float y) = 0;
 
     /**
      * @brief Send entity position update to specific client
@@ -94,7 +93,7 @@ class INetworkServer : public INetworkBase {
      * @return true if sent successfully
      */
     virtual bool sendEntityPosition(uint32_t clientId, uint32_t entityId,
-                                   float x, float y) = 0;
+                                    float x, float y) = 0;
 
     /**
      * @brief Send entity death to specific client
@@ -112,7 +111,7 @@ class INetworkServer : public INetworkBase {
      * @return Number of clients the message was sent to
      */
     virtual size_t broadcast(const void* data, size_t size,
-                           uint32_t excludeClient = 0) = 0;
+                             uint32_t excludeClient = 0) = 0;
 
     /**
      * @brief Get list of connected clients
