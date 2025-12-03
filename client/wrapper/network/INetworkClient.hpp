@@ -12,7 +12,7 @@
 #include <memory>
 #include <string>
 
-#include "server/network/Protocol.hpp"
+#include "common/network/Protocol.hpp"
 
 namespace rtype {
 

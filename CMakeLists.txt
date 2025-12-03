@@ -36,12 +36,29 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Enable testing
+
 include(CTest)
 enable_testing()
 
+add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
+
+# Test server executable
+add_executable(test-server
+    ${CMAKE_SOURCE_DIR}/test_server.cpp
+)
+
+target_include_directories(test-server
+    PRIVATE
+    ${NETWORK_INCLUDE_DIR}
+)
+
+target_link_libraries(test-server
+    PRIVATE
+        network
+        Boost::system
+)
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -74,7 +91,7 @@ endif()
 if(ENABLE_COVERAGE)
     find_program(LCOV_PATH lcov)
     find_program(GENHTML_PATH genhtml)
-    
+
     if(LCOV_PATH AND GENHTML_PATH)
         add_custom_target(coverage
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

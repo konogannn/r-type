@@ -7,22 +7,15 @@
 
 #pragma once
 
-#include <cstdint>
 #include <functional>
-#include <memory>
-#include <string>
 
-#include "server/network/Protocol.hpp"
+#include "INetworkBase.hpp"
+#include "Protocol.hpp"
 
 namespace rtype {
 
 /**
- * @brief Connection state of the network client
- */
-enum class NetworkState { Disconnected, Connecting, Connected, Error };
-
-/**
- * @brief Callback types for network events
+ * @brief Callback types for client network events
  */
 using OnConnectedCallback = std::function<void()>;
 using OnDisconnectedCallback = std::function<void()>;
@@ -33,17 +26,13 @@ using OnEntityPositionCallback =
     std::function<void(const ::EntityPositionPacket&)>;
 using OnEntityDeadCallback = std::function<void(uint32_t entityId)>;
 using OnScoreUpdateCallback = std::function<void(uint32_t score)>;
-using OnErrorCallback = std::function<void(const std::string& error)>;
 
 /**
- * @brief Abstract interface for network client communication
- * This interface is library-agnostic and can be implemented for different
- * networking libraries
+ * @brief Client-specific network interface
+ * Inherits from base and adds client functionality
  */
-class INetworkClient {
+class INetworkClient : public INetworkBase {
    public:
-    virtual ~INetworkClient() = default;
-
     /**
      * @brief Connect to the server
      * @param serverAddress Server IP address
@@ -62,12 +51,6 @@ class INetworkClient {
      * @return true if connected
      */
     virtual bool isConnected() const = 0;
-
-    /**
-     * @brief Get current network state
-     * @return Current state
-     */
-    virtual NetworkState getState() const = 0;
 
     /**
      * @brief Send login packet to server
@@ -96,12 +79,7 @@ class INetworkClient {
      */
     virtual bool sendAck(uint32_t sequenceId) = 0;
 
-    /**
-     * @brief Process incoming network messages (should be called regularly)
-     */
-    virtual void update() = 0;
-
-    // Callback setters
+    // Client-specific callback setters
     virtual void setOnConnectedCallback(OnConnectedCallback callback) = 0;
     virtual void setOnDisconnectedCallback(OnDisconnectedCallback callback) = 0;
     virtual void setOnLoginResponseCallback(
@@ -111,7 +89,6 @@ class INetworkClient {
         OnEntityPositionCallback callback) = 0;
     virtual void setOnEntityDeadCallback(OnEntityDeadCallback callback) = 0;
     virtual void setOnScoreUpdateCallback(OnScoreUpdateCallback callback) = 0;
-    virtual void setOnErrorCallback(OnErrorCallback callback) = 0;
 };
 
 }  // namespace rtype

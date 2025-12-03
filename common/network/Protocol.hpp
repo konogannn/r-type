@@ -65,4 +65,14 @@ struct EntityPositionPacket {
     float y;
 };
 
+struct EntityDeadPacket {
+    Header header;
+    uint32_t entityId;
+};
+
+struct ScoreUpdatePacket {
+    Header header;
+    uint32_t score;
+};
+
 #pragma pack(pop)

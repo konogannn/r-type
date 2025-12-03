@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "server/network/Protocol.hpp"
+#include "common/network/Protocol.hpp"
 
 namespace rtype {
 

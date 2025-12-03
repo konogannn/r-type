@@ -10,7 +10,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "server/network/Protocol.hpp"
+#include "common/network/NetworkMessage.hpp"
 
 namespace rtype {
 
@@ -200,7 +200,8 @@ void NetworkClientAsio::setOnScoreUpdateCallback(OnScoreUpdateCallback callback)
     _onScoreUpdate = callback;
 }
 
-void NetworkClientAsio::setOnErrorCallback(OnErrorCallback callback)
+void NetworkClientAsio::setOnErrorCallback(
+    std::function<void(const std::string&)> callback)
 {
     _onError = callback;
 }
@@ -301,7 +302,7 @@ void NetworkClientAsio::stopNetworkThread()
         _networkThread.join();
     }
 
-    _ioContext.reset();
+    _ioContext.restart();
 }
 
 bool NetworkClientAsio::sendMessage(const void* data, size_t size)
