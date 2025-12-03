@@ -186,7 +186,8 @@ void NetworkClientAsio::setOnScoreUpdateCallback(
     _onScoreUpdate = callback;
 }
 
-void NetworkClientAsio::setOnErrorCallback(std::function<void(const std::string&)> callback) {
+void NetworkClientAsio::setOnErrorCallback(
+    std::function<void(const std::string&)> callback) {
     _onError = callback;
 }
 
