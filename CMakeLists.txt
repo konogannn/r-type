@@ -25,7 +25,7 @@ if(ENABLE_COVERAGE)
 endif()
 
 # Find packages used by multiple modules
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system NO_CMAKE_SYSTEM_PATH)
 
 if(Boost_FOUND)
     message(STATUS "Boost found: ${Boost_VERSION}")
