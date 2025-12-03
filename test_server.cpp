@@ -10,7 +10,7 @@
 #include <iostream>
 #include <thread>
 
-#include "server/network/Protocol.hpp"
+#include "network/Protocol.hpp"
 
 using boost::asio::ip::udp;
 
