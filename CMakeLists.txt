@@ -44,21 +44,7 @@ add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
 
-# Test server executable
-add_executable(test-server
-    ${CMAKE_SOURCE_DIR}/test_server.cpp
-)
-
-target_include_directories(test-server
-    PRIVATE
-    ${NETWORK_INCLUDE_DIR}
-)
-
-target_link_libraries(test-server
-    PRIVATE
-        network
-        Boost::system
-)
+target_include_directories(r-type_server PRIVATE ${Boost_INCLUDE_DIRS})
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
