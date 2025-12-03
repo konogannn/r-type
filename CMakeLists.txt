@@ -40,11 +40,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 include(CTest)
 enable_testing()
 
-# Suppress developer warnings (e.g. CMP0167 about FindBoost removal)
-set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1)
 
-# Locate the shared network directory. The project historically used `network/` but
-# some repository layouts move it to `common/network/`.
 if(EXISTS "${CMAKE_SOURCE_DIR}/network/CMakeLists.txt")
     add_subdirectory(network)
     set(NETWORK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/network")
@@ -105,7 +101,7 @@ endif()
 if(ENABLE_COVERAGE)
     find_program(LCOV_PATH lcov)
     find_program(GENHTML_PATH genhtml)
-    
+
     if(LCOV_PATH AND GENHTML_PATH)
         add_custom_target(coverage
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
