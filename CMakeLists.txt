@@ -36,10 +36,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-
-include(CTest)
-enable_testing()
-
 add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
@@ -72,6 +68,9 @@ if(CLANG_FORMAT)
 else()
     message(WARNING "clang-format not found! Formatting target will not be available.")
 endif()
+
+include(CTest)
+enable_testing()
 
 # Coverage target
 if(ENABLE_COVERAGE)
