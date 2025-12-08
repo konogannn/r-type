@@ -175,9 +175,9 @@ void NetworkServer::runNetworkLoop()
     try {
         _ioContext.run();
     } catch (const std::exception& e) {
-        std::cerr << "[Server] Network error: " << e.what() << std::endl;
-        Logger::getInstance().log("Network error: " + std::string(e.what()),
-                                  LogLevel::ERROR_L, "NetworkServer");
+        Logger::getInstance().log(
+            "Network thread exception: " + std::string(e.what()),
+            LogLevel::ERROR_L, "NetworkServer");
         _state = NetworkState::Error;
         if (_onError) _onError(e.what());
     }
@@ -258,9 +258,11 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
 
                 {
                     std::lock_guard<std::mutex> lock(_clientsMutex);
-                    session->username =
-                        std::string(event.loginPacket.username,
-                                    strnlen(event.loginPacket.username, 8));
+                    auto* sessionPtr = getSessionById(session->clientId);
+                    if (sessionPtr)
+                        sessionPtr->username =
+                            std::string(event.loginPacket.username,
+                                        strnlen(event.loginPacket.username, 8));
                 }
 
                 pushEvent(event);
@@ -349,11 +351,6 @@ bool NetworkServer::sendEntityPosition(uint32_t clientId, uint32_t entityId,
 
 bool NetworkServer::sendEntityDead(uint32_t clientId, uint32_t entityId)
 {
-    struct EntityDeadPacket {
-        Header header;
-        uint32_t entityId;
-    } __attribute__((packed));
-
     EntityDeadPacket packet;
     packet.header.opCode = OpCode::S2C_ENTITY_DEAD;
     packet.header.packetSize = sizeof(EntityDeadPacket);
