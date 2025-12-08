@@ -10,9 +10,10 @@ add_library(r-type_server_network STATIC
 )
 
 target_link_libraries(r-type_server_network
-    PRIVATE
+    PUBLIC
         network
         utils
+    PRIVATE
         Boost::system
         Boost::thread
 )
