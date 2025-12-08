@@ -118,9 +118,8 @@ void SettingsMenu::updateLayout() {
     float sliderSpacing = 100.0f * scaleH;
 
     if (_sliders.size() >= 2) {
-        _sliders[0] =
-            Slider(centerColX, sliderY, sliderWidth, "Music Volume", 0.0f,
-                   100.0f, _sliders[0].getValue());
+        _sliders[0] = Slider(centerColX, sliderY, sliderWidth, "Music Volume",
+                             0.0f, 100.0f, _sliders[0].getValue());
         _sliders[1] =
             Slider(centerColX, sliderY + sliderSpacing, sliderWidth,
                    "SFX Volume", 0.0f, 100.0f, _sliders[1].getValue());
@@ -128,7 +127,8 @@ void SettingsMenu::updateLayout() {
     float toggleWidth = resButtonWidth;
     float toggleHeight = 60.0f * scaleH;
     float toggleX = leftColX + (resButtonWidth / 2.0f) - (toggleWidth / 2.0f);
-    float toggleY = leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scaleH);
+    float toggleY =
+        leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scaleH);
     _fullscreenToggle =
         ToggleButton(toggleX, toggleY, toggleWidth, toggleHeight, "Fullscreen",
                      _fullscreenToggle.isOn());
@@ -250,43 +250,50 @@ void SettingsMenu::render() {
     float rightColCenter = windowWidth * 0.78f;
     float resButtonWidth = 320.0f * scaleW;
     std::string resTitle = "RESOLUTION";
-    float resTitleW = _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
+    float resTitleW =
+        _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
     float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
     float sectionTitleY = 190.0f * scale;
-    _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize, 100,
-                       200, 255, _fontPath);
+    _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
+                       100, 200, 255, _fontPath);
 
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
     }
     std::string audioTitle = "AUDIO";
-    float audioTitleW = _graphics.getTextWidth(audioTitle, sectionTitleSize, _fontPath);
-    float audioTitleX = centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
+    float audioTitleW =
+        _graphics.getTextWidth(audioTitle, sectionTitleSize, _fontPath);
+    float audioTitleX =
+        centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
     float sliderY = 300.0f * scale;
     float audioTitleY = sectionTitleY;
-    _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize, 100,
-                       200, 255, _fontPath);
+    _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
+                       100, 200, 255, _fontPath);
 
     for (const auto& slider : _sliders) {
         renderSlider(slider, scale);
     }
     std::string dispTitle = "DISPLAY";
-    float dispTitleW = _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
+    float dispTitleW =
+        _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
     float leftColY = 250.0f * scale;
     float resSpacing = 60.0f * scale;
-    float toggleYRender = leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scale);
+    float toggleYRender =
+        leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scale);
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
     float dispTitleY = toggleYRender - 30.0f * scale;
-    _graphics.drawText(dispTitle, dispTitleX, dispTitleY,
-                       sectionTitleSize, 100, 200, 255, _fontPath);
+    _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 100,
+                       200, 255, _fontPath);
 
     renderToggleButton(scale);
     std::string ctrlTitle = "CONTROLS";
-    float ctrlTitleW = _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
+    float ctrlTitleW =
+        _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
     float keyBindWidth = 400.0f * scaleW;
-    float ctrlTitleX = (windowWidth / 2.0f) - (keyBindWidth / 2.0f) - (ctrlTitleW / 2.0f) + (keyBindWidth / 2.0f);
-    _graphics.drawText(ctrlTitle, ctrlTitleX, 500.0f * scale,
-                       sectionTitleSize, 100, 200, 255, _fontPath);
+    float ctrlTitleX = (windowWidth / 2.0f) - (keyBindWidth / 2.0f) -
+                       (ctrlTitleW / 2.0f) + (keyBindWidth / 2.0f);
+    _graphics.drawText(ctrlTitle, ctrlTitleX, 500.0f * scale, sectionTitleSize,
+                       100, 200, 255, _fontPath);
 
     for (const auto& button : _keyBindingButtons) {
         renderKeyBindingButton(button, scale);
