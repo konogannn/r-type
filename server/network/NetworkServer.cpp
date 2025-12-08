@@ -270,7 +270,7 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
             break;
 
         case OpCode::C2S_INPUT:
-            if (size >= sizeof(InputPacket)) {
+            if (size >= sizeof(InputPacket) && session->isAuthenticated) {
                 NetworkEvent event;
                 event.type = EventType::Input;
                 event.clientId = session->clientId;
