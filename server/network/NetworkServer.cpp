@@ -43,9 +43,8 @@ bool NetworkServer::start(uint16_t port)
     startReceive();
 
     _networkThread = std::thread(&NetworkServer::runNetworkLoop, this);
-    Logger::getInstance().log(
-        "Server started on port " + std::to_string(port), LogLevel::INFO_L,
-        "NetworkServer");
+    Logger::getInstance().log("Server started on port " + std::to_string(port),
+                              LogLevel::INFO_L, "NetworkServer");
     return true;
 }
 
@@ -57,11 +56,9 @@ void NetworkServer::stop()
     _state = NetworkState::Disconnected;
     _ioContext.stop();
 
-    if (_networkThread.joinable())
-        _networkThread.join();
+    if (_networkThread.joinable()) _networkThread.join();
 
-    if (_socket.is_open())
-        _socket.close();
+    if (_socket.is_open()) _socket.close();
 
     {
         std::lock_guard<std::mutex> lock(_clientsMutex);
@@ -69,7 +66,8 @@ void NetworkServer::stop()
         _endpointToId.clear();
     }
 
-    Logger::getInstance().log("Network stopped.", LogLevel::INFO_L, "NetworkServer");
+    Logger::getInstance().log("Network stopped.", LogLevel::INFO_L,
+                              "NetworkServer");
 }
 
 bool NetworkServer::isRunning() const { return _running; }
@@ -142,10 +140,10 @@ void NetworkServer::disconnectClient(uint32_t clientId,
 
     auto it = _sessions.find(clientId);
     if (it != _sessions.end()) {
-        Logger::getInstance().log(
-            "Disconnecting client " + std::to_string(clientId) +
-                " (reason: " + reason + ")",
-            LogLevel::INFO_L, "NetworkServer");
+        Logger::getInstance().log("Disconnecting client " +
+                                      std::to_string(clientId) +
+                                      " (reason: " + reason + ")",
+                                  LogLevel::INFO_L, "NetworkServer");
 
         _endpointToId.erase(it->second.endpoint);
 
@@ -178,9 +176,8 @@ void NetworkServer::runNetworkLoop()
         _ioContext.run();
     } catch (const std::exception& e) {
         std::cerr << "[Server] Network error: " << e.what() << std::endl;
-        Logger::getInstance().log(
-            "Network error: " + std::string(e.what()), LogLevel::ERROR_L,
-            "NetworkServer");
+        Logger::getInstance().log("Network error: " + std::string(e.what()),
+                                  LogLevel::ERROR_L, "NetworkServer");
         _state = NetworkState::Error;
         if (_onError) _onError(e.what());
     }
@@ -202,9 +199,8 @@ void NetworkServer::handleReceive(const boost::system::error_code& error,
     if (!error) {
         processPacket(_receiveBuffer.data(), bytesTransferred, _remoteEndpoint);
     } else if (error != boost::asio::error::operation_aborted) {
-        Logger::getInstance().log(
-            "Receive error: " + error.message(), LogLevel::ERROR_L,
-            "NetworkServer");
+        Logger::getInstance().log("Receive error: " + error.message(),
+                                  LogLevel::ERROR_L, "NetworkServer");
     }
 
     if (_running) {
