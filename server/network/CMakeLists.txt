@@ -12,6 +12,7 @@ add_library(r-type_server_network STATIC
 target_link_libraries(r-type_server_network
     PRIVATE
         network
+        utils
         Boost::system
         Boost::thread
 )
@@ -19,4 +20,5 @@ target_link_libraries(r-type_server_network
 target_include_directories(r-type_server_network
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}
 )
