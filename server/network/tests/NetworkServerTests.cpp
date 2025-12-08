@@ -20,10 +20,7 @@ class NetworkServerTests : public ::testing::Test {
    protected:
     std::unique_ptr<NetworkServer> server;
 
-    void SetUp() override
-    {
-        server = std::make_unique<NetworkServer>(5);
-    }
+    void SetUp() override { server = std::make_unique<NetworkServer>(5); }
 
     void TearDown() override
     {

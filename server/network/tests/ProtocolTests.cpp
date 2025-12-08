@@ -104,7 +104,7 @@ TEST_F(ProtocolTest, InputPacketInitialization)
 
 TEST_F(ProtocolTest, InputMaskCombinations)
 {
-    uint8_t combined = 1 | 8 | 16;    // 1 + 8 + 16 = 25
+    uint8_t combined = 1 | 8 | 16;  // 1 + 8 + 16 = 25
 
     // Test individual flags
     EXPECT_TRUE(combined & 1);
