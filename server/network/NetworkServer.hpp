@@ -27,19 +27,35 @@ namespace rtype {
 /**
  * @brief Represents a connected client session on the server
  *
- * This structure holds all information about a client connection,
- * including authentication state and network endpoint.
+ * This structure holds all stateful information about a client connection,
+ * including authentication status, network endpoint, and packet reliability
+ * data.
  */
 struct ClientSession {
-    uint32_t clientId;     ///< Unique identifier assigned by the server
-    uint32_t playerId;     ///< Game-assigned player ID (0 until authenticated)
+    uint32_t clientId;  ///< Unique internal identifier assigned by the server
+    uint32_t playerId;  ///< Game-assigned player ID (0 until authenticated)
     std::string username;  ///< Player username (max 8 characters)
     boost::asio::ip::udp::endpoint
         endpoint;             ///< UDP endpoint (IP address and port)
     uint32_t lastSequenceId;  ///< Last received sequence ID for packet ordering
     bool isAuthenticated;     ///< True if login process completed successfully
     std::chrono::steady_clock::time_point
-        lastActivity;  ///< Last packet received time
+        lastActivity;  ///< Timestamp of the last valid packet received
+
+    /**
+     * @brief Structure for tracking reliable packets that need acknowledgement.
+     */
+    struct PendingPacket {
+        uint32_t sequenceId;        ///< Sequence ID of the sent packet
+        std::vector<uint8_t> data;  ///< Raw packet data
+        std::chrono::steady_clock::time_point
+            lastSentTime;  ///< Last transmission time
+        int retryCount;    ///< Number of times this packet has been retried
+    };
+
+    std::vector<PendingPacket>
+        pendingPackets;       ///< Queue of unacknowledged reliable packets
+    uint32_t nextSequenceId;  ///< Next sequence ID to use for sending
 };
 
 /**
@@ -53,12 +69,10 @@ struct ClientSession {
  * - Thread-safe event queuing for game engine integration
  * - Broadcasting to multiple clients
  * - Automatic timeout and disconnection of inactive clients
+ * - Reliable packet delivery system (ACKs and retries)
  *
  * @note All network operations run on a dedicated thread. The main game thread
- *       should call update() regularly to process queued network events.
- *
- * @see INetworkServer
- * @see Protocol.hpp for packet definitions
+ *       must call update() regularly to process queued network events.
  */
 class NetworkServer : public INetworkServer {
    public:
@@ -94,9 +108,10 @@ class NetworkServer : public INetworkServer {
      * This method must be called regularly from the main game thread.
      * It dequeues and processes all pending network events (client connections,
      * logins, inputs, disconnections) by invoking the registered callbacks.
-     * Also checks for timed-out clients and disconnects them.
+     * It also performs maintenance tasks like checking for timed-out clients
      *
      * @note Thread-safe. Events are pushed by the network thread and consumed
+     *       by the game thread
      *       by the game thread.
      */
     void update() override;
@@ -201,6 +216,17 @@ class NetworkServer : public INetworkServer {
     bool sendEntityDead(uint32_t clientId, uint32_t entityId) override;
 
     /**
+     * @brief Send score update to a client
+     *
+     * Sends an S2C_SCORE_UPDATE packet.
+     *
+     * @param clientId Target client (0 to broadcast)
+     * @param score New score value
+     * @return true if sent successfully
+     */
+    bool sendScoreUpdate(uint32_t clientId, uint32_t score) override;
+
+    /**
      * @brief Broadcast raw data to all connected clients
      *
      * Sends arbitrary binary data to all authenticated clients, optionally
@@ -209,10 +235,11 @@ class NetworkServer : public INetworkServer {
      * @param data Pointer to data buffer
      * @param size Size of data in bytes
      * @param excludeClient Client ID to skip (0 = send to all)
+     * @param reliable Whether to send the data reliably
      * @return size_t Number of clients the data was sent to
      */
-    size_t broadcast(const void* data, size_t size,
-                     uint32_t excludeClient = 0) override;
+    size_t broadcast(const void* data, size_t size, uint32_t excludeClient = 0,
+                     bool reliable = false) override;
 
     /**
      * @brief Get list of all connected clients
@@ -259,6 +286,16 @@ class NetworkServer : public INetworkServer {
      * @param callback Function(clientId, InputPacket)
      */
     void setOnClientInputCallback(OnClientInputCallback callback) override;
+
+    /**
+     * @brief Register callback for start game requests
+     *
+     * Called when C2S_START_GAME packet is received.
+     *
+     * @param callback Function(clientId)
+     */
+    void setOnClientStartGameCallback(
+        OnClientStartGameCallback callback) override;
 
     /**
      * @brief Set the timeout duration for inactive clients
@@ -317,6 +354,11 @@ class NetworkServer : public INetworkServer {
     void checkTimeouts();
 
     /**
+     * @brief Resend reliable packets that haven't been ACKed
+     */
+    void resendPendingPackets();
+
+    /**
      * @brief Disconnect a client by ID
      *
      * Removes the client session and pushes a disconnect event.
@@ -356,9 +398,12 @@ class NetworkServer : public INetworkServer {
      * @param endpoint Target address
      * @param data Data buffer
      * @param size Data size in bytes
+     * @param reliable If true, packet will be resent until ACKed
+     * @param session Optional session pointer for reliable tracking
      */
     void sendToEndpoint(const boost::asio::ip::udp::endpoint& endpoint,
-                        const void* data, size_t size);
+                        const void* data, size_t size, bool reliable = false,
+                        ClientSession* session = nullptr);
 
     /**
      * @brief Event types for the thread-safe event queue
@@ -367,7 +412,8 @@ class NetworkServer : public INetworkServer {
         Connect,     ///< New client connected
         Disconnect,  ///< Client disconnected
         Login,       ///< Login packet received
-        Input        ///< Input packet received
+        Input,       ///< Input packet received
+        StartGame    ///< Start game packet received
     };
 
     /**
@@ -429,6 +475,7 @@ class NetworkServer : public INetworkServer {
         _onClientDisconnected;             ///< Disconnection event handler
     OnClientLoginCallback _onClientLogin;  ///< Login event handler
     OnClientInputCallback _onClientInput;  ///< Input event handler
+    OnClientStartGameCallback _onClientStartGame;  ///< Start game event handler
     std::function<void(const std::string&)> _onError;  ///< Error event handler
 
     // --- Event Queue ---
