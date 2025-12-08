@@ -77,6 +77,7 @@ NetworkState NetworkServer::getState() const { return _state; }
 void NetworkServer::update()
 {
     checkTimeouts();
+    resendPendingPackets();
 
     std::deque<NetworkEvent> events;
     {
@@ -102,6 +103,9 @@ void NetworkServer::update()
             case EventType::Input:
                 if (_onClientInput)
                     _onClientInput(event.clientId, event.inputPacket);
+                break;
+            case EventType::StartGame:
+                if (_onClientStartGame) _onClientStartGame(event.clientId);
                 break;
         }
     }
@@ -130,6 +134,32 @@ void NetworkServer::checkTimeouts()
                 std::to_string(_timeoutDuration.count()) + "s of inactivity",
             LogLevel::INFO_L, "NetworkServer");
         disconnectClient(clientId, "timeout");
+    }
+}
+
+void NetworkServer::resendPendingPackets()
+{
+    auto now = std::chrono::steady_clock::now();
+    std::lock_guard<std::mutex> lock(_clientsMutex);
+
+    for (auto& pair : _sessions) {
+        auto& session = pair.second;
+        for (auto& packet : session.pendingPackets) {
+            auto elapsed =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    now - packet.lastSentTime);
+
+            if (elapsed.count() >= 1000) {
+                if (packet.retryCount < 5) {
+                    sendToEndpoint(session.endpoint, packet.data.data(),
+                                   packet.data.size(), false, nullptr);
+                    packet.lastSentTime = now;
+                    packet.retryCount++;
+                } else {
+                    disconnectClient(pair.first, "too many retries");
+                }
+            }
+        }
     }
 }
 
@@ -229,6 +259,7 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
             newSession.isAuthenticated = false;
             newSession.playerId = 0;
             newSession.lastActivity = std::chrono::steady_clock::now();
+            newSession.nextSequenceId = 1;
 
             _sessions[newId] = newSession;
             _endpointToId[sender] = newId;
@@ -258,11 +289,9 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
 
                 {
                     std::lock_guard<std::mutex> lock(_clientsMutex);
-                    auto* sessionPtr = getSessionById(session->clientId);
-                    if (sessionPtr)
-                        sessionPtr->username =
-                            std::string(event.loginPacket.username,
-                                        strnlen(event.loginPacket.username, 8));
+                    session->username =
+                        std::string(event.loginPacket.username,
+                                    strnlen(event.loginPacket.username, 8));
                 }
 
                 pushEvent(event);
@@ -279,8 +308,33 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
             }
             break;
 
+        case OpCode::C2S_START_GAME:
+            if (size >= sizeof(StartGamePacket) && session->isAuthenticated) {
+                NetworkEvent event;
+                event.type = EventType::StartGame;
+                event.clientId = session->clientId;
+                pushEvent(event);
+            }
+            break;
+
         case OpCode::C2S_DISCONNECT:
             disconnectClient(session->clientId, "client request");
+            break;
+
+        case OpCode::C2S_ACK:
+            if (size >= sizeof(AckPacket) && session->isAuthenticated) {
+                const AckPacket* ack = reinterpret_cast<const AckPacket*>(data);
+                std::lock_guard<std::mutex> lock(_clientsMutex);
+                auto& pending = session->pendingPackets;
+
+                pending.erase(std::remove_if(
+                                  pending.begin(), pending.end(),
+                                  [ack](const ClientSession::PendingPacket& p) {
+                                      return p.sequenceId ==
+                                             ack->ackedSequenceId;
+                                  }),
+                              pending.end());
+            }
             break;
 
         default:
@@ -306,7 +360,8 @@ bool NetworkServer::sendLoginResponse(uint32_t clientId, uint32_t playerId,
     response.mapWidth = mapWidth;
     response.mapHeight = mapHeight;
 
-    sendToEndpoint(it->second.endpoint, &response, sizeof(response));
+    sendToEndpoint(it->second.endpoint, &response, sizeof(response), true,
+                   &it->second);
     return true;
 }
 
@@ -323,7 +378,7 @@ bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
     packet.y = y;
 
     if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
+        broadcast(&packet, sizeof(packet), 0, true);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
     }
@@ -358,6 +413,22 @@ bool NetworkServer::sendEntityDead(uint32_t clientId, uint32_t entityId)
     packet.entityId = entityId;
 
     if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0, true);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendScoreUpdate(uint32_t clientId, uint32_t score)
+{
+    ScoreUpdatePacket packet;
+    packet.header.opCode = OpCode::S2C_SCORE_UPDATE;
+    packet.header.packetSize = sizeof(ScoreUpdatePacket);
+    packet.header.sequenceId = 0;
+    packet.score = score;
+
+    if (clientId == 0) {
         broadcast(&packet, sizeof(packet), 0);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
@@ -366,13 +437,14 @@ bool NetworkServer::sendEntityDead(uint32_t clientId, uint32_t entityId)
 }
 
 size_t NetworkServer::broadcast(const void* data, size_t size,
-                                uint32_t excludeClient)
+                                uint32_t excludeClient, bool reliable)
 {
     std::lock_guard<std::mutex> lock(_clientsMutex);
     size_t count = 0;
-    for (const auto& pair : _sessions) {
-        if (pair.first != excludeClient && pair.second.isAuthenticated) {
-            sendToEndpoint(pair.second.endpoint, data, size);
+    for (auto& session : _sessions) {
+        if (session.first != excludeClient && session.second.isAuthenticated) {
+            sendToEndpoint(session.second.endpoint, data, size, reliable,
+                           &session.second);
             count++;
         }
     }
@@ -414,6 +486,11 @@ void NetworkServer::setOnClientInputCallback(OnClientInputCallback callback)
 {
     _onClientInput = callback;
 }
+void NetworkServer::setOnClientStartGameCallback(
+    OnClientStartGameCallback callback)
+{
+    _onClientStartGame = callback;
+}
 
 // --- Helpers ---
 
@@ -440,10 +517,30 @@ ClientSession* NetworkServer::getSessionById(uint32_t id)
 
 void NetworkServer::sendToEndpoint(
     const boost::asio::ip::udp::endpoint& endpoint, const void* data,
-    size_t size)
+    size_t size, bool reliable, ClientSession* session)
 {
-    _socket.async_send_to(boost::asio::buffer(data, size), endpoint,
-                          [](const boost::system::error_code&, size_t) {});
+    if (reliable && session) {
+        uint32_t seqId = session->nextSequenceId++;
+
+        std::vector<uint8_t> buffer(static_cast<const uint8_t*>(data),
+                                    static_cast<const uint8_t*>(data) + size);
+        Header* header = reinterpret_cast<Header*>(buffer.data());
+        header->sequenceId = seqId;
+
+        ClientSession::PendingPacket pending;
+        pending.sequenceId = seqId;
+        pending.data = buffer;
+        pending.lastSentTime = std::chrono::steady_clock::now();
+        pending.retryCount = 0;
+
+        session->pendingPackets.push_back(pending);
+
+        _socket.async_send_to(boost::asio::buffer(buffer), endpoint,
+                              [](const boost::system::error_code&, size_t) {});
+    } else {
+        _socket.async_send_to(boost::asio::buffer(data, size), endpoint,
+                              [](const boost::system::error_code&, size_t) {});
+    }
 }
 
 void NetworkServer::sendToClient(const void* data, size_t size,
@@ -452,7 +549,12 @@ void NetworkServer::sendToClient(const void* data, size_t size,
     std::lock_guard<std::mutex> lock(_clientsMutex);
     ClientSession* session = getSessionById(clientId);
     if (session) {
-        sendToEndpoint(session->endpoint, data, size);
+        const Header* h = reinterpret_cast<const Header*>(data);
+        bool reliable = (h->opCode == OpCode::S2C_LOGIN_OK ||
+                         h->opCode == OpCode::S2C_ENTITY_NEW ||
+                         h->opCode == OpCode::S2C_ENTITY_DEAD);
+
+        sendToEndpoint(session->endpoint, data, size, reliable, session);
     }
 }
 
