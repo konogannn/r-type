@@ -7,6 +7,12 @@
 
 #include "Logger.hpp"
 
+Logger& Logger::getInstance()
+{
+    static Logger instance("r-type.log");
+    return instance;
+}
+
 Logger::Logger(const std::string& filename)
 {
     _logFile.open(filename, std::ios::app);
@@ -19,7 +25,6 @@ Logger::~Logger()
 {
     _closing.store(true, std::memory_order_release);
 
-    std::lock_guard<std::mutex> lock(_mutex);
     if (_logFile.is_open()) {
         _logFile.flush();
         _logFile.close();
