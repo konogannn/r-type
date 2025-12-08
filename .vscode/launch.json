@@ -25,7 +25,6 @@
                 }
             ],
             "preLaunchTask": "Build: Server (Debug)",
-            "miDebuggerPath": "/usr/bin/gdb",
             "logging": {
                 "engineLogging": false
             }

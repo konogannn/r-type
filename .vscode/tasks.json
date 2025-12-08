@@ -173,10 +173,12 @@
         {
             "label": "Clean: Debug",
             "type": "shell",
-            "command": "rm",
+            "command": "cmake",
             "args": [
-                "-rf",
-                "${workspaceFolder}/build/debug"
+                "--build",
+                "${workspaceFolder}/build/debug",
+                "--target",
+                "clean"
             ],
             "problemMatcher": [],
             "detail": "Clean debug build directory"
@@ -184,24 +186,15 @@
         {
             "label": "Clean: Release",
             "type": "shell",
-            "command": "rm",
+            "command": "cmake",
             "args": [
-                "-rf",
-                "${workspaceFolder}/build/release"
+                "--build",
+                "${workspaceFolder}/build/release",
+                "--target",
+                "clean"
             ],
             "problemMatcher": [],
             "detail": "Clean release build directory"
         },
-        {
-            "label": "Clean: All",
-            "type": "shell",
-            "command": "rm",
-            "args": [
-                "-rf",
-                "${workspaceFolder}/build"
-            ],
-            "problemMatcher": [],
-            "detail": "Clean all build directories"
-        }
     ]
 }
