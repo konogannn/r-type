@@ -23,3 +23,8 @@ target_include_directories(r-type_server_network
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}
 )
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+    set(ALL_SERVER_TEST_SOURCES ${ALL_SERVER_TEST_SOURCES} PARENT_SCOPE)
+endif()
