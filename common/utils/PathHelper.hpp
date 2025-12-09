@@ -93,6 +93,13 @@ class PathHelper {
             return fullPath.string();
         }
 
+        std::cerr << "Warning: Asset file not found: " << fullPath.string()
+                  << std::endl;
+        std::cerr << "  Searched path: " << path << std::endl;
+        std::cerr << "  Base path: " << _basePath << std::endl;
+        std::cerr << "  Working directory: "
+                  << std::filesystem::current_path().string() << std::endl;
+
         return fullPath.string();
     }
 
