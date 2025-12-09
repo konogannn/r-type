@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Button.hpp"
+#include "src/Background.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/graphics/SpriteSFML.hpp"
 #include "wrapper/input/InputSFML.hpp"
@@ -36,7 +37,7 @@ class Menu {
     /**
      * @brief Update menu state (handle input, hover effects)
      */
-    MenuAction update();
+    MenuAction update(float deltaTime);
 
     /**
      * @brief Render the menu
@@ -45,14 +46,47 @@ class Menu {
 
     void updateLayout();
 
+    /**
+     * @brief Get the background (shared with game)
+     */
+    Background* getBackground() { return _background.get(); }
+
+    /**
+     * @brief Get menu UI alpha for fade transition
+     */
+    float getUIAlpha() const { return _uiAlpha; }
+
+    /**
+     * @brief Start fade out transition
+     */
+    void startFadeOut() { _isFadingOut = true; }
+
+    /**
+     * @brief Check if fade out is complete
+     */
+    bool isFadeOutComplete() const { return _uiAlpha <= 0.0f && _isFadingOut; }
+
+    /**
+     * @brief Reset fade state (when returning to menu)
+     */
+    void resetFade()
+    {
+        _isFadingOut = false;
+        _uiAlpha = 1.0f;
+    }
+
    private:
     WindowSFML& _window;
     GraphicsSFML& _graphics;
     InputSFML& _input;
 
-    std::unique_ptr<SpriteSFML> _background;
+    std::unique_ptr<Background> _background;
     std::vector<Button> _buttons;
     std::string _fontPath;
+
+    bool _isFadingOut;
+    float _uiAlpha;
+    static constexpr float FADE_SPEED = 2.0f;
 
     // Menu configuration
     static constexpr float BUTTON_WIDTH = 300.0f;
