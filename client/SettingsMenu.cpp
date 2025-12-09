@@ -101,9 +101,24 @@ void SettingsMenu::updateLayout() {
     float resButtonHeight = 50.0f * scaleH;
     float leftColX = windowWidth * 0.12f;
     float centerColX = (windowWidth - sliderWidth) / 2.0f;
-    float rightColCenter = windowWidth * 0.78f;
     float leftColY = 250.0f * scaleH;
     float resSpacing = 60.0f * scaleH;
+
+    _layout.scaleW = scaleW;
+    _layout.scaleH = scaleH;
+    _layout.sliderWidth = sliderWidth;
+    _layout.keyBindWidth = keyBindWidth;
+    _layout.resButtonWidth = resButtonWidth;
+    _layout.resButtonHeight = resButtonHeight;
+    _layout.leftColX = leftColX;
+    _layout.centerColX = centerColX;
+    _layout.leftColY = leftColY;
+    _layout.resSpacing = resSpacing;
+    _layout.toggleY = leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scaleH);
+    _layout.keyBindStartY = 500.0f * scaleH;
+    _layout.keyBindHeight = 50.0f * scaleH;
+    _layout.keyBindSpacing = 60.0f * scaleH;
+    _layout.sectionTitleY = 190.0f * scaleH;
 
     for (size_t i = 0; i < _resolutionButtons.size(); i++) {
         Resolution res = _resolutionButtons[i].getResolution();
@@ -243,19 +258,17 @@ void SettingsMenu::render() {
                        _fontPath);
 
     unsigned int sectionTitleSize = static_cast<unsigned int>(24 * scale);
-    float scaleW = windowWidth / 1920.0f;
-    float sliderWidth = 400.0f * scaleW;
-    float leftColX = windowWidth * 0.12f;
-    float centerColX = (windowWidth - sliderWidth) / 2.0f;
-    float rightColCenter = windowWidth * 0.78f;
-    float resButtonWidth = 320.0f * scaleW;
-    std::string resTitle = "RESOLUTION";
-    float resTitleW =
-        _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
-    float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
-    float sectionTitleY = 190.0f * scale;
-    _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+        // Reuse layout computed in updateLayout() to avoid duplication
+        float sliderWidth = _layout.sliderWidth;
+        float leftColX = _layout.leftColX;
+        float centerColX = _layout.centerColX;
+        float resButtonWidth = _layout.resButtonWidth;
+        std::string resTitle = "RESOLUTION";
+        float resTitleW = _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
+        float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
+        float sectionTitleY = _layout.sectionTitleY;
+        _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
+                           100, 200, 255, _fontPath);
 
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
@@ -263,9 +276,7 @@ void SettingsMenu::render() {
     std::string audioTitle = "AUDIO";
     float audioTitleW =
         _graphics.getTextWidth(audioTitle, sectionTitleSize, _fontPath);
-    float audioTitleX =
-        centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
-    float sliderY = 300.0f * scale;
+    float audioTitleX = centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
     float audioTitleY = sectionTitleY;
     _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
                        100, 200, 255, _fontPath);
@@ -274,12 +285,8 @@ void SettingsMenu::render() {
         renderSlider(slider, scale);
     }
     std::string dispTitle = "DISPLAY";
-    float dispTitleW =
-        _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
-    float leftColY = 250.0f * scale;
-    float resSpacing = 60.0f * scale;
-    float toggleYRender =
-        leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scale);
+    float dispTitleW = _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
+    float toggleYRender = _layout.toggleY;
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
     float dispTitleY = toggleYRender - 30.0f * scale;
     _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 100,
@@ -287,11 +294,8 @@ void SettingsMenu::render() {
 
     renderToggleButton(scale);
     std::string ctrlTitle = "CONTROLS";
-    float ctrlTitleW =
-        _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
-    float keyBindWidth = 400.0f * scaleW;
-    float ctrlTitleX = (windowWidth / 2.0f) - (keyBindWidth / 2.0f) -
-                       (ctrlTitleW / 2.0f) + (keyBindWidth / 2.0f);
+    float ctrlTitleW = _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
+    float ctrlTitleX = (windowWidth / 2.0f) - (ctrlTitleW / 2.0f);
     _graphics.drawText(ctrlTitle, ctrlTitleX, 500.0f * scale, sectionTitleSize,
                        100, 200, 255, _fontPath);
 

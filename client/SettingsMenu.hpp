@@ -89,6 +89,26 @@ class SettingsMenu {
     static constexpr unsigned int FONT_SIZE = 24;
     static constexpr unsigned int TITLE_SIZE = 48;
 
+    struct LayoutMetrics {
+        float scaleW = 1.0f;
+        float scaleH = 1.0f;
+        float sliderWidth = 400.0f;
+        float keyBindWidth = 400.0f;
+        float resButtonWidth = 320.0f;
+        float resButtonHeight = 50.0f;
+        float leftColX = 0.0f;
+        float centerColX = 0.0f;
+        float leftColY = 0.0f;
+        float resSpacing = 60.0f;
+        float toggleY = 0.0f;
+        float keyBindStartY = 0.0f;
+        float keyBindHeight = 0.0f;
+        float keyBindSpacing = 0.0f;
+        float sectionTitleY = 0.0f;
+    };
+
+    LayoutMetrics _layout;
+
     void setupBackground();
     void setupSliders();
     void setupKeyBindings();
