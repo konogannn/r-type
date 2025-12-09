@@ -46,11 +46,11 @@ void Menu::setupLogo()
 void Menu::setupButtons()
 {
     _buttons.clear();
-    _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, "PLAY");
-    _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, "SETTINGS");
-    _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT,
+    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "PLAY");
+    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "SETTINGS");
+    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT,
                           "CONNECT TO SERVER");
-    _buttons.emplace_back(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, "QUIT");
+    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "QUIT");
 }
 
 void Menu::updateLayout()
