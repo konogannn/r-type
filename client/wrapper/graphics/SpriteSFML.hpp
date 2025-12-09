@@ -35,6 +35,8 @@ class SpriteSFML : public ISprite {
     float getPositionY() const override;
     void setTextureRect(int left, int top, int width, int height) override;
     void setSmooth(bool smooth) override;
+    float getTextureWidth() const override;
+    float getTextureHeight() const override;
 
     /**
      * @brief Get the underlying SFML sprite
