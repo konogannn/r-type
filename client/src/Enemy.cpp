@@ -7,6 +7,8 @@
 
 #include "Enemy.hpp"
 
+#include <cmath>
+
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
 Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
@@ -15,7 +17,10 @@ Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
       _scale(scale),
       _currentFrame(0),
       _frameTimer(0.0f),
-      _frameDuration(0.15f)
+      _frameDuration(0.15f),
+      _isSliding(false),
+      _slideTargetX(x),
+      _slideSpeed(300.0f * scale)
 {
     _sprite = std::make_unique<rtype::SpriteSFML>();
     if (_sprite->loadTexture(texturePath)) {
@@ -28,6 +33,20 @@ Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
 
 void Enemy::update(float deltaTime)
 {
+    if (_isSliding) {
+        float distance = _slideTargetX - _x;
+        if (std::abs(distance) < 2.0f) {
+            _x = _slideTargetX;
+            _isSliding = false;
+        } else {
+            _x += (distance > 0 ? 1 : -1) * _slideSpeed * deltaTime;
+        }
+
+        if (_sprite) {
+            _sprite->setPosition(_x, _y);
+        }
+    }
+
     _frameTimer += deltaTime;
 
     if (_frameTimer >= _frameDuration) {
@@ -39,6 +58,18 @@ void Enemy::update(float deltaTime)
         }
     }
 }
+
+void Enemy::startSlideIn(float targetX)
+{
+    _slideTargetX = targetX;
+    _x = 2000.0f;
+    _isSliding = true;
+    if (_sprite) {
+        _sprite->setPosition(_x, _y);
+    }
+}
+
+bool Enemy::isSlideInComplete() const { return !_isSliding; }
 
 void Enemy::draw(rtype::IGraphics& graphics)
 {
