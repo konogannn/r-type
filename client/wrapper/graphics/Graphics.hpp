@@ -28,7 +28,7 @@ class IGraphics {
     virtual void drawSprite(const ISprite& sprite) = 0;
 
     /**
-     * @brief Draw a rectangle
+     * @brief Draw a filled rectangle
      * @param x X position
      * @param y Y position
      * @param width Width
@@ -40,6 +40,21 @@ class IGraphics {
     virtual void drawRectangle(float x, float y, float width, float height,
                                unsigned char r, unsigned char g,
                                unsigned char b) = 0;
+
+    /**
+     * @brief Draw a filled rectangle with alpha
+     * @param x X position
+     * @param y Y position
+     * @param width Width
+     * @param height Height
+     * @param r Red component (0-255)
+     * @param g Green component (0-255)
+     * @param b Blue component (0-255)
+     * @param a Alpha component (0-255, 0=transparent, 255=opaque)
+     */
+    virtual void drawRectangle(float x, float y, float width, float height,
+                               unsigned char r, unsigned char g,
+                               unsigned char b, unsigned char a) = 0;
 
     /**
      * @brief Draw a circle
@@ -67,6 +82,23 @@ class IGraphics {
     virtual void drawText(const std::string& text, float x, float y,
                           unsigned int fontSize, unsigned char r,
                           unsigned char g, unsigned char b,
+                          const std::string& fontPath) = 0;
+
+    /**
+     * @brief Draw text with alpha
+     * @param text Text to display
+     * @param x X position
+     * @param y Y position
+     * @param fontSize Font size
+     * @param r Red component (0-255)
+     * @param g Green component (0-255)
+     * @param b Blue component (0-255)
+     * @param a Alpha component (0-255)
+     * @param fontPath Path to the font file
+     */
+    virtual void drawText(const std::string& text, float x, float y,
+                          unsigned int fontSize, unsigned char r,
+                          unsigned char g, unsigned char b, unsigned char a,
                           const std::string& fontPath) = 0;
 
     /**
