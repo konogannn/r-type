@@ -1,4 +1,4 @@
-# setup_and_build.ps1
+# installer.ps1
 # Main script to set up the environment and build R-Type on Windows
 $ErrorActionPreference = "Stop"
 

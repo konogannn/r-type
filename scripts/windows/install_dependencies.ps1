@@ -1,4 +1,4 @@
-# install_system_deps.ps1
+# install_dependencies.ps1
 # Checks for mandatory system dependencies (Git, CMake).
 $ErrorActionPreference = "Stop"
 
