@@ -9,8 +9,8 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
 #include "../window/WindowSFML.hpp"
+#include "common/utils/PathHelper.hpp"
 
 namespace rtype {
 
