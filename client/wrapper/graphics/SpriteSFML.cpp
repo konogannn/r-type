@@ -67,6 +67,15 @@ float SpriteSFML::getTextureHeight() const
     return static_cast<float>(_texture->getSize().y);
 }
 
+void SpriteSFML::setAlpha(unsigned char alpha)
+{
+    if (_sprite) {
+        sf::Color color = _sprite->getColor();
+        color.a = alpha;
+        _sprite->setColor(color);
+    }
+}
+
 const sf::Sprite& SpriteSFML::getSFMLSprite() const { return *_sprite; }
 
 }  // namespace rtype
