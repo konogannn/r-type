@@ -17,13 +17,9 @@ SoundManager& SoundManager::getInstance()
 
 void SoundManager::loadAll()
 {
-    std::cout << "Loading sounds..." << std::endl;
-
     loadSound("shot", "assets/sound/shot_1.wav");
     loadSound("hit", "assets/sound/hit.wav");
     loadSound("explosion", "assets/sound/explosion.wav");
-
-    std::cout << "Sounds loaded: " << _buffers.size() << std::endl;
 }
 
 void SoundManager::loadSound(const std::string& name,
