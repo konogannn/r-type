@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "../../../common/utils/PathHelper.hpp"
+
 namespace rtype {
 
 SpriteSFML::SpriteSFML()
@@ -19,8 +21,10 @@ SpriteSFML::SpriteSFML()
 
 bool SpriteSFML::loadTexture(const std::string& filepath)
 {
-    if (!_texture->loadFromFile(filepath)) {
-        std::cerr << "Error: Failed to load texture from " << filepath
+    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
+
+    if (!_texture->loadFromFile(resolvedPath)) {
+        std::cerr << "Error: Failed to load texture from " << resolvedPath
                   << std::endl;
         return false;
     }
