@@ -9,6 +9,7 @@
 
 #include <iostream>
 
+#include "../../../common/utils/PathHelper.hpp"
 #include "../window/WindowSFML.hpp"
 
 namespace rtype {
@@ -51,8 +52,9 @@ sf::Font* GraphicsSFML::loadFont(const std::string& fontPath)
 {
     if (_fontCache.find(fontPath) == _fontCache.end()) {
         sf::Font font;
-        if (!font.loadFromFile(fontPath)) {
-            std::cerr << "Error: Failed to load font: " << fontPath
+        std::string resolvedPath = utils::PathHelper::getAssetPath(fontPath);
+        if (!font.loadFromFile(resolvedPath)) {
+            std::cerr << "Error: Failed to load font: " << resolvedPath
                       << std::endl;
             return nullptr;
         }
