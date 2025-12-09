@@ -20,6 +20,7 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
       _uiAlpha(1.0f)
 {
     setupBackground();
+    setupLogo();
     setupButtons();
     updateLayout();
 }
@@ -32,6 +33,14 @@ void Menu::setupBackground()
     _background = std::make_unique<Background>(
         "assets/background/bg-back.png", "assets/background/bg-stars.png",
         "assets/background/bg-planet.png", windowWidth, windowHeight);
+}
+
+void Menu::setupLogo()
+{
+    _logoSprite = std::make_unique<rtype::SpriteSFML>();
+    if (_logoSprite->loadTexture("assets/icon/logo.png")) {
+        _logoSprite->setSmooth(true);
+    }
 }
 
 void Menu::setupButtons()
@@ -53,7 +62,7 @@ void Menu::updateLayout()
     float scaleH = windowHeight / 1080.0f;
 
     float centerX = (windowWidth / 2.0f) - (BUTTON_WIDTH * scaleW / 2.0f);
-    float startY = 400.0f * scaleH;
+    float startY = 600.0f * scaleH;
     float spacing = (BUTTON_HEIGHT + BUTTON_SPACING) * scaleH;
     float buttonWidth = BUTTON_WIDTH * scaleW;
     float buttonHeight = BUTTON_HEIGHT * scaleH;
@@ -167,14 +176,19 @@ void Menu::render()
                            255, 255, textAlpha, _fontPath);
     }
 
-    unsigned int titleFontSize = static_cast<unsigned int>(64 * scale);
-    float titleWidth =
-        _graphics.getTextWidth("R-TYPE", titleFontSize, _fontPath);
-    float titleX = (windowWidth / 2.0f) - (titleWidth / 2.0f);
-    float titleY = 150.0f * scaleH;
-    unsigned char titleAlpha = static_cast<unsigned char>(255 * _uiAlpha);
-    _graphics.drawText("R-TYPE", titleX, titleY, titleFontSize, 255, 100, 0,
-                       titleAlpha, _fontPath);
+    if (_logoSprite) {
+        float logoScale = scale * 0.5f;
+        _logoSprite->setScale(logoScale, logoScale);
+
+        float logoWidth = _logoSprite->getTextureWidth() * logoScale;
+        float logoX = (windowWidth / 2.0f) - (logoWidth / 2.0f);
+        float logoY = 50.0f * scaleH;
+        _logoSprite->setPosition(logoX, logoY);
+        unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
+        _logoSprite->setAlpha(alpha);
+
+        _graphics.drawSprite(*_logoSprite);
+    }
 }
 
 }  // namespace rtype
