@@ -42,6 +42,7 @@ target_include_directories(r-type_client
 target_link_libraries(r-type_client
     PRIVATE
         network
+        utils
         sfml-graphics
         sfml-audio
         sfml-window
@@ -75,6 +76,7 @@ target_include_directories(r-type_client-enhanced
 target_link_libraries(r-type_client-enhanced
     PRIVATE
         network
+        utils
         sfml-graphics
         sfml-audio
         sfml-window

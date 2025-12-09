@@ -75,7 +75,7 @@ bool Config::save(const std::string& filepath)
         if (!value.empty()) {
             try {
                 size_t pos;
-                std::stod(value, &pos);
+                (void)std::stod(value, &pos);
                 isNumber = (pos == value.length());
             } catch (...) {
                 isNumber = false;

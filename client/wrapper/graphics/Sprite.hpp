@@ -79,6 +79,24 @@ class ISprite {
      * @param smooth true to enable smoothing, false for pixel-perfect
      */
     virtual void setSmooth(bool smooth) = 0;
+
+    /**
+     * @brief Get the width of the texture
+     * @return Width in pixels
+     */
+    virtual float getTextureWidth() const = 0;
+
+    /**
+     * @brief Get the height of the texture
+     * @return Height in pixels
+     */
+    virtual float getTextureHeight() const = 0;
+
+    /**
+     * @brief Set the alpha transparency of the sprite
+     * @param alpha Alpha value (0-255, 0=transparent, 255=opaque)
+     */
+    virtual void setAlpha(unsigned char alpha) = 0;
 };
 
 }  // namespace rtype

@@ -36,11 +36,18 @@ class GraphicsSFML : public IGraphics {
     void drawRectangle(float x, float y, float width, float height,
                        unsigned char r, unsigned char g,
                        unsigned char b) override;
+    void drawRectangle(float x, float y, float width, float height,
+                       unsigned char r, unsigned char g, unsigned char b,
+                       unsigned char a) override;
     void drawCircle(float x, float y, float radius, unsigned char r,
                     unsigned char g, unsigned char b) override;
     void drawText(const std::string& text, float x, float y,
                   unsigned int fontSize, unsigned char r, unsigned char g,
                   unsigned char b, const std::string& fontPath) override;
+    void drawText(const std::string& text, float x, float y,
+                  unsigned int fontSize, unsigned char r, unsigned char g,
+                  unsigned char b, unsigned char a,
+                  const std::string& fontPath) override;
     float getTextWidth(const std::string& text, unsigned int fontSize,
                        const std::string& fontPath) override;
 

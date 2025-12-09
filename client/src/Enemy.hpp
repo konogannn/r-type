@@ -26,6 +26,9 @@ class Enemy {
     float getWidth() const;
     float getHeight() const;
 
+    void startSlideIn(float targetX);
+    bool isSlideInComplete() const;
+
    private:
     std::unique_ptr<rtype::ISprite> _sprite;
     float _x, _y;
@@ -33,4 +36,8 @@ class Enemy {
     int _currentFrame;
     float _frameTimer;
     float _frameDuration;
+
+    bool _isSliding;
+    float _slideTargetX;
+    float _slideSpeed;
 };
