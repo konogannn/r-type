@@ -81,6 +81,7 @@ class Menu {
     InputSFML& _input;
 
     std::unique_ptr<Background> _background;
+    std::unique_ptr<rtype::ISprite> _logoSprite;
     std::vector<Button> _buttons;
     std::string _fontPath;
 
@@ -88,7 +89,6 @@ class Menu {
     float _uiAlpha;
     static constexpr float FADE_SPEED = 2.0f;
 
-    // Menu configuration
     static constexpr float BUTTON_WIDTH = 300.0f;
     static constexpr float BUTTON_HEIGHT = 60.0f;
     static constexpr float BUTTON_SPACING = 20.0f;
@@ -96,6 +96,7 @@ class Menu {
 
     void setupButtons();
     void setupBackground();
+    void setupLogo();
 };
 
 }  // namespace rtype
