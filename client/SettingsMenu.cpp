@@ -375,9 +375,9 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     float handleHeight = baseUnit * 0.45f;
     float fontSize = baseUnit * 0.4f;
 
-    _graphics.drawText(slider.getLabel(), slider.getX(),
-                       slider.getY() - baseUnit * 0.9f, fontSize, 255, 255, 255,
-                       _fontPath);
+    _graphics.drawText(
+        slider.getLabel(), slider.getX(), slider.getY() - baseUnit * 0.9f,
+        static_cast<unsigned int>(fontSize), 255, 255, 255, _fontPath);
 
     _graphics.drawRectangle(slider.getX(), slider.getY(), slider.getWidth(),
                             trackHeight, 50, 50, 50);
@@ -410,8 +410,9 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     std::string valueText = oss.str();
 
     float valueX = slider.getX() + slider.getWidth() + baseUnit * 0.3f;
+    unsigned int fontSizeUInt = static_cast<unsigned int>(fontSize);
     _graphics.drawText(valueText, valueX, slider.getY() - fontSize * 0.3f,
-                       fontSize, 255, 255, 255, _fontPath);
+                       fontSizeUInt, 255, 255, 255, _fontPath);
 }
 
 void SettingsMenu::saveSettings()
