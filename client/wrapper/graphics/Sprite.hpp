@@ -91,6 +91,12 @@ class ISprite {
      * @return Height in pixels
      */
     virtual float getTextureHeight() const = 0;
+
+    /**
+     * @brief Set the alpha transparency of the sprite
+     * @param alpha Alpha value (0-255, 0=transparent, 255=opaque)
+     */
+    virtual void setAlpha(unsigned char alpha) = 0;
 };
 
 }  // namespace rtype
