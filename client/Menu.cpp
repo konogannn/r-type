@@ -15,7 +15,9 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/fonts/Retro_Gaming.ttf")
+      _fontPath("assets/fonts/Retro_Gaming.ttf"),
+      _isFadingOut(false),
+      _uiAlpha(1.0f)
 {
     setupBackground();
     setupButtons();
@@ -24,11 +26,12 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
 
 void Menu::setupBackground()
 {
-    _background = std::make_unique<SpriteSFML>();
-    if (!_background->loadTexture("assets/sprite_fond.jpg")) {
-        std::cerr << "Warning: Failed to load background image" << std::endl;
-        return;
-    }
+    float windowWidth = static_cast<float>(_window.getWidth());
+    float windowHeight = static_cast<float>(_window.getHeight());
+
+    _background = std::make_unique<Background>(
+        "assets/background/bg-back.png", "assets/background/bg-stars.png",
+        "assets/background/bg-planet.png", windowWidth, windowHeight);
 }
 
 void Menu::setupButtons()
@@ -45,13 +48,6 @@ void Menu::updateLayout()
 {
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
-
-    if (_background) {
-        float scaleX = windowWidth / 450.0f;
-        float scaleY = windowHeight / 225.0f;
-        _background->setScale(scaleX, scaleY);
-        _background->setPosition(0, 0);
-    }
 
     float scaleW = windowWidth / 1920.0f;
     float scaleH = windowHeight / 1080.0f;
@@ -71,8 +67,23 @@ void Menu::updateLayout()
                          buttonHeight, "QUIT");
 }
 
-MenuAction Menu::update()
+MenuAction Menu::update(float deltaTime)
 {
+    if (_background) {
+        _background->update(deltaTime);
+    }
+
+    if (_isFadingOut) {
+        _uiAlpha -= FADE_SPEED * deltaTime;
+        if (_uiAlpha < 0.0f) {
+            _uiAlpha = 0.0f;
+        }
+        if (isFadeOutComplete()) {
+            return MenuAction::StartGame;
+        }
+        return MenuAction::None;
+    }
+
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
@@ -80,8 +91,9 @@ MenuAction Menu::update()
     for (size_t i = 0; i < _buttons.size(); ++i) {
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
             switch (i) {
-                case 0:
-                    return MenuAction::StartGame;
+                case 0:  // Start fade out instead of immediate transition
+                    startFadeOut();
+                    return MenuAction::None;
                 case 1:
                     return MenuAction::Settings;
                 case 2:
@@ -104,7 +116,11 @@ void Menu::render()
     float scale = std::min(scaleW, scaleH);
 
     if (_background) {
-        _graphics.drawSprite(*_background);
+        _background->draw(_graphics);
+    }
+
+    if (_uiAlpha <= 0.0f) {
+        return;
     }
 
     for (const auto& button : _buttons) {
@@ -119,20 +135,23 @@ void Menu::render()
             b = 100;
         }
 
+        unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
+
         _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
-                                button.getHeight(), r, g, b);
+                                button.getHeight(), r, g, b, alpha);
 
         float borderThickness = 3.0f * scale;
+
         _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
-                                borderThickness, 100, 150, 255);
+                                borderThickness, 100, 150, 255, alpha);
         _graphics.drawRectangle(
             button.getX(), button.getY() + button.getHeight() - borderThickness,
-            button.getWidth(), borderThickness, 100, 150, 255);
+            button.getWidth(), borderThickness, 100, 150, 255, alpha);
         _graphics.drawRectangle(button.getX(), button.getY(), borderThickness,
-                                button.getHeight(), 100, 150, 255);
+                                button.getHeight(), 100, 150, 255, alpha);
         _graphics.drawRectangle(
             button.getX() + button.getWidth() - borderThickness, button.getY(),
-            borderThickness, button.getHeight(), 100, 150, 255);
+            borderThickness, button.getHeight(), 100, 150, 255, alpha);
 
         unsigned int scaledFontSize =
             static_cast<unsigned int>(FONT_SIZE * scale);
@@ -143,8 +162,9 @@ void Menu::render()
         float textY = button.getY() + (button.getHeight() / 2.0f) -
                       (scaledFontSize / 2.0f);
 
+        unsigned char textAlpha = static_cast<unsigned char>(255 * _uiAlpha);
         _graphics.drawText(button.getText(), textX, textY, scaledFontSize, 255,
-                           255, 255, _fontPath);
+                           255, 255, textAlpha, _fontPath);
     }
 
     unsigned int titleFontSize = static_cast<unsigned int>(64 * scale);
@@ -152,8 +172,9 @@ void Menu::render()
         _graphics.getTextWidth("R-TYPE", titleFontSize, _fontPath);
     float titleX = (windowWidth / 2.0f) - (titleWidth / 2.0f);
     float titleY = 150.0f * scaleH;
+    unsigned char titleAlpha = static_cast<unsigned char>(255 * _uiAlpha);
     _graphics.drawText("R-TYPE", titleX, titleY, titleFontSize, 255, 100, 0,
-                       _fontPath);
+                       titleAlpha, _fontPath);
 }
 
 }  // namespace rtype
