@@ -20,14 +20,14 @@
 #include "TextureManager.hpp"
 
 Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
-           rtype::InputSFML& input, Background* sharedBackground)
+           rtype::InputSFML& input,
+           std::shared_ptr<Background> sharedBackground)
     : _window(window),
       _input(input),
       _graphics(graphics),
       _running(false),
       _returnToMenu(false),
       _background(sharedBackground),
-      _ownsBackground(sharedBackground == nullptr),
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
@@ -49,7 +49,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
     SoundManager::getInstance().setVolume(sfxVolume);
 
     if (!_background) {
-        _background = new Background(
+        _background = std::make_shared<Background>(
             "assets/background/bg-back.png", "assets/background/bg-stars.png",
             "assets/background/bg-planet.png", static_cast<float>(actualWidth),
             static_cast<float>(actualHeight));
@@ -84,10 +84,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
 Game::~Game()
 {
-    if (_ownsBackground && _background) {
-        delete _background;
-        _background = nullptr;
-    }
+    // shared_ptr handles cleanup automatically
 }
 
 bool Game::run()
