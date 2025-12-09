@@ -37,6 +37,7 @@ class SpriteSFML : public ISprite {
     void setSmooth(bool smooth) override;
     float getTextureWidth() const override;
     float getTextureHeight() const override;
+    void setAlpha(unsigned char alpha) override;
 
     /**
      * @brief Get the underlying SFML sprite
