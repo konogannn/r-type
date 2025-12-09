@@ -35,6 +35,6 @@ cmake --build "$BUILD_DIR" --config Release --target r-type_server r-type_client
 
 Write-Host ""
 Write-OK "R-Type project built successfully!"
-Write-Info "Executables are located in the '$BUILD_DIR\Release' directory."
-Write-Info "Example Server: .\$BUILD_DIR\Release\r-type_server.exe"
-Write-Info "Example Client: .\$BUILD_DIR\Release\r-type_client.exe"
+Write-Info "Executables are located in the 'Release' directory."
+Write-Info "Example Server: .\Release\r-type_server.exe"
+Write-Info "Example Client: .\Release\r-type_client.exe"
