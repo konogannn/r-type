@@ -259,7 +259,6 @@ void SettingsMenu::render() {
                        _fontPath);
 
     unsigned int sectionTitleSize = static_cast<unsigned int>(24 * scale);
-    // Reuse layout computed in updateLayout() to avoid duplication
     float sliderWidth = _layout.sliderWidth;
     float leftColX = _layout.leftColX;
     float centerColX = _layout.centerColX;
