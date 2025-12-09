@@ -1,6 +1,6 @@
-find_package(fmt CONFIG REQUIRED)
-find_package(OpenAL CONFIG REQUIRED)
-find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
+find_package(fmt CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
+find_package(OpenAL CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
+find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED NO_CMAKE_SYSTEM_PATH)
 
 if(SFML_FOUND)
     message(STATUS "SFML found: ${SFML_VERSION}")

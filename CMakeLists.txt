@@ -25,7 +25,7 @@ if(ENABLE_COVERAGE)
 endif()
 
 # Find packages used by multiple modules
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system NO_CMAKE_SYSTEM_PATH)
 
 if(Boost_FOUND)
     message(STATUS "Boost found: ${Boost_VERSION}")
@@ -36,29 +36,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-
-include(CTest)
-enable_testing()
-
 add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
 
-# Test server executable
-add_executable(test-server
-    ${CMAKE_SOURCE_DIR}/test_server.cpp
-)
-
-target_include_directories(test-server
-    PRIVATE
-    ${NETWORK_INCLUDE_DIR}
-)
-
-target_link_libraries(test-server
-    PRIVATE
-        network
-        Boost::system
-)
+target_include_directories(r-type_server PRIVATE ${Boost_INCLUDE_DIRS})
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -86,6 +68,9 @@ if(CLANG_FORMAT)
 else()
     message(WARNING "clang-format not found! Formatting target will not be available.")
 endif()
+
+include(CTest)
+enable_testing()
 
 # Coverage target
 if(ENABLE_COVERAGE)

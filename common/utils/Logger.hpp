@@ -24,6 +24,13 @@
  */
 
 /**
+ * @brief Log severity levels.
+ *
+ * Use LogLevel::INFO_L, LogLevel::DEBUG_L, ... for scoped names.
+ */
+enum class LogLevel { DEBUG_L, INFO_L, WARNING_L, ERROR_L, CRITICAL_L };
+
+/**
  * @class Logger
  * @brief Simple thread-safe logger writing timestamped lines to a file.
  *
@@ -34,28 +41,14 @@
 class Logger {
    public:
     /**
-     * @brief Log severity levels.
+     * @brief Get the singleton Logger instance.
+     * @return Reference to the global Logger.
      *
-     * Use LogLevel::INFO_L, LogLevel::DEBUG_L, ... for scoped names.
+     * This method returns a reference to a static Logger instance. The first
+     * time it is called, the Logger is constructed. Subsequent calls return
+     * the same instance.
      */
-    enum class LogLevel { DEBUG_L, INFO_L, WARNING_L, ERROR_L, CRITICAL_L };
-
-    /**
-     * @brief Construct a Logger.
-     * @param filename Path to the log file. Defaults to "r-type_server.log".
-     *
-     * The file is opened in append mode. If opening fails, an error is written
-     * to std::cerr.
-     */
-    explicit Logger(const std::string& filename = "r-type_server.log");
-
-    /**
-     * @brief Destroy the Logger.
-     *
-     * The destructor flushes and closes the file. It acquires the internal
-     * mutex to synchronize with concurrent writers.
-     */
-    ~Logger();
+    static Logger& getInstance();
 
     /**
      * @brief Write a log line.
@@ -77,6 +70,23 @@ class Logger {
     Logger& operator=(Logger&&) = delete;
 
    protected:
+    /**
+     * @brief Construct a Logger.
+     * @param filename Path to the log file. Defaults to "r-type_server.log".
+     *
+     * The file is opened in append mode. If opening fails, an error is written
+     * to std::cerr.
+     */
+    explicit Logger(const std::string& filename = "r-type.log");
+
+    /**
+     * @brief Destroy the Logger.
+     *
+     * The destructor flushes and closes the file. It acquires the internal
+     * mutex to synchronize with concurrent writers.
+     */
+    ~Logger();
+
     /**
      * @brief Get current timestamp as string.
      * @return Timestamp formatted as "YYYY-MM-DD HH:MM:SS".

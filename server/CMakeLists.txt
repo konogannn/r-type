@@ -1,37 +1,59 @@
-# Server module CMakeLists.txt
-# This module contains the game server code and engine (backend)
+set(ALL_SERVER_TEST_SOURCES "") # Initialized before subdirectories are processed.
 
-# Add subdirectories
 add_subdirectory(engine)
 add_subdirectory(network)
-add_subdirectory(utils)
 
-# Include directories for server headers
-include_directories(
+add_executable(r-type_server
+    main.cpp
+)
+
+target_include_directories(r-type_server PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/network
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils
 )
 
-# Collect all server source files (placeholder - uncomment when files exist)
-# set(SERVER_SOURCES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-#     # Add other server source files here
-# )
+target_link_libraries(r-type_server PRIVATE
+    r-type_server_network
+    r-type-engine
+)
 
-# Create the server executable (placeholder - uncomment when ready to build)
-# add_executable(r-type-server
-#     ${SERVER_SOURCES}
-# )
+if(BUILD_TESTING)
+    find_package(GTest REQUIRED NO_CMAKE_SYSTEM_PATH)
 
-# Link libraries to the server executable (uncomment when ready)
-# target_link_libraries(r-type-server
-#     PRIVATE
-#         r-type-engine
-#     # Add network library (e.g., Asio, Boost.Asio) when needed
-# )
+    file(GLOB_RECURSE TEST_SOURCES 
+        "${CMAKE_CURRENT_SOURCE_DIR}/**/tests/*.cpp"
+    )
+    
+    set(ALL_SERVER_TEST_SOURCES 
+        ${TEST_SOURCES}
+    )
 
-# Executable will be output to project root (configured globally in root CMakeLists.txt)
+    if(ALL_SERVER_TEST_SOURCES)
+        message(STATUS "Found test sources: ${ALL_SERVER_TEST_SOURCES}")
+        
+        add_executable(r-type_server_tests
+            ${ALL_SERVER_TEST_SOURCES}
+        )
 
-# Placeholder message to indicate module structure is ready
+        target_include_directories(r-type_server_tests PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine
+            ${CMAKE_CURRENT_SOURCE_DIR}/network
+            ${CMAKE_SOURCE_DIR}
+        )
+
+        target_link_libraries(r-type_server_tests PRIVATE
+            GTest::gtest
+            GTest::gtest_main
+            r-type_server_network
+            r-type-engine
+        )
+
+        add_test(NAME ServerTests COMMAND r-type_server_tests)
+        include(GoogleTest)
+        gtest_discover_tests(r-type_server_tests)
+    else()
+        message(WARNING "No server test sources found. The 'r-type_server_tests' executable will not be built.")
+    endif()
+endif()

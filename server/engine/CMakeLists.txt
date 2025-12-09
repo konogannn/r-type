@@ -33,4 +33,5 @@ set_target_properties(r-type-engine PROPERTIES
 # Add tests subdirectory if testing is enabled
 if(BUILD_TESTING)
     add_subdirectory(tests)
+    set(ALL_SERVER_TEST_SOURCES ${ALL_SERVER_TEST_SOURCES} PARENT_SCOPE)
 endif()
