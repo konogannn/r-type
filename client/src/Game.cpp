@@ -236,7 +236,8 @@ void Game::render()
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
-    _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale, 20 * _scale, 0, 255, 0,
+    _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale,
+                       static_cast<unsigned int>(20 * _scale), 0, 255, 0,
                        "assets/fonts/Retro_Gaming.ttf");
 
     _window.display();
