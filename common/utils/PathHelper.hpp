@@ -48,9 +48,6 @@ class PathHelper {
                 std::filesystem::is_directory(testPath)) {
                 _basePath = basePath;
                 _initialized = true;
-                std::cout << "[DEBUG] Assets directory found at: "
-                          << std::filesystem::absolute(testPath).string()
-                          << std::endl;
                 return;
             }
         }
