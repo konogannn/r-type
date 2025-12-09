@@ -15,8 +15,9 @@ namespace rtype {
 
 WindowSFML::WindowSFML(unsigned int width, unsigned int height,
                        const std::string& title)
-    : _window(std::make_unique<sf::RenderWindow>(sf::VideoMode(width, height),
-                                                 title)),
+    : _window(std::make_unique<sf::RenderWindow>(
+          sf::VideoMode(width, height), title,
+          sf::Style::Titlebar | sf::Style::Close)),
       _deltaTime(0.0f),
       _width(width),
       _height(height),
@@ -265,7 +266,7 @@ void WindowSFML::recreateWindow()
     } else {
         _window = std::make_unique<sf::RenderWindow>(
             sf::VideoMode(_windowedWidth, _windowedHeight), _title,
-            sf::Style::Default);
+            sf::Style::Titlebar | sf::Style::Close);
         _width = _windowedWidth;
         _height = _windowedHeight;
     }
