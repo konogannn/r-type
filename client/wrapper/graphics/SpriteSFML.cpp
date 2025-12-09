@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "../../../common/utils/PathHelper.hpp"
+#include "common/utils/PathHelper.hpp"
 
 namespace rtype {
 
