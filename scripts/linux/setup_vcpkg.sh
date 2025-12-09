@@ -22,7 +22,6 @@ VCPKG_BOOTSTRAP_SCRIPT="$VCPKG_DIR/bootstrap-vcpkg.sh"
 print_header "Vcpkg Setup"
 
 print_info "Managing Vcpkg submodule..."
-Describe the goal and purpose of this task.
 
 # 1. Pull/update the submodule (requires Git, installed in the previous step)
 git submodule update --init --recursive

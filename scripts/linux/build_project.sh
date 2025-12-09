@@ -28,8 +28,7 @@ cmake -S . -B "$BUILD_DIR" -DCMAKE_TOOLCHAIN_FILE="$VCPKG_DIR/scripts/buildsyste
 
 # 2. Build the project
 print_info "Building the project."
-# Using -j$(nproc) for parallel compilation
-cmake --build "$BUILD_DIR" -j$(nproc)
+cmake --build "$BUILD_DIR" --config Release --target r-type_server r-type_client
 
 print_ok "R-Type project built successfully!"
 echo ""
