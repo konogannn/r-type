@@ -19,7 +19,6 @@ Write-Host "=========================================="
 
 # 1. Configure CMake with the Vcpkg toolchain file
 # This step triggers the installation of C++ libraries via vcpkg.json.
-$config_command = "cmake -S . -B `"$BUILD_DIR`" -DCMAKE_TOOLCHAIN_FILE=`"$VCPKG_DIR\scripts\buildsystems\vcpkg.cmake`" -DCMAKE_BUILD_TYPE=Release"
 Write-Info "Step 1/2: Configuring CMake and installing/linking C++ dependencies (Release)"
 cmake -S . -B "$BUILD_DIR" -DCMAKE_TOOLCHAIN_FILE="$VCPKG_DIR\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release
 if ($LASTEXITCODE -ne 0) {
@@ -32,6 +31,11 @@ if ($LASTEXITCODE -ne 0) {
 # Using /m for parallel building on MSBuild (which CMake will use by default on Windows)
 Write-Info "Step 2/2: Building the project executables (Release)"
 cmake --build "$BUILD_DIR" --config Release --target r-type_server r-type_client
+if ($LASTEXITCODE -ne 0) {
+    Write-Err "Build failed."
+} else {
+    Write-OK "Project built successfully."
+}
 
 Write-Host ""
 Write-OK "R-Type project built successfully!"
