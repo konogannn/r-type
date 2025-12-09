@@ -49,7 +49,7 @@ class Menu {
     /**
      * @brief Get the background (shared with game)
      */
-    Background* getBackground() { return _background.get(); }
+    std::shared_ptr<Background> getBackground() { return _background; }
 
     /**
      * @brief Get menu UI alpha for fade transition
@@ -80,7 +80,7 @@ class Menu {
     GraphicsSFML& _graphics;
     InputSFML& _input;
 
-    std::unique_ptr<Background> _background;
+    std::shared_ptr<Background> _background;
     std::unique_ptr<rtype::ISprite> _logoSprite;
     std::vector<Button> _buttons;
     std::string _fontPath;
