@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "../../../common/utils/PathHelper.hpp"
+
 namespace rtype {
 
 AudioSFML::AudioSFML()
@@ -23,8 +25,9 @@ bool AudioSFML::playSound(const std::string& filepath, bool loop)
     SoundData soundData;
     soundData.buffer = std::make_unique<sf::SoundBuffer>();
 
-    if (!soundData.buffer->loadFromFile(filepath)) {
-        std::cerr << "Error: Failed to load sound from " << filepath
+    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
+    if (!soundData.buffer->loadFromFile(resolvedPath)) {
+        std::cerr << "Error: Failed to load sound from " << resolvedPath
                   << std::endl;
         return false;
     }
@@ -41,8 +44,9 @@ bool AudioSFML::playSound(const std::string& filepath, bool loop)
 
 bool AudioSFML::playMusic(const std::string& filepath, bool loop)
 {
-    if (!_music->openFromFile(filepath)) {
-        std::cerr << "Error: Failed to load music from " << filepath
+    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
+    if (!_music->openFromFile(resolvedPath)) {
+        std::cerr << "Error: Failed to load music from " << resolvedPath
                   << std::endl;
         return false;
     }
