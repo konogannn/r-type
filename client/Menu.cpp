@@ -30,7 +30,7 @@ void Menu::setupBackground()
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
 
-    _background = std::make_unique<Background>(
+    _background = std::make_shared<Background>(
         "assets/background/bg-back.png", "assets/background/bg-stars.png",
         "assets/background/bg-planet.png", windowWidth, windowHeight);
 }
