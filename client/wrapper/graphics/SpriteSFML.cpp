@@ -53,6 +53,16 @@ void SpriteSFML::setTextureRect(int left, int top, int width, int height)
 
 void SpriteSFML::setSmooth(bool smooth) { _texture->setSmooth(smooth); }
 
+float SpriteSFML::getTextureWidth() const
+{
+    return static_cast<float>(_texture->getSize().x);
+}
+
+float SpriteSFML::getTextureHeight() const
+{
+    return static_cast<float>(_texture->getSize().y);
+}
+
 const sf::Sprite& SpriteSFML::getSFMLSprite() const { return *_sprite; }
 
 }  // namespace rtype
