@@ -24,7 +24,8 @@
 class Game {
    public:
     Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
-         rtype::InputSFML& input);
+         rtype::InputSFML& input, Background* sharedBackground = nullptr);
+    ~Game();
     bool run();
 
    private:
@@ -42,7 +43,8 @@ class Game {
     bool _running;
     bool _returnToMenu;
 
-    std::unique_ptr<Background> _background;
+    Background* _background;
+    bool _ownsBackground;
     std::unique_ptr<Player> _player;
     std::unique_ptr<Enemy> _enemy;
     std::vector<std::unique_ptr<Projectile>> _projectiles;
