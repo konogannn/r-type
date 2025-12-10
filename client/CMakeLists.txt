@@ -85,4 +85,6 @@ target_link_libraries(r-type_client-enhanced
         OpenAL::OpenAL
 )
 
-target_link_options(r-type_client-enhanced PRIVATE "-Wl,--copy-dt-needed-entries")
+if (UNIX AND NOT MSVC)
+    target_link_options(r-type_client PRIVATE "-Wl,--copy-dt-needed-entries")
+endif()

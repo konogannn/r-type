@@ -1,69 +1,40 @@
-#Requires -RunAsAdministrator
+# setup_vcpkg.ps1
+# Manages the Vcpkg submodule and performs bootstrapping
+$ErrorActionPreference = "Stop"
 
-Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host "  vcpkg Installation Script (Windows)     " -ForegroundColor Cyan
-Write-Host "==========================================" -ForegroundColor Cyan
+$GREEN = 'Green'
+$RED = 'Red'
+$YELLOW = 'Yellow'
 
-function Print-Ok { param([string]$M) Write-Host "✓ $M" -ForegroundColor Green }
-function Print-Err { param([string]$M) Write-Host "✗ $M" -ForegroundColor Red }
-function Print-Info { param([string]$M) Write-Host "ℹ $M" -ForegroundColor Yellow }
+function Write-OK { Write-Host "✓ $($args[0])" -ForegroundColor $GREEN }
+function Write-Err { Write-Host "✗ $($args[0])" -ForegroundColor $RED; exit 1 }
+function Write-Info { Write-Host "ℹ $($args[0])" -ForegroundColor $YELLOW }
 
-$VcpkgDir = "$env:USERPROFILE\.vcpkg"
-
-if (Test-Path $VcpkgDir) {
-    Print-Info "vcpkg already at: $VcpkgDir"
-    $update = Read-Host "Update? (y/N)"
-    if ($update -eq "y") {
-        Set-Location $VcpkgDir
-        git pull
-        .\bootstrap-vcpkg.bat
-        Print-Ok "Updated"
-    }
-}
-else {
-    try {
-        $null = Get-Command git -ErrorAction Stop
-        Print-Ok "Git found"
-    }
-    catch {
-        Print-Info "Installing Git..."
-        try { $null = Get-Command choco -ErrorAction Stop }
-        catch {
-            Set-ExecutionPolicy Bypass -Scope Process -Force
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-            # Official Chocolatey install: https://chocolatey.org/install
-            Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        }
-        choco install git -y
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        Print-Ok "Git installed"
-    }
-
-    Print-Info "Cloning vcpkg..."
-    git clone https://github.com/microsoft/vcpkg.git $VcpkgDir
-
-    Print-Info "Bootstrapping..."
-    Set-Location $VcpkgDir
-    .\bootstrap-vcpkg.bat
-    Print-Ok "vcpkg installed"
-}
-
-$currentVcpkgRoot = [System.Environment]::GetEnvironmentVariable("VCPKG_ROOT", "User")
-if ($currentVcpkgRoot -ne $VcpkgDir) {
-    [System.Environment]::SetEnvironmentVariable("VCPKG_ROOT", $VcpkgDir, "User")
-    $env:VCPKG_ROOT = $VcpkgDir
-    Print-Ok "VCPKG_ROOT set"
-}
-
-$currentPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
-if ($currentPath -notlike "*$VcpkgDir*") {
-    [System.Environment]::SetEnvironmentVariable("Path", "$currentPath;$VcpkgDir", "User")
-    $env:Path += ";$VcpkgDir"
-    Print-Ok "Added to PATH"
-}
+$VCPKG_DIR = "vcpkg"
+$VCPKG_BOOTSTRAP_SCRIPT = ".\$VCPKG_DIR\bootstrap-vcpkg.bat"
 
 Write-Host ""
-Print-Ok "Setup complete!"
-Print-Info "Restart terminal then build: cmake -S . -B build && cmake --build build --config Release"
-Write-Host ""
+Write-Info "VCPKG SUBMODULE MANAGEMENT"
+Write-Host "=========================================="
+
+# 1. Pull/update the submodule
+Write-Info "Updating/Initializing Vcpkg submodule"
+git submodule update --init --recursive
+
+# 2. Bootstrap Vcpkg (builds the vcpkg.exe executable)
+if (-not (Test-Path ".\$VCPKG_DIR\vcpkg.exe")) {
+    Write-Info "Compiling Vcpkg executable. This may take a moment..."
+    Write-Host ""
+    
+    # Execute the .bat file with visible output
+    & $VCPKG_BOOTSTRAP_SCRIPT
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Err "Vcpkg bootstrap failed. Exit Code: $LASTEXITCODE"
+    }
+    Write-Host ""
+    Write-OK "Vcpkg executable compiled successfully"
+} else {
+    Write-OK "Vcpkg executable already exists."
+}

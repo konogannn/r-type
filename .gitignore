@@ -43,6 +43,7 @@ ecs_tests*
 *.swp
 *.swo
 *~
+.idea/
 
 # Log files
 *.log
