@@ -1,37 +1,43 @@
 # Server module CMakeLists.txt
 # This module contains the game server code and engine (backend)
+# Everything is compiled into a single executable (no libraries)
 
-# Add subdirectories
+# Find threads package for multithreading support
+find_package(Threads REQUIRED)
+
+# Add engine, network, and utils subdirectories to collect their sources
 add_subdirectory(engine)
 add_subdirectory(network)
 add_subdirectory(utils)
 
-# Include directories for server headers
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/engine
-    ${CMAKE_CURRENT_SOURCE_DIR}/network
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils
+# Collect all source files for the server executable
+set(SERVER_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${ENGINE_MODULE_SOURCES}
+    ${UTILS_MODULE_SOURCES}
 )
 
-# Collect all server source files (placeholder - uncomment when files exist)
-# set(SERVER_SOURCES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-#     # Add other server source files here
-# )
+# Create the server executable with all source files compiled directly
+add_executable(r-type-server
+    ${SERVER_SOURCES}
+)
 
-# Create the server executable (placeholder - uncomment when ready to build)
-# add_executable(r-type-server
-#     ${SERVER_SOURCES}
-# )
+# Include all necessary directories
+target_include_directories(r-type-server
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${ENGINE_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/network
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils
+)
 
-# Link libraries to the server executable (uncomment when ready)
-# target_link_libraries(r-type-server
-#     PRIVATE
-#         r-type-engine
-#     # Add network library (e.g., Asio, Boost.Asio) when needed
-# )
+# Link threading library
+target_link_libraries(r-type-server
+    PRIVATE
+        Threads::Threads
+)
 
-# Executable will be output to project root (configured globally in root CMakeLists.txt)
-
-# Placeholder message to indicate module structure is ready
+# Set output directory (executable will be in project root)
+set_target_properties(r-type-server PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/..
+)
