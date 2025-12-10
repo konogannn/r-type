@@ -38,6 +38,7 @@ coverage.info
 coverage_filtered.info
 coverage_html/
 ecs_tests*
+CTest*
 
 # IDE files
 *.swp
