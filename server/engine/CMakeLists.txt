@@ -1,10 +1,13 @@
 # Engine module CMakeLists.txt
 # This module contains the core game engine code (ECS, physics, etc.)
 # Part of the server/backend architecture
+# No libraries - just collect source files
 
-# Add subdirectories
+# Add subdirectories to collect sources
 add_subdirectory(Component)
 add_subdirectory(Entity)
+add_subdirectory(System)
+add_subdirectory(Threading)
 
 # Collect all engine source files from subdirectories
 set(ENGINE_SOURCES
@@ -12,25 +15,28 @@ set(ENGINE_SOURCES
     ${ENTITY_MODULE_SOURCES}
 )
 
-# Create the engine library
-add_library(r-type-engine STATIC
-    ${ENGINE_SOURCES}
-)
+# Export engine sources to parent scope (server)
+set(ENGINE_MODULE_SOURCES ${ENGINE_SOURCES} PARENT_SCOPE)
 
-# Make engine headers available to server module
-target_include_directories(r-type-engine
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/Component
-        ${CMAKE_CURRENT_SOURCE_DIR}/Entity
-)
-
-# Set output directory for the engine library
-set_target_properties(r-type-engine PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+# Export include directories to parent scope
+set(ENGINE_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Component
+    ${CMAKE_CURRENT_SOURCE_DIR}/Entity
+    ${CMAKE_CURRENT_SOURCE_DIR}/System
+    ${CMAKE_CURRENT_SOURCE_DIR}/Threading
+    PARENT_SCOPE
 )
 
 # Add tests subdirectory if testing is enabled
 if(BUILD_TESTING)
     add_subdirectory(tests)
+endif()
+
+# Add examples subdirectory (optional) - only if it exists
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+    option(BUILD_EXAMPLES "Build example programs" ON)
+    if(BUILD_EXAMPLES)
+        add_subdirectory(examples)
+    endif()
 endif()
