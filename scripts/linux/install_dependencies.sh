@@ -1,64 +1,58 @@
 #!/bin/bash
-# This script requires Bash. Do not run with sh or other shells.
-set -e
 
-echo "=========================================="
-echo "  R-Type Dependencies Installer (Linux)   "
-echo "=========================================="
+set -e
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+print_header() {
+    echo "=========================================="
+    printf "%*s%s\n" $(((44 - ${#1}) / 2)) "" "$1"
+    echo "=========================================="
+}
 print_ok() { echo -e "${GREEN}✓ $1${NC}"; }
 print_err() { echo -e "${RED}✗ $1${NC}"; }
 print_info() { echo -e "${YELLOW}ℹ $1${NC}"; }
+cmd_exists() { command -v "$1" >/dev/null 2>&1; }
+
+print_header "Installing System Dependencies"
 
 if [ "$EUID" -eq 0 ]; then
-    print_err "Do not run as root"
+    print_err "Please run this script as a non-root user."
     exit 1
 fi
 
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     DISTRO=$ID
+    print_info "Distribution: $DISTRO"
 else
-    print_err "Cannot detect distribution"
+    print_err "Unable to determine Linux distribution."
     exit 1
 fi
-
-print_info "Distribution: $DISTRO"
-
-cmd_exists() { command -v "$1" >/dev/null 2>&1; }
 
 case "$DISTRO" in
     ubuntu|debian|linuxmint|pop)
         sudo apt update
         cmd_exists cmake || sudo apt install -y cmake
-        sudo apt install -y build-essential g++ libsfml-dev lcov
+        sudo apt install -y build-essential git
         ;;
     fedora|rhel|centos|rocky|almalinux)
         cmd_exists cmake || sudo dnf install -y cmake
-        sudo dnf install -y gcc-c++ make SFML-devel lcov
+        sudo dnf install -y gcc-c++ make git
         ;;
     arch|manjaro)
         sudo pacman -Sy
         cmd_exists cmake || sudo pacman -S --noconfirm cmake
-        sudo pacman -S --noconfirm base-devel sfml lcov
-        ;;
-    opensuse*|suse)
-        cmd_exists cmake || sudo zypper install -y cmake
-        sudo zypper install -y gcc-c++ make libsfml2 sfml2-devel lcov
+        sudo pacman -S --noconfirm base-devel git
         ;;
     *)
-        print_err "Unsupported: $DISTRO"
-        print_info "Install manually: CMake 3.11+, GCC/G++, SFML 2.5+, lcov"
+        print_err "Unsupported distribution: $DISTRO"
+        print_info "Please install manually: Git, CMake 3.11+, GCC/G++"
         exit 1
         ;;
 esac
 
-echo ""
-print_ok "Dependencies installed!"
-print_info "Build: cmake -S . -B build && cmake --build build"
-echo ""
+print_ok "System dependencies installed."

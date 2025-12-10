@@ -1,0 +1,138 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: Server",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/r-type_server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build: Server (Debug)",
+            "logging": {
+                "engineLogging": false
+            }
+        },
+        {
+            "name": "Debug: Client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/r-type_client",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build: Client (Debug)",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "logging": {
+                "engineLogging": false
+            }
+        },
+        {
+            "name": "Debug: Server + Client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/r-type_server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build: All (Debug)",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "postDebugTask": "Launch: Client After Server"
+        },
+        {
+            "name": "Release: Server",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/r-type_server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "Build: Server (Release)",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Release: Client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/r-type_client",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "Build: Client (Release)",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Test: Run with Debugger",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/ctest",
+            "args": [
+                "--test-dir",
+                "${workspaceFolder}/build/debug",
+                "--output-on-failure",
+                "--verbose"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "Build: All (Debug)"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server + Client (Debug)",
+            "configurations": ["Debug: Server", "Debug: Client"],
+            "stopAll": true,
+            "preLaunchTask": "Build: All (Debug)"
+        }
+    ]
+}

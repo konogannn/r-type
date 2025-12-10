@@ -8,7 +8,10 @@ find_package(Threads REQUIRED)
 # Add engine, network, and utils subdirectories to collect their sources
 add_subdirectory(engine)
 add_subdirectory(network)
-add_subdirectory(utils)
+
+add_executable(r-type_server
+    main.cpp
+)
 
 # Collect all source files for the server executable
 set(SERVER_SOURCES

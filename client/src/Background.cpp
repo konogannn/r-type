@@ -28,9 +28,9 @@ BackgroundLayer::BackgroundLayer(const std::string& texturePath,
         _sprite2->loadTexture(texturePath)) {
         _sprite1->setSmooth(false);
         _sprite2->setSmooth(false);
+        _textureWidth = _sprite1->getTextureWidth();
+        float textureHeight = _sprite1->getTextureHeight();
 
-        _textureWidth = 272.0f;
-        float textureHeight = 160.0f;
         float scaleX = windowWidth / _textureWidth;
         float scaleY = windowHeight / textureHeight;
 

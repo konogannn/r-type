@@ -20,12 +20,14 @@
 #include "TextureManager.hpp"
 
 Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
-           rtype::InputSFML& input)
+           rtype::InputSFML& input,
+           std::shared_ptr<Background> sharedBackground)
     : _window(window),
       _input(input),
       _graphics(graphics),
       _running(false),
       _returnToMenu(false),
+      _background(sharedBackground),
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
@@ -33,17 +35,6 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 {
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
-
-    int width = config.getInt("resolutionWidth", 1920);
-    int height = config.getInt("resolutionHeight", 1080);
-    _window.setResolution(width, height);
-
-    int fullscreenState = config.getInt("fullscreen", 0);
-    if (fullscreenState == 1) {
-        _window.setFullscreen(true);
-    }
-
-    _window.setFramerateLimit(60);
 
     int actualWidth = _window.getWidth();
     int actualHeight = _window.getHeight();
@@ -57,19 +48,23 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
     float sfxVolume = config.getFloat("sfxVolume", 100.0f);
     SoundManager::getInstance().setVolume(sfxVolume);
 
-    _background = std::make_unique<Background>(
-        "assets/background/bg-back.png", "assets/background/bg-stars.png",
-        "assets/background/bg-planet.png", static_cast<float>(actualWidth),
-        static_cast<float>(actualHeight));
+    if (!_background) {
+        _background = std::make_shared<Background>(
+            "assets/background/bg-back.png", "assets/background/bg-stars.png",
+            "assets/background/bg-planet.png", static_cast<float>(actualWidth),
+            static_cast<float>(actualHeight));
+    }
 
     auto* playerStatic =
         TextureManager::getInstance().getSprite("player_static");
     auto* playerDown = TextureManager::getInstance().getSprite("player_down");
     auto* playerUp = TextureManager::getInstance().getSprite("player_up");
     if (playerStatic && playerDown && playerUp) {
-        _player =
-            std::make_unique<Player>(playerStatic, playerDown, playerUp,
-                                     100.0f * _scale, 300.0f * _scale, _scale);
+        float targetX = 100.0f * _scale;
+        _player = std::make_unique<Player>(playerStatic, playerDown, playerUp,
+                                           targetX, 300.0f * _scale, _scale);
+
+        _player->startSlideIn(targetX);
 
         rtype::KeyBinding& keyBindings = rtype::KeyBinding::getInstance();
         keyBindings.loadFromConfig();
@@ -80,14 +75,24 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
                          keyBindings.getKey(rtype::GameAction::Shoot));
     }
 
-    _enemy = std::make_unique<Enemy>("assets/sprites/boss_1.png",
-                                     600.0f * _scale, 250.0f * _scale, _scale);
+    float enemyTargetX = 600.0f * _scale;
+    _enemy = std::make_unique<Enemy>("assets/sprites/boss_1.png", enemyTargetX,
+                                     250.0f * _scale, _scale);
+
+    _enemy->startSlideIn(enemyTargetX);
+}
+
+Game::~Game()
+{
+    // shared_ptr handles cleanup automatically
 }
 
 bool Game::run()
 {
     _running = true;
     _returnToMenu = false;
+
+    _window.getDeltaTime();
 
     while (_running && _window.isOpen()) {
         float deltaTime = _window.getDeltaTime();
@@ -228,7 +233,8 @@ void Game::render()
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
-    _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale, 20 * _scale, 0, 255, 0,
+    _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale,
+                       static_cast<unsigned int>(20 * _scale), 0, 255, 0,
                        "assets/fonts/Retro_Gaming.ttf");
 
     _window.display();

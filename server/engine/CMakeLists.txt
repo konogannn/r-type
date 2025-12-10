@@ -31,6 +31,7 @@ set(ENGINE_INCLUDE_DIRS
 # Add tests subdirectory if testing is enabled
 if(BUILD_TESTING)
     add_subdirectory(tests)
+    set(ALL_SERVER_TEST_SOURCES ${ALL_SERVER_TEST_SOURCES} PARENT_SCOPE)
 endif()
 
 # Add examples subdirectory (optional) - only if it exists

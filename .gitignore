@@ -20,8 +20,8 @@ vcpkg_installed/
 
 # Compiled executables
 lib
-r-type-client
-r-type-server
+r-type_client*
+r-type_server*
 *.exe
 *.out
 *.app
@@ -44,6 +44,7 @@ CTest*
 *.swp
 *.swo
 *~
+.idea/
 
 # Log files
 *.log

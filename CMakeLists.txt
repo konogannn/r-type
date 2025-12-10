@@ -1,19 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
-
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    if(DEFINED ENV{VCPKG_ROOT})
-        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "Vcpkg toolchain file")
-        message(STATUS "Using vcpkg from VCPKG_ROOT: $ENV{VCPKG_ROOT}")
-    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
-        set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "Vcpkg toolchain file")
-        message(STATUS "Using local vcpkg: ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg")
-    else()
-        message(WARNING "vcpkg not found. Install vcpkg or set VCPKG_ROOT environment variable.")
-        message(WARNING "Falling back to system packages or FetchContent.")
-    endif()
-endif()
+cmake_minimum_required(VERSION 3.16)
 
 project(r-type VERSION 1.0.0 LANGUAGES CXX)
 
@@ -21,10 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+if(UNIX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    add_compile_definitions(_WIN32_WINNT=0x0601)
 endif()
 
 # Coverage option
@@ -40,7 +26,7 @@ if(ENABLE_COVERAGE)
 endif()
 
 # Find packages used by multiple modules
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system NO_CMAKE_SYSTEM_PATH)
 
 if(Boost_FOUND)
     message(STATUS "Boost found: ${Boost_VERSION}")
@@ -51,12 +37,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Enable testing
-include(CTest)
-enable_testing()
-
+add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
+
+target_include_directories(r-type_server PRIVATE ${Boost_INCLUDE_DIRS})
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -85,11 +70,14 @@ else()
     message(WARNING "clang-format not found! Formatting target will not be available.")
 endif()
 
+include(CTest)
+enable_testing()
+
 # Coverage target
 if(ENABLE_COVERAGE)
     find_program(LCOV_PATH lcov)
     find_program(GENHTML_PATH genhtml)
-    
+
     if(LCOV_PATH AND GENHTML_PATH)
         add_custom_target(coverage
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

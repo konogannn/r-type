@@ -1,0 +1,73 @@
+name: Generate Documentation
+run-name: ${{ github.actor }} has run the generate documentation workflow
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "docs/**"
+  workflow_dispatch:
+
+jobs:
+  check_repository:
+    name: Check the repository
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.new.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if we are in the mirrored repository
+        id: new
+        run: |
+          if [[ "${{ github.repository }}" == *"Epitech"* ]]; then
+            echo "::notice::You are in the Epitech repository"
+            echo "value=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "value=0" >> "$GITHUB_OUTPUT"
+          exit 0
+
+  build:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == '0' }}
+    name: Build Docusaurus
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: docs
+      - name: Build website
+        run: npm run build
+        working-directory: docs
+
+      - name: Upload Build Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

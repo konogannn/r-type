@@ -25,7 +25,10 @@ Player::Player(rtype::ISprite* spriteStatic, rtype::ISprite* spriteDown,
       _keyLeft(rtype::Key::Q),
       _keyRight(rtype::Key::D),
       _keyShoot(rtype::Key::Space),
-      _currentState(MovementState::STATIC)
+      _currentState(MovementState::STATIC),
+      _isSliding(false),
+      _slideTargetX(x),
+      _slideSpeed(400.0f * scale)
 {
     if (_currentSprite) {
         _currentSprite->setScale(3.0f * scale, 3.0f * scale);
@@ -46,6 +49,10 @@ void Player::setKeys(rtype::Key up, rtype::Key down, rtype::Key left,
 void Player::handleInput(const rtype::IInput& input, float deltaTime,
                          float worldWidth, float worldHeight)
 {
+    if (_isSliding) {
+        return;
+    }
+
     MovementState newState = MovementState::STATIC;
     if (_keyUp != rtype::Key::Unknown && input.isKeyPressed(_keyUp)) {
         _y -= _speed * deltaTime;
@@ -106,6 +113,20 @@ void Player::handleInput(const rtype::IInput& input, float deltaTime,
 
 void Player::update(float deltaTime)
 {
+    if (_isSliding) {
+        float distance = _slideTargetX - _x;
+        if (std::abs(distance) < 2.0f) {
+            _x = _slideTargetX;
+            _isSliding = false;
+        } else {
+            _x += (distance > 0 ? 1 : -1) * _slideSpeed * deltaTime;
+        }
+
+        if (_currentSprite) {
+            _currentSprite->setPosition(_x, _y);
+        }
+    }
+
     if (!_canShoot) {
         _shootCooldown -= deltaTime;
         if (_shootCooldown <= 0.0f) {
@@ -115,6 +136,18 @@ void Player::update(float deltaTime)
 
     _wantsToShoot = false;
 }
+
+void Player::startSlideIn(float targetX)
+{
+    _slideTargetX = targetX;
+    _x = -100.0f;
+    _isSliding = true;
+    if (_currentSprite) {
+        _currentSprite->setPosition(_x, _y);
+    }
+}
+
+bool Player::isSlideInComplete() const { return !_isSliding; }
 
 void Player::draw(rtype::IGraphics& graphics)
 {

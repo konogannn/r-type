@@ -1,0 +1,49 @@
+name: Clang-format
+run-name: ${{ github.actor }} has run the clang-format workflow
+
+on:
+  pull_request:
+    paths:
+      - "**/*.cpp"
+      - "**/*.hpp"
+      - "**/*.tpp"
+      - ".clang-format"
+
+jobs:
+  check_repository:
+    name: Check the repository
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.new.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if we are in the mirrored repository
+        id: new
+        run: |
+          if [[ "${{ github.repository }}" == *"Epitech"* ]]; then
+            echo "::notice::You are in the Epitech repository"
+            echo "value=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "value=0" >> "$GITHUB_OUTPUT"
+          exit 0
+
+  formatting-check:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == 0 }}
+    name: Formatting Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'client'
+          - 'server'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run clang-format style check for C/C++/Protobuf programs.
+      uses: jidicula/clang-format-action@v4.16.0
+      with:
+        clang-format-version: '18'
+        check-path: ${{ matrix.path }}
