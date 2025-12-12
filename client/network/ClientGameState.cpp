@@ -113,23 +113,16 @@ void ClientGameState::update(float deltaTime)
     if (_networkClient) {
         _networkClient->update();
     }
+
+    for (auto& [entityId, entity] : _entities) {
+        if (entity->type == 3 && entity->velocityX != 0.0f) {
+            entity->x += entity->velocityX * deltaTime;
+        }
+    }
 }
 
 void ClientGameState::render(IGraphics& graphics)
 {
-    static int frameCount = 0;
-    if (++frameCount % 60 == 0) {  // Log every 60 frames (~1 second)
-        std::cout << "\n========== ENTITIES STATUS (Frame " << frameCount
-                  << ") ==========" << std::endl;
-        for (const auto& [entityId, entity] : _entities) {
-            std::cout << "  Entity " << entityId << " (Type " << entity->type
-                      << "): pos=(" << entity->x << ", " << entity->y << ")"
-                      << std::endl;
-        }
-        std::cout << "===================================================\n"
-                  << std::endl;
-    }
-
     if (!_gameStarted) {
         return;
     }
@@ -137,9 +130,6 @@ void ClientGameState::render(IGraphics& graphics)
     for (const auto& [entityId, entity] : _entities) {
         if (entity->sprite) {
             entity->sprite->setPosition(entity->x, entity->y);
-            // Note: SpriteSFML doesn't have a draw method that takes IGraphics
-            // This would need to be implemented in your graphics system
-            // graphics.drawSprite(*entity->sprite);
         }
     }
 }

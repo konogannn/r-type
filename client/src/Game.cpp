@@ -30,7 +30,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
-      _scale(1.0f)
+      _scale(1.0f),
+      _lastShootTime(std::chrono::steady_clock::now())
 {
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
@@ -84,15 +85,12 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
     _enemy = std::make_unique<Enemy>("assets/sprites/boss_1.png",
                                      600.0f * _scale, 250.0f * _scale, _scale);
 
-    // Initialize network
     _gameState = std::make_unique<rtype::ClientGameState>();
 
-    // Try to connect to server
     std::cout << "[Game] Attempting to connect to server " << serverAddress
               << ":" << serverPort << "..." << std::endl;
     if (_gameState->connectToServer(serverAddress, serverPort)) {
         std::cout << "[Game] Connection initiated" << std::endl;
-        // Send login after connection
         _gameState->sendLogin("Player1");
     } else {
         std::cout << "[Game] Failed to connect to server" << std::endl;
@@ -101,7 +99,6 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
 Game::~Game()
 {
-    // Disconnect from server before destroying
     if (_gameState && _gameState->isConnected()) {
         std::cout << "[Game] Disconnecting from server..." << std::endl;
         _gameState->disconnect();
@@ -145,40 +142,35 @@ void Game::handleEvents()
 
 void Game::update(float deltaTime)
 {
-    // Update network (process received packets)
     if (_gameState) {
         _gameState->update(deltaTime);
 
-        // Send input to server
         uint8_t inputMask = 0;
         rtype::KeyBinding& keyBindings = rtype::KeyBinding::getInstance();
 
         if (_input.isKeyPressed(
                 keyBindings.getKey(rtype::GameAction::MoveUp))) {
-            inputMask |= 1;  // UP
+            inputMask |= 1;
         }
         if (_input.isKeyPressed(
                 keyBindings.getKey(rtype::GameAction::MoveDown))) {
-            inputMask |= 2;  // DOWN
+            inputMask |= 2;
         }
         if (_input.isKeyPressed(
                 keyBindings.getKey(rtype::GameAction::MoveLeft))) {
-            inputMask |= 4;  // LEFT
+            inputMask |= 4;
         }
         if (_input.isKeyPressed(
                 keyBindings.getKey(rtype::GameAction::MoveRight))) {
-            inputMask |= 8;  // RIGHT
+            inputMask |= 8;
         }
-        // Handle shooting with cooldown
-        static auto lastShootTime = std::chrono::steady_clock::now();
-        const auto shootCooldown =
-            std::chrono::milliseconds(200);  // 200ms between shots
+        const auto shootCooldown = std::chrono::milliseconds(200);
 
         if (_input.isKeyPressed(keyBindings.getKey(rtype::GameAction::Shoot))) {
             auto currentTime = std::chrono::steady_clock::now();
-            if (currentTime - lastShootTime >= shootCooldown) {
-                inputMask |= 16;  // SHOOT
-                lastShootTime = currentTime;
+            if (currentTime - _lastShootTime >= shootCooldown) {
+                inputMask |= 16;
+                _lastShootTime = currentTime;
             }
         }
 
@@ -190,9 +182,6 @@ void Game::update(float deltaTime)
     if (_background) {
         _background->update(deltaTime);
     }
-
-    // Local player movement removed - server handles all positions
-    // Player movement is now controlled via network packets
 
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
@@ -257,7 +246,6 @@ void Game::render()
             if (!entity) {
                 continue;
             }
-            // Use currentSprite if available (for animations), otherwise sprite
             rtype::ISprite* spriteToRender = entity->currentSprite
                                                  ? entity->currentSprite
                                                  : entity->sprite.get();
@@ -267,24 +255,23 @@ void Game::render()
                     spriteToRender->setPosition(entity->x, entity->y);
                     _graphics.drawSprite(*spriteToRender);
                 } catch (const std::exception& e) {
+                    std::cout << "[ERROR] Exception while drawing entity ID "
+                              << id << ": " << e.what() << std::endl;
                 }
             }
         }
     }
 
-    // Display FPS
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
     _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale, 20 * _scale, 0, 255, 0,
                        "assets/fonts/Retro_Gaming.ttf");
 
-    // Display Score
     if (_gameState) {
         std::string scoreStr =
             "Score: " + std::to_string(_gameState->getScore());
         _graphics.drawText(scoreStr, 10 * _scale, 40 * _scale, 20 * _scale, 255,
                            255, 0, "assets/fonts/Retro_Gaming.ttf");
 
-        // Display connection status
         if (_gameState->isConnected()) {
             std::string entityCount =
                 "Entities: " + std::to_string(_gameState->getEntityCount());

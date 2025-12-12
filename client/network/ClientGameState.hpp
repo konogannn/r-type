@@ -25,12 +25,13 @@ struct ClientEntity {
     uint32_t id;
     uint8_t type;
     float x, y;
-    float lastY = 0;  // Track last Y position for animation
+    float lastY = 0;
+    float velocityX = 0.0f;
+    float velocityY = 0.0f;
     std::unique_ptr<SpriteSFML> sprite;
-    std::unique_ptr<SpriteSFML> spriteUp;    // Player moving up
-    std::unique_ptr<SpriteSFML> spriteDown;  // Player moving down
-    SpriteSFML* currentSprite =
-        nullptr;  // Current displayed sprite (raw pointer)
+    std::unique_ptr<SpriteSFML> spriteUp;
+    std::unique_ptr<SpriteSFML> spriteDown;
+    SpriteSFML* currentSprite = nullptr;
     bool isLocalPlayer = false;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
@@ -40,6 +41,9 @@ struct ClientEntity {
           y(posY),
           sprite(std::make_unique<SpriteSFML>())
     {
+        if (entityType == 3) {
+            velocityX = 400.0f;
+        }
     }
 };
 

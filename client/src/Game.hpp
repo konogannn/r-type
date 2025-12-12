@@ -57,4 +57,5 @@ class Game {
     int _fpsCounter;
     int _currentFps;
     float _scale;
+    std::chrono::steady_clock::time_point _lastShootTime;
 };

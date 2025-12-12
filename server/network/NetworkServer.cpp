@@ -300,40 +300,6 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
 
         case OpCode::C2S_INPUT:
             if (size >= sizeof(InputPacket) && session->isAuthenticated) {
-                // Clear LOGIN_OK pending packets since client is clearly
-                // authenticated
-                {
-                    std::lock_guard<std::mutex> lock(_clientsMutex);
-                    auto& pending = session->pendingPackets;
-                    auto beforeSize = pending.size();
-
-                    pending.erase(
-                        std::remove_if(
-                            pending.begin(), pending.end(),
-                            [](const ClientSession::PendingPacket& p) {
-                                if (p.data.size() >= sizeof(Header)) {
-                                    const Header* h =
-                                        reinterpret_cast<const Header*>(
-                                            p.data.data());
-                                    return static_cast<OpCode>(h->opCode) ==
-                                               OpCode::S2C_LOGIN_OK ||
-                                           static_cast<OpCode>(h->opCode) ==
-                                               OpCode::S2C_ENTITY_NEW;
-                                }
-                                return false;
-                            }),
-                        pending.end());
-
-                    auto afterSize = pending.size();
-                    if (beforeSize != afterSize) {
-                        std::cout
-                            << "[INPUT] Cleared " << (beforeSize - afterSize)
-                            << " LOGIN/SPAWN packets from pending (client "
-                            << session->clientId << " is authenticated)"
-                            << std::endl;
-                    }
-                }
-
                 NetworkEvent event;
                 event.type = EventType::Input;
                 event.clientId = session->clientId;
@@ -402,8 +368,7 @@ bool NetworkServer::sendLoginResponse(uint32_t clientId, uint32_t playerId,
     response.mapWidth = mapWidth;
     response.mapHeight = mapHeight;
 
-    // Send as unreliable - client will retry if not received
-    sendToEndpoint(it->second.endpoint, &response, sizeof(response), false,
+    sendToEndpoint(it->second.endpoint, &response, sizeof(response), true,
                    &it->second);
     return true;
 }
@@ -457,16 +422,9 @@ bool NetworkServer::sendEntityDead(uint32_t clientId, uint32_t entityId)
     packet.entityId = entityId;
 
     if (clientId == 0) {
-        // Broadcast as unreliable
-        broadcast(&packet, sizeof(packet), 0, false);
+        broadcast(&packet, sizeof(packet), 0, true);
     } else {
-        // Send to specific client as unreliable
-        std::lock_guard<std::mutex> lock(_clientsMutex);
-        ClientSession* session = getSessionById(clientId);
-        if (session) {
-            sendToEndpoint(session->endpoint, &packet, sizeof(packet), false,
-                           session);
-        }
+        sendToClient(&packet, sizeof(packet), clientId);
     }
     return true;
 }
