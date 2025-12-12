@@ -20,7 +20,8 @@
 #include "TextureManager.hpp"
 
 Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
-           rtype::InputSFML& input, std::shared_ptr<Background> sharedBackground,
+           rtype::InputSFML& input,
+           std::shared_ptr<Background> sharedBackground,
            const std::string& serverAddress, uint16_t serverPort)
     : _window(window),
       _input(input),
