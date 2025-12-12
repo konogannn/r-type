@@ -30,6 +30,10 @@ ClientGameState::ClientGameState()
         });
     _networkClient->setOnEntityDeadCallback(
         [this](uint32_t entityId) { onEntityDead(entityId); });
+    _networkClient->setOnScoreUpdateCallback([this](uint32_t score) {
+        _score = score;
+        std::cout << "[INFO] Score updated: " << score << std::endl;
+    });
     _networkClient->setOnErrorCallback(
         [this](const std::string& error) { onError(error); });
 }
@@ -113,6 +117,19 @@ void ClientGameState::update(float deltaTime)
 
 void ClientGameState::render(IGraphics& graphics)
 {
+    static int frameCount = 0;
+    if (++frameCount % 60 == 0) {  // Log every 60 frames (~1 second)
+        std::cout << "\n========== ENTITIES STATUS (Frame " << frameCount
+                  << ") ==========" << std::endl;
+        for (const auto& [entityId, entity] : _entities) {
+            std::cout << "  Entity " << entityId << " (Type " << entity->type
+                      << "): pos=(" << entity->x << ", " << entity->y << ")"
+                      << std::endl;
+        }
+        std::cout << "===================================================\n"
+                  << std::endl;
+    }
+
     if (!_gameStarted) {
         return;
     }
@@ -181,26 +198,41 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
 void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
                                     float y)
 {
+    if (_entities.find(entityId) != _entities.end()) {
+        return;
+    }
+
     std::cout << "[INFO] Entity spawned: ID=" << entityId
               << ", Type=" << static_cast<int>(type) << ", Position=(" << x
               << "," << y << ")" << std::endl;
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
-
     entity->isLocalPlayer = (entityId == _playerId);
-
     createEntitySprite(*entity);
-
     _entities[entityId] = std::move(entity);
 }
 
 void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
 {
     auto* entity = getEntity(entityId);
-    if (entity) {
-        entity->x = x;
-        entity->y = y;
+    if (!entity) {
+        return;
     }
+
+    if (entity->type == 1 && entity->spriteUp && entity->spriteDown) {
+        float deltaY = y - entity->lastY;
+        if (deltaY < -0.5f) {  // Moving up
+            entity->currentSprite = entity->spriteUp.get();
+        } else if (deltaY > 0.5f) {  // Moving down
+            entity->currentSprite = entity->spriteDown.get();
+        } else {  // Static
+            entity->currentSprite = entity->sprite.get();
+        }
+        entity->lastY = y;
+    }
+
+    entity->x = x;
+    entity->y = y;
 }
 
 void ClientGameState::onEntityDead(uint32_t entityId)
@@ -217,24 +249,48 @@ void ClientGameState::onError(const std::string& error)
 
 void ClientGameState::createEntitySprite(ClientEntity& entity)
 {
+    if (!entity.sprite) {
+        std::cout << "[ERROR] Entity sprite pointer is null!" << std::endl;
+        return;
+    }
+
     std::string texturePath;
+    float scale = 1.0f;
+
     switch (entity.type) {
-        case 1:
+        case 1:  // Player
             texturePath = "assets/sprites/player1.png";
+            scale = 4.0f;  // Player size (doubled from original)
+
+            // Load animation sprites (player1=static, player2=down, player3=up)
+            entity.spriteUp = std::make_unique<SpriteSFML>();
+            entity.spriteDown = std::make_unique<SpriteSFML>();
+
+            entity.spriteUp->loadTexture("assets/sprites/player3.png");
+            entity.spriteUp->setScale(scale, scale);
+
+            entity.spriteDown->loadTexture("assets/sprites/player2.png");
+            entity.spriteDown->setScale(scale, scale);
+
+            entity.currentSprite = entity.sprite.get();
             break;
-        case 2:
-            texturePath = "assets/sprites/boss1.png";
+        case 2:  // Enemy/Boss
+            texturePath = "assets/sprites/boss_1.png";
+            scale = 9.0f;  // Enemy size (doubled from original)
             break;
-        case 3:
+        case 3:  // Projectile
             texturePath = "assets/sprites/projectile_player_1.png";
+            scale = 6.0f;  // Projectile size (doubled from original)
             break;
         default:
-            texturePath = "assets/default.png";
+            texturePath = "assets/sprites/player1.png";
+            scale = 2.0f;
             break;
     }
 
-    std::cout << "[DEBUG] Created sprite for entity type "
-              << static_cast<int>(entity.type) << std::endl;
+    if (entity.sprite->loadTexture(texturePath)) {
+        entity.sprite->setScale(scale, scale);
+    }
 }
 
 void ClientGameState::removeEntity(uint32_t entityId)

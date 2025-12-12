@@ -155,6 +155,12 @@ void NetworkClientAsio::update()
 {
     std::lock_guard<std::mutex> lock(_messageQueueMutex);
 
+    static int updateCount = 0;
+    if (_pendingMessages.size() > 0 && ++updateCount % 60 == 0) {
+        std::cout << "[NETWORK] Processing " << _pendingMessages.size()
+                  << " pending messages" << std::endl;
+    }
+
     while (!_pendingMessages.empty()) {
         const auto& message = _pendingMessages.front();
         processReceivedData(message.data.data(), message.data.size());
@@ -248,6 +254,11 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
     }
 
     const ::Header* header = reinterpret_cast<const ::Header*>(data);
+
+    // Send ACK for reliable packets (non-zero sequence ID)
+    if (header->sequenceId != 0) {
+        sendAck(header->sequenceId);
+    }
 
     switch (static_cast<::OpCode>(header->opCode)) {
         case ::OpCode::S2C_LOGIN_OK:

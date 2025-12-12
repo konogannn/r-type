@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "../network/ClientGameState.hpp"
 #include "../wrapper/graphics/GraphicsSFML.hpp"
 #include "../wrapper/input/InputSFML.hpp"
 #include "../wrapper/window/WindowSFML.hpp"
@@ -24,7 +25,10 @@
 class Game {
    public:
     Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
-         rtype::InputSFML& input);
+         rtype::InputSFML& input,
+         const std::string& serverAddress = "127.0.0.1",
+         uint16_t serverPort = 8080);
+    ~Game();
     bool run();
 
    private:
@@ -42,6 +46,7 @@ class Game {
     bool _running;
     bool _returnToMenu;
 
+    std::unique_ptr<rtype::ClientGameState> _gameState;
     std::unique_ptr<Background> _background;
     std::unique_ptr<Player> _player;
     std::unique_ptr<Enemy> _enemy;

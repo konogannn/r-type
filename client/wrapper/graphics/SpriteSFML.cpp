@@ -25,6 +25,7 @@ bool SpriteSFML::loadTexture(const std::string& filepath)
         return false;
     }
     _sprite->setTexture(*_texture);
+    // Don't reset scale - let caller set it
     return true;
 }
 

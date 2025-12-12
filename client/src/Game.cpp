@@ -20,7 +20,8 @@
 #include "TextureManager.hpp"
 
 Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
-           rtype::InputSFML& input)
+           rtype::InputSFML& input, const std::string& serverAddress,
+           uint16_t serverPort)
     : _window(window),
       _input(input),
       _graphics(graphics),
@@ -82,6 +83,29 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
     _enemy = std::make_unique<Enemy>("assets/sprites/boss_1.png",
                                      600.0f * _scale, 250.0f * _scale, _scale);
+
+    // Initialize network
+    _gameState = std::make_unique<rtype::ClientGameState>();
+
+    // Try to connect to server
+    std::cout << "[Game] Attempting to connect to server " << serverAddress
+              << ":" << serverPort << "..." << std::endl;
+    if (_gameState->connectToServer(serverAddress, serverPort)) {
+        std::cout << "[Game] Connection initiated" << std::endl;
+        // Send login after connection
+        _gameState->sendLogin("Player1");
+    } else {
+        std::cout << "[Game] Failed to connect to server" << std::endl;
+    }
+}
+
+Game::~Game()
+{
+    // Disconnect from server before destroying
+    if (_gameState && _gameState->isConnected()) {
+        std::cout << "[Game] Disconnecting from server..." << std::endl;
+        _gameState->disconnect();
+    }
 }
 
 bool Game::run()
@@ -121,39 +145,54 @@ void Game::handleEvents()
 
 void Game::update(float deltaTime)
 {
+    // Update network (process received packets)
+    if (_gameState) {
+        _gameState->update(deltaTime);
+
+        // Send input to server
+        uint8_t inputMask = 0;
+        rtype::KeyBinding& keyBindings = rtype::KeyBinding::getInstance();
+
+        if (_input.isKeyPressed(
+                keyBindings.getKey(rtype::GameAction::MoveUp))) {
+            inputMask |= 1;  // UP
+        }
+        if (_input.isKeyPressed(
+                keyBindings.getKey(rtype::GameAction::MoveDown))) {
+            inputMask |= 2;  // DOWN
+        }
+        if (_input.isKeyPressed(
+                keyBindings.getKey(rtype::GameAction::MoveLeft))) {
+            inputMask |= 4;  // LEFT
+        }
+        if (_input.isKeyPressed(
+                keyBindings.getKey(rtype::GameAction::MoveRight))) {
+            inputMask |= 8;  // RIGHT
+        }
+        // Handle shooting with cooldown
+        static auto lastShootTime = std::chrono::steady_clock::now();
+        const auto shootCooldown =
+            std::chrono::milliseconds(200);  // 200ms between shots
+
+        if (_input.isKeyPressed(keyBindings.getKey(rtype::GameAction::Shoot))) {
+            auto currentTime = std::chrono::steady_clock::now();
+            if (currentTime - lastShootTime >= shootCooldown) {
+                inputMask |= 16;  // SHOOT
+                lastShootTime = currentTime;
+            }
+        }
+
+        if (inputMask != 0 && _gameState->isConnected()) {
+            _gameState->sendInput(inputMask);
+        }
+    }
+
     if (_background) {
         _background->update(deltaTime);
     }
 
-    if (_player) {
-        _player->handleInput(_input, deltaTime,
-                             static_cast<float>(_window.getWidth()),
-                             static_cast<float>(_window.getHeight()));
-
-        if (_player->wantsToShoot()) {
-            spawnProjectile(_player->getX() + 60 * _scale,
-                            _player->getY() + 30 * _scale);
-            SoundManager::getInstance().playSound("shot");
-        }
-        _player->update(deltaTime);
-    }
-
-    float windowWidth = static_cast<float>(_window.getWidth());
-    for (auto& projectile : _projectiles) {
-        projectile->update(deltaTime, windowWidth);
-    }
-
-    _projectiles.erase(std::remove_if(_projectiles.begin(), _projectiles.end(),
-                                      [](const std::unique_ptr<Projectile>& p) {
-                                          return !p->isAlive();
-                                      }),
-                       _projectiles.end());
-
-    if (_enemy) {
-        _enemy->update(deltaTime);
-    }
-
-    checkCollisions();
+    // Local player movement removed - server handles all positions
+    // Player movement is now controlled via network packets
 
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
@@ -211,25 +250,53 @@ void Game::render()
         _background->draw(_graphics);
     }
 
-    if (_player) {
-        _player->draw(_graphics);
+    if (_gameState) {
+        const auto& entities = _gameState->getAllEntities();
+
+        for (const auto& [id, entity] : entities) {
+            if (!entity) {
+                continue;
+            }
+            // Use currentSprite if available (for animations), otherwise sprite
+            rtype::ISprite* spriteToRender = entity->currentSprite
+                                                 ? entity->currentSprite
+                                                 : entity->sprite.get();
+
+            if (spriteToRender) {
+                try {
+                    spriteToRender->setPosition(entity->x, entity->y);
+                    _graphics.drawSprite(*spriteToRender);
+                } catch (const std::exception& e) {
+                }
+            }
+        }
     }
 
-    for (auto& projectile : _projectiles) {
-        projectile->draw(_graphics);
-    }
-
-    if (_enemy) {
-        _enemy->draw(_graphics);
-    }
-
-    for (auto& explosion : _explosions) {
-        explosion->draw(_graphics);
-    }
-
+    // Display FPS
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
     _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale, 20 * _scale, 0, 255, 0,
                        "assets/fonts/Retro_Gaming.ttf");
+
+    // Display Score
+    if (_gameState) {
+        std::string scoreStr =
+            "Score: " + std::to_string(_gameState->getScore());
+        _graphics.drawText(scoreStr, 10 * _scale, 40 * _scale, 20 * _scale, 255,
+                           255, 0, "assets/fonts/Retro_Gaming.ttf");
+
+        // Display connection status
+        if (_gameState->isConnected()) {
+            std::string entityCount =
+                "Entities: " + std::to_string(_gameState->getEntityCount());
+            _graphics.drawText(entityCount, 10 * _scale, 70 * _scale,
+                               16 * _scale, 255, 255, 255,
+                               "assets/fonts/Retro_Gaming.ttf");
+        } else {
+            _graphics.drawText("Disconnected", 10 * _scale, 70 * _scale,
+                               20 * _scale, 255, 0, 0,
+                               "assets/fonts/Retro_Gaming.ttf");
+        }
+    }
 
     _window.display();
 }

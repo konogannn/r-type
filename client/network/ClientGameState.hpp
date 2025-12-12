@@ -12,9 +12,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "GraphicsSFML.hpp"
+#include "../wrapper/graphics/GraphicsSFML.hpp"
+#include "../wrapper/graphics/SpriteSFML.hpp"
 #include "NetworkClientAsio.hpp"
-#include "SpriteSFML.hpp"
 
 namespace rtype {
 
@@ -25,7 +25,12 @@ struct ClientEntity {
     uint32_t id;
     uint8_t type;
     float x, y;
+    float lastY = 0;  // Track last Y position for animation
     std::unique_ptr<SpriteSFML> sprite;
+    std::unique_ptr<SpriteSFML> spriteUp;    // Player moving up
+    std::unique_ptr<SpriteSFML> spriteDown;  // Player moving down
+    SpriteSFML* currentSprite =
+        nullptr;  // Current displayed sprite (raw pointer)
     bool isLocalPlayer = false;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
@@ -52,6 +57,7 @@ class ClientGameState {
     uint16_t _mapHeight = 0;
     bool _gameStarted = false;
     bool _connectionAttempting = false;
+    uint32_t _score = 0;
 
     // Entities
     std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>> _entities;
@@ -81,6 +87,7 @@ class ClientGameState {
     uint32_t getPlayerId() const { return _playerId; }
     uint16_t getMapWidth() const { return _mapWidth; }
     uint16_t getMapHeight() const { return _mapHeight; }
+    uint32_t getScore() const { return _score; }
     const std::string& getLastError() const { return _lastError; }
     size_t getEntityCount() const { return _entities.size(); }
 
