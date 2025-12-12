@@ -16,6 +16,7 @@
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/graphics/SpriteSFML.hpp"
 #include "wrapper/input/InputSFML.hpp"
+#include "wrapper/utils/ClockSFML.hpp"
 #include "wrapper/window/WindowSFML.hpp"
 
 using namespace rtype;
@@ -50,7 +51,11 @@ int main()
 
     GameState state = GameState::Menu;
 
+    auto clock = std::make_unique<ClockSFML>();
+    float deltaTime = 0.0f;
+
     while (window->isOpen()) {
+        deltaTime = clock->restart();
         if (state == GameState::Menu) {
             while (window->pollEvent()) {
                 EventType eventType = window->getEventType();
@@ -60,7 +65,7 @@ int main()
                 }
             }
 
-            MenuAction action = menu->update();
+            MenuAction action = menu->update(deltaTime);
 
             window->clear(0, 0, 0);
             menu->render();
@@ -69,6 +74,7 @@ int main()
             switch (action) {
                 case MenuAction::StartGame:
                     state = GameState::Playing;
+                    clock->restart();
                     break;
                 case MenuAction::Settings:
                     state = GameState::Settings;
@@ -102,10 +108,14 @@ int main()
                     state = GameState::Menu;
                     config.load();
                     menu->updateLayout();
+                    menu->resetFade();
+                    clock->restart();
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Error in game: " << e.what() << std::endl;
                 state = GameState::Menu;
+                menu->resetFade();
+                clock->restart();
             }
         } else if (state == GameState::Settings) {
             while (window->pollEvent()) {

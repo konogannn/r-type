@@ -123,6 +123,9 @@ void ClientGameState::update(float deltaTime)
 
 void ClientGameState::render(IGraphics& graphics)
 {
+    // TEMPO for warning
+    (void)graphics;
+
     if (!_gameStarted) {
         return;
     }

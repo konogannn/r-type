@@ -30,6 +30,9 @@ class Player {
     float getY() const;
     bool wantsToShoot() const;
 
+    void startSlideIn(float targetX);
+    bool isSlideInComplete() const;
+
    private:
     rtype::ISprite* _spriteStatic;
     rtype::ISprite* _spriteDown;
@@ -50,4 +53,8 @@ class Player {
 
     enum class MovementState { STATIC, MOVING_UP, MOVING_DOWN };
     MovementState _currentState;
+
+    bool _isSliding;
+    float _slideTargetX;
+    float _slideSpeed;
 };

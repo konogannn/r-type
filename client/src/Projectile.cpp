@@ -48,6 +48,6 @@ float Projectile::getX() const { return _x; }
 
 float Projectile::getY() const { return _y; }
 
-float Projectile::getWidth() const { return 64.0f * _scale; }
+float Projectile::getWidth() const { return 32.0f * _scale; }
 
-float Projectile::getHeight() const { return 64.0f * _scale; }
+float Projectile::getHeight() const { return 8.0f * _scale; }

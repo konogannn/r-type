@@ -62,28 +62,28 @@ void SettingsMenu::setupBackground()
 void SettingsMenu::setupSliders()
 {
     _sliders.clear();
-    _sliders.emplace_back(0, 0, SLIDER_WIDTH, "Music Volume", 0.0f, 100.0f,
+    _sliders.emplace_back(0.0f, 0.0f, SLIDER_WIDTH, "Music Volume", 0.0f, 100.0f,
                           80.0f);
-    _sliders.emplace_back(0, 0, SLIDER_WIDTH, "SFX Volume", 0.0f, 100.0f,
+    _sliders.emplace_back(0.0f, 0.0f, SLIDER_WIDTH, "SFX Volume", 0.0f, 100.0f,
                           100.0f);
 }
 
 void SettingsMenu::setupKeyBindings()
 {
     _keyBindingButtons.clear();
-    _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::MoveUp);
-    _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::MoveDown);
-    _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::MoveLeft);
-    _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::MoveRight);
-    _keyBindingButtons.emplace_back(0, 0, 400.0f, 50.0f, GameAction::Shoot);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveUp);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveDown);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveLeft);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveRight);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::Shoot);
 }
 
 void SettingsMenu::setupResolutionButtons()
 {
     _resolutionButtons.clear();
-    _resolutionButtons.emplace_back(0, 0, 250.0f, 50.0f, Resolution::R1280x720);
-    _resolutionButtons.emplace_back(0, 0, 250.0f, 50.0f, Resolution::R1600x900);
-    _resolutionButtons.emplace_back(0, 0, 250.0f, 50.0f,
+    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f, Resolution::R1280x720);
+    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f, Resolution::R1600x900);
+    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f,
                                     Resolution::R1920x1080);
 }
 
@@ -375,9 +375,9 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     float handleHeight = baseUnit * 0.45f;
     float fontSize = baseUnit * 0.4f;
 
-    _graphics.drawText(slider.getLabel(), slider.getX(),
-                       slider.getY() - baseUnit * 0.9f, fontSize, 255, 255, 255,
-                       _fontPath);
+    _graphics.drawText(
+        slider.getLabel(), slider.getX(), slider.getY() - baseUnit * 0.9f,
+        static_cast<unsigned int>(fontSize), 255, 255, 255, _fontPath);
 
     _graphics.drawRectangle(slider.getX(), slider.getY(), slider.getWidth(),
                             trackHeight, 50, 50, 50);
@@ -410,8 +410,9 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     std::string valueText = oss.str();
 
     float valueX = slider.getX() + slider.getWidth() + baseUnit * 0.3f;
+    unsigned int fontSizeUInt = static_cast<unsigned int>(fontSize);
     _graphics.drawText(valueText, valueX, slider.getY() - fontSize * 0.3f,
-                       fontSize, 255, 255, 255, _fontPath);
+                       fontSizeUInt, 255, 255, 255, _fontPath);
 }
 
 void SettingsMenu::saveSettings()

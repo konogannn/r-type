@@ -290,7 +290,7 @@ Install vcpkg using the setup script:
 ```
 
 **"FetchContent not available"** (if not using vcpkg)
-Update CMake to version 3.11 or higher:
+Update CMake to version 3.16 or higher:
 ```bash
 # Linux
 sudo apt install cmake  # or use your package manager

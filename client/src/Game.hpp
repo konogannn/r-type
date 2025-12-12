@@ -26,6 +26,8 @@ class Game {
    public:
     Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
          rtype::InputSFML& input,
+         std::shared_ptr<Background> sharedBackground = nullptr);
+    ~Game(,
          const std::string& serverAddress = "127.0.0.1",
          uint16_t serverPort = 8080);
     ~Game();

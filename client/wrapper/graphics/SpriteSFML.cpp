@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "common/utils/PathHelper.hpp"
+
 namespace rtype {
 
 SpriteSFML::SpriteSFML()
@@ -19,8 +21,10 @@ SpriteSFML::SpriteSFML()
 
 bool SpriteSFML::loadTexture(const std::string& filepath)
 {
-    if (!_texture->loadFromFile(filepath)) {
-        std::cerr << "Error: Failed to load texture from " << filepath
+    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
+
+    if (!_texture->loadFromFile(resolvedPath)) {
+        std::cerr << "Error: Failed to load texture from " << resolvedPath
                   << std::endl;
         return false;
     }
@@ -53,6 +57,25 @@ void SpriteSFML::setTextureRect(int left, int top, int width, int height)
 }
 
 void SpriteSFML::setSmooth(bool smooth) { _texture->setSmooth(smooth); }
+
+float SpriteSFML::getTextureWidth() const
+{
+    return static_cast<float>(_texture->getSize().x);
+}
+
+float SpriteSFML::getTextureHeight() const
+{
+    return static_cast<float>(_texture->getSize().y);
+}
+
+void SpriteSFML::setAlpha(unsigned char alpha)
+{
+    if (_sprite) {
+        sf::Color color = _sprite->getColor();
+        color.a = alpha;
+        _sprite->setColor(color);
+    }
+}
 
 const sf::Sprite& SpriteSFML::getSFMLSprite() const { return *_sprite; }
 
