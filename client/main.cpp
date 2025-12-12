@@ -100,7 +100,7 @@ int main()
                     config.getString("serverAddress", "127.0.0.1");
                 int serverPort = config.getInt("serverPort", 8080);
 
-                Game game(*window, *graphics, *input, serverAddress,
+                Game game(*window, *graphics, *input, nullptr, serverAddress,
                           static_cast<uint16_t>(serverPort));
                 bool returnToMenu = game.run();
 
