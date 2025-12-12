@@ -168,6 +168,7 @@ void Game::update(float deltaTime)
             if (currentTime - _lastShootTime >= shootCooldown) {
                 inputMask |= 16;
                 _lastShootTime = currentTime;
+                SoundManager::getInstance().playSound("shot");
             }
         }
 
