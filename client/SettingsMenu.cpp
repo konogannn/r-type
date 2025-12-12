@@ -62,8 +62,8 @@ void SettingsMenu::setupBackground()
 void SettingsMenu::setupSliders()
 {
     _sliders.clear();
-    _sliders.emplace_back(0.0f, 0.0f, SLIDER_WIDTH, "Music Volume", 0.0f, 100.0f,
-                          80.0f);
+    _sliders.emplace_back(0.0f, 0.0f, SLIDER_WIDTH, "Music Volume", 0.0f,
+                          100.0f, 80.0f);
     _sliders.emplace_back(0.0f, 0.0f, SLIDER_WIDTH, "SFX Volume", 0.0f, 100.0f,
                           100.0f);
 }
@@ -71,18 +71,25 @@ void SettingsMenu::setupSliders()
 void SettingsMenu::setupKeyBindings()
 {
     _keyBindingButtons.clear();
-    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveUp);
-    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveDown);
-    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveLeft);
-    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::MoveRight);
-    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, GameAction::Shoot);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f,
+                                    GameAction::MoveUp);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f,
+                                    GameAction::MoveDown);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f,
+                                    GameAction::MoveLeft);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f,
+                                    GameAction::MoveRight);
+    _keyBindingButtons.emplace_back(0.0f, 0.0f, 400.0f, 50.0f,
+                                    GameAction::Shoot);
 }
 
 void SettingsMenu::setupResolutionButtons()
 {
     _resolutionButtons.clear();
-    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f, Resolution::R1280x720);
-    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f, Resolution::R1600x900);
+    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f,
+                                    Resolution::R1280x720);
+    _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f,
+                                    Resolution::R1600x900);
     _resolutionButtons.emplace_back(0.0f, 0.0f, 250.0f, 50.0f,
                                     Resolution::R1920x1080);
 }

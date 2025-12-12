@@ -13,9 +13,6 @@
 #include "../Config.hpp"
 #include "../KeyBinding.hpp"
 #include "Background.hpp"
-#include "Enemy.hpp"
-#include "Player.hpp"
-#include "Projectile.hpp"
 #include "SoundManager.hpp"
 #include "TextureManager.hpp"
 
@@ -56,29 +53,6 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
             "assets/background/bg-planet.png", static_cast<float>(actualWidth),
             static_cast<float>(actualHeight));
     }
-
-    auto* playerStatic =
-        TextureManager::getInstance().getSprite("player_static");
-    auto* playerDown = TextureManager::getInstance().getSprite("player_down");
-    auto* playerUp = TextureManager::getInstance().getSprite("player_up");
-    if (playerStatic && playerDown && playerUp) {
-        float targetX = 100.0f * _scale;
-        _player = std::make_unique<Player>(playerStatic, playerDown, playerUp,
-                                           targetX, 300.0f * _scale, _scale);
-
-        _player->startSlideIn(targetX);
-
-        rtype::KeyBinding& keyBindings = rtype::KeyBinding::getInstance();
-        keyBindings.loadFromConfig();
-        _player->setKeys(keyBindings.getKey(rtype::GameAction::MoveUp),
-                         keyBindings.getKey(rtype::GameAction::MoveDown),
-                         keyBindings.getKey(rtype::GameAction::MoveLeft),
-                         keyBindings.getKey(rtype::GameAction::MoveRight),
-                         keyBindings.getKey(rtype::GameAction::Shoot));
-    }
-
-    _enemy = std::make_unique<Enemy>("assets/sprites/boss_1.png",
-                                     600.0f * _scale, 250.0f * _scale, _scale);
 
     _gameState = std::make_unique<rtype::ClientGameState>();
 
@@ -180,53 +154,6 @@ void Game::update(float deltaTime)
     if (_background) {
         _background->update(deltaTime);
     }
-
-    for (auto& explosion : _explosions) {
-        explosion->update(deltaTime);
-    }
-
-    _explosions.erase(
-        std::remove_if(_explosions.begin(), _explosions.end(),
-                       [](const std::unique_ptr<rtype::Explosion>& e) {
-                           return e->isFinished();
-                       }),
-        _explosions.end());
-}
-
-void Game::checkCollisions()
-{
-    if (!_enemy) {
-        return;
-    }
-
-    for (auto& projectile : _projectiles) {
-        if (!projectile->isAlive()) {
-            continue;
-        }
-
-        float projX = projectile->getX();
-        float projY = projectile->getY();
-        float projW = projectile->getWidth();
-        float projH = projectile->getHeight();
-
-        float enemyX = _enemy->getX();
-        float enemyY = _enemy->getY();
-        float enemyW = _enemy->getWidth();
-        float enemyH = _enemy->getHeight();
-
-        bool collision = (projX < enemyX + enemyW && projX + projW > enemyX &&
-                          projY < enemyY + enemyH && projY + projH > enemyY);
-
-        if (collision) {
-            projectile->kill();
-            SoundManager::getInstance().playSound("hit");
-            _explosions.push_back(std::make_unique<rtype::Explosion>(
-                "assets/sprites/blowup_2.png", enemyX, enemyY, _scale));
-            SoundManager::getInstance().playSound("explosion");
-            _enemy.reset();
-            break;
-        }
-    }
 }
 
 void Game::render()
@@ -285,12 +212,6 @@ void Game::render()
     }
 
     _window.display();
-}
-
-void Game::spawnProjectile(float x, float y)
-{
-    _projectiles.push_back(std::make_unique<Projectile>(
-        "assets/sprites/projectile_player_1.png", x, y, _scale));
 }
 
 void Game::updateFps(float deltaTime)
