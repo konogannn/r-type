@@ -51,10 +51,18 @@ class GraphicsSFML : public IGraphics {
     float getTextWidth(const std::string& text, unsigned int fontSize,
                        const std::string& fontPath) override;
 
+    /**
+     * @brief Set a render texture as the draw target (for post-processing)
+     * @param renderTexture Pointer to RenderTexture, or nullptr to reset to
+     * window
+     */
+    void setRenderTarget(sf::RenderTexture* renderTexture);
+
    private:
     sf::Font* loadFont(const std::string& fontPath);
 
     WindowSFML& _window;
+    sf::RenderTexture* _renderTarget;
     mutable std::map<std::string, sf::Font> _fontCache;
 };
 

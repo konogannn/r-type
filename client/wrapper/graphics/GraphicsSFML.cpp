@@ -14,13 +14,25 @@
 
 namespace rtype {
 
-GraphicsSFML::GraphicsSFML(WindowSFML& window) : _window(window) {}
+GraphicsSFML::GraphicsSFML(WindowSFML& window)
+    : _window(window), _renderTarget(nullptr)
+{
+}
+
+void GraphicsSFML::setRenderTarget(sf::RenderTexture* renderTexture)
+{
+    _renderTarget = renderTexture;
+}
 
 void GraphicsSFML::drawSprite(const ISprite& sprite)
 {
     const SpriteSFML* spriteSFML = dynamic_cast<const SpriteSFML*>(&sprite);
     if (spriteSFML) {
-        _window.getSFMLWindow().draw(spriteSFML->getSFMLSprite());
+        if (_renderTarget) {
+            _renderTarget->draw(spriteSFML->getSFMLSprite());
+        } else {
+            _window.getSFMLWindow().draw(spriteSFML->getSFMLSprite());
+        }
     } else {
         std::cerr << "Error: GraphicsSFML::drawSprite() - sprite is not a "
                      "SpriteSFML instance. "
@@ -36,7 +48,12 @@ void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
     sf::RectangleShape rectangle(sf::Vector2f(width, height));
     rectangle.setPosition(x, y);
     rectangle.setFillColor(sf::Color(r, g, b));
-    _window.getSFMLWindow().draw(rectangle);
+
+    if (_renderTarget) {
+        _renderTarget->draw(rectangle);
+    } else {
+        _window.getSFMLWindow().draw(rectangle);
+    }
 }
 
 void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
@@ -46,7 +63,12 @@ void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
     sf::RectangleShape rectangle(sf::Vector2f(width, height));
     rectangle.setPosition(x, y);
     rectangle.setFillColor(sf::Color(r, g, b, a));
-    _window.getSFMLWindow().draw(rectangle);
+
+    if (_renderTarget) {
+        _renderTarget->draw(rectangle);
+    } else {
+        _window.getSFMLWindow().draw(rectangle);
+    }
 }
 
 void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
@@ -55,7 +77,12 @@ void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
     sf::CircleShape circle(radius);
     circle.setPosition(x - radius, y - radius);
     circle.setFillColor(sf::Color(r, g, b));
-    _window.getSFMLWindow().draw(circle);
+
+    if (_renderTarget) {
+        _renderTarget->draw(circle);
+    } else {
+        _window.getSFMLWindow().draw(circle);
+    }
 }
 
 sf::Font* GraphicsSFML::loadFont(const std::string& fontPath)
@@ -93,7 +120,11 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
     sfText.setFillColor(sf::Color(r, g, b));
     sfText.setPosition(x, y);
 
-    _window.getSFMLWindow().draw(sfText);
+    if (_renderTarget) {
+        _renderTarget->draw(sfText);
+    } else {
+        _window.getSFMLWindow().draw(sfText);
+    }
 }
 
 void GraphicsSFML::drawText(const std::string& text, float x, float y,
@@ -116,7 +147,11 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
     sfText.setFillColor(sf::Color(r, g, b, a));
     sfText.setPosition(x, y);
 
-    _window.getSFMLWindow().draw(sfText);
+    if (_renderTarget) {
+        _renderTarget->draw(sfText);
+    } else {
+        _window.getSFMLWindow().draw(sfText);
+    }
 }
 
 float GraphicsSFML::getTextWidth(const std::string& text, unsigned int fontSize,
