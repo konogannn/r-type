@@ -322,11 +322,12 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
             break;
 
         case OpCode::C2S_ACK:
-            if (size >= sizeof(AckPacket) && session->isAuthenticated) {
+            if (size >= sizeof(AckPacket)) {
                 const AckPacket* ack = reinterpret_cast<const AckPacket*>(data);
                 std::lock_guard<std::mutex> lock(_clientsMutex);
                 auto& pending = session->pendingPackets;
 
+                auto beforeSize = pending.size();
                 pending.erase(std::remove_if(
                                   pending.begin(), pending.end(),
                                   [ack](const ClientSession::PendingPacket& p) {
@@ -334,6 +335,13 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
                                              ack->ackedSequenceId;
                                   }),
                               pending.end());
+                auto afterSize = pending.size();
+
+                std::cout << "[Callback] ACK Received.\n"
+                          << "  - Client ID: " << session->clientId << "\n"
+                          << "  - ACK Seq: " << ack->ackedSequenceId << "\n"
+                          << "  - Pending before: " << beforeSize << "\n"
+                          << "  - Pending after: " << afterSize << std::endl;
             }
             break;
 
@@ -378,7 +386,8 @@ bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
     packet.y = y;
 
     if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0, true);
+        // Broadcast as unreliable
+        broadcast(&packet, sizeof(packet), 0, false);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
     }

@@ -95,7 +95,13 @@ int main()
                 std::cout << "  ESC: Return to menu" << std::endl;
                 std::cout << "===========================" << std::endl;
 
-                Game game(*window, *graphics, *input, menu->getBackground());
+                // Load server configuration
+                std::string serverAddress =
+                    config.getString("serverAddress", "127.0.0.1");
+                int serverPort = config.getInt("serverPort", 8080);
+
+                Game game(*window, *graphics, *input, nullptr, serverAddress,
+                          static_cast<uint16_t>(serverPort));
                 bool returnToMenu = game.run();
 
                 if (returnToMenu) {

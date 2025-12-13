@@ -8,8 +8,18 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <unordered_map>
 
 #include "network/NetworkServer.hpp"
+
+struct Projectile {
+    uint32_t id;
+    uint32_t ownerId;  // Client who fired it
+    float x;
+    float y;
+    float speed;
+    bool alive;
+};
 
 /**
  * @brief Test main for NetworkServer
@@ -19,121 +29,138 @@
 int main()
 {
     try {
-        // 1. Instantiate the NetworkServer
-        // This class encapsulates the UDP socket and protocol logic.
-        std::cout << "[Main] Creating NetworkServer..." << std::endl;
         rtype::NetworkServer server(10);
 
-        // 2. Configure Callbacks
-        // The server is event-driven. We register lambdas to handle specific
-        // events. These callbacks will be invoked when we call server.update().
+        std::unordered_map<uint32_t, Projectile> activeProjectiles;
 
-        // Called when a new client sends a packet (connection established)
+        std::unordered_map<uint32_t, std::pair<float, float>> playerPositions;
+
         server.setOnClientConnectedCallback(
-            [](uint32_t clientId, const std::string& ip, uint16_t port) {
-                std::cout << "[Callback] New Client Connected!" << std::endl;
-                std::cout << "  - Client ID: " << clientId << std::endl;
-                std::cout << "  - Address:   " << ip << ":" << port
-                          << std::endl;
-            });
+            [](uint32_t clientId, const std::string& ip, uint16_t port) {});
 
-        // Called when a client disconnects (explicitly or timeout)
-        server.setOnClientDisconnectedCallback([](uint32_t clientId) {
-            std::cout << "[Callback] Client Disconnected." << std::endl;
-            std::cout << "  - Client ID: " << clientId << std::endl;
-        });
+        server.setOnClientDisconnectedCallback([](uint32_t clientId) {});
 
-        // Called when a client sends a LOGIN packet
-        // We need to respond with a LOGIN_OK packet containing the Player ID
-        // and Map dimensions.
-        server.setOnClientLoginCallback([&server](uint32_t clientId,
-                                                  const LoginPacket& packet) {
-            std::string username(packet.username, strnlen(packet.username, 8));
-            std::cout << "[Callback] Login Request Received." << std::endl;
-            std::cout << "  - Client ID: " << clientId << std::endl;
-            std::cout << "  - Username:  " << username << std::endl;
-
-            // Logic to assign a Player ID (e.g., ClientID + 100)
+        server.setOnClientLoginCallback([&server, &playerPositions](
+                                            uint32_t clientId,
+                                            const LoginPacket& packet) {
             uint32_t newPlayerId = clientId + 100;
             uint16_t mapW = 1920;
             uint16_t mapH = 1080;
 
-            std::cout << "  -> Accepting login. Assigning Player ID: "
-                      << newPlayerId << std::endl;
+            playerPositions[clientId] = {100.0f, 100.0f};
 
-            // Send response
             if (server.sendLoginResponse(clientId, newPlayerId, mapW, mapH)) {
-                std::cout << "  -> Login response sent successfully."
-                          << std::endl;
-
-                // Example: Spawn the player entity for everyone
-                // EntityID = PlayerID, Type = 1 (Player), Pos = (100, 100)
                 server.sendEntitySpawn(clientId, newPlayerId, 1, 100.0f,
                                        100.0f);
-                std::cout << "  -> Spawned player entity." << std::endl;
-            } else {
-                std::cerr
-                    << "  -> Failed to send login response (Client not found?)"
-                    << std::endl;
             }
         });
 
-        // Called when a client sends an INPUT packet
         server.setOnClientInputCallback(
-            [&server](uint32_t clientId, const InputPacket& packet) {
-                std::cout << "[Callback] Input Received." << std::endl;
-                std::cout << "  - Client ID: " << clientId << std::endl;
-                std::cout << "  - Input Mask: " << (int)packet.inputMask
-                          << std::endl;
+            [&server, &activeProjectiles, &playerPositions](
+                uint32_t clientId, const InputPacket& packet) {
+                if (playerPositions.find(clientId) == playerPositions.end()) {
+                    playerPositions[clientId] = {100.0f, 100.0f};
+                }
 
-                // Example: Interpret input and move player
-                // In a real game, you would update the game state here.
-                // For testing, let's just acknowledge by sending a position
-                // update.
+                float& x = playerPositions[clientId].first;
+                float& y = playerPositions[clientId].second;
+                bool positionChanged = false;
 
-                // Let's pretend the player moved to a random position
-                static float x = 100.0f;
-                static float y = 100.0f;
+                const float MIN_X = 0.0f;
+                const float MAX_X = 1800.0f;
+                const float MIN_Y = 0.0f;
+                const float MAX_Y = 1000.0f;
 
-                if (packet.inputMask & 1) y -= 5.0f;  // UP
-                if (packet.inputMask & 2) y += 5.0f;  // DOWN
-                if (packet.inputMask & 4) x -= 5.0f;  // LEFT
-                if (packet.inputMask & 8) x += 5.0f;  // RIGHT
+                if (packet.inputMask & 1) {
+                    y -= 5.0f;
+                    positionChanged = true;
+                }
+                if (packet.inputMask & 2) {
+                    y += 5.0f;
+                    positionChanged = true;
+                }
+                if (packet.inputMask & 4) {
+                    x -= 5.0f;
+                    positionChanged = true;
+                }
+                if (packet.inputMask & 8) {
+                    x += 5.0f;
+                    positionChanged = true;
+                }
 
-                // Broadcast the new position to all clients (including the
-                // sender) Assuming EntityID = ClientID + 100 (same as login
-                // logic)
-                uint32_t entityId = clientId + 100;
-                server.sendEntityPosition(clientId, entityId, x, y);
-                std::cout << "  -> Broadcasted new position: (" << x << ", "
-                          << y << ")" << std::endl;
+                if (x < MIN_X) x = MIN_X;
+                if (x > MAX_X) x = MAX_X;
+                if (y < MIN_Y) y = MIN_Y;
+                if (y > MAX_Y) y = MAX_Y;
+
+                if (packet.inputMask & 16) {
+                    static uint32_t projectileIdCounter = 10000;
+                    uint32_t projectileId = projectileIdCounter++;
+
+                    float projectileX = x + 50.0f;
+                    float projectileY = y;
+
+                    activeProjectiles[projectileId] = {
+                        projectileId, clientId, projectileX,
+                        projectileY,  400.0f,   true};
+
+                    server.sendEntitySpawn(0, projectileId, 3, projectileX,
+                                           projectileY);
+                }
+
+                if (positionChanged) {
+                    uint32_t entityId = clientId + 100;
+                    server.sendEntityPosition(0, entityId, x, y);
+                }
             });
 
-        // 3. Start the Server
         uint16_t port = 8080;
         if (!server.start(port)) {
-            std::cerr << "[Main] Failed to start server on port " << port
-                      << std::endl;
+            std::cerr << "Failed to start server on port " << port << std::endl;
             return 1;
         }
-        std::cout << "[Main] Server started successfully on port " << port
-                  << std::endl;
-        std::cout << "[Main] Waiting for packets... (Press Ctrl+C to stop)"
-                  << std::endl;
+        std::cout << "Server started on port " << port << std::endl;
 
-        // 4. Main Loop
-        // The server network thread runs in the background receiving packets.
-        // We must call update() regularly to process the event queue and
-        // trigger callbacks on this thread (the main thread).
+        auto lastUpdateTime = std::chrono::steady_clock::now();
+        const float targetFPS = 60.0f;
+        const auto targetFrameTime =
+            std::chrono::milliseconds(static_cast<int>(1000.0f / targetFPS));
+
         while (server.isRunning()) {
+            auto currentTime = std::chrono::steady_clock::now();
+            auto deltaTime =
+                std::chrono::duration<float>(currentTime - lastUpdateTime)
+                    .count();
+            lastUpdateTime = currentTime;
+
             server.update();
 
-            // Sleep to prevent high CPU usage in this empty loop
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            static int projectileUpdateCounter = 0;
+            projectileUpdateCounter++;
+            bool shouldSendPositions = (projectileUpdateCounter % 10 == 0);
+
+            for (auto it = activeProjectiles.begin();
+                 it != activeProjectiles.end();) {
+                auto& proj = it->second;
+
+                proj.x += proj.speed * deltaTime;
+
+                if (proj.x > 2000.0f) {
+                    server.sendEntityDead(0, proj.id);
+                    it = activeProjectiles.erase(it);
+                } else {
+                    if (shouldSendPositions) {
+                        server.sendEntityPosition(0, proj.id, proj.x, proj.y);
+                    }
+                    ++it;
+                }
+            }
+
+            std::this_thread::sleep_for(targetFrameTime);
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "[Main] Exception: " << e.what() << std::endl;
+        std::cerr << "Exception: " << e.what() << std::endl;
         return 84;
     }
 
