@@ -21,9 +21,14 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
       _backButton(960.0f - (BUTTON_WIDTH / 2.0f), 900.0f, BUTTON_WIDTH,
                   BUTTON_HEIGHT, "BACK"),
       _fullscreenToggle(1100.0f, 485.0f, 200.0f, 50.0f, "Fullscreen", false),
+      _colorBlindSelection(0.0f, 0.0f, 400.0f, 50.0f, "Color Blind Filter",
+                           {"None", "Protanopia", "Deuteranopia", "Tritanopia",
+                            "Protanomaly", "Deuteranomaly", "Tritanomaly"},
+                           0),
       _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
+      _colorBlindFilter(ColorBlindFilter::getInstance()),
       _currentResolution(Resolution::R1920x1080)
 {
     setupBackground();
@@ -46,6 +51,11 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     for (auto& button : _resolutionButtons) {
         button.setActive(button.getResolution() == _currentResolution);
     }
+
+    // Load color blind filter setting
+    int colorBlindMode = _config.getInt("colorBlindMode", 0);
+    _colorBlindSelection.setSelectedIndex(colorBlindMode);
+    _colorBlindFilter.setMode(ColorBlindFilter::indexToMode(colorBlindMode));
 
     updateLayout();
 }
@@ -162,6 +172,19 @@ void SettingsMenu::updateLayout()
         ToggleButton(toggleX, toggleY, toggleWidth, toggleHeight, "Fullscreen",
                      _fullscreenToggle.isOn());
 
+    float colorBlindWidth = resButtonWidth;
+    float colorBlindHeight = 50.0f * scaleH;
+    float colorBlindX =
+        leftColX + (resButtonWidth / 2.0f) - (colorBlindWidth / 2.0f);
+    float colorBlindY = toggleY + toggleHeight + (20.0f * scaleH);
+    int currentSelection = _colorBlindSelection.getSelectedIndex();
+    _colorBlindSelection =
+        SelectionButton(colorBlindX, colorBlindY, colorBlindWidth,
+                        colorBlindHeight, "Color Blind Filter",
+                        {"None", "Protanopia", "Deuteranopia", "Tritanopia",
+                         "Protanomaly", "Deuteranomaly", "Tritanomaly"},
+                        currentSelection);
+
     float keyBindStartY = 500.0f * scaleH;
     float keyBindHeight = 50.0f * scaleH;
     float keyBindSpacing = 60.0f * scaleH;
@@ -227,6 +250,16 @@ bool SettingsMenu::update()
             }
         }
     }
+    if (!anyInEditMode) {
+        if (_colorBlindSelection.update(mouseX, mouseY, isMousePressed)) {
+            int selectedMode = _colorBlindSelection.getSelectedIndex();
+            _colorBlindFilter.setMode(
+                ColorBlindFilter::indexToMode(selectedMode));
+            _config.setInt("colorBlindMode", selectedMode);
+            _config.save();
+        }
+    }
+
     if (!anyInEditMode &&
         _backButton.isClicked(mouseX, mouseY, isMousePressed)) {
         saveSettings();
@@ -261,6 +294,13 @@ void SettingsMenu::render()
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
     float scale = windowHeight / 1080.0f;
+
+    sf::RenderTexture* filterTexture = _colorBlindFilter.getRenderTexture();
+
+    if (filterTexture) {
+        filterTexture->clear(sf::Color(0, 0, 0));
+        _graphics.setRenderTarget(filterTexture);
+    }
 
     if (_background) {
         _graphics.drawSprite(*_background);
@@ -313,6 +353,8 @@ void SettingsMenu::render()
                        200, 255, _fontPath);
 
     renderToggleButton(scale);
+    renderColorBlindSelection(scale);
+
     std::string ctrlTitle = "CONTROLS";
     float ctrlTitleW =
         _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
@@ -325,6 +367,11 @@ void SettingsMenu::render()
     }
 
     renderBackButton(scale);
+
+    if (filterTexture) {
+        _graphics.setRenderTarget(nullptr);
+        _colorBlindFilter.endCaptureAndApply(_window);
+    }
 }
 
 void SettingsMenu::renderBackButton(float scale)
@@ -584,6 +631,74 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
     float textY = button.getY() + 15.0f * scale;
     _graphics.drawText(button.getLabel(), textX, textY, fontSize, 255, 255, 255,
                        _fontPath);
+}
+
+void SettingsMenu::renderColorBlindSelection(float scale)
+{
+    unsigned int fontSize = static_cast<unsigned int>(20 * scale);
+    unsigned int labelSize = static_cast<unsigned int>(18 * scale);
+
+    unsigned char r, g, b;
+    int mouseX = _input.getMouseX();
+    int mouseY = _input.getMouseY();
+
+    if (_colorBlindSelection.isHovered(mouseX, mouseY)) {
+        r = 0;
+        g = 200;
+        b = 255;
+    } else {
+        r = 30;
+        g = 30;
+        b = 100;
+    }
+
+    _graphics.drawRectangle(_colorBlindSelection.getX(),
+                            _colorBlindSelection.getY(),
+                            _colorBlindSelection.getWidth(),
+                            _colorBlindSelection.getHeight(), r, g, b);
+
+    float borderThickness = 3.0f * scale;
+    _graphics.drawRectangle(
+        _colorBlindSelection.getX(), _colorBlindSelection.getY(),
+        _colorBlindSelection.getWidth(), borderThickness, 100, 150, 255);
+    _graphics.drawRectangle(
+        _colorBlindSelection.getX(),
+        _colorBlindSelection.getY() + _colorBlindSelection.getHeight() -
+            borderThickness,
+        _colorBlindSelection.getWidth(), borderThickness, 100, 150, 255);
+    _graphics.drawRectangle(_colorBlindSelection.getX(),
+                            _colorBlindSelection.getY(), borderThickness,
+                            _colorBlindSelection.getHeight(), 100, 150, 255);
+    _graphics.drawRectangle(_colorBlindSelection.getX() +
+                                _colorBlindSelection.getWidth() -
+                                borderThickness,
+                            _colorBlindSelection.getY(), borderThickness,
+                            _colorBlindSelection.getHeight(), 100, 150, 255);
+
+    float labelX = _colorBlindSelection.getX() + 10.0f * scale;
+    float labelY = _colorBlindSelection.getY() + 8.0f * scale;
+    _graphics.drawText(_colorBlindSelection.getLabel(), labelX, labelY,
+                       labelSize, 200, 200, 200, _fontPath);
+
+    std::string selectedText = _colorBlindSelection.getSelectedOption();
+    float selectedTextWidth =
+        _graphics.getTextWidth(selectedText, fontSize, _fontPath);
+    float selectedX = _colorBlindSelection.getX() +
+                      _colorBlindSelection.getWidth() - selectedTextWidth -
+                      10.0f * scale;
+    float selectedY = _colorBlindSelection.getY() + 15.0f * scale;
+    _graphics.drawText(selectedText, selectedX, selectedY, fontSize, 255, 200,
+                       100, _fontPath);
+
+    float arrowX = _colorBlindSelection.getX() +
+                   _colorBlindSelection.getWidth() - selectedTextWidth -
+                   30.0f * scale;
+    _graphics.drawText("<", arrowX - 15.0f * scale, selectedY, fontSize, 150,
+                       150, 150, _fontPath);
+    _graphics.drawText(">",
+                       _colorBlindSelection.getX() +
+                           _colorBlindSelection.getWidth() - 15.0f * scale,
+                       selectedY, fontSize, 150, 150, 150, _fontPath);
 }
 
 }  // namespace rtype

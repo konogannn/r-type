@@ -11,11 +11,13 @@
 #include <vector>
 
 #include "Button.hpp"
+#include "ColorBlindFilter.hpp"
 #include "Config.hpp"
 #include "KeyBinding.hpp"
 #include "KeyBindingButton.hpp"
 #include "Resolution.hpp"
 #include "ResolutionButton.hpp"
+#include "SelectionButton.hpp"
 #include "Slider.hpp"
 #include "ToggleButton.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
@@ -76,10 +78,12 @@ class SettingsMenu {
     std::vector<ResolutionButton> _resolutionButtons;
     Button _backButton;
     ToggleButton _fullscreenToggle;
+    SelectionButton _colorBlindSelection;
     std::string _fontPath;
 
     Config& _config;
     KeyBinding& _keyBinding;
+    ColorBlindFilter& _colorBlindFilter;
     Resolution _currentResolution;
 
     static constexpr float SLIDER_WIDTH = 400.0f;
@@ -118,6 +122,7 @@ class SettingsMenu {
     void renderKeyBindingButton(const KeyBindingButton& button, float scale);
     void renderToggleButton(float scale);
     void renderResolutionButton(const ResolutionButton& button, float scale);
+    void renderColorBlindSelection(float scale);
     void renderBackButton(float scale);
 };
 
