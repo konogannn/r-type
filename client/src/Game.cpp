@@ -26,6 +26,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _running(false),
       _returnToMenu(false),
       _background(sharedBackground),
+      _colorBlindFilter(rtype::ColorBlindFilter::getInstance()),
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
@@ -34,6 +35,11 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 {
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
+
+    int colorBlindMode = config.getInt("colorBlindMode", 0);
+    _colorBlindFilter.setMode(
+        rtype::ColorBlindFilter::indexToMode(colorBlindMode));
+    _colorBlindFilter.initialize(_window);
 
     int actualWidth = _window.getWidth();
     int actualHeight = _window.getHeight();
@@ -158,7 +164,14 @@ void Game::update(float deltaTime)
 
 void Game::render()
 {
-    _window.clear(0, 0, 0);
+    sf::RenderTexture* filterTexture = _colorBlindFilter.getRenderTexture();
+
+    if (filterTexture) {
+        filterTexture->clear(sf::Color(0, 0, 0));
+        _graphics.setRenderTarget(filterTexture);
+    } else {
+        _window.clear(0, 0, 0);
+    }
 
     if (_background) {
         _background->draw(_graphics);
@@ -209,6 +222,12 @@ void Game::render()
                                20 * _scale, 255, 0, 0,
                                "assets/fonts/Retro_Gaming.ttf");
         }
+    }
+
+    if (filterTexture) {
+        _graphics.setRenderTarget(nullptr);
+        _window.clear(0, 0, 0);
+        _colorBlindFilter.endCaptureAndApply(_window);
     }
 
     _window.display();

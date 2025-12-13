@@ -9,6 +9,7 @@
 #include <chrono>
 #include <memory>
 
+#include "../ColorBlindFilter.hpp"
 #include "../network/ClientGameState.hpp"
 #include "../wrapper/graphics/GraphicsSFML.hpp"
 #include "../wrapper/input/InputSFML.hpp"
@@ -43,6 +44,7 @@ class Game {
 
     std::unique_ptr<rtype::ClientGameState> _gameState;
     std::shared_ptr<Background> _background;
+    rtype::ColorBlindFilter& _colorBlindFilter;
 
     float _fpsUpdateTime;
     int _fpsCounter;
