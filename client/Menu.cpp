@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "Config.hpp"
+
 namespace rtype {
 
 Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
@@ -16,6 +18,7 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
       _graphics(graphics),
       _input(input),
       _fontPath("assets/fonts/Retro_Gaming.ttf"),
+      _colorBlindFilter(ColorBlindFilter::getInstance()),
       _isFadingOut(false),
       _uiAlpha(1.0f)
 {
@@ -23,6 +26,12 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     setupLogo();
     setupButtons();
     updateLayout();
+
+    Config& config = Config::getInstance();
+    config.load();
+    int colorBlindMode = config.getInt("colorBlindMode", 0);
+    _colorBlindFilter.setMode(ColorBlindFilter::indexToMode(colorBlindMode));
+    _colorBlindFilter.initialize(_window);
 }
 
 void Menu::setupBackground()
@@ -100,7 +109,7 @@ MenuAction Menu::update(float deltaTime)
     for (size_t i = 0; i < _buttons.size(); ++i) {
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
             switch (i) {
-                case 0:  // Start fade out instead of immediate transition
+                case 0:
                     startFadeOut();
                     return MenuAction::None;
                 case 1:
@@ -124,70 +133,86 @@ void Menu::render()
     float scaleH = windowHeight / 1080.0f;
     float scale = std::min(scaleW, scaleH);
 
+    sf::RenderTexture* filterTexture = _colorBlindFilter.getRenderTexture();
+
+    if (filterTexture) {
+        filterTexture->clear(sf::Color(0, 0, 0));
+        _graphics.setRenderTarget(filterTexture);
+    }
+
     if (_background) {
         _background->draw(_graphics);
     }
 
-    if (_uiAlpha <= 0.0f) {
-        return;
-    }
+    if (_uiAlpha > 0.0f) {
+        for (const auto& button : _buttons) {
+            unsigned char r, g, b;
+            if (button.getIsHovered()) {
+                r = 0;
+                g = 200;
+                b = 255;
+            } else {
+                r = 30;
+                g = 30;
+                b = 100;
+            }
 
-    for (const auto& button : _buttons) {
-        unsigned char r, g, b;
-        if (button.getIsHovered()) {
-            r = 0;
-            g = 200;
-            b = 255;
-        } else {
-            r = 30;
-            g = 30;
-            b = 100;
+            unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
+
+            _graphics.drawRectangle(button.getX(), button.getY(),
+                                    button.getWidth(), button.getHeight(), r, g,
+                                    b, alpha);
+
+            float borderThickness = 3.0f * scale;
+
+            _graphics.drawRectangle(button.getX(), button.getY(),
+                                    button.getWidth(), borderThickness, 100,
+                                    150, 255, alpha);
+            _graphics.drawRectangle(
+                button.getX(),
+                button.getY() + button.getHeight() - borderThickness,
+                button.getWidth(), borderThickness, 100, 150, 255, alpha);
+            _graphics.drawRectangle(button.getX(), button.getY(),
+                                    borderThickness, button.getHeight(), 100,
+                                    150, 255, alpha);
+            _graphics.drawRectangle(
+                button.getX() + button.getWidth() - borderThickness,
+                button.getY(), borderThickness, button.getHeight(), 100, 150,
+                255, alpha);
+
+            unsigned int scaledFontSize =
+                static_cast<unsigned int>(FONT_SIZE * scale);
+            float textWidth = _graphics.getTextWidth(button.getText(),
+                                                     scaledFontSize, _fontPath);
+            float textX =
+                button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
+            float textY = button.getY() + (button.getHeight() / 2.0f) -
+                          (scaledFontSize / 2.0f);
+
+            unsigned char textAlpha =
+                static_cast<unsigned char>(255 * _uiAlpha);
+            _graphics.drawText(button.getText(), textX, textY, scaledFontSize,
+                               255, 255, 255, textAlpha, _fontPath);
         }
 
-        unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
+        if (_logoSprite) {
+            float logoScale = scale * 0.5f;
+            _logoSprite->setScale(logoScale, logoScale);
 
-        _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
-                                button.getHeight(), r, g, b, alpha);
+            float logoWidth = _logoSprite->getTextureWidth() * logoScale;
+            float logoX = (windowWidth / 2.0f) - (logoWidth / 2.0f);
+            float logoY = 50.0f * scaleH;
+            _logoSprite->setPosition(logoX, logoY);
+            unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
+            _logoSprite->setAlpha(alpha);
 
-        float borderThickness = 3.0f * scale;
-
-        _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
-                                borderThickness, 100, 150, 255, alpha);
-        _graphics.drawRectangle(
-            button.getX(), button.getY() + button.getHeight() - borderThickness,
-            button.getWidth(), borderThickness, 100, 150, 255, alpha);
-        _graphics.drawRectangle(button.getX(), button.getY(), borderThickness,
-                                button.getHeight(), 100, 150, 255, alpha);
-        _graphics.drawRectangle(
-            button.getX() + button.getWidth() - borderThickness, button.getY(),
-            borderThickness, button.getHeight(), 100, 150, 255, alpha);
-
-        unsigned int scaledFontSize =
-            static_cast<unsigned int>(FONT_SIZE * scale);
-        float textWidth =
-            _graphics.getTextWidth(button.getText(), scaledFontSize, _fontPath);
-        float textX =
-            button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
-        float textY = button.getY() + (button.getHeight() / 2.0f) -
-                      (scaledFontSize / 2.0f);
-
-        unsigned char textAlpha = static_cast<unsigned char>(255 * _uiAlpha);
-        _graphics.drawText(button.getText(), textX, textY, scaledFontSize, 255,
-                           255, 255, textAlpha, _fontPath);
+            _graphics.drawSprite(*_logoSprite);
+        }
     }
 
-    if (_logoSprite) {
-        float logoScale = scale * 0.5f;
-        _logoSprite->setScale(logoScale, logoScale);
-
-        float logoWidth = _logoSprite->getTextureWidth() * logoScale;
-        float logoX = (windowWidth / 2.0f) - (logoWidth / 2.0f);
-        float logoY = 50.0f * scaleH;
-        _logoSprite->setPosition(logoX, logoY);
-        unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
-        _logoSprite->setAlpha(alpha);
-
-        _graphics.drawSprite(*_logoSprite);
+    if (filterTexture) {
+        _graphics.setRenderTarget(nullptr);
+        _colorBlindFilter.endCaptureAndApply(_window);
     }
 }
 

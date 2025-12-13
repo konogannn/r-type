@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Button.hpp"
+#include "ColorBlindFilter.hpp"
 #include "src/Background.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/graphics/SpriteSFML.hpp"
@@ -84,6 +85,7 @@ class Menu {
     std::unique_ptr<rtype::ISprite> _logoSprite;
     std::vector<Button> _buttons;
     std::string _fontPath;
+    ColorBlindFilter& _colorBlindFilter;
 
     bool _isFadingOut;
     float _uiAlpha;
