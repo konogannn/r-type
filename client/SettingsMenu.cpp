@@ -51,8 +51,6 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     for (auto& button : _resolutionButtons) {
         button.setActive(button.getResolution() == _currentResolution);
     }
-
-    // Load color blind filter setting
     int colorBlindMode = _config.getInt("colorBlindMode", 0);
     _colorBlindSelection.setSelectedIndex(colorBlindMode);
     _colorBlindFilter.setMode(ColorBlindFilter::indexToMode(colorBlindMode));
@@ -305,8 +303,6 @@ void SettingsMenu::render()
     if (_background) {
         _graphics.drawSprite(*_background);
     }
-
-    _graphics.drawRectangle(0, 0, windowWidth, windowHeight, 0, 0, 0);
 
     unsigned int titleSize = static_cast<unsigned int>(48 * scale);
     float titleWidth = _graphics.getTextWidth("SETTINGS", titleSize, _fontPath);
@@ -635,8 +631,7 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
 
 void SettingsMenu::renderColorBlindSelection(float scale)
 {
-    unsigned int fontSize = static_cast<unsigned int>(20 * scale);
-    unsigned int labelSize = static_cast<unsigned int>(18 * scale);
+    unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
     unsigned char r, g, b;
     int mouseX = _input.getMouseX();
@@ -675,30 +670,13 @@ void SettingsMenu::renderColorBlindSelection(float scale)
                             _colorBlindSelection.getY(), borderThickness,
                             _colorBlindSelection.getHeight(), 100, 150, 255);
 
-    float labelX = _colorBlindSelection.getX() + 10.0f * scale;
-    float labelY = _colorBlindSelection.getY() + 8.0f * scale;
-    _graphics.drawText(_colorBlindSelection.getLabel(), labelX, labelY,
-                       labelSize, 200, 200, 200, _fontPath);
-
-    std::string selectedText = _colorBlindSelection.getSelectedOption();
-    float selectedTextWidth =
-        _graphics.getTextWidth(selectedText, fontSize, _fontPath);
-    float selectedX = _colorBlindSelection.getX() +
-                      _colorBlindSelection.getWidth() - selectedTextWidth -
-                      10.0f * scale;
-    float selectedY = _colorBlindSelection.getY() + 15.0f * scale;
-    _graphics.drawText(selectedText, selectedX, selectedY, fontSize, 255, 200,
-                       100, _fontPath);
-
-    float arrowX = _colorBlindSelection.getX() +
-                   _colorBlindSelection.getWidth() - selectedTextWidth -
-                   30.0f * scale;
-    _graphics.drawText("<", arrowX - 15.0f * scale, selectedY, fontSize, 150,
-                       150, 150, _fontPath);
-    _graphics.drawText(">",
-                       _colorBlindSelection.getX() +
-                           _colorBlindSelection.getWidth() - 15.0f * scale,
-                       selectedY, fontSize, 150, 150, 150, _fontPath);
+    std::string displayText = _colorBlindSelection.getSelectedOption();
+    float textWidth = _graphics.getTextWidth(displayText, fontSize, _fontPath);
+    float textX = _colorBlindSelection.getX() +
+                  (_colorBlindSelection.getWidth() / 2.0f) - (textWidth / 2.0f);
+    float textY = _colorBlindSelection.getY() + 15.0f * scale;
+    _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255,
+                       _fontPath);
 }
 
 }  // namespace rtype
