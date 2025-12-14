@@ -147,10 +147,9 @@ void Game::update(float deltaTime)
             }
         }
 
-        // Throttle input sending to ~60Hz max (reduce network spam)
-        if (inputMask != 0 && _gameState->isConnected()) {
+        if (inputMask != 0 && _gameState->isConnected() && _window.hasFocus()) {
             auto currentTime = std::chrono::steady_clock::now();
-            const auto inputCooldown = std::chrono::milliseconds(16);  // ~60Hz
+            const auto inputCooldown = std::chrono::milliseconds(16);
             if (currentTime - _lastInputTime >= inputCooldown) {
                 _gameState->sendInput(inputMask);
                 _lastInputTime = currentTime;
