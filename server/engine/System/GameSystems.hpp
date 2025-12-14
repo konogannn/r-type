@@ -384,6 +384,77 @@ class CollisionSystem : public ISystem {
             }
         }
 
+        auto players =
+            entityManager
+                .getEntitiesWith<Position, Player, Health, BoundingBox>();
+
+        for (auto& playerEntity : players) {
+            auto* playerPos =
+                entityManager.getComponent<Position>(playerEntity);
+            auto* playerHealth =
+                entityManager.getComponent<Health>(playerEntity);
+            auto* playerBox =
+                entityManager.getComponent<BoundingBox>(playerEntity);
+
+            if (!playerPos || !playerHealth || !playerBox) continue;
+
+            bool playerAlreadyMarked = false;
+            for (EntityId id : _immediateDestroyList) {
+                if (id == playerEntity.getId()) {
+                    playerAlreadyMarked = true;
+                    break;
+                }
+            }
+            if (playerAlreadyMarked) continue;
+
+            for (auto& enemyEntity : enemies) {
+                auto* enemyPos =
+                    entityManager.getComponent<Position>(enemyEntity);
+                auto* enemyBox =
+                    entityManager.getComponent<BoundingBox>(enemyEntity);
+
+                if (!enemyPos || !enemyBox) continue;
+
+                bool enemyAlreadyMarked = false;
+                for (EntityId id : _immediateDestroyList) {
+                    if (id == enemyEntity.getId()) {
+                        enemyAlreadyMarked = true;
+                        break;
+                    }
+                }
+                if (enemyAlreadyMarked) continue;
+
+                if (checkCollision(*playerPos, *playerBox, *enemyPos,
+                                   *enemyBox)) {
+                    playerHealth->takeDamage(20.0f);
+
+                    auto* enemyNetEntity =
+                        entityManager.getComponent<NetworkEntity>(enemyEntity);
+                    if (enemyNetEntity) {
+                        _entitiesToDestroy.push_back(
+                            {enemyEntity.getId(), enemyNetEntity->entityId,
+                             enemyNetEntity->entityType});
+                    }
+                    _immediateDestroyList.push_back(enemyEntity.getId());
+
+                    if (!playerHealth->isAlive()) {
+                        auto* playerNetEntity =
+                            entityManager.getComponent<NetworkEntity>(
+                                playerEntity);
+                        if (playerNetEntity) {
+                            _entitiesToDestroy.push_back(
+                                {playerEntity.getId(),
+                                 playerNetEntity->entityId,
+                                 playerNetEntity->entityType});
+                        }
+                        _immediateDestroyList.push_back(playerEntity.getId());
+                    }
+
+                    break;
+                }
+            }
+        }
+
         for (EntityId id : _immediateDestroyList) {
             entityManager.destroyEntity(id);
         }
