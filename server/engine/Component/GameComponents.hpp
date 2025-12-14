@@ -141,4 +141,14 @@ struct Lifetime : public ComponentBase<Lifetime> {
     Lifetime(float duration = 5.0f) : remaining(duration) {}
 };
 
+/**
+ * @brief MarkedForDestruction component - Tags entity for deferred destruction
+ * 
+ * Entities with this component will be destroyed after network notification
+ * is sent in the next frame.
+ */
+struct MarkedForDestruction : public ComponentBase<MarkedForDestruction> {
+    MarkedForDestruction() = default;
+};
+
 }  // namespace engine

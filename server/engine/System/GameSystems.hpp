@@ -87,9 +87,11 @@ class LifetimeSystem : public System<Lifetime> {
         _entitiesToDestroy.clear();
         System<Lifetime>::update(deltaTime, entityManager);
 
-        // Destroy entities after iteration
         for (EntityId id : _entitiesToDestroy) {
-            entityManager.destroyEntity(id);
+            Entity* entity = entityManager.getEntity(id);
+            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+                entityManager.addComponent(*entity, MarkedForDestruction());
+            }
         }
     }
 };
@@ -195,9 +197,11 @@ class BulletCleanupSystem : public System<Position, Bullet> {
         _entitiesToDestroy.clear();
         System<Position, Bullet>::update(deltaTime, entityManager);
 
-        // Destroy out-of-bounds bullets
         for (EntityId id : _entitiesToDestroy) {
-            entityManager.destroyEntity(id);
+            Entity* entity = entityManager.getEntity(id);
+            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+                entityManager.addComponent(*entity, MarkedForDestruction());
+            }
         }
     }
 };
@@ -228,9 +232,11 @@ class EnemyCleanupSystem : public System<Position, Enemy> {
         _entitiesToDestroy.clear();
         System<Position, Enemy>::update(deltaTime, entityManager);
 
-        // Destroy off-screen enemies
         for (EntityId id : _entitiesToDestroy) {
-            entityManager.destroyEntity(id);
+            Entity* entity = entityManager.getEntity(id);
+            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+                entityManager.addComponent(*entity, MarkedForDestruction());
+            }
         }
     }
 };
@@ -295,25 +301,24 @@ class CollisionSystem : public ISystem {
 
                 if (checkCollision(*bulletPos, *bulletBox, *enemyPos,
                                    *enemyBox)) {
-                    // Damage enemy
                     enemyHealth->takeDamage(bullet->damage);
 
-                    // Mark bullet for destruction
                     _entitiesToDestroy.push_back(bulletEntity.getId());
 
-                    // If enemy is dead, mark it too
                     if (!enemyHealth->isAlive()) {
                         _entitiesToDestroy.push_back(enemyEntity.getId());
                     }
 
-                    break;  // Bullet can only hit one enemy
+                    break;
                 }
             }
         }
 
-        // Destroy entities
         for (EntityId id : _entitiesToDestroy) {
-            entityManager.destroyEntity(id);
+            Entity* entity = entityManager.getEntity(id);
+            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+                entityManager.addComponent(*entity, MarkedForDestruction());
+            }
         }
     }
 };
