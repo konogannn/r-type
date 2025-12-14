@@ -89,7 +89,8 @@ class LifetimeSystem : public System<Lifetime> {
 
         for (EntityId id : _entitiesToDestroy) {
             Entity* entity = entityManager.getEntity(id);
-            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+            if (entity &&
+                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
                 entityManager.addComponent(*entity, MarkedForDestruction());
             }
         }
@@ -199,7 +200,8 @@ class BulletCleanupSystem : public System<Position, Bullet> {
 
         for (EntityId id : _entitiesToDestroy) {
             Entity* entity = entityManager.getEntity(id);
-            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+            if (entity &&
+                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
                 entityManager.addComponent(*entity, MarkedForDestruction());
             }
         }
@@ -234,7 +236,8 @@ class EnemyCleanupSystem : public System<Position, Enemy> {
 
         for (EntityId id : _entitiesToDestroy) {
             Entity* entity = entityManager.getEntity(id);
-            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+            if (entity &&
+                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
                 entityManager.addComponent(*entity, MarkedForDestruction());
             }
         }
@@ -316,7 +319,8 @@ class CollisionSystem : public ISystem {
 
         for (EntityId id : _entitiesToDestroy) {
             Entity* entity = entityManager.getEntity(id);
-            if (entity && !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
+            if (entity &&
+                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
                 entityManager.addComponent(*entity, MarkedForDestruction());
             }
         }

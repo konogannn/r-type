@@ -143,7 +143,7 @@ struct Lifetime : public ComponentBase<Lifetime> {
 
 /**
  * @brief MarkedForDestruction component - Tags entity for deferred destruction
- * 
+ *
  * Entities with this component will be destroyed after network notification
  * is sent in the next frame.
  */

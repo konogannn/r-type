@@ -70,7 +70,7 @@ class GameLoop {
     // Player tracking
     std::unordered_map<uint32_t, EntityId> _clientToEntity;
     uint32_t _nextBulletId;
-    
+
     // Pending entity destructions (sent to network before actual destruction)
     std::vector<EntityId> _pendingDestructions;
 
@@ -161,9 +161,10 @@ class GameLoop {
      * @param clientId The client ID
      */
     void removePlayer(uint32_t clientId);
-    
+
     /**
-     * @brief Queue an entity for destruction (will be destroyed after network sync)
+     * @brief Queue an entity for destruction (will be destroyed after network
+     * sync)
      * @param entityId The entity to destroy
      */
     void queueEntityDestruction(EntityId entityId);

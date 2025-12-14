@@ -276,9 +276,8 @@ void NetworkServer::handleReceive(const boost::system::error_code& error,
                 LogLevel::ERROR_L, "NetworkServer");
         }
     } else if (error != boost::asio::error::operation_aborted) {
-        Logger::getInstance().log(
-            "Receive error: " + error.message(),
-            LogLevel::ERROR_L, "NetworkServer");
+        Logger::getInstance().log("Receive error: " + error.message(),
+                                  LogLevel::ERROR_L, "NetworkServer");
     }
 
     if (_running) {

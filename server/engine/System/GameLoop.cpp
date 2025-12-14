@@ -177,12 +177,14 @@ void GameLoop::processInputCommands(float deltaTime)
 
 void GameLoop::generateNetworkUpdates()
 {
-    auto markedEntities = _entityManager.getEntitiesWith<Position, NetworkEntity, MarkedForDestruction>();
-    
+    auto markedEntities =
+        _entityManager
+            .getEntitiesWith<Position, NetworkEntity, MarkedForDestruction>();
+
     for (auto& entity : markedEntities) {
         auto* pos = _entityManager.getComponent<Position>(entity);
         auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
-        
+
         if (pos && netEntity) {
             EntityStateUpdate update;
             update.entityId = netEntity->entityId;
@@ -193,21 +195,21 @@ void GameLoop::generateNetworkUpdates()
             update.destroyed = true;
             _outputQueue.push(update);
         }
-        
+
         _pendingDestructions.push_back(entity.getId());
     }
-    
+
     for (EntityId entityId : _pendingDestructions) {
         _entityManager.destroyEntity(entityId);
     }
     _pendingDestructions.clear();
-    
+
     auto entities = _entityManager.getEntitiesWith<Position, NetworkEntity>();
 
     for (auto& entity : entities) {
         auto* pos = _entityManager.getComponent<Position>(entity);
         auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
-        
+
         if (netEntity->needsSync) {
             EntityStateUpdate update;
             update.entityId = netEntity->entityId;
