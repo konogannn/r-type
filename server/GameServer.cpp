@@ -32,9 +32,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
 
     setupNetworkCallbacks();
 
-    _gameLoop.setOnPlayerDeath([this](uint32_t clientId) {
-        onPlayerDeath(clientId);
-    });
+    _gameLoop.setOnPlayerDeath(
+        [this](uint32_t clientId) { onPlayerDeath(clientId); });
 }
 
 GameServer::~GameServer() { stop(); }
@@ -87,7 +86,7 @@ void GameServer::onClientDisconnected(uint32_t clientId)
 
         std::cout << "[Game] Successfully handled client " << clientId
                   << " disconnection.";
-        
+
         if (_playerCount.load() == 0 && _gameStarted) {
             std::cout << " No players remaining, stopping game..." << std::endl;
             _gameStarted = false;
@@ -169,9 +168,10 @@ void GameServer::onPlayerDeath(uint32_t clientId)
         _playerCount--;
         std::cout << "[Game] Players remaining: " << _playerCount.load()
                   << std::endl;
-        
+
         if (_playerCount.load() == 0 && _gameStarted) {
-            std::cout << "[Game] All players died, stopping game..." << std::endl;
+            std::cout << "[Game] All players died, stopping game..."
+                      << std::endl;
             _gameStarted = false;
         }
     }
@@ -217,7 +217,8 @@ void GameServer::processNetworkUpdates()
     const auto targetFrameTime = std::chrono::milliseconds(16);
     std::vector<engine::EntityStateUpdate> entityUpdates;
 
-    while (_networkServer.isRunning() && _gameLoop.isRunning() && _gameStarted) {
+    while (_networkServer.isRunning() && _gameLoop.isRunning() &&
+           _gameStarted) {
         auto frameStart = std::chrono::steady_clock::now();
 
         try {
@@ -280,12 +281,12 @@ void GameServer::processNetworkUpdates()
 void GameServer::resetGameState()
 {
     std::cout << "[Game] Resetting game state..." << std::endl;
-    
+
     std::lock_guard<std::mutex> lock(_playerMutex);
     _playersReady.clear();
     _playerCount = 0;
     _gameStarted = false;
-    
+
     std::cout << "[Lobby] Ready for new players" << std::endl;
 }
 
@@ -309,7 +310,7 @@ void GameServer::run()
 
             std::cout << "[Game] Shutting down game loop..." << std::endl;
             _gameLoop.stop();
-            
+
             resetGameState();
         }
     } catch (const std::exception& e) {
