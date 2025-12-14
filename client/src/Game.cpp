@@ -30,7 +30,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _fpsCounter(0),
       _currentFps(0),
       _scale(1.0f),
-      _lastShootTime(std::chrono::steady_clock::now())
+      _lastShootTime(std::chrono::steady_clock::now()),
+      _lastInputTime(std::chrono::steady_clock::now())
 {
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
@@ -146,8 +147,14 @@ void Game::update(float deltaTime)
             }
         }
 
+        // Throttle input sending to ~60Hz max (reduce network spam)
         if (inputMask != 0 && _gameState->isConnected()) {
-            _gameState->sendInput(inputMask);
+            auto currentTime = std::chrono::steady_clock::now();
+            const auto inputCooldown = std::chrono::milliseconds(16); // ~60Hz
+            if (currentTime - _lastInputTime >= inputCooldown) {
+                _gameState->sendInput(inputMask);
+                _lastInputTime = currentTime;
+            }
         }
     }
 
