@@ -125,6 +125,142 @@ class INetworkServer : public INetworkBase {
      */
     virtual bool sendScoreUpdate(uint32_t clientId, uint32_t score) = 0;
 
+    // --- Extended Game Event Notifications ---
+
+    /**
+     * @brief Notify clients that a monster spawned.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param monsterId Unique monster identifier.
+     * @param monsterType Type of monster.
+     * @param x Spawn X position.
+     * @param y Spawn Y position.
+     * @return true If sent successfully.
+     */
+    virtual bool sendMonsterSpawned(uint32_t clientId, uint32_t monsterId,
+                                    uint8_t monsterType, float x, float y) = 0;
+
+    /**
+     * @brief Notify clients that a monster moved.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param monsterId Monster identifier.
+     * @param x New X position.
+     * @param y New Y position.
+     * @param velocityX X velocity.
+     * @param velocityY Y velocity.
+     * @return true If sent successfully.
+     */
+    virtual bool sendMonsterMoved(uint32_t clientId, uint32_t monsterId,
+                                  float x, float y, float velocityX = 0.0f,
+                                  float velocityY = 0.0f) = 0;
+
+    /**
+     * @brief Notify clients that a monster fired.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param monsterId Monster that fired.
+     * @param projectileId ID of created projectile.
+     * @param x Projectile X position.
+     * @param y Projectile Y position.
+     * @param velocityX Projectile X velocity.
+     * @param velocityY Projectile Y velocity.
+     * @return true If sent successfully.
+     */
+    virtual bool sendMonsterFired(uint32_t clientId, uint32_t monsterId,
+                                  uint32_t projectileId, float x, float y,
+                                  float velocityX, float velocityY) = 0;
+
+    /**
+     * @brief Notify clients that a monster was killed.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param monsterId Monster that was killed.
+     * @param killerId Entity that killed it.
+     * @param killerType Type of killer (1=player, 2=environment).
+     * @return true If sent successfully.
+     */
+    virtual bool sendMonsterKilled(uint32_t clientId, uint32_t monsterId,
+                                   uint32_t killerId, uint8_t killerType) = 0;
+
+    /**
+     * @brief Notify clients that a player moved.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param playerId Player identifier.
+     * @param x New X position.
+     * @param y New Y position.
+     * @return true If sent successfully.
+     */
+    virtual bool sendPlayerMoved(uint32_t clientId, uint32_t playerId, float x,
+                                 float y) = 0;
+
+    /**
+     * @brief Notify clients that a player fired.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param playerId Player that fired.
+     * @param projectileId ID of created projectile.
+     * @param x Projectile X position.
+     * @param y Projectile Y position.
+     * @return true If sent successfully.
+     */
+    virtual bool sendPlayerFired(uint32_t clientId, uint32_t playerId,
+                                 uint32_t projectileId, float x, float y) = 0;
+
+    /**
+     * @brief Notify clients that a player was killed.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param playerId Player that was killed.
+     * @param killerId Entity that killed them.
+     * @param killerType Type of killer.
+     * @return true If sent successfully.
+     */
+    virtual bool sendPlayerKilled(uint32_t clientId, uint32_t playerId,
+                                  uint32_t killerId, uint8_t killerType) = 0;
+
+    /**
+     * @brief Notify clients that a player took damage.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param playerId Player that was damaged.
+     * @param attackerId Entity that caused damage.
+     * @param damageAmount Amount of damage.
+     * @param remainingHealth Remaining health.
+     * @return true If sent successfully.
+     */
+    virtual bool sendPlayerDamaged(uint32_t clientId, uint32_t playerId,
+                                   uint32_t attackerId, float damageAmount,
+                                   float remainingHealth) = 0;
+
+    /**
+     * @brief Notify clients that another client crashed/disconnected.
+     *
+     * @param clientId Target client ID (0 to broadcast to all except crashed).
+     * @param crashedClientId Client that crashed.
+     * @param playerId Player ID of crashed client.
+     * @param reason Crash reason (0=unknown, 1=timeout, 2=disconnect, 3=crash).
+     * @return true If sent successfully.
+     */
+    virtual bool sendClientCrashed(uint32_t clientId, uint32_t crashedClientId,
+                                   uint32_t playerId, uint8_t reason) = 0;
+
+    /**
+     * @brief Send generic extensible game event.
+     *
+     * @param clientId Target client ID (0 to broadcast).
+     * @param eventType Event type identifier.
+     * @param entityId Primary entity ID.
+     * @param secondaryId Secondary entity ID.
+     * @param data Event-specific data (32 bytes max).
+     * @param dataSize Size of data.
+     * @return true If sent successfully.
+     */
+    virtual bool sendGameEvent(uint32_t clientId, uint16_t eventType,
+                               uint32_t entityId, uint32_t secondaryId,
+                               const uint8_t* data, size_t dataSize) = 0;
+
     /**
      * @brief Broadcast data to all connected clients.
      *
