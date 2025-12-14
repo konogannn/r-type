@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "GameSystems.hpp"
+
 namespace engine {
 
 GameLoop::GameLoop(float targetFPS)
@@ -26,7 +28,6 @@ void GameLoop::addSystem(std::unique_ptr<ISystem> system)
 {
     _systems.push_back(std::move(system));
 
-    // Sort systems by priority
     std::sort(_systems.begin(), _systems.end(),
               [](const auto& a, const auto& b) {
                   return a->getPriority() < b->getPriority();
@@ -36,10 +37,9 @@ void GameLoop::addSystem(std::unique_ptr<ISystem> system)
 void GameLoop::start()
 {
     if (_running.load()) {
-        return;  // Already running
+        return;
     }
 
-    // Initialize all systems
     for (auto& system : _systems) {
         system->initialize(_entityManager);
     }
@@ -51,12 +51,10 @@ void GameLoop::start()
 void GameLoop::stop()
 {
     if (!_running.load()) {
-        return;  // Not running
+        return;
     }
-
     _running.store(false);
 
-    // Shutdown queues to unblock any waiting threads
     _inputQueue.shutdown();
     _outputQueue.shutdown();
 
@@ -64,7 +62,6 @@ void GameLoop::stop()
         _gameThread.join();
     }
 
-    // Cleanup systems
     for (auto& system : _systems) {
         system->cleanup(_entityManager);
     }
@@ -80,23 +77,76 @@ void GameLoop::gameThreadLoop()
             std::chrono::duration<float>(currentTime - lastUpdateTime).count();
         lastUpdateTime = currentTime;
 
-        // Cap delta time to prevent physics issues
         if (deltaTime > 0.1f) {
             deltaTime = 0.1f;
         }
 
-        // Process network input commands
         processInputCommands(deltaTime);
-
-        // Update all systems
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
+
+            if (system->getName() == "CollisionSystem") {
+                auto* collisionSystem =
+                    dynamic_cast<engine::CollisionSystem*>(system.get());
+                if (collisionSystem) {
+                    const auto& destroyed =
+                        collisionSystem->getDestroyedEntities();
+                    for (const auto& info : destroyed) {
+                        EntityStateUpdate update;
+                        update.entityId = info.networkEntityId;
+                        update.entityType = info.entityType;
+                        update.x = 0.0f;
+                        update.y = 0.0f;
+                        update.spawned = false;
+                        update.destroyed = true;
+                        _outputQueue.push(update);
+                    }
+                    collisionSystem->clearDestroyedEntities();
+                }
+            }
+
+            else if (system->getName() == "BulletCleanupSystem") {
+                auto* bulletCleanup =
+                    dynamic_cast<engine::BulletCleanupSystem*>(system.get());
+                if (bulletCleanup) {
+                    const auto& destroyed =
+                        bulletCleanup->getDestroyedEntities();
+                    for (const auto& info : destroyed) {
+                        EntityStateUpdate update;
+                        update.entityId = info.networkEntityId;
+                        update.entityType = info.entityType;
+                        update.x = 0.0f;
+                        update.y = 0.0f;
+                        update.spawned = false;
+                        update.destroyed = true;
+                        _outputQueue.push(update);
+                    }
+                    bulletCleanup->clearDestroyedEntities();
+                }
+            }
+
+            else if (system->getName() == "EnemyCleanupSystem") {
+                auto* enemyCleanup =
+                    dynamic_cast<engine::EnemyCleanupSystem*>(system.get());
+                if (enemyCleanup) {
+                    const auto& destroyed =
+                        enemyCleanup->getDestroyedEntities();
+                    for (const auto& info : destroyed) {
+                        EntityStateUpdate update;
+                        update.entityId = info.networkEntityId;
+                        update.entityType = info.entityType;
+                        update.x = 0.0f;
+                        update.y = 0.0f;
+                        update.spawned = false;
+                        update.destroyed = true;
+                        _outputQueue.push(update);
+                    }
+                    enemyCleanup->clearDestroyedEntities();
+                }
+            }
         }
 
-        // Generate network updates
         generateNetworkUpdates();
-
-        // Sleep to maintain target FPS
         auto frameTime = std::chrono::steady_clock::now() - currentTime;
         if (frameTime < _targetFrameTime) {
             std::this_thread::sleep_for(_targetFrameTime - frameTime);
@@ -110,19 +160,17 @@ void GameLoop::processInputCommands(float deltaTime)
     _inputQueue.popAll(commands);
 
     for (const auto& cmd : commands) {
-        // Find player entity for this client
         auto it = _clientToEntity.find(cmd.clientId);
         if (it == _clientToEntity.end()) {
-            continue;  // Player not spawned yet
+            continue;
         }
 
         EntityId entityId = it->second;
         Entity* entity = _entityManager.getEntity(entityId);
         if (!entity) {
-            continue;  // Entity no longer exists
+            continue;
         }
 
-        // Get player components
         auto* pos = _entityManager.getComponent<Position>(*entity);
         auto* player = _entityManager.getComponent<Player>(*entity);
 
@@ -130,7 +178,6 @@ void GameLoop::processInputCommands(float deltaTime)
             continue;
         }
 
-        // Handle movement input
         const float MOVE_SPEED = 300.0f;
         const float MIN_X = 0.0f;
         const float MAX_X = 1800.0f;
@@ -145,7 +192,6 @@ void GameLoop::processInputCommands(float deltaTime)
         if (cmd.inputMask & 4) moveX -= MOVE_SPEED * deltaTime;  // Left
         if (cmd.inputMask & 8) moveX += MOVE_SPEED * deltaTime;  // Right
 
-        // Update position with bounds checking
         bool positionChanged = (moveX != 0.0f || moveY != 0.0f);
 
         pos->x += moveX;
@@ -156,7 +202,6 @@ void GameLoop::processInputCommands(float deltaTime)
         if (pos->y < MIN_Y) pos->y = MIN_Y;
         if (pos->y > MAX_Y) pos->y = MAX_Y;
 
-        // Mark for network sync if position changed
         if (positionChanged) {
             auto* netEntity =
                 _entityManager.getComponent<NetworkEntity>(*entity);
@@ -165,8 +210,7 @@ void GameLoop::processInputCommands(float deltaTime)
             }
         }
 
-        // Handle shooting input
-        if (cmd.inputMask & 16) {  // Shoot
+        if (cmd.inputMask & 16) {
             if (player->shootCooldown <= 0.0f) {
                 createBullet(entityId, cmd.clientId, *pos, true);
                 player->shootCooldown = player->shootDelay;
@@ -177,33 +221,6 @@ void GameLoop::processInputCommands(float deltaTime)
 
 void GameLoop::generateNetworkUpdates()
 {
-    auto markedEntities =
-        _entityManager
-            .getEntitiesWith<Position, NetworkEntity, MarkedForDestruction>();
-
-    for (auto& entity : markedEntities) {
-        auto* pos = _entityManager.getComponent<Position>(entity);
-        auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
-
-        if (pos && netEntity) {
-            EntityStateUpdate update;
-            update.entityId = netEntity->entityId;
-            update.entityType = netEntity->entityType;
-            update.x = pos->x;
-            update.y = pos->y;
-            update.spawned = false;
-            update.destroyed = true;
-            _outputQueue.push(update);
-        }
-
-        _pendingDestructions.push_back(entity.getId());
-    }
-
-    for (EntityId entityId : _pendingDestructions) {
-        _entityManager.destroyEntity(entityId);
-    }
-    _pendingDestructions.clear();
-
     auto entities = _entityManager.getEntitiesWith<Position, NetworkEntity>();
 
     for (auto& entity : entities) {
@@ -310,12 +327,13 @@ void GameLoop::queueEntityDestruction(EntityId entityId)
 
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
 {
-    auto players = _entityManager.getEntitiesWith<Position, NetworkEntity, Player>();
-    
+    auto players =
+        _entityManager.getEntitiesWith<Position, NetworkEntity, Player>();
+
     for (auto& entity : players) {
         auto* pos = _entityManager.getComponent<Position>(entity);
         auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
-        
+
         if (pos && netEntity) {
             EntityStateUpdate update;
             update.entityId = netEntity->entityId;
