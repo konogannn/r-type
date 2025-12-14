@@ -26,6 +26,8 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _isFullscreen(false),
       _title(title)
 {
+    _icon.loadFromFile("assets/icon/logo.png");
+    _window->setIcon(_icon.getSize().x, _icon.getSize().y, _icon.getPixelsPtr());
 }
 
 bool WindowSFML::isOpen() const { return _window->isOpen(); }
@@ -263,12 +265,14 @@ void WindowSFML::recreateWindow()
                                                      sf::Style::Fullscreen);
         _width = desktopMode.width;
         _height = desktopMode.height;
+        _window->setIcon(_icon.getSize().x, _icon.getSize().y, _icon.getPixelsPtr());
     } else {
         _window = std::make_unique<sf::RenderWindow>(
             sf::VideoMode(_windowedWidth, _windowedHeight), _title,
             sf::Style::Titlebar | sf::Style::Close);
         _width = _windowedWidth;
         _height = _windowedHeight;
+        _window->setIcon(_icon.getSize().x, _icon.getSize().y, _icon.getPixelsPtr());
     }
 
     _window->setFramerateLimit(60);
