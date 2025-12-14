@@ -13,6 +13,7 @@ add_subdirectory(Threading)
 set(ENGINE_SOURCES
     ${COMPONENT_MODULE_SOURCES}
     ${ENTITY_MODULE_SOURCES}
+    ${SYSTEM_MODULE_SOURCES}
 )
 
 # Export engine sources to parent scope (server)
