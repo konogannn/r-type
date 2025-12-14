@@ -67,17 +67,26 @@ void GameServer::onClientDisconnected(uint32_t clientId)
     std::cout << "[Network] Client " << clientId << " disconnected"
               << std::endl;
 
-    {
-        std::lock_guard<std::mutex> lock(_playerMutex);
-        if (_playersReady.find(clientId) != _playersReady.end()) {
-            _playersReady.erase(clientId);
-            _playerCount--;
-            std::cout << "[Lobby] Player left. Players in lobby: "
-                      << _playerCount.load() << std::endl;
+    try {
+        {
+            std::lock_guard<std::mutex> lock(_playerMutex);
+            if (_playersReady.find(clientId) != _playersReady.end()) {
+                _playersReady.erase(clientId);
+                _playerCount--;
+                std::cout << "[Lobby] Player left. Players in lobby: "
+                          << _playerCount.load() << std::endl;
+            }
         }
-    }
 
-    _gameLoop.removePlayer(clientId);
+        _gameLoop.removePlayer(clientId);
+        
+        std::cout << "[Game] Successfully handled client " << clientId
+                  << " disconnection. Server continues running." << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "[GameServer] Error handling client disconnect: "
+                  << e.what() << std::endl;
+        std::cerr << "[GameServer] Server remains operational" << std::endl;
+    }
 }
 
 void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
@@ -168,21 +177,52 @@ void GameServer::processNetworkUpdates()
     while (_networkServer.isRunning() && _gameLoop.isRunning()) {
         auto frameStart = std::chrono::steady_clock::now();
 
-        _networkServer.update();
+        try {
+            _networkServer.update();
 
-        entityUpdates.clear();
-        _gameLoop.popEntityUpdates(entityUpdates);
+            entityUpdates.clear();
+            _gameLoop.popEntityUpdates(entityUpdates);
 
-        for (const auto& update : entityUpdates) {
-            if (update.spawned) {
-                _networkServer.sendEntitySpawn(
-                    0, update.entityId, update.entityType, update.x, update.y);
-            } else if (update.destroyed) {
-                _networkServer.sendEntityDead(0, update.entityId);
-            } else {
-                _networkServer.sendEntityPosition(0, update.entityId, update.x,
-                                                  update.y);
+            for (const auto& update : entityUpdates) {
+                try {
+                    if (update.spawned) {
+                        _networkServer.sendEntitySpawn(
+                            0, update.entityId, update.entityType, update.x, update.y);
+                        
+                        if (update.entityType == 2) {
+                            _networkServer.sendMonsterSpawned(
+                                0, update.entityId, 0, update.x, update.y);
+                        }
+                    } else if (update.destroyed) {
+                        _networkServer.sendEntityDead(0, update.entityId);
+                        
+                        if (update.entityType == 2) {
+                            _networkServer.sendMonsterKilled(
+                                0, update.entityId, 0, 1);
+                        } else if (update.entityType == 0) {
+                            _networkServer.sendPlayerKilled(
+                                0, update.entityId, 0, 2);
+                        }
+                    } else {
+                        _networkServer.sendEntityPosition(
+                            0, update.entityId, update.x, update.y);
+                        
+                        if (update.entityType == 0) {
+                            _networkServer.sendPlayerMoved(
+                                0, update.entityId, update.x, update.y);
+                        } else if (update.entityType == 2) {
+                            _networkServer.sendMonsterMoved(
+                                0, update.entityId, update.x, update.y, 0.0f, 0.0f);
+                        }
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "[GameServer] Error processing entity update: "
+                              << e.what() << std::endl;
+                }
             }
+        } catch (const std::exception& e) {
+            std::cerr << "[GameServer] Error in network update loop: "
+                      << e.what() << std::endl;
         }
 
         auto frameTime = std::chrono::steady_clock::now() - frameStart;
@@ -194,22 +234,34 @@ void GameServer::processNetworkUpdates()
 
 void GameServer::run()
 {
-    waitForPlayers();
+    try {
+        waitForPlayers();
 
-    if (!_networkServer.isRunning()) {
-        std::cout << "[Server] Server stopped before game could start"
-                  << std::endl;
-        return;
+        if (!_networkServer.isRunning()) {
+            std::cout << "[Server] Server stopped before game could start"
+                      << std::endl;
+            return;
+        }
+
+        _gameLoop.start();
+        std::cout << "[Game] Game loop started at 60 FPS with "
+                  << _playerCount.load() << " player(s)" << std::endl;
+
+        processNetworkUpdates();
+
+        std::cout << "[Game] Shutting down game loop..." << std::endl;
+        _gameLoop.stop();
+    } catch (const std::exception& e) {
+        std::cerr << "[GameServer FATAL] Unhandled exception in run(): "
+                  << e.what() << std::endl;
+        try {
+            _gameLoop.stop();
+            _networkServer.stop();
+        } catch (...) {
+            std::cerr << "[GameServer] Error during emergency shutdown"
+                      << std::endl;
+        }
     }
-
-    _gameLoop.start();
-    std::cout << "[Game] Game loop started at 60 FPS with "
-              << _playerCount.load() << " player(s)" << std::endl;
-
-    processNetworkUpdates();
-
-    std::cout << "[Game] Shutting down game loop..." << std::endl;
-    _gameLoop.stop();
 }
 
 void GameServer::stop()
