@@ -118,7 +118,7 @@ class NetworkMessage {
      * @return EntityDeadPacket ready to send
      */
     static ::EntityDeadPacket createEntityDeadPacket(uint32_t entityId,
-                                                      uint32_t sequenceId);
+                                                     uint32_t sequenceId);
 
     /**
      * @brief Create score update packet
@@ -127,7 +127,7 @@ class NetworkMessage {
      * @return ScoreUpdatePacket ready to send
      */
     static ::ScoreUpdatePacket createScoreUpdatePacket(uint32_t score,
-                                                            uint32_t sequenceId);
+                                                       uint32_t sequenceId);
 
     /**
      * @brief Validate packet header

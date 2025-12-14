@@ -52,18 +52,18 @@ enum OpCode : uint8_t {
     S2C_ENTITY_DEAD = 13,  ///< Despawn/Destroy an entity.
     S2C_MAP = 14,          ///< Map information (unused/reserved).
     S2C_SCORE_UPDATE = 15,  ///< Update current game score.
-    
+
     // --- Extended S2C Events (for comprehensive game notifications) ---
-    S2C_MONSTER_SPAWNED = 16,   ///< Monster/enemy has spawned
-    S2C_MONSTER_MOVED = 17,     ///< Monster/enemy has moved
-    S2C_MONSTER_FIRED = 18,     ///< Monster/enemy has fired a projectile
-    S2C_MONSTER_KILLED = 19,    ///< Monster/enemy was destroyed
-    S2C_PLAYER_MOVED = 20,      ///< Another player has moved
-    S2C_PLAYER_FIRED = 21,      ///< Another player has fired
-    S2C_PLAYER_KILLED = 22,     ///< A player was killed
-    S2C_PLAYER_DAMAGED = 23,    ///< A player took damage
-    S2C_CLIENT_CRASHED = 24,    ///< Another client has crashed/disconnected
-    S2C_GAME_EVENT = 25,        ///< Generic extensible game event
+    S2C_MONSTER_SPAWNED = 16,  ///< Monster/enemy has spawned
+    S2C_MONSTER_MOVED = 17,    ///< Monster/enemy has moved
+    S2C_MONSTER_FIRED = 18,    ///< Monster/enemy has fired a projectile
+    S2C_MONSTER_KILLED = 19,   ///< Monster/enemy was destroyed
+    S2C_PLAYER_MOVED = 20,     ///< Another player has moved
+    S2C_PLAYER_FIRED = 21,     ///< Another player has fired
+    S2C_PLAYER_KILLED = 22,    ///< A player was killed
+    S2C_PLAYER_DAMAGED = 23,   ///< A player took damage
+    S2C_CLIENT_CRASHED = 24,   ///< Another client has crashed/disconnected
+    S2C_GAME_EVENT = 25,       ///< Generic extensible game event
 };
 
 /**
@@ -181,10 +181,10 @@ struct ScoreUpdatePacket {
  */
 struct MonsterSpawnedPacket {
     Header header;
-    uint32_t monsterId;  ///< Unique monster identifier
-    uint8_t monsterType; ///< Type of monster (0=BASIC, 1=FAST, 2=TANK, etc.)
-    float x;             ///< Spawn X position
-    float y;             ///< Spawn Y position
+    uint32_t monsterId;   ///< Unique monster identifier
+    uint8_t monsterType;  ///< Type of monster (0=BASIC, 1=FAST, 2=TANK, etc.)
+    float x;              ///< Spawn X position
+    float y;              ///< Spawn Y position
 };
 
 /**
@@ -220,9 +220,9 @@ struct MonsterFiredPacket {
  */
 struct MonsterKilledPacket {
     Header header;
-    uint32_t monsterId;      ///< Monster that was killed
-    uint32_t killerId;       ///< Entity that killed it (player ID or 0)
-    uint8_t killerType;      ///< Type: 0=unknown, 1=player, 2=environment
+    uint32_t monsterId;  ///< Monster that was killed
+    uint32_t killerId;   ///< Entity that killed it (player ID or 0)
+    uint8_t killerType;  ///< Type: 0=unknown, 1=player, 2=environment
 };
 
 /**
@@ -231,9 +231,9 @@ struct MonsterKilledPacket {
  */
 struct PlayerMovedPacket {
     Header header;
-    uint32_t playerId;   ///< Player identifier
-    float x;             ///< New X position
-    float y;             ///< New Y position
+    uint32_t playerId;  ///< Player identifier
+    float x;            ///< New X position
+    float y;            ///< New Y position
 };
 
 /**
@@ -277,25 +277,25 @@ struct PlayerDamagedPacket {
  */
 struct ClientCrashedPacket {
     Header header;
-    uint32_t clientId;   ///< Client that crashed/disconnected
-    uint32_t playerId;   ///< Player ID associated with the client
-    uint8_t reason;      ///< Reason: 0=unknown, 1=timeout, 2=disconnect, 3=crash
+    uint32_t clientId;  ///< Client that crashed/disconnected
+    uint32_t playerId;  ///< Player ID associated with the client
+    uint8_t reason;     ///< Reason: 0=unknown, 1=timeout, 2=disconnect, 3=crash
 };
 
 /**
  * @brief Generic extensible game event packet for future additions
  * OpCode: S2C_GAME_EVENT
- * 
+ *
  * This packet provides an extensible mechanism for adding new event types
  * without requiring protocol changes. The eventType field determines how
  * to interpret the data payload.
  */
 struct GameEventPacket {
     Header header;
-    uint16_t eventType;     ///< Event type identifier
-    uint32_t entityId;      ///< Primary entity involved (or 0)
-    uint32_t secondaryId;   ///< Secondary entity involved (or 0)
-    uint8_t data[32];       ///< Flexible data payload for event-specific info
+    uint16_t eventType;    ///< Event type identifier
+    uint32_t entityId;     ///< Primary entity involved (or 0)
+    uint32_t secondaryId;  ///< Secondary entity involved (or 0)
+    uint8_t data[32];      ///< Flexible data payload for event-specific info
 };
 
 #pragma pack(pop)
