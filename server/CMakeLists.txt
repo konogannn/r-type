@@ -12,6 +12,7 @@ add_subdirectory(network)
 # Collect all source files for the server executable
 set(SERVER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameServer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/network/NetworkServer.cpp
     ${ENGINE_MODULE_SOURCES}
 )
