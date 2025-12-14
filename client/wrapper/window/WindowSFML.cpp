@@ -29,8 +29,8 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
 {
     _icon.loadFromFile(PathHelper::getAssetPath("icon/logo.png"));
     if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
-    _window->setIcon(_icon.getSize().x, _icon.getSize().y,
-                     _icon.getPixelsPtr());
+        _window->setIcon(_icon.getSize().x, _icon.getSize().y,
+                         _icon.getPixelsPtr());
 }
 
 bool WindowSFML::isOpen() const { return _window->isOpen(); }
@@ -270,7 +270,7 @@ void WindowSFML::recreateWindow()
         _height = desktopMode.height;
         if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
             _window->setIcon(_icon.getSize().x, _icon.getSize().y,
-                            _icon.getPixelsPtr());
+                             _icon.getPixelsPtr());
     } else {
         _window = std::make_unique<sf::RenderWindow>(
             sf::VideoMode(_windowedWidth, _windowedHeight), _title,
@@ -279,7 +279,7 @@ void WindowSFML::recreateWindow()
         _height = _windowedHeight;
         if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
             _window->setIcon(_icon.getSize().x, _icon.getSize().y,
-                            _icon.getPixelsPtr());
+                             _icon.getPixelsPtr());
     }
 
     _window->setFramerateLimit(60);
