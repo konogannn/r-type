@@ -34,7 +34,7 @@ class GameServer {
 
     void setupNetworkCallbacks();
     void onClientConnected(uint32_t clientId, const std::string& ip,
-                          uint16_t port);
+                           uint16_t port);
     void onClientDisconnected(uint32_t clientId);
     void onClientLogin(uint32_t clientId, const LoginPacket& packet);
     void onClientInput(uint32_t clientId, const InputPacket& packet);

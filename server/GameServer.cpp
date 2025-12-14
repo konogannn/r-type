@@ -32,10 +32,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     setupNetworkCallbacks();
 }
 
-GameServer::~GameServer()
-{
-    stop();
-}
+GameServer::~GameServer() { stop(); }
 
 void GameServer::setupNetworkCallbacks()
 {
@@ -178,14 +175,13 @@ void GameServer::processNetworkUpdates()
 
         for (const auto& update : entityUpdates) {
             if (update.spawned) {
-                _networkServer.sendEntitySpawn(0, update.entityId,
-                                              update.entityType, update.x,
-                                              update.y);
+                _networkServer.sendEntitySpawn(
+                    0, update.entityId, update.entityType, update.x, update.y);
             } else if (update.destroyed) {
                 _networkServer.sendEntityDead(0, update.entityId);
             } else {
                 _networkServer.sendEntityPosition(0, update.entityId, update.x,
-                                                 update.y);
+                                                  update.y);
             }
         }
 
