@@ -243,7 +243,8 @@ void GameLoop::generateNetworkUpdates()
     }
 }
 
-void GameLoop::createBullet(EntityId ownerEntityId, uint32_t clientId,
+void GameLoop::createBullet(EntityId ownerEntityId,
+                            [[maybe_unused]] uint32_t clientId,
                             const Position& ownerPos, bool fromPlayer)
 {
     Entity bullet = _entityManager.createEntity();

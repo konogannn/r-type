@@ -50,13 +50,13 @@ class ISystem {
      * @brief Initialize the system (called once at startup)
      * @param entityManager Reference to the entity manager
      */
-    virtual void initialize(EntityManager& entityManager) {}
+    virtual void initialize([[maybe_unused]] EntityManager& entityManager) {}
 
     /**
      * @brief Cleanup the system (called at shutdown)
      * @param entityManager Reference to the entity manager
      */
-    virtual void cleanup(EntityManager& entityManager) {}
+    virtual void cleanup([[maybe_unused]] EntityManager& entityManager) {}
 };
 
 /**

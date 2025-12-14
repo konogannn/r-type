@@ -182,7 +182,7 @@ class BulletCleanupSystem : public ISystem {
 
     void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
 
-    void update(float deltaTime, EntityManager& entityManager) override
+    void update(float /* deltaTime */, EntityManager& entityManager) override
     {
         _entitiesToDestroy.clear();
 
@@ -234,7 +234,8 @@ class EnemyCleanupSystem : public ISystem {
 
     void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
 
-    void update(float deltaTime, EntityManager& entityManager) override
+    void update([[maybe_unused]] float deltaTime,
+                EntityManager& entityManager) override
     {
         _entitiesToDestroy.clear();
 
@@ -302,7 +303,8 @@ class CollisionSystem : public ISystem {
 
     void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
 
-    void update(float deltaTime, EntityManager& entityManager) override
+    void update([[maybe_unused]] float deltaTime,
+                EntityManager& entityManager) override
     {
         _entitiesToDestroy.clear();
         _immediateDestroyList.clear();
@@ -393,7 +395,8 @@ class CollisionSystem : public ISystem {
  */
 class PlayerCooldownSystem : public System<Player> {
    protected:
-    void processEntity(float deltaTime, Entity& entity, Player* player) override
+    void processEntity(float deltaTime, [[maybe_unused]] Entity& entity,
+                       Player* player) override
     {
         if (player->shootCooldown > 0.0f) {
             player->shootCooldown -= deltaTime;
@@ -407,44 +410,4 @@ class PlayerCooldownSystem : public System<Player> {
     std::string getName() const override { return "PlayerCooldownSystem"; }
     int getPriority() const override { return 15; }
 };
-
-/**
- * @brief Network sync system - Periodically marks entities for network sync
- * Ensures position updates are sent even when velocity is 0
- */
-class NetworkSyncSystem : public ISystem {
-   private:
-    float _syncTimer;
-    float _syncInterval;
-
-   public:
-    NetworkSyncSystem(float syncInterval = 0.1f)
-        : _syncTimer(0.0f), _syncInterval(syncInterval)
-    {
-    }
-
-    std::string getName() const override { return "NetworkSyncSystem"; }
-    int getPriority() const override { return 80; }
-
-    void update(float deltaTime, EntityManager& entityManager) override
-    {
-        _syncTimer += deltaTime;
-
-        if (_syncTimer >= _syncInterval) {
-            _syncTimer = 0.0f;
-
-            auto entities =
-                entityManager.getEntitiesWith<Position, NetworkEntity>();
-
-            for (auto& entity : entities) {
-                auto* netEntity =
-                    entityManager.getComponent<NetworkEntity>(entity);
-                if (netEntity && !netEntity->isFirstSync) {
-                    netEntity->needsSync = true;
-                }
-            }
-        }
-    }
-};
-
 }  // namespace engine

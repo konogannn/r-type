@@ -20,7 +20,7 @@ struct Position : public ComponentBase<Position> {
     float x;
     float y;
 
-    Position(float x = 0.0f, float y = 0.0f) : x(x), y(y) {}
+    Position(float x_pos = 0.0f, float y_pos = 0.0f) : x(x_pos), y(y_pos) {}
 };
 
 /**
@@ -30,7 +30,7 @@ struct Velocity : public ComponentBase<Velocity> {
     float vx;
     float vy;
 
-    Velocity(float vx = 0.0f, float vy = 0.0f) : vx(vx), vy(vy) {}
+    Velocity(float vx_ = 0.0f, float vy_ = 0.0f) : vx(vx_), vy(vy_) {}
 };
 
 /**
@@ -42,8 +42,8 @@ struct Player : public ComponentBase<Player> {
     float shootCooldown;            // Time until next shot
     const float shootDelay = 0.2f;  // Minimum time between shots
 
-    Player(uint32_t clientId = 0, uint32_t playerId = 0)
-        : clientId(clientId), playerId(playerId), shootCooldown(0.0f)
+    Player(uint32_t clientId_ = 0, uint32_t playerId_ = 0)
+        : clientId(clientId_), playerId(playerId_), shootCooldown(0.0f)
     {
     }
 };
@@ -57,7 +57,7 @@ struct Enemy : public ComponentBase<Enemy> {
     Type type;
     float shootCooldown;
 
-    Enemy(Type type = Type::BASIC) : type(type), shootCooldown(0.0f) {}
+    Enemy(Type type_ = Type::BASIC) : type(type_), shootCooldown(0.0f) {}
 };
 
 /**
@@ -68,8 +68,9 @@ struct Bullet : public ComponentBase<Bullet> {
     bool fromPlayer;   // true if player bullet, false if enemy bullet
     float damage;
 
-    Bullet(uint32_t ownerId = 0, bool fromPlayer = true, float damage = 10.0f)
-        : ownerId(ownerId), fromPlayer(fromPlayer), damage(damage)
+    Bullet(uint32_t ownerId_ = 0, bool fromPlayer_ = true,
+           float damage_ = 10.0f)
+        : ownerId(ownerId_), fromPlayer(fromPlayer_), damage(damage_)
     {
     }
 };
@@ -81,7 +82,7 @@ struct Health : public ComponentBase<Health> {
     float current;
     float max;
 
-    Health(float max = 100.0f) : current(max), max(max) {}
+    Health(float max_ = 100.0f) : current(max_), max(max_) {}
 
     bool isAlive() const { return current > 0.0f; }
 
@@ -107,9 +108,9 @@ struct NetworkEntity : public ComponentBase<NetworkEntity> {
     bool needsSync;      // Flag for position sync
     bool isFirstSync;    // True for spawn, false for position updates
 
-    NetworkEntity(uint32_t entityId = 0, uint8_t entityType = 0)
-        : entityId(entityId),
-          entityType(entityType),
+    NetworkEntity(uint32_t entityId_ = 0, uint8_t entityType_ = 0)
+        : entityId(entityId_),
+          entityType(entityType_),
           needsSync(true),
           isFirstSync(true)
     {
@@ -122,12 +123,12 @@ struct NetworkEntity : public ComponentBase<NetworkEntity> {
 struct BoundingBox : public ComponentBase<BoundingBox> {
     float width;
     float height;
-    float offsetX;  // Offset from position
+    float offsetX;
     float offsetY;
 
-    BoundingBox(float width = 32.0f, float height = 32.0f, float offsetX = 0.0f,
-                float offsetY = 0.0f)
-        : width(width), height(height), offsetX(offsetX), offsetY(offsetY)
+    BoundingBox(float width_ = 32.0f, float height_ = 32.0f,
+                float offsetX_ = 0.0f, float offsetY_ = 0.0f)
+        : width(width_), height(height_), offsetX(offsetX_), offsetY(offsetY_)
     {
     }
 };
