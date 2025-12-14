@@ -3,30 +3,22 @@
 ** R-Type
 ** File description:
 ** main - R-Type Server Entry Point
-**
-** This server implements:
-** - Multithreaded architecture (network + game threads)
-** - Comprehensive game event notifications to all clients
-** - Robust client crash/disconnect handling
-** - Extensible event system for future development
-**
-** See docs/SERVER_EVENT_SYSTEM.md for detailed documentation
 */
 
-#include <iostream>
-#include <csignal>
 #include <atomic>
+#include <csignal>
+#include <iostream>
 
 #include "GameServer.hpp"
 
-// Global server pointer for signal handler
 static rtype::GameServer* g_serverInstance = nullptr;
 
 void signalHandler(int signal)
 {
     if (signal == SIGINT || signal == SIGTERM) {
-        std::cout << "\n[Server] Received shutdown signal, stopping gracefully..."
-                  << std::endl;
+        std::cout
+            << "\n[Server] Received shutdown signal, stopping gracefully..."
+            << std::endl;
         if (g_serverInstance) {
             g_serverInstance->stop();
         }
@@ -35,7 +27,6 @@ void signalHandler(int signal)
 
 int main()
 {
-    // Set up signal handlers for graceful shutdown
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
 
@@ -50,9 +41,8 @@ int main()
     std::cout << "========================================" << std::endl;
 
     try {
-        // Create server with 60 FPS and 30 second timeout
         rtype::GameServer server(60.0f, 30);
-        g_serverInstance = &server;  // Store for signal handler
+        g_serverInstance = &server;
 
         std::cout << "[Server] Starting on port 8080..." << std::endl;
         if (!server.start(8080)) {
@@ -62,13 +52,12 @@ int main()
         }
 
         std::cout << "[Server] Server started successfully" << std::endl;
-        std::cout << "[Server] Press Ctrl+C to shutdown gracefully" << std::endl;
+        std::cout << "[Server] Press Ctrl+C to shutdown gracefully"
+                  << std::endl;
 
-        // Run the server - this blocks until server stops
-        // The server is designed to never crash, even if clients disconnect
         server.run();
 
-        g_serverInstance = nullptr;  // Clear after run
+        g_serverInstance = nullptr;
 
         std::cout << "[Server] Server stopped" << std::endl;
 

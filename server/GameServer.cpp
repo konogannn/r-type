@@ -17,10 +17,10 @@ namespace rtype {
 
 GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     : _networkServer(timeoutSeconds),
-    _gameLoop(targetFPS),
-    _gameStarted(false),
-    _playerCount(0),
-    _nextPlayerId(1)
+      _gameLoop(targetFPS),
+      _gameStarted(false),
+      _playerCount(0),
+      _nextPlayerId(1)
 {
     _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(5.0f));
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
@@ -80,7 +80,7 @@ void GameServer::onClientDisconnected(uint32_t clientId)
         }
 
         _gameLoop.removePlayer(clientId);
-        
+
         std::cout << "[Game] Successfully handled client " << clientId
                   << " disconnection. Server continues running." << std::endl;
     } catch (const std::exception& e) {
@@ -118,16 +118,17 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
     if (_networkServer.sendLoginResponse(clientId, newPlayerId, mapW, mapH)) {
         std::vector<engine::EntityStateUpdate> existingPlayers;
         _gameLoop.getAllPlayers(existingPlayers);
-        
+
         for (const auto& playerUpdate : existingPlayers) {
-            _networkServer.sendEntitySpawn(
-                clientId, playerUpdate.entityId, playerUpdate.entityType,
-                playerUpdate.x, playerUpdate.y);
-            
-            std::cout << "[Game] Sending existing player " << playerUpdate.entityId
-                      << " to new client " << clientId << std::endl;
+            _networkServer.sendEntitySpawn(clientId, playerUpdate.entityId,
+                                           playerUpdate.entityType,
+                                           playerUpdate.x, playerUpdate.y);
+
+            std::cout << "[Game] Sending existing player "
+                      << playerUpdate.entityId << " to new client " << clientId
+                      << std::endl;
         }
-        
+
         float startX = 100.0f;
         float startY = 200.0f + (newPlayerId - 1) * 200.0f;
 
@@ -199,33 +200,35 @@ void GameServer::processNetworkUpdates()
             for (const auto& update : entityUpdates) {
                 try {
                     if (update.spawned) {
-                        _networkServer.sendEntitySpawn(
-                            0, update.entityId, update.entityType, update.x, update.y);
-                        
+                        _networkServer.sendEntitySpawn(0, update.entityId,
+                                                       update.entityType,
+                                                       update.x, update.y);
+
                         if (update.entityType == 2) {
                             _networkServer.sendMonsterSpawned(
                                 0, update.entityId, 0, update.x, update.y);
                         }
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);
-                        
+
                         if (update.entityType == 2) {
-                            _networkServer.sendMonsterKilled(
-                                0, update.entityId, 0, 1);
+                            _networkServer.sendMonsterKilled(0, update.entityId,
+                                                             0, 1);
                         } else if (update.entityType == 0) {
-                            _networkServer.sendPlayerKilled(
-                                0, update.entityId, 0, 2);
+                            _networkServer.sendPlayerKilled(0, update.entityId,
+                                                            0, 2);
                         }
                     } else {
-                        _networkServer.sendEntityPosition(
-                            0, update.entityId, update.x, update.y);
-                        
+                        _networkServer.sendEntityPosition(0, update.entityId,
+                                                          update.x, update.y);
+
                         if (update.entityType == 0) {
-                            _networkServer.sendPlayerMoved(
-                                0, update.entityId, update.x, update.y);
+                            _networkServer.sendPlayerMoved(0, update.entityId,
+                                                           update.x, update.y);
                         } else if (update.entityType == 2) {
-                            _networkServer.sendMonsterMoved(
-                                0, update.entityId, update.x, update.y, 0.0f, 0.0f);
+                            _networkServer.sendMonsterMoved(0, update.entityId,
+                                                            update.x, update.y,
+                                                            0.0f, 0.0f);
                         }
                     }
                 } catch (const std::exception& e) {
