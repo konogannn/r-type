@@ -9,6 +9,7 @@ set(COMPONENT_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/Component.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.tpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameComponents.hpp
 )
 
 # Export sources to parent scope
