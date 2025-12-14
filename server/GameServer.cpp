@@ -17,12 +17,12 @@ namespace rtype {
 
 GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     : _networkServer(timeoutSeconds),
-      _gameLoop(targetFPS),
-      _gameStarted(false),
-      _playerCount(0),
-      _nextPlayerId(1)
+    _gameLoop(targetFPS),
+    _gameStarted(false),
+    _playerCount(0),
+    _nextPlayerId(1)
 {
-    _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(2.0f));
+    _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(5.0f));
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
     _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
