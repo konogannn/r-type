@@ -100,6 +100,16 @@ void GameLoop::gameThreadLoop()
                         update.spawned = false;
                         update.destroyed = true;
                         _outputQueue.push(update);
+
+                        if (info.entityType == 1 && _onPlayerDeathCallback) {
+                            for (const auto& pair : _clientToEntity) {
+                                if (pair.second == info.entityId) {
+                                    _onPlayerDeathCallback(pair.first);
+                                    _clientToEntity.erase(pair.first);
+                                    break;
+                                }
+                            }
+                        }
                     }
                     collisionSystem->clearDestroyedEntities();
                 }

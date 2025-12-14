@@ -74,6 +74,9 @@ class GameLoop {
     // Pending entity destructions (sent to network before actual destruction)
     std::vector<EntityId> _pendingDestructions;
 
+    // Player death callback
+    std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
+
     /**
      * @brief Main game loop (runs in separate thread)
      */
@@ -174,6 +177,14 @@ class GameLoop {
      * @param updates Vector to receive the player states
      */
     void getAllPlayers(std::vector<EntityStateUpdate>& updates);
+
+    /**
+     * @brief Set callback for when a player dies
+     * @param callback Function to call with clientId when player dies
+     */
+    void setOnPlayerDeath(std::function<void(uint32_t)> callback) {
+        _onPlayerDeathCallback = std::move(callback);
+    }
 };
 
 }  // namespace engine
