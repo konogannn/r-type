@@ -286,7 +286,8 @@ TEST_F(ThreadSafeQueueTest, MultithreadedPush)
         thread.join();
     }
 
-    EXPECT_EQ(intQueue->size(), static_cast<size_t>(numThreads * itemsPerThread));
+    EXPECT_EQ(intQueue->size(),
+              static_cast<size_t>(numThreads * itemsPerThread));
 }
 
 // Test multiple threads popping

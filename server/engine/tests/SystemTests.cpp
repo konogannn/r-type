@@ -228,12 +228,12 @@ TEST_F(SystemTest, UpdateMultipleEntities)
     ASSERT_NE(pos2, nullptr);
     ASSERT_NE(pos3, nullptr);
 
-    EXPECT_FLOAT_EQ(pos1->x, 20.0f);   // 0 + 10*2
-    EXPECT_FLOAT_EQ(pos1->y, 10.0f);   // 0 + 5*2
-    EXPECT_FLOAT_EQ(pos2->x, 90.0f);   // 100 + (-5)*2
-    EXPECT_FLOAT_EQ(pos2->y, 70.0f);   // 50 + 10*2
-    EXPECT_FLOAT_EQ(pos3->x, 20.0f);   // 20 + 0*2
-    EXPECT_FLOAT_EQ(pos3->y, 0.0f);    // 30 + (-15)*2
+    EXPECT_FLOAT_EQ(pos1->x, 20.0f);  // 0 + 10*2
+    EXPECT_FLOAT_EQ(pos1->y, 10.0f);  // 0 + 5*2
+    EXPECT_FLOAT_EQ(pos2->x, 90.0f);  // 100 + (-5)*2
+    EXPECT_FLOAT_EQ(pos2->y, 70.0f);  // 50 + 10*2
+    EXPECT_FLOAT_EQ(pos3->x, 20.0f);  // 20 + 0*2
+    EXPECT_FLOAT_EQ(pos3->y, 0.0f);   // 30 + (-15)*2
 
     EXPECT_EQ(movementSystem->getProcessCount(), 3);
 }

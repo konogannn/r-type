@@ -276,7 +276,8 @@ TEST_F(ThreadSafeEntityManagerTest, GetEntitiesWithMultipleComponents)
     manager->addComponent(entity3, VelocityComponent());
     manager->addComponent(entity3, HealthComponent());
 
-    auto entities = manager->getEntitiesWith<PositionComponent, VelocityComponent>();
+    auto entities =
+        manager->getEntitiesWith<PositionComponent, VelocityComponent>();
 
     EXPECT_EQ(entities.size(), 2u);
 }
@@ -293,11 +294,10 @@ TEST_F(ThreadSafeEntityManagerTest, ForEachSingleComponent)
     int count = 0;
     float totalX = 0.0f;
 
-    manager->forEach<PositionComponent>(
-        [&](Entity& e, PositionComponent* pos) {
-            count++;
-            totalX += pos->x;
-        });
+    manager->forEach<PositionComponent>([&](Entity& e, PositionComponent* pos) {
+        count++;
+        totalX += pos->x;
+    });
 
     EXPECT_EQ(count, 2);
     EXPECT_FLOAT_EQ(totalX, 40.0f);
@@ -477,8 +477,7 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentEntityDestruction)
         threads.emplace_back([this, &entities, &index, numEntities]() {
             while (true) {
                 int i = index.fetch_add(1);
-                if (i >= numEntities)
-                    break;
+                if (i >= numEntities) break;
                 manager->destroyEntity(entities[i]);
             }
         });
@@ -513,8 +512,9 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentComponentAddition)
             for (int i = 0; i < entitiesPerThread; i++) {
                 manager->addComponent(
                     threadEntities[t][i],
-                    PositionComponent(static_cast<float>(t * entitiesPerThread + i),
-                                      static_cast<float>(t * entitiesPerThread + i)));
+                    PositionComponent(
+                        static_cast<float>(t * entitiesPerThread + i),
+                        static_cast<float>(t * entitiesPerThread + i)));
             }
         });
     }
@@ -527,7 +527,8 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentComponentAddition)
     int count = 0;
     for (int t = 0; t < numThreads; t++) {
         for (int i = 0; i < entitiesPerThread; i++) {
-            if (manager->hasComponent<PositionComponent>(threadEntities[t][i])) {
+            if (manager->hasComponent<PositionComponent>(
+                    threadEntities[t][i])) {
                 count++;
             }
         }
@@ -544,8 +545,9 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentReads)
 
     for (int i = 0; i < numEntities; i++) {
         Entity entity = manager->createEntity();
-        manager->addComponent(entity, PositionComponent(static_cast<float>(i),
-                                                        static_cast<float>(i * 2)));
+        manager->addComponent(entity,
+                              PositionComponent(static_cast<float>(i),
+                                                static_cast<float>(i * 2)));
         entities.push_back(entity);
     }
 
@@ -554,14 +556,15 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentReads)
     std::atomic<int> successfulReads{0};
 
     for (int r = 0; r < numReaders; r++) {
-        threads.emplace_back([this, &entities, &successfulReads, numEntities]() {
-            for (int i = 0; i < numEntities; i++) {
-                PositionComponent pos;
-                if (manager->getComponent(entities[i], pos)) {
-                    successfulReads++;
+        threads.emplace_back(
+            [this, &entities, &successfulReads, numEntities]() {
+                for (int i = 0; i < numEntities; i++) {
+                    PositionComponent pos;
+                    if (manager->getComponent(entities[i], pos)) {
+                        successfulReads++;
+                    }
                 }
-            }
-        });
+            });
     }
 
     for (auto& thread : threads) {
@@ -589,9 +592,9 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentWrites)
     for (int w = 0; w < numWriters; w++) {
         threads.emplace_back([this, &entities, w, numEntities]() {
             for (int i = 0; i < numEntities; i++) {
-                manager->setComponent(
-                    entities[i],
-                    PositionComponent(static_cast<float>(w), static_cast<float>(w)));
+                manager->setComponent(entities[i],
+                                      PositionComponent(static_cast<float>(w),
+                                                        static_cast<float>(w)));
             }
         });
     }
@@ -691,8 +694,8 @@ TEST_F(ThreadSafeEntityManagerTest, ConcurrentArchetypeCreation)
 
     for (int t = 0; t < numThreads; t++) {
         threads.emplace_back([this, &archetypes, t]() {
-            archetypes[t] =
-                manager->getOrCreateArchetype<PositionComponent, VelocityComponent>();
+            archetypes[t] = manager->getOrCreateArchetype<PositionComponent,
+                                                          VelocityComponent>();
         });
     }
 
