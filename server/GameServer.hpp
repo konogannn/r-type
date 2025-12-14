@@ -39,9 +39,11 @@ class GameServer {
     void onClientDisconnected(uint32_t clientId);
     void onClientLogin(uint32_t clientId, const LoginPacket& packet);
     void onClientInput(uint32_t clientId, const InputPacket& packet);
+    void onPlayerDeath(uint32_t clientId);
 
     void waitForPlayers();
     void processNetworkUpdates();
+    void resetGameState();
 
    public:
     GameServer(float targetFPS = 60.0f, uint32_t timeoutSeconds = 30);

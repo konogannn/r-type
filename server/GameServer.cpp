@@ -31,6 +31,10 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::LifetimeSystem>());
 
     setupNetworkCallbacks();
+
+    _gameLoop.setOnPlayerDeath([this](uint32_t clientId) {
+        onPlayerDeath(clientId);
+    });
 }
 
 GameServer::~GameServer() { stop(); }
@@ -82,7 +86,14 @@ void GameServer::onClientDisconnected(uint32_t clientId)
         _gameLoop.removePlayer(clientId);
 
         std::cout << "[Game] Successfully handled client " << clientId
-                  << " disconnection. Server continues running." << std::endl;
+                  << " disconnection.";
+        
+        if (_playerCount.load() == 0 && _gameStarted) {
+            std::cout << " No players remaining, stopping game..." << std::endl;
+            _gameStarted = false;
+        } else {
+            std::cout << " Server continues running." << std::endl;
+        }
     } catch (const std::exception& e) {
         std::cerr << "[GameServer] Error handling client disconnect: "
                   << e.what() << std::endl;
@@ -148,6 +159,24 @@ void GameServer::onClientInput(uint32_t clientId, const InputPacket& packet)
     _gameLoop.queueInput(cmd);
 }
 
+void GameServer::onPlayerDeath(uint32_t clientId)
+{
+    std::cout << "[Game] Player " << clientId << " died!" << std::endl;
+
+    std::lock_guard<std::mutex> lock(_playerMutex);
+    if (_playersReady.find(clientId) != _playersReady.end()) {
+        _playersReady.erase(clientId);
+        _playerCount--;
+        std::cout << "[Game] Players remaining: " << _playerCount.load()
+                  << std::endl;
+        
+        if (_playerCount.load() == 0 && _gameStarted) {
+            std::cout << "[Game] All players died, stopping game..." << std::endl;
+            _gameStarted = false;
+        }
+    }
+}
+
 bool GameServer::start(uint16_t port)
 {
     if (!_networkServer.start(port)) {
@@ -188,7 +217,7 @@ void GameServer::processNetworkUpdates()
     const auto targetFrameTime = std::chrono::milliseconds(16);
     std::vector<engine::EntityStateUpdate> entityUpdates;
 
-    while (_networkServer.isRunning() && _gameLoop.isRunning()) {
+    while (_networkServer.isRunning() && _gameLoop.isRunning() && _gameStarted) {
         auto frameStart = std::chrono::steady_clock::now();
 
         try {
@@ -248,25 +277,41 @@ void GameServer::processNetworkUpdates()
     }
 }
 
+void GameServer::resetGameState()
+{
+    std::cout << "[Game] Resetting game state..." << std::endl;
+    
+    std::lock_guard<std::mutex> lock(_playerMutex);
+    _playersReady.clear();
+    _playerCount = 0;
+    _gameStarted = false;
+    
+    std::cout << "[Lobby] Ready for new players" << std::endl;
+}
+
 void GameServer::run()
 {
     try {
-        waitForPlayers();
+        while (_networkServer.isRunning()) {
+            waitForPlayers();
 
-        if (!_networkServer.isRunning()) {
-            std::cout << "[Server] Server stopped before game could start"
-                      << std::endl;
-            return;
+            if (!_networkServer.isRunning()) {
+                std::cout << "[Server] Server stopped before game could start"
+                          << std::endl;
+                return;
+            }
+
+            _gameLoop.start();
+            std::cout << "[Game] Game loop started at 60 FPS with "
+                      << _playerCount.load() << " player(s)" << std::endl;
+
+            processNetworkUpdates();
+
+            std::cout << "[Game] Shutting down game loop..." << std::endl;
+            _gameLoop.stop();
+            
+            resetGameState();
         }
-
-        _gameLoop.start();
-        std::cout << "[Game] Game loop started at 60 FPS with "
-                  << _playerCount.load() << " player(s)" << std::endl;
-
-        processNetworkUpdates();
-
-        std::cout << "[Game] Shutting down game loop..." << std::endl;
-        _gameLoop.stop();
     } catch (const std::exception& e) {
         std::cerr << "[GameServer FATAL] Unhandled exception in run(): "
                   << e.what() << std::endl;
