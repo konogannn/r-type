@@ -32,10 +32,8 @@ class MovementSystem : public ISystem {
     void update(float deltaTime, EntityManager& entityManager) override
     {
         _frameCounter++;
-        bool shouldSync =
-            (_frameCounter % 2 == 0);  // Sync every 2nd frame (~30Hz)
+        bool shouldSync = (_frameCounter % 2 == 0);
 
-        // Update all entities with Position and Velocity
         auto entities = entityManager.getEntitiesWith<Position, Velocity>();
 
         for (auto& entity : entities) {
@@ -43,13 +41,10 @@ class MovementSystem : public ISystem {
             auto* vel = entityManager.getComponent<Velocity>(entity);
 
             if (pos && vel) {
-                // Only update if velocity is non-zero
                 if (vel->vx != 0.0f || vel->vy != 0.0f) {
-                    // Update position
                     pos->x += vel->vx * deltaTime;
                     pos->y += vel->vy * deltaTime;
 
-                    // Mark for network sync at reduced rate
                     auto* netEntity =
                         entityManager.getComponent<NetworkEntity>(entity);
                     if (netEntity && shouldSync) {
@@ -88,11 +83,7 @@ class LifetimeSystem : public System<Lifetime> {
         System<Lifetime>::update(deltaTime, entityManager);
 
         for (EntityId id : _entitiesToDestroy) {
-            Entity* entity = entityManager.getEntity(id);
-            if (entity &&
-                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
-                entityManager.addComponent(*entity, MarkedForDestruction());
-            }
+            entityManager.destroyEntity(id);
         }
     }
 };
@@ -132,14 +123,11 @@ class EnemySpawnerSystem : public ISystem {
 
     void spawnEnemy(EntityManager& entityManager)
     {
-        // Create enemy entity
         Entity enemy = entityManager.createEntity();
 
-        // Random Y position
         float y = _yDist(_rng);
-        float x = 1900.0f;  // Spawn on right edge
+        float x = 1900.0f;
 
-        // Random enemy type
         int typeRoll = _typeDist(_rng);
         Enemy::Type type = Enemy::Type::BASIC;
         float speed = -100.0f;
@@ -155,7 +143,6 @@ class EnemySpawnerSystem : public ISystem {
             health = 100.0f;
         }
 
-        // Add components
         entityManager.addComponent(enemy, Position(x, y));
         entityManager.addComponent(enemy, Velocity(speed, 0.0f));
         entityManager.addComponent(enemy, Enemy(type));
@@ -171,39 +158,54 @@ class EnemySpawnerSystem : public ISystem {
 /**
  * @brief Bullet cleanup system - Removes bullets that leave the screen
  */
-class BulletCleanupSystem : public System<Position, Bullet> {
+class BulletCleanupSystem : public ISystem {
    private:
-    std::vector<EntityId> _entitiesToDestroy;
-    const float MIN_X = -100.0f;
+    struct DestroyInfo {
+        EntityId entityId;
+        uint32_t networkEntityId;
+        uint8_t entityType;
+    };
+    std::vector<DestroyInfo> _entitiesToDestroy;
+    const float MIN_X = -50.0f;
     const float MAX_X = 2100.0f;
-    const float MIN_Y = -100.0f;
+    const float MIN_Y = -50.0f;
     const float MAX_Y = 1200.0f;
-
-   protected:
-    void processEntity(float deltaTime, Entity& entity, Position* pos,
-                       Bullet* bullet) override
-    {
-        if (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
-            pos->y > MAX_Y) {
-            _entitiesToDestroy.push_back(entity.getId());
-        }
-    }
 
    public:
     std::string getName() const override { return "BulletCleanupSystem"; }
     int getPriority() const override { return 90; }
 
+    const std::vector<DestroyInfo>& getDestroyedEntities() const
+    {
+        return _entitiesToDestroy;
+    }
+
+    void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+
     void update(float deltaTime, EntityManager& entityManager) override
     {
         _entitiesToDestroy.clear();
-        System<Position, Bullet>::update(deltaTime, entityManager);
 
-        for (EntityId id : _entitiesToDestroy) {
-            Entity* entity = entityManager.getEntity(id);
-            if (entity &&
-                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
-                entityManager.addComponent(*entity, MarkedForDestruction());
+        auto bullets = entityManager.getEntitiesWith<Position, Bullet>();
+
+        for (auto& entity : bullets) {
+            auto* pos = entityManager.getComponent<Position>(entity);
+            if (!pos) continue;
+
+            if (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
+                pos->y > MAX_Y) {
+                auto* netEntity =
+                    entityManager.getComponent<NetworkEntity>(entity);
+                if (netEntity) {
+                    _entitiesToDestroy.push_back({entity.getId(),
+                                                  netEntity->entityId,
+                                                  netEntity->entityType});
+                }
             }
+        }
+
+        for (const auto& info : _entitiesToDestroy) {
+            entityManager.destroyEntity(info.entityId);
         }
     }
 };
@@ -211,35 +213,50 @@ class BulletCleanupSystem : public System<Position, Bullet> {
 /**
  * @brief Enemy cleanup system - Removes enemies that go off-screen left
  */
-class EnemyCleanupSystem : public System<Position, Enemy> {
+class EnemyCleanupSystem : public ISystem {
    private:
-    std::vector<EntityId> _entitiesToDestroy;
+    struct DestroyInfo {
+        EntityId entityId;
+        uint32_t networkEntityId;
+        uint8_t entityType;
+    };
+    std::vector<DestroyInfo> _entitiesToDestroy;
     const float MIN_X = -200.0f;
-
-   protected:
-    void processEntity(float deltaTime, Entity& entity, Position* pos,
-                       Enemy* enemy) override
-    {
-        if (pos->x < MIN_X) {
-            _entitiesToDestroy.push_back(entity.getId());
-        }
-    }
 
    public:
     std::string getName() const override { return "EnemyCleanupSystem"; }
     int getPriority() const override { return 95; }
 
+    const std::vector<DestroyInfo>& getDestroyedEntities() const
+    {
+        return _entitiesToDestroy;
+    }
+
+    void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+
     void update(float deltaTime, EntityManager& entityManager) override
     {
         _entitiesToDestroy.clear();
-        System<Position, Enemy>::update(deltaTime, entityManager);
 
-        for (EntityId id : _entitiesToDestroy) {
-            Entity* entity = entityManager.getEntity(id);
-            if (entity &&
-                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
-                entityManager.addComponent(*entity, MarkedForDestruction());
+        auto enemies = entityManager.getEntitiesWith<Position, Enemy>();
+
+        for (auto& entity : enemies) {
+            auto* pos = entityManager.getComponent<Position>(entity);
+            if (!pos) continue;
+
+            if (pos->x < MIN_X) {
+                auto* netEntity =
+                    entityManager.getComponent<NetworkEntity>(entity);
+                if (netEntity) {
+                    _entitiesToDestroy.push_back({entity.getId(),
+                                                  netEntity->entityId,
+                                                  netEntity->entityType});
+                }
             }
+        }
+
+        for (const auto& info : _entitiesToDestroy) {
+            entityManager.destroyEntity(info.entityId);
         }
     }
 };
@@ -249,7 +266,13 @@ class EnemyCleanupSystem : public System<Position, Enemy> {
  */
 class CollisionSystem : public ISystem {
    private:
-    std::vector<EntityId> _entitiesToDestroy;
+    struct DestroyInfo {
+        EntityId entityId;
+        uint32_t networkEntityId;
+        uint8_t entityType;
+    };
+    std::vector<DestroyInfo> _entitiesToDestroy;
+    std::vector<EntityId> _immediateDestroyList;
 
     bool checkCollision(const Position& pos1, const BoundingBox& box1,
                         const Position& pos2, const BoundingBox& box2)
@@ -272,15 +295,21 @@ class CollisionSystem : public ISystem {
     std::string getName() const override { return "CollisionSystem"; }
     int getPriority() const override { return 50; }
 
+    const std::vector<DestroyInfo>& getDestroyedEntities() const
+    {
+        return _entitiesToDestroy;
+    }
+
+    void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+
     void update(float deltaTime, EntityManager& entityManager) override
     {
         _entitiesToDestroy.clear();
+        _immediateDestroyList.clear();
 
-        // Get all bullets
         auto bullets =
             entityManager.getEntitiesWith<Position, Bullet, BoundingBox>();
 
-        // Check bullet-enemy collisions (player bullets vs enemies)
         auto enemies =
             entityManager
                 .getEntitiesWith<Position, Enemy, Health, BoundingBox>();
@@ -292,7 +321,17 @@ class CollisionSystem : public ISystem {
             auto* bulletBox =
                 entityManager.getComponent<BoundingBox>(bulletEntity);
 
-            if (!bullet->fromPlayer) continue;  // Skip enemy bullets for now
+            if (!bullet || !bulletPos || !bulletBox) continue;
+            if (!bullet->fromPlayer) continue;
+
+            bool alreadyMarked = false;
+            for (EntityId id : _immediateDestroyList) {
+                if (id == bulletEntity.getId()) {
+                    alreadyMarked = true;
+                    break;
+                }
+            }
+            if (alreadyMarked) continue;
 
             for (auto& enemyEntity : enemies) {
                 auto* enemyPos =
@@ -302,14 +341,40 @@ class CollisionSystem : public ISystem {
                 auto* enemyBox =
                     entityManager.getComponent<BoundingBox>(enemyEntity);
 
+                if (!enemyPos || !enemyHealth || !enemyBox) continue;
+
+                bool enemyAlreadyMarked = false;
+                for (EntityId id : _immediateDestroyList) {
+                    if (id == enemyEntity.getId()) {
+                        enemyAlreadyMarked = true;
+                        break;
+                    }
+                }
+                if (enemyAlreadyMarked) continue;
+
                 if (checkCollision(*bulletPos, *bulletBox, *enemyPos,
                                    *enemyBox)) {
                     enemyHealth->takeDamage(bullet->damage);
 
-                    _entitiesToDestroy.push_back(bulletEntity.getId());
+                    auto* bulletNetEntity =
+                        entityManager.getComponent<NetworkEntity>(bulletEntity);
+                    if (bulletNetEntity) {
+                        _entitiesToDestroy.push_back(
+                            {bulletEntity.getId(), bulletNetEntity->entityId,
+                             bulletNetEntity->entityType});
+                    }
+                    _immediateDestroyList.push_back(bulletEntity.getId());
 
                     if (!enemyHealth->isAlive()) {
-                        _entitiesToDestroy.push_back(enemyEntity.getId());
+                        auto* enemyNetEntity =
+                            entityManager.getComponent<NetworkEntity>(
+                                enemyEntity);
+                        if (enemyNetEntity) {
+                            _entitiesToDestroy.push_back(
+                                {enemyEntity.getId(), enemyNetEntity->entityId,
+                                 enemyNetEntity->entityType});
+                        }
+                        _immediateDestroyList.push_back(enemyEntity.getId());
                     }
 
                     break;
@@ -317,12 +382,8 @@ class CollisionSystem : public ISystem {
             }
         }
 
-        for (EntityId id : _entitiesToDestroy) {
-            Entity* entity = entityManager.getEntity(id);
-            if (entity &&
-                !entityManager.hasComponent<MarkedForDestruction>(*entity)) {
-                entityManager.addComponent(*entity, MarkedForDestruction());
-            }
+        for (EntityId id : _immediateDestroyList) {
+            entityManager.destroyEntity(id);
         }
     }
 };
@@ -369,7 +430,6 @@ class NetworkSyncSystem : public ISystem {
     {
         _syncTimer += deltaTime;
 
-        // Only sync periodically to reduce bandwidth
         if (_syncTimer >= _syncInterval) {
             _syncTimer = 0.0f;
 
@@ -380,7 +440,6 @@ class NetworkSyncSystem : public ISystem {
                 auto* netEntity =
                     entityManager.getComponent<NetworkEntity>(entity);
                 if (netEntity && !netEntity->isFirstSync) {
-                    // Mark for sync (but not spawns)
                     netEntity->needsSync = true;
                 }
             }
