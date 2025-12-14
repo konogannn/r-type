@@ -27,7 +27,7 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _isFullscreen(false),
       _title(title)
 {
-    _icon.loadFromFile(PathHelper::getAssetPath("icon/logo.png"));
+    _icon.loadFromFile(utils::PathHelper::getAssetPath("icon/logo.png"));
     if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
         _window->setIcon(_icon.getSize().x, _icon.getSize().y,
                          _icon.getPixelsPtr());
