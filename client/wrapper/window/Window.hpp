@@ -135,6 +135,12 @@ class IWindow {
      * @param height New height in pixels
      */
     virtual void setResolution(unsigned int width, unsigned int height) = 0;
+
+    /**
+     * @brief Check if window has focus
+     * @return True if window is focused
+     */
+    virtual bool hasFocus() const = 0;
 };
 
 }  // namespace rtype
