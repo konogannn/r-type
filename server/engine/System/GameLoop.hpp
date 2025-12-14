@@ -168,6 +168,12 @@ class GameLoop {
      * @param entityId The entity to destroy
      */
     void queueEntityDestruction(EntityId entityId);
+    
+    /**
+     * @brief Get all existing player entity states
+     * @param updates Vector to receive the player states
+     */
+    void getAllPlayers(std::vector<EntityStateUpdate>& updates);
 };
 
 }  // namespace engine

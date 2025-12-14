@@ -269,7 +269,7 @@ void GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
     _entityManager.addComponent(player, Player(clientId, playerId));
     _entityManager.addComponent(player, Health(100.0f));
     _entityManager.addComponent(player, BoundingBox(48.0f, 48.0f));
-    _entityManager.addComponent(player, NetworkEntity(playerId, 1));
+    _entityManager.addComponent(player, NetworkEntity(player.getId(), 1));
 
     _clientToEntity[clientId] = player.getId();
 }
@@ -306,6 +306,27 @@ void GameLoop::removePlayer(uint32_t clientId)
 void GameLoop::queueEntityDestruction(EntityId entityId)
 {
     _pendingDestructions.push_back(entityId);
+}
+
+void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
+{
+    auto players = _entityManager.getEntitiesWith<Position, NetworkEntity, Player>();
+    
+    for (auto& entity : players) {
+        auto* pos = _entityManager.getComponent<Position>(entity);
+        auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
+        
+        if (pos && netEntity) {
+            EntityStateUpdate update;
+            update.entityId = netEntity->entityId;
+            update.entityType = netEntity->entityType;
+            update.x = pos->x;
+            update.y = pos->y;
+            update.spawned = true;
+            update.destroyed = false;
+            updates.push_back(update);
+        }
+    }
 }
 
 }  // namespace engine
