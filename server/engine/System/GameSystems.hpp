@@ -32,7 +32,8 @@ class MovementSystem : public ISystem {
     void update(float deltaTime, EntityManager& entityManager) override
     {
         _frameCounter++;
-        bool shouldSync = (_frameCounter % 2 == 0);  // Sync every 2nd frame (~30Hz)
+        bool shouldSync =
+            (_frameCounter % 2 == 0);  // Sync every 2nd frame (~30Hz)
 
         // Update all entities with Position and Velocity
         auto entities = entityManager.getEntitiesWith<Position, Velocity>();
