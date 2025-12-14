@@ -108,7 +108,9 @@ struct NetworkEntity : public ComponentBase<NetworkEntity> {
     bool isFirstSync;    // True for spawn, false for position updates
 
     NetworkEntity(uint32_t entityId = 0, uint8_t entityType = 0)
-        : entityId(entityId), entityType(entityType), needsSync(true),
+        : entityId(entityId),
+          entityType(entityType),
+          needsSync(true),
           isFirstSync(true)
     {
     }

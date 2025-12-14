@@ -147,7 +147,7 @@ void GameLoop::processInputCommands(float deltaTime)
 
         // Update position with bounds checking
         bool positionChanged = (moveX != 0.0f || moveY != 0.0f);
-        
+
         pos->x += moveX;
         pos->y += moveY;
 
@@ -158,7 +158,8 @@ void GameLoop::processInputCommands(float deltaTime)
 
         // Mark for network sync if position changed
         if (positionChanged) {
-            auto* netEntity = _entityManager.getComponent<NetworkEntity>(*entity);
+            auto* netEntity =
+                _entityManager.getComponent<NetworkEntity>(*entity);
             if (netEntity) {
                 netEntity->needsSync = true;
             }
@@ -189,11 +190,12 @@ void GameLoop::generateNetworkUpdates()
             update.entityType = netEntity->entityType;
             update.x = pos->x;
             update.y = pos->y;
-            update.spawned = netEntity->isFirstSync;  // True for spawn, false for position updates
+            update.spawned = netEntity->isFirstSync;  // True for spawn, false
+                                                      // for position updates
             update.destroyed = false;
 
             _outputQueue.push(update);
-            netEntity->needsSync = false;  // Reset sync flag after sending
+            netEntity->needsSync = false;    // Reset sync flag after sending
             netEntity->isFirstSync = false;  // Mark that spawn has been sent
         }
     }
