@@ -19,7 +19,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     : _networkServer(timeoutSeconds),
       _gameLoop(targetFPS),
       _gameStarted(false),
-      _playerCount(0)
+      _playerCount(0),
+      _nextPlayerId(1)
 {
     _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(2.0f));
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
@@ -110,13 +111,25 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
                   << _playerCount.load() << "/" << MAX_PLAYERS << std::endl;
     }
 
-    uint32_t newPlayerId = clientId + 100;
+    uint32_t newPlayerId = _nextPlayerId.fetch_add(1);
     uint16_t mapW = 1920;
     uint16_t mapH = 1080;
 
     if (_networkServer.sendLoginResponse(clientId, newPlayerId, mapW, mapH)) {
+        std::vector<engine::EntityStateUpdate> existingPlayers;
+        _gameLoop.getAllPlayers(existingPlayers);
+        
+        for (const auto& playerUpdate : existingPlayers) {
+            _networkServer.sendEntitySpawn(
+                clientId, playerUpdate.entityId, playerUpdate.entityType,
+                playerUpdate.x, playerUpdate.y);
+            
+            std::cout << "[Game] Sending existing player " << playerUpdate.entityId
+                      << " to new client " << clientId << std::endl;
+        }
+        
         float startX = 100.0f;
-        float startY = 200.0f + (_playerCount.load() - 1) * 200.0f;
+        float startY = 200.0f + (newPlayerId - 1) * 200.0f;
 
         _gameLoop.spawnPlayer(clientId, newPlayerId, startX, startY);
 

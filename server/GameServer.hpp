@@ -25,6 +25,7 @@ class GameServer {
 
     std::atomic<bool> _gameStarted;
     std::atomic<int> _playerCount;
+    std::atomic<uint32_t> _nextPlayerId;
     std::mutex _playerMutex;
     std::unordered_map<uint32_t, bool> _playersReady;
 
