@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../src/Explosion.hpp"
 #include "../wrapper/graphics/GraphicsSFML.hpp"
 #include "../wrapper/graphics/SpriteSFML.hpp"
 #include "NetworkClientAsio.hpp"
@@ -65,6 +66,9 @@ class ClientGameState {
 
     // Entities
     std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>> _entities;
+
+    // Visual effects
+    std::vector<std::unique_ptr<Explosion>> _explosions;
 
     // Connection status
     std::string _lastError;
