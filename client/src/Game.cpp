@@ -191,6 +191,9 @@ void Game::render()
                 }
             }
         }
+
+        // Render explosions on top of entities
+        _gameState->render(_graphics);
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
