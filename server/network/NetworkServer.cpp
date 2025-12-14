@@ -76,13 +76,6 @@ NetworkState NetworkServer::getState() const { return _state; }
 
 void NetworkServer::update()
 {
-    static int updateCount = 0;
-    updateCount++;
-
-    if (updateCount % 300 == 0) {
-        std::cout << "[NetworkServer] update() called " << updateCount
-                  << " times" << std::endl;
-    }
     checkTimeouts();
     resendPendingPackets();
 
@@ -90,11 +83,6 @@ void NetworkServer::update()
     {
         std::lock_guard<std::mutex> lock(_eventQueueMutex);
         events = std::move(_eventQueue);
-    }
-
-    if (!events.empty() && updateCount % 300 == 0) {
-        std::cout << "[NetworkServer] Processing " << events.size() << " events"
-                  << std::endl;
     }
 
     for (const auto& event : events) {
@@ -141,9 +129,6 @@ void NetworkServer::checkTimeouts()
     }
 
     for (uint32_t clientId : timedOutClients) {
-        std::cout << "[NetworkServer] Client " << clientId
-                  << " TIMED OUT after " << _timeoutDuration.count()
-                  << "s - disconnecting" << std::endl;
         Logger::getInstance().log(
             "Client " + std::to_string(clientId) + " timed out after " +
                 std::to_string(_timeoutDuration.count()) + "s of inactivity",
@@ -155,49 +140,89 @@ void NetworkServer::checkTimeouts()
 void NetworkServer::resendPendingPackets()
 {
     auto now = std::chrono::steady_clock::now();
-    std::lock_guard<std::mutex> lock(_clientsMutex);
+    std::vector<uint32_t> clientsToDisconnect;
 
-    for (auto& pair : _sessions) {
-        auto& session = pair.second;
-        for (auto& packet : session.pendingPackets) {
-            auto elapsed =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    now - packet.lastSentTime);
+    {
+        std::lock_guard<std::mutex> lock(_clientsMutex);
 
-            if (elapsed.count() >= 1000) {
-                if (packet.retryCount < 5) {
-                    sendToEndpoint(session.endpoint, packet.data.data(),
-                                   packet.data.size(), false, nullptr);
-                    packet.lastSentTime = now;
-                    packet.retryCount++;
-                } else {
-                    disconnectClient(pair.first, "too many retries");
+        for (auto& pair : _sessions) {
+            auto& session = pair.second;
+            for (auto& packet : session.pendingPackets) {
+                auto elapsed =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        now - packet.lastSentTime);
+
+                if (elapsed.count() >= 1000) {
+                    if (packet.retryCount < 5) {
+                        sendToEndpoint(session.endpoint, packet.data.data(),
+                                       packet.data.size(), false, nullptr);
+                        packet.lastSentTime = now;
+                        packet.retryCount++;
+                    } else {
+                        clientsToDisconnect.push_back(pair.first);
+                        break;
+                    }
                 }
             }
         }
+    }
+
+    for (uint32_t clientId : clientsToDisconnect) {
+        disconnectClient(clientId, "too many retries");
     }
 }
 
 void NetworkServer::disconnectClient(uint32_t clientId,
                                      const std::string& reason)
 {
-    std::lock_guard<std::mutex> lock(_clientsMutex);
+    uint32_t playerId = 0;
+    bool shouldNotify = false;
+    uint8_t crashReason = 0;
 
-    auto it = _sessions.find(clientId);
-    if (it != _sessions.end()) {
+    // First, gather info and remove session (with lock)
+    {
+        std::lock_guard<std::mutex> lock(_clientsMutex);
+
+        auto it = _sessions.find(clientId);
+        if (it == _sessions.end()) {
+            return;  // Client already disconnected
+        }
+
         Logger::getInstance().log("Disconnecting client " +
                                       std::to_string(clientId) +
                                       " (reason: " + reason + ")",
                                   LogLevel::INFO_L, "NetworkServer");
 
+        playerId = it->second.playerId;
+        shouldNotify = it->second.isAuthenticated && playerId != 0;
+
         _endpointToId.erase(it->second.endpoint);
+
+        // Determine crash reason code
+        if (reason.find("timeout") != std::string::npos ||
+            reason.find("timed out") != std::string::npos) {
+            crashReason = 1;  // timeout
+        } else if (reason.find("disconnect") != std::string::npos) {
+            crashReason = 2;  // graceful disconnect
+        } else {
+            crashReason = 3;  // crash/error
+        }
+
+        _sessions.erase(it);
 
         NetworkEvent event;
         event.type = EventType::Disconnect;
         event.clientId = clientId;
         pushEvent(event);
+    }
 
-        _sessions.erase(it);
+    if (shouldNotify) {
+        try {
+            sendClientCrashed(0, clientId, playerId, crashReason);
+        } catch (const std::exception& e) {
+            std::cerr << "[NetworkServer] Error sending crash notification: "
+                      << e.what() << std::endl;
+        }
     }
 }
 
@@ -217,35 +242,19 @@ void NetworkServer::setOnErrorCallback(
 
 void NetworkServer::runNetworkLoop()
 {
-    std::cout
-        << "[NetworkServer] Network thread started, entering io_context.run()"
-        << std::endl;
     try {
-        size_t handlersRun = _ioContext.run();
-        std::cout << "[NetworkServer] io_context.run() exited normally, ran "
-                  << handlersRun << " handlers" << std::endl;
+        _ioContext.run();
     } catch (const std::exception& e) {
-        std::cerr << "[NetworkServer FATAL] Network thread exception: "
-                  << e.what() << std::endl;
         Logger::getInstance().log(
             "Network thread exception: " + std::string(e.what()),
             LogLevel::ERROR_L, "NetworkServer");
         _state = NetworkState::Error;
         if (_onError) _onError(e.what());
     }
-    std::cout << "[NetworkServer] Network thread exiting" << std::endl;
 }
 
 void NetworkServer::startReceive()
 {
-    static int startCount = 0;
-    startCount++;
-
-    if (startCount % 60 == 0) {
-        std::cout << "[NetworkServer] startReceive() called " << startCount
-                  << " times" << std::endl;
-    }
-
     _socket.async_receive_from(boost::asio::buffer(_receiveBuffer),
                                _remoteEndpoint,
                                [this](const boost::system::error_code& error,
@@ -257,43 +266,29 @@ void NetworkServer::startReceive()
 void NetworkServer::handleReceive(const boost::system::error_code& error,
                                   size_t bytesTransferred)
 {
-    static int receiveCount = 0;
-    receiveCount++;
-
-    if (receiveCount % 60 == 0) {
-        std::cout << "[NetworkServer] handleReceive() called " << receiveCount
-                  << " times, _running=" << _running << std::endl;
-    }
-
     if (!error) {
         try {
             processPacket(_receiveBuffer.data(), bytesTransferred,
                           _remoteEndpoint);
         } catch (const std::exception& e) {
-            std::cerr << "[NetworkServer ERROR] processPacket exception: "
-                      << e.what() << std::endl;
+            Logger::getInstance().log(
+                "Error processing packet: " + std::string(e.what()),
+                LogLevel::ERROR_L, "NetworkServer");
         }
-    } else {
-        std::cerr << "[NetworkServer ERROR] Receive error: " << error.message()
-                  << " (code: " << error.value() << ")" << std::endl;
-        if (error == boost::asio::error::operation_aborted) {
-            std::cout << "[NetworkServer] Receive operation aborted"
-                      << std::endl;
-            return;
-        }
+    } else if (error != boost::asio::error::operation_aborted) {
+        Logger::getInstance().log(
+            "Receive error: " + error.message(),
+            LogLevel::ERROR_L, "NetworkServer");
     }
 
     if (_running) {
         try {
             startReceive();
         } catch (const std::exception& e) {
-            std::cerr << "[NetworkServer FATAL] startReceive() exception: "
-                      << e.what() << std::endl;
+            Logger::getInstance().log(
+                "Failed to restart receive: " + std::string(e.what()),
+                LogLevel::ERROR_L, "NetworkServer");
         }
-    } else {
-        std::cout
-            << "[NetworkServer] Not restarting receive - _running is false"
-            << std::endl;
     }
 }
 
@@ -324,9 +319,6 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
             _endpointToId[sender] = newId;
             session = &_sessions[newId];
             isNewClient = true;
-
-            std::cout << "[NetworkServer] Created NEW session for client "
-                      << newId << " (isAuthenticated=false)" << std::endl;
         } else {
             session->lastActivity = std::chrono::steady_clock::now();
         }
@@ -367,14 +359,6 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
                 event.clientId = session->clientId;
                 event.inputPacket = *reinterpret_cast<const InputPacket*>(data);
                 pushEvent(event);
-            } else if (size >= sizeof(InputPacket)) {
-                static int rejectedCount = 0;
-                rejectedCount++;
-                if (rejectedCount % 60 == 0) {
-                    std::cerr << "[NetworkServer] Rejected " << rejectedCount
-                              << " input packets - client " << session->clientId
-                              << " not authenticated!" << std::endl;
-                }
             }
             break;
 
@@ -438,8 +422,8 @@ bool NetworkServer::sendLoginResponse(uint32_t clientId, uint32_t playerId,
     response.mapWidth = mapWidth;
     response.mapHeight = mapHeight;
 
-    sendToEndpoint(it->second.endpoint, &response, sizeof(response), true,
-                   &it->second);
+    sendToEndpoint(it->second.endpoint, &response, sizeof(response), false,
+                   nullptr);
     return true;
 }
 
@@ -492,7 +476,7 @@ bool NetworkServer::sendEntityDead(uint32_t clientId, uint32_t entityId)
     packet.entityId = entityId;
 
     if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0, true);
+        broadcast(&packet, sizeof(packet), 0, false);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
     }
@@ -515,6 +499,226 @@ bool NetworkServer::sendScoreUpdate(uint32_t clientId, uint32_t score)
     return true;
 }
 
+// --- Extended Game Event Notifications Implementation ---
+
+bool NetworkServer::sendMonsterSpawned(uint32_t clientId, uint32_t monsterId,
+                                       uint8_t monsterType, float x, float y)
+{
+    MonsterSpawnedPacket packet;
+    packet.header.opCode = OpCode::S2C_MONSTER_SPAWNED;
+    packet.header.packetSize = sizeof(MonsterSpawnedPacket);
+    packet.header.sequenceId = 0;
+    packet.monsterId = monsterId;
+    packet.monsterType = monsterType;
+    packet.x = x;
+    packet.y = y;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendMonsterMoved(uint32_t clientId, uint32_t monsterId,
+                                     float x, float y, float velocityX,
+                                     float velocityY)
+{
+    MonsterMovedPacket packet;
+    packet.header.opCode = OpCode::S2C_MONSTER_MOVED;
+    packet.header.packetSize = sizeof(MonsterMovedPacket);
+    packet.header.sequenceId = 0;
+    packet.monsterId = monsterId;
+    packet.x = x;
+    packet.y = y;
+    packet.velocityX = velocityX;
+    packet.velocityY = velocityY;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendMonsterFired(uint32_t clientId, uint32_t monsterId,
+                                     uint32_t projectileId, float x, float y,
+                                     float velocityX, float velocityY)
+{
+    MonsterFiredPacket packet;
+    packet.header.opCode = OpCode::S2C_MONSTER_FIRED;
+    packet.header.packetSize = sizeof(MonsterFiredPacket);
+    packet.header.sequenceId = 0;
+    packet.monsterId = monsterId;
+    packet.projectileId = projectileId;
+    packet.x = x;
+    packet.y = y;
+    packet.velocityX = velocityX;
+    packet.velocityY = velocityY;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendMonsterKilled(uint32_t clientId, uint32_t monsterId,
+                                      uint32_t killerId, uint8_t killerType)
+{
+    MonsterKilledPacket packet;
+    packet.header.opCode = OpCode::S2C_MONSTER_KILLED;
+    packet.header.packetSize = sizeof(MonsterKilledPacket);
+    packet.header.sequenceId = 0;
+    packet.monsterId = monsterId;
+    packet.killerId = killerId;
+    packet.killerType = killerType;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendPlayerMoved(uint32_t clientId, uint32_t playerId,
+                                    float x, float y)
+{
+    PlayerMovedPacket packet;
+    packet.header.opCode = OpCode::S2C_PLAYER_MOVED;
+    packet.header.packetSize = sizeof(PlayerMovedPacket);
+    packet.header.sequenceId = 0;
+    packet.playerId = playerId;
+    packet.x = x;
+    packet.y = y;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendPlayerFired(uint32_t clientId, uint32_t playerId,
+                                    uint32_t projectileId, float x, float y)
+{
+    PlayerFiredPacket packet;
+    packet.header.opCode = OpCode::S2C_PLAYER_FIRED;
+    packet.header.packetSize = sizeof(PlayerFiredPacket);
+    packet.header.sequenceId = 0;
+    packet.playerId = playerId;
+    packet.projectileId = projectileId;
+    packet.x = x;
+    packet.y = y;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendPlayerKilled(uint32_t clientId, uint32_t playerId,
+                                     uint32_t killerId, uint8_t killerType)
+{
+    PlayerKilledPacket packet;
+    packet.header.opCode = OpCode::S2C_PLAYER_KILLED;
+    packet.header.packetSize = sizeof(PlayerKilledPacket);
+    packet.header.sequenceId = 0;
+    packet.playerId = playerId;
+    packet.killerId = killerId;
+    packet.killerType = killerType;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendPlayerDamaged(uint32_t clientId, uint32_t playerId,
+                                      uint32_t attackerId, float damageAmount,
+                                      float remainingHealth)
+{
+    PlayerDamagedPacket packet;
+    packet.header.opCode = OpCode::S2C_PLAYER_DAMAGED;
+    packet.header.packetSize = sizeof(PlayerDamagedPacket);
+    packet.header.sequenceId = 0;
+    packet.playerId = playerId;
+    packet.attackerId = attackerId;
+    packet.damageAmount = damageAmount;
+    packet.remainingHealth = remainingHealth;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendClientCrashed(uint32_t clientId,
+                                      uint32_t crashedClientId,
+                                      uint32_t playerId, uint8_t reason)
+{
+    ClientCrashedPacket packet;
+    packet.header.opCode = OpCode::S2C_CLIENT_CRASHED;
+    packet.header.packetSize = sizeof(ClientCrashedPacket);
+    packet.header.sequenceId = 0;
+    packet.clientId = crashedClientId;
+    packet.playerId = playerId;
+    packet.reason = reason;
+
+    if (clientId == 0) {
+        // Broadcast to all except the crashed client
+        broadcast(&packet, sizeof(packet), crashedClientId);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
+bool NetworkServer::sendGameEvent(uint32_t clientId, uint16_t eventType,
+                                  uint32_t entityId, uint32_t secondaryId,
+                                  const uint8_t* data, size_t dataSize)
+{
+    if (dataSize > 32) {
+        Logger::getInstance().log(
+            "GameEvent data size exceeds 32 bytes, truncating",
+            LogLevel::WARNING_L, "NetworkServer");
+        dataSize = 32;
+    }
+
+    GameEventPacket packet;
+    packet.header.opCode = OpCode::S2C_GAME_EVENT;
+    packet.header.packetSize = sizeof(GameEventPacket);
+    packet.header.sequenceId = 0;
+    packet.eventType = eventType;
+    packet.entityId = entityId;
+    packet.secondaryId = secondaryId;
+
+    if (data && dataSize > 0) {
+        std::memcpy(packet.data, data, dataSize);
+    }
+    if (dataSize < 32) {
+        std::memset(packet.data + dataSize, 0, 32 - dataSize);
+    }
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
 size_t NetworkServer::broadcast(const void* data, size_t size,
                                 uint32_t excludeClient, bool reliable)
 {
@@ -523,7 +727,7 @@ size_t NetworkServer::broadcast(const void* data, size_t size,
     for (auto& session : _sessions) {
         if (session.first != excludeClient && session.second.isAuthenticated) {
             sendToEndpoint(session.second.endpoint, data, size, reliable,
-                           &session.second);
+                           reliable ? &session.second : nullptr);
             count++;
         }
     }
@@ -628,12 +832,7 @@ void NetworkServer::sendToClient(const void* data, size_t size,
     std::lock_guard<std::mutex> lock(_clientsMutex);
     ClientSession* session = getSessionById(clientId);
     if (session) {
-        const Header* h = reinterpret_cast<const Header*>(data);
-        bool reliable = (h->opCode == OpCode::S2C_LOGIN_OK ||
-                         h->opCode == OpCode::S2C_ENTITY_NEW ||
-                         h->opCode == OpCode::S2C_ENTITY_DEAD);
-
-        sendToEndpoint(session->endpoint, data, size, reliable, session);
+        sendToEndpoint(session->endpoint, data, size, false, nullptr);
     }
 }
 
