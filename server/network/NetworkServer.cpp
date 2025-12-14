@@ -76,6 +76,12 @@ NetworkState NetworkServer::getState() const { return _state; }
 
 void NetworkServer::update()
 {
+    static int updateCount = 0;
+    updateCount++;
+
+    if (updateCount % 300 == 0) {
+        std::cout << "[NetworkServer] update() called " << updateCount << " times" << std::endl;
+    }
     checkTimeouts();
     resendPendingPackets();
 
@@ -83,6 +89,10 @@ void NetworkServer::update()
     {
         std::lock_guard<std::mutex> lock(_eventQueueMutex);
         events = std::move(_eventQueue);
+    }
+    
+    if (!events.empty() && updateCount % 300 == 0) {
+        std::cout << "[NetworkServer] Processing " << events.size() << " events" << std::endl;
     }
 
     for (const auto& event : events) {
@@ -129,6 +139,8 @@ void NetworkServer::checkTimeouts()
     }
 
     for (uint32_t clientId : timedOutClients) {
+        std::cout << "[NetworkServer] Client " << clientId << " TIMED OUT after " 
+                  << _timeoutDuration.count() << "s - disconnecting" << std::endl;
         Logger::getInstance().log(
             "Client " + std::to_string(clientId) + " timed out after " +
                 std::to_string(_timeoutDuration.count()) + "s of inactivity",
@@ -202,19 +214,30 @@ void NetworkServer::setOnErrorCallback(
 
 void NetworkServer::runNetworkLoop()
 {
+    std::cout << "[NetworkServer] Network thread started, entering io_context.run()" << std::endl;
     try {
-        _ioContext.run();
+        size_t handlersRun = _ioContext.run();
+        std::cout << "[NetworkServer] io_context.run() exited normally, ran " << handlersRun << " handlers" << std::endl;
     } catch (const std::exception& e) {
+        std::cerr << "[NetworkServer FATAL] Network thread exception: " << e.what() << std::endl;
         Logger::getInstance().log(
             "Network thread exception: " + std::string(e.what()),
             LogLevel::ERROR_L, "NetworkServer");
         _state = NetworkState::Error;
         if (_onError) _onError(e.what());
     }
+    std::cout << "[NetworkServer] Network thread exiting" << std::endl;
 }
 
 void NetworkServer::startReceive()
 {
+    static int startCount = 0;
+    startCount++;
+    
+    if (startCount % 60 == 0) {
+        std::cout << "[NetworkServer] startReceive() called " << startCount << " times" << std::endl;
+    }
+    
     _socket.async_receive_from(boost::asio::buffer(_receiveBuffer),
                                _remoteEndpoint,
                                [this](const boost::system::error_code& error,
@@ -226,15 +249,36 @@ void NetworkServer::startReceive()
 void NetworkServer::handleReceive(const boost::system::error_code& error,
                                   size_t bytesTransferred)
 {
+    static int receiveCount = 0;
+    receiveCount++;
+    
+    if (receiveCount % 60 == 0) {
+        std::cout << "[NetworkServer] handleReceive() called " << receiveCount << " times, _running=" << _running << std::endl;
+    }
+    
     if (!error) {
-        processPacket(_receiveBuffer.data(), bytesTransferred, _remoteEndpoint);
-    } else if (error != boost::asio::error::operation_aborted) {
-        Logger::getInstance().log("Receive error: " + error.message(),
-                                  LogLevel::ERROR_L, "NetworkServer");
+        try {
+            processPacket(_receiveBuffer.data(), bytesTransferred, _remoteEndpoint);
+        } catch (const std::exception& e) {
+            std::cerr << "[NetworkServer ERROR] processPacket exception: " << e.what() << std::endl;
+        }
+    } else {
+        std::cerr << "[NetworkServer ERROR] Receive error: " << error.message() 
+                  << " (code: " << error.value() << ")" << std::endl;
+        if (error == boost::asio::error::operation_aborted) {
+            std::cout << "[NetworkServer] Receive operation aborted" << std::endl;
+            return;
+        }
     }
 
     if (_running) {
-        startReceive();
+        try {
+            startReceive();
+        } catch (const std::exception& e) {
+            std::cerr << "[NetworkServer FATAL] startReceive() exception: " << e.what() << std::endl;
+        }
+    } else {
+        std::cout << "[NetworkServer] Not restarting receive - _running is false" << std::endl;
     }
 }
 
@@ -265,6 +309,9 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
             _endpointToId[sender] = newId;
             session = &_sessions[newId];
             isNewClient = true;
+            
+            std::cout << "[NetworkServer] Created NEW session for client " << newId 
+                      << " (isAuthenticated=false)" << std::endl;
         } else {
             session->lastActivity = std::chrono::steady_clock::now();
         }
@@ -305,6 +352,14 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
                 event.clientId = session->clientId;
                 event.inputPacket = *reinterpret_cast<const InputPacket*>(data);
                 pushEvent(event);
+            } else if (size >= sizeof(InputPacket)) {
+                static int rejectedCount = 0;
+                rejectedCount++;
+                if (rejectedCount % 60 == 0) {
+                    std::cerr << "[NetworkServer] Rejected " << rejectedCount 
+                              << " input packets - client " << session->clientId 
+                              << " not authenticated!" << std::endl;
+                }
             }
             break;
 
