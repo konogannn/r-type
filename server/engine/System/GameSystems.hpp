@@ -173,6 +173,7 @@ class BulletCleanupSystem : public ISystem {
 
    public:
     std::string getName() const override { return "BulletCleanupSystem"; }
+    SystemType getType() const override { return SystemType::BULLET_CLEANUP; }
     int getPriority() const override { return 90; }
 
     const std::vector<DestroyInfo>& getDestroyedEntities() const
@@ -225,6 +226,7 @@ class EnemyCleanupSystem : public ISystem {
 
    public:
     std::string getName() const override { return "EnemyCleanupSystem"; }
+    SystemType getType() const override { return SystemType::ENEMY_CLEANUP; }
     int getPriority() const override { return 95; }
 
     const std::vector<DestroyInfo>& getDestroyedEntities() const
@@ -294,6 +296,7 @@ class CollisionSystem : public ISystem {
 
    public:
     std::string getName() const override { return "CollisionSystem"; }
+    SystemType getType() const override { return SystemType::COLLISION; }
     int getPriority() const override { return 50; }
 
     const std::vector<DestroyInfo>& getDestroyedEntities() const
