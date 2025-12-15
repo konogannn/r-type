@@ -65,6 +65,7 @@ class WindowSFML : public IWindow {
     void recreateWindow();
 
     std::unique_ptr<sf::RenderWindow> _window;
+    sf::Image _icon;
     sf::Event _lastEvent;
     sf::Clock _clock;
     float _deltaTime;
