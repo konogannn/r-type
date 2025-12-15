@@ -9,6 +9,11 @@
 
 namespace engine {
 
+// MovementSystem
+std::string MovementSystem::getName() const { return "MovementSystem"; }
+
+int MovementSystem::getPriority() const { return 10; }
+
 void MovementSystem::update(float deltaTime, EntityManager& entityManager)
 {
     _frameCounter++;
@@ -35,6 +40,11 @@ void MovementSystem::update(float deltaTime, EntityManager& entityManager)
     }
 }
 
+// LifetimeSystem
+std::string LifetimeSystem::getName() const { return "LifetimeSystem"; }
+
+int LifetimeSystem::getPriority() const { return 100; }
+
 void LifetimeSystem::processEntity(float deltaTime, Entity& entity,
                                    Lifetime* lifetime)
 {
@@ -53,6 +63,14 @@ void LifetimeSystem::update(float deltaTime, EntityManager& entityManager)
         entityManager.destroyEntity(id);
     }
 }
+
+// EnemySpawnerSystem
+std::string EnemySpawnerSystem::getName() const
+{
+    return "EnemySpawnerSystem";
+}
+
+int EnemySpawnerSystem::getPriority() const { return 5; }
 
 void EnemySpawnerSystem::update(float deltaTime, EntityManager& entityManager)
 {
@@ -94,6 +112,30 @@ void EnemySpawnerSystem::spawnEnemy(EntityManager& entityManager)
     entityManager.addComponent(enemy, NetworkEntity(_nextEnemyId++, 2));
 }
 
+// BulletCleanupSystem
+std::string BulletCleanupSystem::getName() const
+{
+    return "BulletCleanupSystem";
+}
+
+SystemType BulletCleanupSystem::getType() const
+{
+    return SystemType::BULLET_CLEANUP;
+}
+
+int BulletCleanupSystem::getPriority() const { return 90; }
+
+const std::vector<BulletCleanupSystem::DestroyInfo>&
+BulletCleanupSystem::getDestroyedEntities() const
+{
+    return _entitiesToDestroy;
+}
+
+void BulletCleanupSystem::clearDestroyedEntities()
+{
+    _entitiesToDestroy.clear();
+}
+
 void BulletCleanupSystem::update(float /* deltaTime */,
                                  EntityManager& entityManager)
 {
@@ -122,6 +164,30 @@ void BulletCleanupSystem::update(float /* deltaTime */,
     }
 }
 
+// EnemyCleanupSystem
+std::string EnemyCleanupSystem::getName() const
+{
+    return "EnemyCleanupSystem";
+}
+
+SystemType EnemyCleanupSystem::getType() const
+{
+    return SystemType::ENEMY_CLEANUP;
+}
+
+int EnemyCleanupSystem::getPriority() const { return 95; }
+
+const std::vector<EnemyCleanupSystem::DestroyInfo>&
+EnemyCleanupSystem::getDestroyedEntities() const
+{
+    return _entitiesToDestroy;
+}
+
+void EnemyCleanupSystem::clearDestroyedEntities()
+{
+    _entitiesToDestroy.clear();
+}
+
 void EnemyCleanupSystem::update([[maybe_unused]] float deltaTime,
                                 EntityManager& entityManager)
 {
@@ -147,6 +213,24 @@ void EnemyCleanupSystem::update([[maybe_unused]] float deltaTime,
     for (const auto& info : _entitiesToDestroy) {
         entityManager.destroyEntity(info.entityId);
     }
+}
+
+// CollisionSystem
+std::string CollisionSystem::getName() const { return "CollisionSystem"; }
+
+SystemType CollisionSystem::getType() const { return SystemType::COLLISION; }
+
+int CollisionSystem::getPriority() const { return 50; }
+
+const std::vector<CollisionSystem::DestroyInfo>&
+CollisionSystem::getDestroyedEntities() const
+{
+    return _entitiesToDestroy;
+}
+
+void CollisionSystem::clearDestroyedEntities()
+{
+    _entitiesToDestroy.clear();
 }
 
 bool CollisionSystem::checkCollision(const Position& pos1,
@@ -312,6 +396,14 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
         entityManager.destroyEntity(id);
     }
 }
+
+// PlayerCooldownSystem
+std::string PlayerCooldownSystem::getName() const
+{
+    return "PlayerCooldownSystem";
+}
+
+int PlayerCooldownSystem::getPriority() const { return 15; }
 
 void PlayerCooldownSystem::processEntity(float deltaTime,
                                         [[maybe_unused]] Entity& entity,

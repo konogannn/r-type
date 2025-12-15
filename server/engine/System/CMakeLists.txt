@@ -9,6 +9,7 @@ set(SYSTEM_HEADERS
 )
 
 set(SYSTEM_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/System.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/GameLoop.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/GameSystems.cpp
 )

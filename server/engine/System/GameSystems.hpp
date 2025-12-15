@@ -26,8 +26,8 @@ class MovementSystem : public ISystem {
    public:
     MovementSystem() : _frameCounter(0) {}
 
-    std::string getName() const override { return "MovementSystem"; }
-    int getPriority() const override { return 10; }
+    std::string getName() const override;
+    int getPriority() const override;
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -44,8 +44,8 @@ class LifetimeSystem : public System<Lifetime> {
                        Lifetime* lifetime) override;
 
    public:
-    std::string getName() const override { return "LifetimeSystem"; }
-    int getPriority() const override { return 100; }
+    std::string getName() const override;
+    int getPriority() const override;
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -73,11 +73,11 @@ class EnemySpawnerSystem : public ISystem {
     {
     }
 
+    std::string getName() const override;
+    int getPriority() const override;
+
     void update(float deltaTime, EntityManager& entityManager) override;
     void spawnEnemy(EntityManager& entityManager);
-
-    std::string getName() const override { return "EnemySpawnerSystem"; }
-    int getPriority() const override { return 5; }
 };
 
 /**
@@ -97,16 +97,12 @@ class BulletCleanupSystem : public ISystem {
     const float MAX_Y = 1200.0f;
 
    public:
-    std::string getName() const override { return "BulletCleanupSystem"; }
-    SystemType getType() const override { return SystemType::BULLET_CLEANUP; }
-    int getPriority() const override { return 90; }
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
 
-    const std::vector<DestroyInfo>& getDestroyedEntities() const
-    {
-        return _entitiesToDestroy;
-    }
-
-    void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+    const std::vector<DestroyInfo>& getDestroyedEntities() const;
+    void clearDestroyedEntities();
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -125,16 +121,12 @@ class EnemyCleanupSystem : public ISystem {
     const float MIN_X = -200.0f;
 
    public:
-    std::string getName() const override { return "EnemyCleanupSystem"; }
-    SystemType getType() const override { return SystemType::ENEMY_CLEANUP; }
-    int getPriority() const override { return 95; }
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
 
-    const std::vector<DestroyInfo>& getDestroyedEntities() const
-    {
-        return _entitiesToDestroy;
-    }
-
-    void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+    const std::vector<DestroyInfo>& getDestroyedEntities() const;
+    void clearDestroyedEntities();
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -156,16 +148,12 @@ class CollisionSystem : public ISystem {
                         const Position& pos2, const BoundingBox& box2);
 
    public:
-    std::string getName() const override { return "CollisionSystem"; }
-    SystemType getType() const override { return SystemType::COLLISION; }
-    int getPriority() const override { return 50; }
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
 
-    const std::vector<DestroyInfo>& getDestroyedEntities() const
-    {
-        return _entitiesToDestroy;
-    }
-
-    void clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+    const std::vector<DestroyInfo>& getDestroyedEntities() const;
+    void clearDestroyedEntities();
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -179,7 +167,7 @@ class PlayerCooldownSystem : public System<Player> {
                        Player* player) override;
 
    public:
-    std::string getName() const override { return "PlayerCooldownSystem"; }
-    int getPriority() const override { return 15; }
+    std::string getName() const override;
+    int getPriority() const override;
 };
 }  // namespace engine
