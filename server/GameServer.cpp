@@ -11,6 +11,7 @@
 #include <iostream>
 #include <thread>
 
+#include "../common/utils/Logger.hpp"
 #include "engine/system/GameSystems.hpp"
 
 namespace rtype {
@@ -62,14 +63,17 @@ void GameServer::setupNetworkCallbacks()
 void GameServer::onClientConnected(uint32_t clientId, const std::string& ip,
                                    uint16_t port)
 {
-    std::cout << "[Network] Client " << clientId << " connected from " << ip
-              << ":" << port << std::endl;
+    Logger::getInstance().log(
+        "Client " + std::to_string(clientId) + " connected from " + ip +
+            ":" + std::to_string(port),
+        LogLevel::INFO_L, "Network");
 }
 
 void GameServer::onClientDisconnected(uint32_t clientId)
 {
-    std::cout << "[Network] Client " << clientId << " disconnected"
-              << std::endl;
+    Logger::getInstance().log("Client " + std::to_string(clientId) +
+                                  " disconnected",
+                              LogLevel::INFO_L, "Network");
 
     try {
         {
@@ -77,48 +81,61 @@ void GameServer::onClientDisconnected(uint32_t clientId)
             if (_playersReady.find(clientId) != _playersReady.end()) {
                 _playersReady.erase(clientId);
                 _playerCount--;
-                std::cout << "[Lobby] Player left. Players in lobby: "
-                          << _playerCount.load() << std::endl;
+                Logger::getInstance().log(
+                    "Player left. Players in lobby: " +
+                        std::to_string(_playerCount.load()),
+                    LogLevel::INFO_L, "Lobby");
             }
         }
 
         _gameLoop.removePlayer(clientId);
 
-        std::cout << "[Game] Successfully handled client " << clientId
-                  << " disconnection.";
+        Logger::getInstance().log(
+            "Successfully handled client " + std::to_string(clientId) +
+                " disconnection.",
+            LogLevel::INFO_L, "Game");
 
         if (_playerCount.load() == 0 && _gameStarted) {
-            std::cout << " No players remaining, stopping game..." << std::endl;
+            Logger::getInstance().log("No players remaining, stopping game...",
+                                      LogLevel::INFO_L, "Game");
             _gameStarted = false;
         } else {
-            std::cout << " Server continues running." << std::endl;
+            Logger::getInstance().log("Server continues running.",
+                                      LogLevel::INFO_L, "Game");
         }
     } catch (const std::exception& e) {
-        std::cerr << "[GameServer] Error handling client disconnect: "
-                  << e.what() << std::endl;
-        std::cerr << "[GameServer] Server remains operational" << std::endl;
+        Logger::getInstance().log(
+            "Error handling client disconnect: " + std::string(e.what()),
+            LogLevel::ERROR_L, "GameServer");
+        Logger::getInstance().log("Server remains operational",
+                                  LogLevel::ERROR_L, "GameServer");
     }
 }
 
 void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
 {
-    std::cout << "[Network] Client " << clientId << " logged in as '"
-              << packet.username << "'" << std::endl;
+    Logger::getInstance().log("Client " + std::to_string(clientId) +
+                                  " logged in as '" + packet.username + "'",
+                              LogLevel::INFO_L, "Network");
 
     {
         std::lock_guard<std::mutex> lock(_playerMutex);
 
         if (_playerCount >= MAX_PLAYERS) {
-            std::cout << "[Lobby] Lobby is full! Rejecting client " << clientId
-                      << std::endl;
+            Logger::getInstance().log(
+                "Lobby is full! Rejecting client " + std::to_string(clientId),
+                LogLevel::WARNING_L, "Lobby");
             return;
         }
 
         _playersReady[clientId] = true;
         _playerCount++;
 
-        std::cout << "[Lobby] Player joined. Players in lobby: "
-                  << _playerCount.load() << "/" << MAX_PLAYERS << std::endl;
+        Logger::getInstance().log(
+            "Player joined. Players in lobby: " +
+                std::to_string(_playerCount.load()) + "/" +
+                std::to_string(MAX_PLAYERS),
+            LogLevel::INFO_L, "Lobby");
     }
 
     uint32_t newPlayerId = _nextPlayerId.fetch_add(1);
@@ -134,9 +151,11 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
                                            playerUpdate.entityType,
                                            playerUpdate.x, playerUpdate.y);
 
-            std::cout << "[Game] Sending existing player "
-                      << playerUpdate.entityId << " to new client " << clientId
-                      << std::endl;
+            Logger::getInstance().log(
+                "Sending existing player " +
+                    std::to_string(playerUpdate.entityId) + " to new client " +
+                    std::to_string(clientId),
+                LogLevel::INFO_L, "Game");
         }
 
         float startX = 100.0f;
@@ -144,8 +163,10 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
 
         _gameLoop.spawnPlayer(clientId, newPlayerId, startX, startY);
 
-        std::cout << "[Game] Player " << newPlayerId << " spawned at ("
-                  << startX << ", " << startY << ")" << std::endl;
+        Logger::getInstance().log(
+            "Player " + std::to_string(newPlayerId) + " spawned at (" +
+                std::to_string(startX) + ", " + std::to_string(startY) + ")",
+            LogLevel::INFO_L, "Game");
     }
 }
 
@@ -160,18 +181,20 @@ void GameServer::onClientInput(uint32_t clientId, const InputPacket& packet)
 
 void GameServer::onPlayerDeath(uint32_t clientId)
 {
-    std::cout << "[Game] Player " << clientId << " died!" << std::endl;
+    Logger::getInstance().log("Player " + std::to_string(clientId) + " died!",
+                              LogLevel::INFO_L, "Game");
 
     std::lock_guard<std::mutex> lock(_playerMutex);
     if (_playersReady.find(clientId) != _playersReady.end()) {
         _playersReady.erase(clientId);
         _playerCount--;
-        std::cout << "[Game] Players remaining: " << _playerCount.load()
-                  << std::endl;
+        Logger::getInstance().log(
+            "Players remaining: " + std::to_string(_playerCount.load()),
+            LogLevel::INFO_L, "Game");
 
         if (_playerCount.load() == 0 && _gameStarted) {
-            std::cout << "[Game] All players died, stopping game..."
-                      << std::endl;
+            Logger::getInstance().log("All players died, stopping game...",
+                                      LogLevel::INFO_L, "Game");
             _gameStarted = false;
         }
     }
@@ -180,16 +203,21 @@ void GameServer::onPlayerDeath(uint32_t clientId)
 bool GameServer::start(uint16_t port)
 {
     if (!_networkServer.start(port)) {
-        std::cerr << "[Error] Failed to start server on port " << port
-                  << std::endl;
+        Logger::getInstance().log("Failed to start server on port " +
+                                      std::to_string(port),
+                                  LogLevel::ERROR_L, "Error");
         return false;
     }
 
-    std::cout << "[Network] Server started on port " << port << std::endl;
-    std::cout << "[Lobby] Waiting for players to connect (1-" << MAX_PLAYERS
-              << " players)..." << std::endl;
-    std::cout << "[Lobby] Game will start when " << MIN_PLAYERS_TO_START
-              << " player(s) connect" << std::endl;
+    Logger::getInstance().log("Server started on port " + std::to_string(port),
+                              LogLevel::INFO_L, "Network");
+    Logger::getInstance().log("Waiting for players to connect (1-" +
+                                  std::to_string(MAX_PLAYERS) + " players)...",
+                              LogLevel::INFO_L, "Lobby");
+    Logger::getInstance().log("Game will start when " +
+                                  std::to_string(MIN_PLAYERS_TO_START) +
+                                  " player(s) connect",
+                              LogLevel::INFO_L, "Lobby");
 
     return true;
 }
@@ -202,8 +230,10 @@ void GameServer::waitForPlayers()
         _networkServer.update();
 
         if (_playerCount >= MIN_PLAYERS_TO_START) {
-            std::cout << "[Lobby] Starting game with " << _playerCount.load()
-                      << " player(s)..." << std::endl;
+            Logger::getInstance().log(
+                "Starting game with " + std::to_string(_playerCount.load()) +
+                    " player(s)...",
+                LogLevel::INFO_L, "Lobby");
             _gameStarted = true;
             return;
         }
@@ -240,13 +270,16 @@ void GameServer::processNetworkUpdates()
                                                           update.x, update.y);
                     }
                 } catch (const std::exception& e) {
-                    std::cerr << "[GameServer] Error processing entity update: "
-                              << e.what() << std::endl;
+                    Logger::getInstance().log(
+                        "Error processing entity update: " +
+                            std::string(e.what()),
+                        LogLevel::ERROR_L, "GameServer");
                 }
             }
         } catch (const std::exception& e) {
-            std::cerr << "[GameServer] Error in network update loop: "
-                      << e.what() << std::endl;
+            Logger::getInstance().log(
+                "Error in network update loop: " + std::string(e.what()),
+                LogLevel::ERROR_L, "GameServer");
         }
 
         auto frameTime = std::chrono::steady_clock::now() - frameStart;
@@ -258,14 +291,16 @@ void GameServer::processNetworkUpdates()
 
 void GameServer::resetGameState()
 {
-    std::cout << "[Game] Resetting game state..." << std::endl;
+    Logger::getInstance().log("Resetting game state...", LogLevel::INFO_L,
+                              "Game");
 
     std::lock_guard<std::mutex> lock(_playerMutex);
     _playersReady.clear();
     _playerCount = 0;
     _gameStarted = false;
 
-    std::cout << "[Lobby] Ready for new players" << std::endl;
+    Logger::getInstance().log("Ready for new players", LogLevel::INFO_L,
+                              "Lobby");
 }
 
 void GameServer::run()
@@ -275,31 +310,36 @@ void GameServer::run()
             waitForPlayers();
 
             if (!_networkServer.isRunning()) {
-                std::cout << "[Server] Server stopped before game could start"
-                          << std::endl;
+                Logger::getInstance().log(
+                    "Server stopped before game could start", LogLevel::INFO_L,
+                    "Server");
                 return;
             }
 
             _gameLoop.start();
-            std::cout << "[Game] Game loop started at 60 FPS with "
-                      << _playerCount.load() << " player(s)" << std::endl;
+            Logger::getInstance().log(
+                "Game loop started at 60 FPS with " +
+                    std::to_string(_playerCount.load()) + " player(s)",
+                LogLevel::INFO_L, "Game");
 
             processNetworkUpdates();
 
-            std::cout << "[Game] Shutting down game loop..." << std::endl;
+            Logger::getInstance().log("Shutting down game loop...",
+                                      LogLevel::INFO_L, "Game");
             _gameLoop.stop();
 
             resetGameState();
         }
     } catch (const std::exception& e) {
-        std::cerr << "[GameServer FATAL] Unhandled exception in run(): "
-                  << e.what() << std::endl;
+        Logger::getInstance().log(
+            "Unhandled exception in run(): " + std::string(e.what()),
+            LogLevel::CRITICAL_L, "GameServer FATAL");
         try {
             _gameLoop.stop();
             _networkServer.stop();
         } catch (...) {
-            std::cerr << "[GameServer] Error during emergency shutdown"
-                      << std::endl;
+            Logger::getInstance().log("Error during emergency shutdown",
+                                      LogLevel::CRITICAL_L, "GameServer");
         }
     }
 }
@@ -308,7 +348,8 @@ void GameServer::stop()
 {
     _gameLoop.stop();
     _networkServer.stop();
-    std::cout << "[Server] Shutdown complete" << std::endl;
+    Logger::getInstance().log("Shutdown complete", LogLevel::INFO_L,
+                              "Server");
 }
 
 bool GameServer::isRunning() const

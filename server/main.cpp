@@ -9,6 +9,7 @@
 #include <csignal>
 #include <iostream>
 
+#include "../common/utils/Logger.hpp"
 #include "GameServer.hpp"
 
 static rtype::GameServer* g_serverInstance = nullptr;
@@ -43,33 +44,43 @@ int main()
         rtype::GameServer server(60.0f, 30);
         g_serverInstance = &server;
 
-        std::cout << "[Server] Starting on port 8080..." << std::endl;
+        Logger::getInstance().log("Starting on port 8080...",
+                                  LogLevel::INFO_L, "Server");
         if (!server.start(8080)) {
-            std::cerr << "[Error] Failed to start server" << std::endl;
+            Logger::getInstance().log("Failed to start server",
+                                      LogLevel::ERROR_L, "Error");
             g_serverInstance = nullptr;
             return 1;
         }
 
-        std::cout << "[Server] Server started successfully" << std::endl;
-        std::cout << "[Server] Press Ctrl+C to shutdown gracefully"
-                  << std::endl;
+        Logger::getInstance().log("Server started successfully",
+                                  LogLevel::INFO_L, "Server");
+        Logger::getInstance().log("Press Ctrl+C to shutdown gracefully",
+                                  LogLevel::INFO_L, "Server");
 
         server.run();
 
         g_serverInstance = nullptr;
 
-        std::cout << "[Server] Server stopped" << std::endl;
+        Logger::getInstance().log("Server stopped", LogLevel::INFO_L,
+                                  "Server");
 
     } catch (const std::exception& e) {
-        std::cerr << "[FATAL] Unhandled exception: " << e.what() << std::endl;
-        std::cerr << "[FATAL] Server terminated abnormally" << std::endl;
+        Logger::getInstance().log("Unhandled exception: " +
+                                      std::string(e.what()),
+                                  LogLevel::CRITICAL_L, "FATAL");
+        Logger::getInstance().log("Server terminated abnormally",
+                                  LogLevel::CRITICAL_L, "FATAL");
         return 84;
     } catch (...) {
-        std::cerr << "[FATAL] Unknown exception caught" << std::endl;
-        std::cerr << "[FATAL] Server terminated abnormally" << std::endl;
+        Logger::getInstance().log("Unknown exception caught",
+                                  LogLevel::CRITICAL_L, "FATAL");
+        Logger::getInstance().log("Server terminated abnormally",
+                                  LogLevel::CRITICAL_L, "FATAL");
         return 84;
     }
 
-    std::cout << "[Server] Shutdown complete" << std::endl;
+    Logger::getInstance().log("Shutdown complete", LogLevel::INFO_L,
+                              "Server");
     return 0;
 }

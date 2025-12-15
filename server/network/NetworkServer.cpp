@@ -7,6 +7,8 @@
 
 #include "NetworkServer.hpp"
 
+#include "../../common/utils/Logger.hpp"
+
 namespace rtype {
 
 NetworkServer::NetworkServer(uint32_t timeoutSeconds)
@@ -362,11 +364,13 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
                               pending.end());
                 auto afterSize = pending.size();
 
-                std::cout << "[Callback] ACK Received.\n"
-                          << "  - Client ID: " << session->clientId << "\n"
-                          << "  - ACK Seq: " << ack->ackedSequenceId << "\n"
-                          << "  - Pending before: " << beforeSize << "\n"
-                          << "  - Pending after: " << afterSize << std::endl;
+                Logger::getInstance().log(
+                    "ACK Received. Client ID: " +
+                        std::to_string(session->clientId) +
+                        ", ACK Seq: " + std::to_string(ack->ackedSequenceId) +
+                        ", Pending before: " + std::to_string(beforeSize) +
+                        ", Pending after: " + std::to_string(afterSize),
+                    LogLevel::DEBUG_L, "Callback");
             }
             break;
 
