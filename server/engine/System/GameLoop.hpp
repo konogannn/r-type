@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameLoop - Multithreaded game loop for R-Type server
+** GameLoop
 */
 
 #pragma once
@@ -97,6 +97,12 @@ class GameLoop {
      */
     void createBullet(EntityId ownerEntityId, uint32_t clientId,
                       const Position& ownerPos, bool fromPlayer);
+
+    /**
+     * @brief Process destroyed entities from cleanup systems
+     */
+    template <typename T>
+    void processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath = false);
 
    public:
     /**

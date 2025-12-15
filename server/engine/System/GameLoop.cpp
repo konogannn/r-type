@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameLoop - Implementation
+** GameLoop
 */
 
 #include "GameLoop.hpp"
@@ -85,74 +85,21 @@ void GameLoop::gameThreadLoop()
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
 
-            if (system->getName() == "CollisionSystem") {
-                auto* collisionSystem =
-                    dynamic_cast<engine::CollisionSystem*>(system.get());
-                if (collisionSystem) {
-                    const auto& destroyed =
-                        collisionSystem->getDestroyedEntities();
-                    for (const auto& info : destroyed) {
-                        EntityStateUpdate update;
-                        update.entityId = info.networkEntityId;
-                        update.entityType = info.entityType;
-                        update.x = 0.0f;
-                        update.y = 0.0f;
-                        update.spawned = false;
-                        update.destroyed = true;
-                        _outputQueue.push(update);
-
-                        if (info.entityType == 1 && _onPlayerDeathCallback) {
-                            for (const auto& pair : _clientToEntity) {
-                                if (pair.second == info.entityId) {
-                                    _onPlayerDeathCallback(pair.first);
-                                    _clientToEntity.erase(pair.first);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    collisionSystem->clearDestroyedEntities();
-                }
-            }
-
-            else if (system->getName() == "BulletCleanupSystem") {
-                auto* bulletCleanup =
-                    dynamic_cast<engine::BulletCleanupSystem*>(system.get());
-                if (bulletCleanup) {
-                    const auto& destroyed =
-                        bulletCleanup->getDestroyedEntities();
-                    for (const auto& info : destroyed) {
-                        EntityStateUpdate update;
-                        update.entityId = info.networkEntityId;
-                        update.entityType = info.entityType;
-                        update.x = 0.0f;
-                        update.y = 0.0f;
-                        update.spawned = false;
-                        update.destroyed = true;
-                        _outputQueue.push(update);
-                    }
-                    bulletCleanup->clearDestroyedEntities();
-                }
-            }
-
-            else if (system->getName() == "EnemyCleanupSystem") {
-                auto* enemyCleanup =
-                    dynamic_cast<engine::EnemyCleanupSystem*>(system.get());
-                if (enemyCleanup) {
-                    const auto& destroyed =
-                        enemyCleanup->getDestroyedEntities();
-                    for (const auto& info : destroyed) {
-                        EntityStateUpdate update;
-                        update.entityId = info.networkEntityId;
-                        update.entityType = info.entityType;
-                        update.x = 0.0f;
-                        update.y = 0.0f;
-                        update.spawned = false;
-                        update.destroyed = true;
-                        _outputQueue.push(update);
-                    }
-                    enemyCleanup->clearDestroyedEntities();
-                }
+            switch (system->getType()) {
+                case SystemType::COLLISION:
+                    processDestroyedEntities(
+                        dynamic_cast<CollisionSystem*>(system.get()), true);
+                    break;
+                case SystemType::BULLET_CLEANUP:
+                    processDestroyedEntities(
+                        dynamic_cast<BulletCleanupSystem*>(system.get()));
+                    break;
+                case SystemType::ENEMY_CLEANUP:
+                    processDestroyedEntities(
+                        dynamic_cast<EnemyCleanupSystem*>(system.get()));
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -329,6 +276,39 @@ void GameLoop::removePlayer(uint32_t clientId)
     }
 
     _clientToEntity.erase(it);
+}
+
+template <typename T>
+void GameLoop::processDestroyedEntities(T* cleanupSystem,
+                                        bool checkPlayerDeath)
+{
+    if (!cleanupSystem) {
+        return;
+    }
+
+    const auto& destroyed = cleanupSystem->getDestroyedEntities();
+    for (const auto& info : destroyed) {
+        EntityStateUpdate update;
+        update.entityId = info.networkEntityId;
+        update.entityType = info.entityType;
+        update.x = 0.0f;
+        update.y = 0.0f;
+        update.spawned = false;
+        update.destroyed = true;
+        _outputQueue.push(update);
+
+        if (checkPlayerDeath && info.entityType == 1 &&
+            _onPlayerDeathCallback) {
+            for (const auto& pair : _clientToEntity) {
+                if (pair.second == info.entityId) {
+                    _onPlayerDeathCallback(pair.first);
+                    _clientToEntity.erase(pair.first);
+                    break;
+                }
+            }
+        }
+    }
+    cleanupSystem->clearDestroyedEntities();
 }
 
 void GameLoop::queueEntityDestruction(EntityId entityId)
