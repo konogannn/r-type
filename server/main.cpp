@@ -33,11 +33,10 @@ int main()
     std::cout << "========================================" << std::endl;
     std::cout << "  R-Type Multiplayer Server" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "Features:" << std::endl;
-    std::cout << "  - Multithreaded (network + game logic)" << std::endl;
-    std::cout << "  - Comprehensive event notifications" << std::endl;
-    std::cout << "  - Robust crash handling" << std::endl;
-    std::cout << "  - Extensible event system" << std::endl;
+    std::cout << "  Starting R-Type Server..." << std::endl;
+    std::cout << "  Listening on port 8080" << std::endl;
+    std::cout << "  Nb of Players per game: 1-4" << std::endl;
+    std::cout << "  Press Ctrl+C to stop the server" << std::endl;
     std::cout << "========================================" << std::endl;
 
     try {
