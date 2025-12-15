@@ -94,7 +94,7 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
     }
     if (!_shaderAvailable) {
         _shader = std::make_unique<ShaderSFML>();
-        
+
         if (!_shader->isAvailable()) {
             std::cerr
                 << "ColorBlindFilter: Shaders are not supported on this system"
