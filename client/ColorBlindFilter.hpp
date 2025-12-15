@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include <SFML/Graphics.hpp>
 #include <memory>
 #include <string>
 
 #include "wrapper/graphics/RenderTarget.hpp"
 #include "wrapper/graphics/Shader.hpp"
+#include "wrapper/graphics/Sprite.hpp"
 #include "wrapper/window/WindowSFML.hpp"
 
 namespace rtype {
@@ -63,7 +63,7 @@ class ColorBlindFilter {
     /**
      * @brief Get all available modes for iteration
      */
-    static constexpr int getModeCount() { return 7; }
+    static int getModeCount();
 
     /**
      * @brief Convert mode enum to index
@@ -115,7 +115,7 @@ class ColorBlindFilter {
     bool _shaderAvailable;
     std::unique_ptr<IShader> _shader;
     std::unique_ptr<IRenderTarget> _renderTarget;
-    sf::Sprite _renderSprite;
+    std::unique_ptr<ISprite> _renderSprite;
     unsigned int _windowWidth;
     unsigned int _windowHeight;
 

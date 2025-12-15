@@ -9,8 +9,10 @@
 
 #include <iostream>
 
+#include "wrapper/graphics/RenderStatesSFML.hpp"
 #include "wrapper/graphics/RenderTargetSFML.hpp"
 #include "wrapper/graphics/ShaderSFML.hpp"
+#include "wrapper/graphics/SpriteSFML.hpp"
 
 namespace rtype {
 
@@ -64,6 +66,8 @@ std::string ColorBlindFilter::getModeName(ColorBlindMode mode)
     }
 }
 
+int ColorBlindFilter::getModeCount() { return 7; }
+
 int ColorBlindFilter::modeToIndex(ColorBlindMode mode)
 {
     return static_cast<int>(mode);
@@ -89,14 +93,15 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
         return true;
     }
     if (!_shaderAvailable) {
-        if (!sf::Shader::isAvailable()) {
+        _shader = std::make_unique<ShaderSFML>();
+        
+        if (!_shader->isAvailable()) {
             std::cerr
                 << "ColorBlindFilter: Shaders are not supported on this system"
                 << std::endl;
             return false;
         }
 
-        _shader = std::make_unique<ShaderSFML>();
         if (!_shader->loadFromFile("assets/shaders/colorblind.frag",
                                    IShader::Fragment)) {
             std::cerr << "ColorBlindFilter: Failed to load shader from "
@@ -169,20 +174,23 @@ void ColorBlindFilter::endCaptureAndApply(WindowSFML& window)
 
     _renderTarget->display();
 
+    if (!_renderSprite) {
+        _renderSprite = std::make_unique<SpriteSFML>();
+    }
+
     RenderTargetSFML* renderTargetSFML =
         dynamic_cast<RenderTargetSFML*>(_renderTarget.get());
-    if (renderTargetSFML) {
-        _renderSprite.setTexture(renderTargetSFML->getTexture());
-    }
+    SpriteSFML* spriteSFML = dynamic_cast<SpriteSFML*>(_renderSprite.get());
 
-    _renderSprite.setPosition(0, 0);
-    sf::RenderStates states;
-    ShaderSFML* shaderSFML = dynamic_cast<ShaderSFML*>(_shader.get());
-    if (shaderSFML) {
-        states.shader = shaderSFML->getSFMLShader();
+    if (renderTargetSFML && spriteSFML) {
+        spriteSFML->setTexture(renderTargetSFML->getTexture());
     }
+    _renderSprite->setPosition(0, 0);
 
-    window.getSFMLWindow().draw(_renderSprite, states);
+    RenderStatesSFML states;
+    states.setShader(_shader.get());
+
+    window.draw(*_renderSprite, states);
 }
 
 IRenderTarget* ColorBlindFilter::getRenderTarget()
