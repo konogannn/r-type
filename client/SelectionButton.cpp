@@ -65,4 +65,21 @@ std::string SelectionButton::getSelectedOption() const
     return "";
 }
 
+int SelectionButton::getSelectedIndex() const { return _selectedIndex; }
+
+std::string SelectionButton::getLabel() const { return _label; }
+
+float SelectionButton::getX() const { return _x; }
+
+float SelectionButton::getY() const { return _y; }
+
+float SelectionButton::getWidth() const { return _width; }
+
+float SelectionButton::getHeight() const { return _height; }
+
+const std::vector<std::string>& SelectionButton::getOptions() const
+{
+    return _options;
+}
+
 }  // namespace rtype

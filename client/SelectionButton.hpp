@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** SelectionButton - Dropdown-style selection button for settings
+** SelectionButton
 */
 
 #pragma once
@@ -51,7 +51,7 @@ class SelectionButton {
     /**
      * @brief Get current selected option index
      */
-    int getSelectedIndex() const { return _selectedIndex; }
+    int getSelectedIndex() const;
 
     /**
      * @brief Set selected option index
@@ -66,20 +66,20 @@ class SelectionButton {
     /**
      * @brief Get button label
      */
-    std::string getLabel() const { return _label; }
+    std::string getLabel() const;
 
     /**
      * @brief Get position and dimensions
      */
-    float getX() const { return _x; }
-    float getY() const { return _y; }
-    float getWidth() const { return _width; }
-    float getHeight() const { return _height; }
+    float getX() const;
+    float getY() const;
+    float getWidth() const;
+    float getHeight() const;
 
     /**
      * @brief Get all options
      */
-    const std::vector<std::string>& getOptions() const { return _options; }
+    const std::vector<std::string>& getOptions() const;
 
    private:
     float _x;
