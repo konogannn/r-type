@@ -12,6 +12,7 @@
 #include "Resolution.hpp"
 #include "SettingsMenu.hpp"
 #include "src/Game.hpp"
+#include "src/SoundManager.hpp"
 #include "wrapper/audio/AudioSFML.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/graphics/SpriteSFML.hpp"
@@ -27,6 +28,12 @@ int main()
 {
     Config& config = Config::getInstance();
     config.load();
+    SoundManager::getInstance().loadAll();
+    float sfxVolume = config.getFloat("sfxVolume", 100.0f);
+    float musicVolume = config.getFloat("musicVolume", 100.0f);
+    SoundManager::getInstance().setVolume(sfxVolume);
+    SoundManager::getInstance().setMusicVolume(musicVolume);
+    SoundManager::getInstance().playMusic();
 
     int width = config.getInt("resolutionWidth", 1920);
     int height = config.getInt("resolutionHeight", 1080);
@@ -74,6 +81,8 @@ int main()
             switch (action) {
                 case MenuAction::StartGame:
                     state = GameState::Playing;
+                    // Stop menu music when entering the game
+                    SoundManager::getInstance().stopMusic();
                     clock->restart();
                     break;
                 case MenuAction::Settings:
@@ -94,8 +103,6 @@ int main()
                 std::cout << "  SPACE: Shoot" << std::endl;
                 std::cout << "  ESC: Return to menu" << std::endl;
                 std::cout << "===========================" << std::endl;
-
-                // Load server configuration
                 std::string serverAddress =
                     config.getString("serverAddress", "127.0.0.1");
                 int serverPort = config.getInt("serverPort", 8080);
@@ -109,12 +116,14 @@ int main()
                     config.load();
                     menu->updateLayout();
                     menu->resetFade();
+                    SoundManager::getInstance().playMusic();
                     clock->restart();
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Error in game: " << e.what() << std::endl;
                 state = GameState::Menu;
                 menu->resetFade();
+                SoundManager::getInstance().playMusic();
                 clock->restart();
             }
         } else if (state == GameState::Settings) {
