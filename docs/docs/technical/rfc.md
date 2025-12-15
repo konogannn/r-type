@@ -75,12 +75,12 @@ Every packet begins with a seven-byte header containing fields for packet identi
 
 #### Server-to-Client Operations
 
-- **0x10 - S2C_LOGIN_OK**: Connection accepted with initialization parameters
-- **0x11 - S2C_ENTITY_NEW**: Entity spawn notification (reliable)
-- **0x12 - S2C_ENTITY_POS**: Position update (unreliable)
-- **0x13 - S2C_ENTITY_DEAD**: Entity destruction notification
-- **0x14 - S2C_MAP**: Map data transmission
-- **0x15 - S2C_SCORE_UPDATE**: Score information update
+- **0x0A - S2C_LOGIN_OK**: Connection accepted with initialization parameters
+- **0x0B - S2C_ENTITY_NEW**: Entity spawn notification (reliable)
+- **0x0C - S2C_ENTITY_POS**: Position update (unreliable)
+- **0x0D - S2C_ENTITY_DEAD**: Entity destruction notification
+- **0x0E - S2C_MAP**: Map data transmission
+- **0x0F - S2C_SCORE_UPDATE**: Score information update
 
 ## 4. Packet Format Specifications
 
@@ -91,14 +91,14 @@ Initiates authentication and provides the player's username.
 | Field      | Type       | Size     | Description                                              |
 |:-----------|:-----------|:---------|:---------------------------------------------------------|
 | Header     | struct     | 7 bytes  | Standard header with OpCode 0x01                         |
-| username   | char[32]   | 32 bytes | Null-terminated ASCII string                             |
+| username   | char[8]    | 8 bytes  | Null-terminated ASCII string                             |
 
 ```text
 +-----------------------+------------------------------------------------+
-| Header (7 bytes)      | Username (32 bytes, ASCII)                     |
-| Op: 0x01 | Size | Seq | "PlayerOne\0................................"  |
+| Header (7 bytes)      | Username (8 bytes, ASCII)                     |
+| Op: 0x01 | Size | Seq | "Konogan\0"  |
 +-----------------------+------------------------------------------------+
-Total Size: 39 bytes
+Total Size: 15 bytes
 ```
 
 ### 4.2 Login Response (S2C_LOGIN_OK)
@@ -145,7 +145,7 @@ Entity types: 1=Player, 2=Bydos, 3=Missile.
 
 | Field      | Type       | Size    | Description                                   |
 |:-----------|:-----------|:--------|:----------------------------------------------|
-| Header     | struct     | 7 bytes | Standard header with OpCode 0x08              |
+| Header     | struct     | 7 bytes | Standard header with OpCode 0x0B              |
 | entityId   | uint32_t   | 4 bytes | Unique entity identifier                      |
 | type       | uint8_t    | 1 byte  | Entity type code                              |
 | x          | float      | 4 bytes | Initial X coordinate (IEEE 754)               |
@@ -154,7 +154,7 @@ Entity types: 1=Player, 2=Bydos, 3=Missile.
 ```text
 +---------+-----------+------+-----------+-----------+
 | Header  | Entity ID | Type | Pos X     | Pos Y     |
-| Op: 0x08| uint32    | uint8| float     | float     |
+| Op: 0x0B| uint32    | uint8| float     | float     |
 +---------+-----------+------+-----------+-----------+
 Total Size: 20 bytes
 ```
@@ -165,7 +165,7 @@ Provides current entity position. Transmitted unreliably.
 
 | Field      | Type       | Size    | Description                                   |
 |:-----------|:-----------|:--------|:----------------------------------------------|
-| Header     | struct     | 7 bytes | Standard header with OpCode 0x09              |
+| Header     | struct     | 7 bytes | Standard header with OpCode 0x0C              |
 | entityId   | uint32_t   | 4 bytes | Entity identifier                             |
 | x          | float      | 4 bytes | Updated X coordinate                          |
 | y          | float      | 4 bytes | Updated Y coordinate                          |
@@ -173,7 +173,7 @@ Provides current entity position. Transmitted unreliably.
 ```text
 +---------+-----------+-----------+-----------+
 | Header  | Entity ID | Pos X     | Pos Y     |
-| Op: 0x09| uint32    | float     | float     |
+| Op: 0x0C| uint32    | float     | float     |
 +---------+-----------+-----------+-----------+
 Total Size: 19 bytes
 ```
