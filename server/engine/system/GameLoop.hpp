@@ -14,10 +14,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../Component/GameComponents.hpp"
-#include "../Entity/Entity.hpp"
-#include "../Entity/EntityManager.hpp"
-#include "../Threading/ThreadSafeQueue.hpp"
+#include "../component/GameComponents.hpp"
+#include "../entity/Entity.hpp"
+#include "../entity/EntityManager.hpp"
+#include "../threading/ThreadSafeQueue.hpp"
 #include "System.hpp"
 
 namespace engine {

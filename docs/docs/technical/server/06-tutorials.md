@@ -19,7 +19,7 @@ Add a "Power-Up" entity that players can collect for temporary buffs.
 
 ### Step 1: Define the Component
 
-**File**: `server/engine/Component/GameComponents.hpp`
+**File**: `server/engine/component/GameComponents.hpp`
 
 ```cpp
 /**
@@ -39,7 +39,7 @@ struct PowerUp : public ComponentBase<PowerUp> {
 
 ### Step 2: Create a Spawner System
 
-**File**: `server/engine/System/GameSystems.hpp`
+**File**: `server/engine/system/GameSystems.hpp`
 
 ```cpp
 class PowerUpSpawnerSystem : public ISystem {
@@ -397,7 +397,7 @@ Create a system that makes enemies shoot bullets.
 
 ### Step 1: Add Shooting Capability to Enemy
 
-**File**: `server/engine/Component/GameComponents.hpp`
+**File**: `server/engine/component/GameComponents.hpp`
 
 Enemy component already has `shootCooldown`:
 ```cpp
@@ -413,7 +413,7 @@ struct Enemy : public ComponentBase<Enemy> {
 
 ### Step 2: Create EnemyShootingSystem
 
-**File**: `server/engine/System/GameSystems.hpp`
+**File**: `server/engine/system/GameSystems.hpp`
 
 ```cpp
 class EnemyShootingSystem : public System<Enemy, Position> {
@@ -483,7 +483,7 @@ _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
 
 ### Step 4: Update Collision System
 
-**File**: `server/engine/System/GameSystems.hpp`
+**File**: `server/engine/system/GameSystems.hpp`
 
 In `CollisionSystem::update()`, add check for enemy bullets hitting players:
 
@@ -593,7 +593,7 @@ void NetworkServer::networkThreadFunc() {
 
 ### Add Timing to Systems
 
-**File**: `server/engine/System/System.hpp`
+**File**: `server/engine/system/System.hpp`
 
 ```cpp
 class ISystem {
@@ -655,8 +655,8 @@ void GameLoop::gameThreadLoop() {
 
 ```cpp
 #include <gtest/gtest.h>
-#include "../engine/System/GameSystems.hpp"
-#include "../engine/Entity/EntityManager.hpp"
+#include "../engine/system/GameSystems.hpp"
+#include "../engine/entity/EntityManager.hpp"
 
 TEST(MovementSystem, UpdatesPositionCorrectly) {
     // Setup

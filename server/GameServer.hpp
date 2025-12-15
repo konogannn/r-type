@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameServer - Main game server class
+** GameServer
 */
 
 #pragma once
@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "engine/System/GameLoop.hpp"
+#include "engine/system/GameLoop.hpp"
 #include "network/NetworkServer.hpp"
 
 namespace rtype {

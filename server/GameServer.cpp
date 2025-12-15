@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameServer - Implementation
+** GameServer
 */
 
 #include "GameServer.hpp"
@@ -11,7 +11,7 @@
 #include <iostream>
 #include <thread>
 
-#include "engine/System/GameSystems.hpp"
+#include "engine/system/GameSystems.hpp"
 
 namespace rtype {
 

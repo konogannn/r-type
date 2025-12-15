@@ -9,7 +9,6 @@
 
 namespace engine {
 
-// MovementSystem
 std::string MovementSystem::getName() const { return "MovementSystem"; }
 
 int MovementSystem::getPriority() const { return 10; }
@@ -40,7 +39,6 @@ void MovementSystem::update(float deltaTime, EntityManager& entityManager)
     }
 }
 
-// LifetimeSystem
 std::string LifetimeSystem::getName() const { return "LifetimeSystem"; }
 
 int LifetimeSystem::getPriority() const { return 100; }
@@ -64,7 +62,6 @@ void LifetimeSystem::update(float deltaTime, EntityManager& entityManager)
     }
 }
 
-// EnemySpawnerSystem
 std::string EnemySpawnerSystem::getName() const
 {
     return "EnemySpawnerSystem";
@@ -112,7 +109,6 @@ void EnemySpawnerSystem::spawnEnemy(EntityManager& entityManager)
     entityManager.addComponent(enemy, NetworkEntity(_nextEnemyId++, 2));
 }
 
-// BulletCleanupSystem
 std::string BulletCleanupSystem::getName() const
 {
     return "BulletCleanupSystem";
@@ -164,7 +160,6 @@ void BulletCleanupSystem::update(float /* deltaTime */,
     }
 }
 
-// EnemyCleanupSystem
 std::string EnemyCleanupSystem::getName() const
 {
     return "EnemyCleanupSystem";
@@ -215,7 +210,6 @@ void EnemyCleanupSystem::update([[maybe_unused]] float deltaTime,
     }
 }
 
-// CollisionSystem
 std::string CollisionSystem::getName() const { return "CollisionSystem"; }
 
 SystemType CollisionSystem::getType() const { return SystemType::COLLISION; }
@@ -397,7 +391,6 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     }
 }
 
-// PlayerCooldownSystem
 std::string PlayerCooldownSystem::getName() const
 {
     return "PlayerCooldownSystem";

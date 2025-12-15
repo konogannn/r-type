@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** SystemTests - Unit tests for ECS System classes
+** SystemTests
 */
 
 #include <gtest/gtest.h>

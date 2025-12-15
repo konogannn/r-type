@@ -10,8 +10,8 @@
 #include <random>
 #include <vector>
 
-#include "../Component/GameComponents.hpp"
-#include "../Entity/Entity.hpp"
+#include "../component/GameComponents.hpp"
+#include "../entity/Entity.hpp"
 #include "System.hpp"
 
 namespace engine {

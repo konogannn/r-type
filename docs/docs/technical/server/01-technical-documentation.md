@@ -159,7 +159,7 @@ struct ClientSession {
 
 ### 3. GameLoop (Game Logic Layer)
 
-**File**: `server/engine/System/GameLoop.cpp` / `server/engine/System/GameLoop.hpp`
+**File**: `server/engine/system/GameLoop.cpp` / `server/engine/system/GameLoop.hpp`
 
 **Responsibilities**:
 - Manage the Entity Component System
@@ -593,17 +593,17 @@ server/
 ├── network/
 │   └── NetworkServer.{hpp,cpp}   # Network layer
 ├── engine/
-│   ├── Component/           # ECS components
+│   ├── component/           # ECS components
 │   │   ├── ComponentManager.{hpp,cpp}
 │   │   └── GameComponents.hpp
-│   ├── Entity/              # Entity management
+│   ├── entity/              # Entity management
 │   │   ├── EntityManager.{hpp,cpp}
 │   │   └── Entity.hpp
-│   ├── System/              # ECS systems
+│   ├── system/              # ECS systems
 │   │   ├── GameLoop.{hpp,cpp}
 │   │   ├── GameSystems.hpp
 │   │   └── System.{hpp,tpp}
-│   └── Threading/           # Thread utilities
+│   └── threading/           # Thread utilities
 │       └── ThreadSafeQueue.hpp
 └── tests/                   # Unit tests
 ```

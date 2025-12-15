@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** System - Base class for ECS systems
+** System
 */
 
 #pragma once

@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ThreadSafeQueueTests - Unit tests for ThreadSafeQueue
+** ThreadSafeQueueTests
 */
 
 #include <gtest/gtest.h>

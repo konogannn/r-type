@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameEvents - Documentation for network event handling
+** GameEvents
 */
 
 #pragma once

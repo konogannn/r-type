@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ThreadSafeQueue - Lock-free queue for inter-thread communication
+** ThreadSafeQueue
 */
 
 #pragma once

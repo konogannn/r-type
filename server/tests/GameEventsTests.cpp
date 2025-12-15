@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameEventsTests - Unit tests for GameEvents helper classes
+** GameEventsTests
 */
 
 #include <gtest/gtest.h>

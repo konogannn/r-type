@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** main - R-Type Server Entry Point
+** main
 */
 
 #include <atomic>

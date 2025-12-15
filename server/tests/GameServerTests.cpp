@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** GameServerTests - Unit tests for GameServer class
+** GameServerTests
 */
 
 #include <gtest/gtest.h>

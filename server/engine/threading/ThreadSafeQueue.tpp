@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** R-TYPE
 ** File description:
-** ThreadSafeQueue - Template implementation
+** ThreadSafeQueue
 */
 
 #pragma once

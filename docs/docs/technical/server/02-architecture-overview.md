@@ -116,7 +116,7 @@ class NetworkServer {
 
 ### 3. GameLoop (Game Logic Layer)
 
-**Location**: `server/engine/System/GameLoop.{hpp,cpp}`
+**Location**: `server/engine/system/GameLoop.{hpp,cpp}`
 
 The **heart of the game simulation**, running at 60 FPS in a separate thread.
 
@@ -381,17 +381,17 @@ server/
 ├── network/
 │   └── NetworkServer.{hpp,cpp}   # Network layer
 ├── engine/
-│   ├── Component/           # ECS components
+│   ├── component/           # ECS components
 │   │   ├── ComponentManager.{hpp,cpp}
 │   │   └── GameComponents.hpp
-│   ├── Entity/              # Entity management
+│   ├── entity/              # Entity management
 │   │   ├── EntityManager.{hpp,cpp}
 │   │   └── Entity.hpp
-│   ├── System/              # ECS systems
+│   ├── system/              # ECS systems
 │   │   ├── GameLoop.{hpp,cpp}
 │   │   ├── GameSystems.hpp
 │   │   └── System.{hpp,tpp}
-│   └── Threading/           # Thread utilities
+│   └── threading/           # Thread utilities
 │       └── ThreadSafeQueue.hpp
 └── tests/                   # Unit tests
 ```
