@@ -69,18 +69,13 @@ void SoundManager::playSoundAtVolume(const std::string& name, float volume)
 {
     auto bufferIt = _buffers.find(name);
     if (bufferIt != _buffers.end()) {
-        // Clean up old finished sounds periodically
         if (_tempSounds.size() > 10) {
             _tempSounds.clear();
         }
-
-        // Create a temporary sound with the specific volume
         auto tempSound = std::make_unique<rtype::SoundSFML>();
         tempSound->setBuffer(*bufferIt->second);
         tempSound->setVolume(volume);
         tempSound->play();
-
-        // Keep the sound alive by storing it
         _tempSounds.push_back(std::move(tempSound));
     } else {
         std::cerr << "Sound not found: " << name << std::endl;

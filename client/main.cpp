@@ -81,7 +81,6 @@ int main()
             switch (action) {
                 case MenuAction::StartGame:
                     state = GameState::Playing;
-                    // Stop menu music when entering the game
                     SoundManager::getInstance().stopMusic();
                     clock->restart();
                     break;
