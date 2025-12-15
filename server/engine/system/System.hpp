@@ -77,6 +77,12 @@ class ISystem {
      * @param entityManager Reference to the entity manager
      */
     virtual void cleanup(EntityManager& entityManager);
+
+    /**
+     * @brief Set the entity factory (optional, only for systems that create entities)
+     * @param factory Pointer to the entity factory
+     */
+    virtual void setFactory([[maybe_unused]] class GameEntityFactory* factory) {}
 };
 
 /**

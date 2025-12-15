@@ -7,6 +7,8 @@
 
 #include "GameSystems.hpp"
 
+#include "../entity/GameEntityFactory.hpp"
+
 namespace engine {
 
 std::string MovementSystem::getName() const { return "MovementSystem"; }
@@ -66,44 +68,34 @@ std::string EnemySpawnerSystem::getName() const { return "EnemySpawnerSystem"; }
 
 int EnemySpawnerSystem::getPriority() const { return 5; }
 
-void EnemySpawnerSystem::update(float deltaTime, EntityManager& entityManager)
+void EnemySpawnerSystem::update(float deltaTime,
+                                [[maybe_unused]] EntityManager& entityManager)
 {
     _spawnTimer += deltaTime;
 
     if (_spawnTimer >= _spawnInterval) {
         _spawnTimer = 0.0f;
-        spawnEnemy(entityManager);
+        spawnEnemy();
     }
 }
 
-void EnemySpawnerSystem::spawnEnemy(EntityManager& entityManager)
+void EnemySpawnerSystem::spawnEnemy()
 {
-    Entity enemy = entityManager.createEntity();
+    if (!_factory) return;
 
     float y = _yDist(_rng);
     float x = 1900.0f;
 
     int typeRoll = _typeDist(_rng);
     Enemy::Type type = Enemy::Type::BASIC;
-    float speed = -100.0f;
-    float health = 30.0f;
 
     if (typeRoll == 1) {
         type = Enemy::Type::FAST;
-        speed = -200.0f;
-        health = 20.0f;
     } else if (typeRoll == 2) {
         type = Enemy::Type::TANK;
-        speed = -50.0f;
-        health = 100.0f;
     }
 
-    entityManager.addComponent(enemy, Position(x, y));
-    entityManager.addComponent(enemy, Velocity(speed, 0.0f));
-    entityManager.addComponent(enemy, Enemy(type));
-    entityManager.addComponent(enemy, Health(health));
-    entityManager.addComponent(enemy, BoundingBox(64.0f, 64.0f));
-    entityManager.addComponent(enemy, NetworkEntity(_nextEnemyId++, 2));
+    _factory->createEnemy(type, x, y);
 }
 
 std::string BulletCleanupSystem::getName() const
@@ -372,6 +364,70 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
         }
     }
 
+    for (auto& bulletEntity : bullets) {
+        auto* bulletPos = entityManager.getComponent<Position>(bulletEntity);
+        auto* bullet = entityManager.getComponent<Bullet>(bulletEntity);
+        auto* bulletBox = entityManager.getComponent<BoundingBox>(bulletEntity);
+
+        if (!bullet || !bulletPos || !bulletBox) continue;
+        if (bullet->fromPlayer) continue;
+
+        bool alreadyMarked = false;
+        for (EntityId id : _immediateDestroyList) {
+            if (id == bulletEntity.getId()) {
+                alreadyMarked = true;
+                break;
+            }
+        }
+        if (alreadyMarked) continue;
+
+        for (auto& playerEntity : players) {
+            auto* playerPos = entityManager.getComponent<Position>(playerEntity);
+            auto* playerHealth =
+                entityManager.getComponent<Health>(playerEntity);
+            auto* playerBox =
+                entityManager.getComponent<BoundingBox>(playerEntity);
+
+            if (!playerPos || !playerHealth || !playerBox) continue;
+
+            bool playerAlreadyMarked = false;
+            for (EntityId id : _immediateDestroyList) {
+                if (id == playerEntity.getId()) {
+                    playerAlreadyMarked = true;
+                    break;
+                }
+            }
+            if (playerAlreadyMarked) continue;
+
+            if (checkCollision(*bulletPos, *bulletBox, *playerPos,
+                              *playerBox)) {
+                playerHealth->takeDamage(bullet->damage);
+
+                auto* bulletNetEntity =
+                    entityManager.getComponent<NetworkEntity>(bulletEntity);
+                if (bulletNetEntity) {
+                    _entitiesToDestroy.push_back({bulletEntity.getId(),
+                                                  bulletNetEntity->entityId,
+                                                  bulletNetEntity->entityType});
+                }
+                _immediateDestroyList.push_back(bulletEntity.getId());
+
+                if (!playerHealth->isAlive()) {
+                    auto* playerNetEntity =
+                        entityManager.getComponent<NetworkEntity>(playerEntity);
+                    if (playerNetEntity) {
+                        _entitiesToDestroy.push_back(
+                            {playerEntity.getId(), playerNetEntity->entityId,
+                             playerNetEntity->entityType});
+                    }
+                    _immediateDestroyList.push_back(playerEntity.getId());
+                }
+
+                break;
+            }
+        }
+    }
+
     for (EntityId id : _immediateDestroyList) {
         entityManager.destroyEntity(id);
     }
@@ -394,6 +450,37 @@ void PlayerCooldownSystem::processEntity(float deltaTime,
             player->shootCooldown = 0.0f;
         }
     }
+}
+
+std::string EnemyShootingSystem::getName() const
+{
+    return "EnemyShootingSystem";
+}
+
+SystemType EnemyShootingSystem::getType() const
+{
+    return SystemType::ENEMY_SHOOTING;
+}
+
+int EnemyShootingSystem::getPriority() const { return 20; }
+
+void EnemyShootingSystem::processEntity(float deltaTime,
+                                        [[maybe_unused]] Entity& entity,
+                                        Enemy* enemy, Position* pos)
+{
+    if (!_factory) return;
+
+    if (enemy->shootCooldown > 0.0f) {
+        enemy->shootCooldown -= deltaTime;
+        return;
+    }
+
+    if (enemy->type != Enemy::Type::BASIC) {
+        return;
+    }
+
+    _factory->createEnemyBullet(entity.getId(), *pos);
+    enemy->shootCooldown = SHOOT_INTERVAL;
 }
 
 }  // namespace engine

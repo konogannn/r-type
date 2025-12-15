@@ -50,6 +50,9 @@ class LifetimeSystem : public System<Lifetime> {
     void update(float deltaTime, EntityManager& entityManager) override;
 };
 
+// Forward declaration
+class GameEntityFactory;
+
 /**
  * @brief Enemy spawner system - Spawns enemies periodically
  */
@@ -60,7 +63,7 @@ class EnemySpawnerSystem : public ISystem {
     std::mt19937 _rng;
     std::uniform_real_distribution<float> _yDist;
     std::uniform_int_distribution<int> _typeDist;
-    uint32_t _nextEnemyId;
+    GameEntityFactory* _factory;
 
    public:
     EnemySpawnerSystem(float spawnInterval = 2.0f)
@@ -69,15 +72,16 @@ class EnemySpawnerSystem : public ISystem {
           _rng(std::random_device{}()),
           _yDist(50.0f, 1000.0f),
           _typeDist(0, 2),
-          _nextEnemyId(50000)
+          _factory(nullptr)
     {
     }
 
     std::string getName() const override;
     int getPriority() const override;
 
+    void setFactory(GameEntityFactory* factory) override { _factory = factory; }
     void update(float deltaTime, EntityManager& entityManager) override;
-    void spawnEnemy(EntityManager& entityManager);
+    void spawnEnemy();
 };
 
 /**
@@ -91,10 +95,10 @@ class BulletCleanupSystem : public ISystem {
         uint8_t entityType;
     };
     std::vector<DestroyInfo> _entitiesToDestroy;
-    const float MIN_X = -50.0f;
-    const float MAX_X = 2100.0f;
-    const float MIN_Y = -50.0f;
-    const float MAX_Y = 1200.0f;
+    const float MIN_X = -200.0f;
+    const float MAX_X = 2000.0f;
+    const float MIN_Y = -200.0f;
+    const float MAX_Y = 1100.0f;
 
    public:
     std::string getName() const override;
@@ -169,5 +173,27 @@ class PlayerCooldownSystem : public System<Player> {
    public:
     std::string getName() const override;
     int getPriority() const override;
+};
+
+/**
+ * @brief Enemy shooting system - Makes enemies shoot bullets at players
+ */
+class EnemyShootingSystem : public System<Enemy, Position> {
+   private:
+    GameEntityFactory* _factory;
+    const float SHOOT_INTERVAL = 2.0f;  // Enemies shoot every 2 seconds
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, Enemy* enemy,
+                       Position* pos) override;
+
+   public:
+    EnemyShootingSystem() : _factory(nullptr) {}
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+
+    void setFactory(GameEntityFactory* factory) override { _factory = factory; }
 };
 }  // namespace engine
