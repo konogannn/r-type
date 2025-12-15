@@ -233,33 +233,11 @@ void GameServer::processNetworkUpdates()
                         _networkServer.sendEntitySpawn(0, update.entityId,
                                                        update.entityType,
                                                        update.x, update.y);
-
-                        if (update.entityType == 2) {
-                            _networkServer.sendMonsterSpawned(
-                                0, update.entityId, 0, update.x, update.y);
-                        }
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);
-
-                        if (update.entityType == 2) {
-                            _networkServer.sendMonsterKilled(0, update.entityId,
-                                                             0, 1);
-                        } else if (update.entityType == 0) {
-                            _networkServer.sendPlayerKilled(0, update.entityId,
-                                                            0, 2);
-                        }
                     } else {
                         _networkServer.sendEntityPosition(0, update.entityId,
                                                           update.x, update.y);
-
-                        if (update.entityType == 0) {
-                            _networkServer.sendPlayerMoved(0, update.entityId,
-                                                           update.x, update.y);
-                        } else if (update.entityType == 2) {
-                            _networkServer.sendMonsterMoved(0, update.entityId,
-                                                            update.x, update.y,
-                                                            0.0f, 0.0f);
-                        }
                     }
                 } catch (const std::exception& e) {
                     std::cerr << "[GameServer] Error processing entity update: "
