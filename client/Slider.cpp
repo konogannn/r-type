@@ -27,7 +27,7 @@ Slider::Slider(float x, float y, float width, const std::string& label,
     _value = std::clamp(_value, _minValue, _maxValue);
 }
 
-void Slider::update(int mouseX, int mouseY, bool isMousePressed)
+bool Slider::update(int mouseX, int mouseY, bool isMousePressed)
 {
     float mx = static_cast<float>(mouseX);
     _isHovered = isPointInHandle(mouseX, mouseY);
@@ -40,11 +40,19 @@ void Slider::update(int mouseX, int mouseY, bool isMousePressed)
         _isDragging = false;
     }
 
+    bool valueChanged = false;
     if (_isDragging) {
+        float oldValue = _value;
         float relativeX = mx - _x;
         float normalizedValue = std::clamp(relativeX / _width, 0.0f, 1.0f);
         _value = _minValue + normalizedValue * (_maxValue - _minValue);
+
+        if (std::abs(_value - oldValue) > 0.5f) {
+            valueChanged = true;
+        }
     }
+
+    return valueChanged;
 }
 
 void Slider::setValue(float value)
