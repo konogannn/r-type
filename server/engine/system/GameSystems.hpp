@@ -8,13 +8,18 @@
 #pragma once
 
 #include <random>
+#include <variant>
 #include <vector>
 
 #include "../component/GameComponents.hpp"
 #include "../entity/Entity.hpp"
+#include "../events/SpawnEvents.hpp"
 #include "System.hpp"
 
 namespace engine {
+
+// Import SpawnEvent type from events
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -50,9 +55,6 @@ class LifetimeSystem : public System<Lifetime> {
     void update(float deltaTime, EntityManager& entityManager) override;
 };
 
-// Forward declaration
-class GameEntityFactory;
-
 /**
  * @brief Enemy spawner system - Spawns enemies periodically
  */
@@ -63,23 +65,22 @@ class EnemySpawnerSystem : public ISystem {
     std::mt19937 _rng;
     std::uniform_real_distribution<float> _yDist;
     std::uniform_int_distribution<int> _typeDist;
-    GameEntityFactory* _factory;
+    std::vector<SpawnEvent>& _spawnQueue;
 
    public:
-    EnemySpawnerSystem(float spawnInterval = 2.0f)
+    EnemySpawnerSystem(std::vector<SpawnEvent>& spawnQueue, float spawnInterval = 2.0f)
         : _spawnTimer(0.0f),
           _spawnInterval(spawnInterval),
           _rng(std::random_device{}()),
           _yDist(50.0f, 1000.0f),
           _typeDist(0, 2),
-          _factory(nullptr)
+          _spawnQueue(spawnQueue)
     {
     }
 
     std::string getName() const override;
     int getPriority() const override;
 
-    void setFactory(GameEntityFactory* factory) override { _factory = factory; }
     void update(float deltaTime, EntityManager& entityManager) override;
     void spawnEnemy();
 };
@@ -180,7 +181,7 @@ class PlayerCooldownSystem : public System<Player> {
  */
 class EnemyShootingSystem : public System<Enemy, Position> {
    private:
-    GameEntityFactory* _factory;
+    std::vector<SpawnEvent>& _spawnQueue;
     const float SHOOT_INTERVAL = 2.0f;  // Enemies shoot every 2 seconds
 
    protected:
@@ -188,12 +189,10 @@ class EnemyShootingSystem : public System<Enemy, Position> {
                        Position* pos) override;
 
    public:
-    EnemyShootingSystem() : _factory(nullptr) {}
+    EnemyShootingSystem(std::vector<SpawnEvent>& spawnQueue) : _spawnQueue(spawnQueue) {}
 
     std::string getName() const override;
     SystemType getType() const override;
     int getPriority() const override;
-
-    void setFactory(GameEntityFactory* factory) override { _factory = factory; }
 };
 }  // namespace engine

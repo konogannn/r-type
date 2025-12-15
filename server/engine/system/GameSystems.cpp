@@ -7,8 +7,6 @@
 
 #include "GameSystems.hpp"
 
-#include "../entity/GameEntityFactory.hpp"
-
 namespace engine {
 
 std::string MovementSystem::getName() const { return "MovementSystem"; }
@@ -81,8 +79,6 @@ void EnemySpawnerSystem::update(float deltaTime,
 
 void EnemySpawnerSystem::spawnEnemy()
 {
-    if (!_factory) return;
-
     float y = _yDist(_rng);
     float x = 1900.0f;
 
@@ -95,7 +91,7 @@ void EnemySpawnerSystem::spawnEnemy()
         type = Enemy::Type::TANK;
     }
 
-    _factory->createEnemy(type, x, y);
+    _spawnQueue.push_back(SpawnEnemyEvent{type, x, y});
 }
 
 std::string BulletCleanupSystem::getName() const
@@ -468,8 +464,6 @@ void EnemyShootingSystem::processEntity(float deltaTime,
                                         [[maybe_unused]] Entity& entity,
                                         Enemy* enemy, Position* pos)
 {
-    if (!_factory) return;
-
     if (enemy->shootCooldown > 0.0f) {
         enemy->shootCooldown -= deltaTime;
         return;
@@ -479,7 +473,7 @@ void EnemyShootingSystem::processEntity(float deltaTime,
         return;
     }
 
-    _factory->createEnemyBullet(entity.getId(), *pos);
+    _spawnQueue.push_back(SpawnEnemyBulletEvent{entity.getId(), *pos});
     enemy->shootCooldown = SHOOT_INTERVAL;
 }
 
