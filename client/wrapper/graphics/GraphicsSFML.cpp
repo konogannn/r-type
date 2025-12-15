@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "../window/WindowSFML.hpp"
+#include "RenderTargetSFML.hpp"
 #include "common/utils/PathHelper.hpp"
 
 namespace rtype {
@@ -19,9 +20,9 @@ GraphicsSFML::GraphicsSFML(WindowSFML& window)
 {
 }
 
-void GraphicsSFML::setRenderTarget(sf::RenderTexture* renderTexture)
+void GraphicsSFML::setRenderTarget(IRenderTarget* renderTarget)
 {
-    _renderTarget = renderTexture;
+    _renderTarget = renderTarget;
 }
 
 void GraphicsSFML::drawSprite(const ISprite& sprite)
@@ -29,7 +30,12 @@ void GraphicsSFML::drawSprite(const ISprite& sprite)
     const SpriteSFML* spriteSFML = dynamic_cast<const SpriteSFML*>(&sprite);
     if (spriteSFML) {
         if (_renderTarget) {
-            _renderTarget->draw(spriteSFML->getSFMLSprite());
+            RenderTargetSFML* sfmlTarget =
+                dynamic_cast<RenderTargetSFML*>(_renderTarget);
+            if (sfmlTarget && sfmlTarget->getSFMLRenderTexture()) {
+                sfmlTarget->getSFMLRenderTexture()->draw(
+                    spriteSFML->getSFMLSprite());
+            }
         } else {
             _window.getSFMLWindow().draw(spriteSFML->getSFMLSprite());
         }
@@ -50,7 +56,11 @@ void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
     rectangle.setFillColor(sf::Color(r, g, b));
 
     if (_renderTarget) {
-        _renderTarget->draw(rectangle);
+        RenderTargetSFML* sfmlTarget =
+            dynamic_cast<RenderTargetSFML*>(_renderTarget);
+        if (sfmlTarget && sfmlTarget->getSFMLRenderTexture()) {
+            sfmlTarget->getSFMLRenderTexture()->draw(rectangle);
+        }
     } else {
         _window.getSFMLWindow().draw(rectangle);
     }
@@ -65,7 +75,11 @@ void GraphicsSFML::drawRectangle(float x, float y, float width, float height,
     rectangle.setFillColor(sf::Color(r, g, b, a));
 
     if (_renderTarget) {
-        _renderTarget->draw(rectangle);
+        RenderTargetSFML* sfmlTarget =
+            dynamic_cast<RenderTargetSFML*>(_renderTarget);
+        if (sfmlTarget && sfmlTarget->getSFMLRenderTexture()) {
+            sfmlTarget->getSFMLRenderTexture()->draw(rectangle);
+        }
     } else {
         _window.getSFMLWindow().draw(rectangle);
     }
@@ -79,7 +93,11 @@ void GraphicsSFML::drawCircle(float x, float y, float radius, unsigned char r,
     circle.setFillColor(sf::Color(r, g, b));
 
     if (_renderTarget) {
-        _renderTarget->draw(circle);
+        RenderTargetSFML* sfmlTarget =
+            dynamic_cast<RenderTargetSFML*>(_renderTarget);
+        if (sfmlTarget && sfmlTarget->getSFMLRenderTexture()) {
+            sfmlTarget->getSFMLRenderTexture()->draw(circle);
+        }
     } else {
         _window.getSFMLWindow().draw(circle);
     }
@@ -121,7 +139,11 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
     sfText.setPosition(x, y);
 
     if (_renderTarget) {
-        _renderTarget->draw(sfText);
+        RenderTargetSFML* sfmlTarget =
+            dynamic_cast<RenderTargetSFML*>(_renderTarget);
+        if (sfmlTarget && sfmlTarget->getSFMLRenderTexture()) {
+            sfmlTarget->getSFMLRenderTexture()->draw(sfText);
+        }
     } else {
         _window.getSFMLWindow().draw(sfText);
     }
@@ -148,7 +170,11 @@ void GraphicsSFML::drawText(const std::string& text, float x, float y,
     sfText.setPosition(x, y);
 
     if (_renderTarget) {
-        _renderTarget->draw(sfText);
+        RenderTargetSFML* sfmlTarget =
+            dynamic_cast<RenderTargetSFML*>(_renderTarget);
+        if (sfmlTarget && sfmlTarget->getSFMLRenderTexture()) {
+            sfmlTarget->getSFMLRenderTexture()->draw(sfText);
+        }
     } else {
         _window.getSFMLWindow().draw(sfText);
     }
