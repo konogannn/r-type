@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "Config.hpp"
+#include "src/SoundManager.hpp"
 
 namespace rtype {
 
@@ -108,6 +109,7 @@ MenuAction Menu::update(float deltaTime)
 
     for (size_t i = 0; i < _buttons.size(); ++i) {
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
+            SoundManager::getInstance().playSound("click");
             switch (i) {
                 case 0:
                     startFadeOut();
@@ -133,10 +135,10 @@ void Menu::render()
     float scaleH = windowHeight / 1080.0f;
     float scale = std::min(scaleW, scaleH);
 
-    sf::RenderTexture* filterTexture = _colorBlindFilter.getRenderTexture();
+    rtype::IRenderTarget* filterTexture = _colorBlindFilter.getRenderTarget();
 
     if (filterTexture) {
-        filterTexture->clear(sf::Color(0, 0, 0));
+        _colorBlindFilter.beginCapture();
         _graphics.setRenderTarget(filterTexture);
     }
 

@@ -11,6 +11,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "src/SoundManager.hpp"
+
 namespace rtype {
 
 SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
@@ -174,7 +176,7 @@ void SettingsMenu::updateLayout()
     float colorBlindHeight = 50.0f * scaleH;
     float colorBlindX =
         leftColX + (resButtonWidth / 2.0f) - (colorBlindWidth / 2.0f);
-    float colorBlindY = toggleY + toggleHeight + (20.0f * scaleH);
+    float colorBlindY = toggleY + toggleHeight + (40.0f * scaleH);
     int currentSelection = _colorBlindSelection.getSelectedIndex();
     _colorBlindSelection =
         SelectionButton(colorBlindX, colorBlindY, colorBlindWidth,
@@ -211,18 +213,31 @@ bool SettingsMenu::update()
     bool anyInEditMode = isWaitingForKeyPress();
 
     if (!anyInEditMode) {
-        for (auto& slider : _sliders) {
-            slider.update(mouseX, mouseY, isMousePressed);
+        for (size_t i = 0; i < _sliders.size(); ++i) {
+            if (_sliders[i].update(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSoundAtVolume(
+                    "click", _sliders[i].getValue());
+                if (i == 0) {
+                    SoundManager::getInstance().setMusicVolume(
+                        _sliders[i].getValue());
+                } else if (i == 1) {
+                    SoundManager::getInstance().setVolume(
+                        _sliders[i].getValue());
+                }
+            }
         }
     }
     if (!anyInEditMode) {
         for (auto& button : _keyBindingButtons) {
-            button.isClicked(mouseX, mouseY, isMousePressed);
+            if (button.isClicked(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSound("click");
+            }
         }
     }
     if (!anyInEditMode) {
         _fullscreenToggle.update(mouseX, mouseY);
         if (_fullscreenToggle.isClicked(mouseX, mouseY, isMousePressed)) {
+            SoundManager::getInstance().playSound("click");
             _window.setFullscreen(_fullscreenToggle.isOn());
             _config.setInt("fullscreen", _fullscreenToggle.isOn() ? 1 : 0);
             _config.save();
@@ -233,6 +248,7 @@ bool SettingsMenu::update()
         for (auto& button : _resolutionButtons) {
             button.update(mouseX, mouseY);
             if (button.isClicked(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSound("click");
                 _currentResolution = button.getResolution();
                 for (auto& btn : _resolutionButtons) {
                     btn.setActive(btn.getResolution() == _currentResolution);
@@ -250,6 +266,7 @@ bool SettingsMenu::update()
     }
     if (!anyInEditMode) {
         if (_colorBlindSelection.update(mouseX, mouseY, isMousePressed)) {
+            SoundManager::getInstance().playSound("click");
             int selectedMode = _colorBlindSelection.getSelectedIndex();
             _colorBlindFilter.setMode(
                 ColorBlindFilter::indexToMode(selectedMode));
@@ -260,6 +277,7 @@ bool SettingsMenu::update()
 
     if (!anyInEditMode &&
         _backButton.isClicked(mouseX, mouseY, isMousePressed)) {
+        SoundManager::getInstance().playSound("click");
         saveSettings();
         return true;
     }
@@ -293,10 +311,10 @@ void SettingsMenu::render()
     float windowHeight = static_cast<float>(_window.getHeight());
     float scale = windowHeight / 1080.0f;
 
-    sf::RenderTexture* filterTexture = _colorBlindFilter.getRenderTexture();
+    rtype::IRenderTarget* filterTexture = _colorBlindFilter.getRenderTarget();
 
     if (filterTexture) {
-        filterTexture->clear(sf::Color(0, 0, 0));
+        _colorBlindFilter.beginCapture();
         _graphics.setRenderTarget(filterTexture);
     }
 
@@ -322,7 +340,7 @@ void SettingsMenu::render()
     float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
     float sectionTitleY = _layout.sectionTitleY;
     _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+                       255, 255, 255, _fontPath);
 
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
@@ -334,7 +352,7 @@ void SettingsMenu::render()
         centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
     float audioTitleY = sectionTitleY;
     _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+                       255, 255, 255, _fontPath);
 
     for (const auto& slider : _sliders) {
         renderSlider(slider, scale);
@@ -345,10 +363,21 @@ void SettingsMenu::render()
     float toggleYRender = _layout.toggleY;
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
     float dispTitleY = toggleYRender - 30.0f * scale;
-    _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 100,
-                       200, 255, _fontPath);
+    _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 255,
+                       255, 255, _fontPath);
 
     renderToggleButton(scale);
+
+    std::string colorBlindTitle = "COLOR-BLINDNESS";
+    float colorBlindTitleW =
+        _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, _fontPath);
+    float colorBlindTitleX =
+        leftColX + (resButtonWidth / 2.0f) - (colorBlindTitleW / 2.0f);
+    float toggleHeight = 60.0f * scale;
+    float colorBlindTitleY = toggleYRender + toggleHeight + 10.0f * scale;
+    _graphics.drawText(colorBlindTitle, colorBlindTitleX, colorBlindTitleY,
+                       sectionTitleSize, 255, 255, 255, _fontPath);
+
     renderColorBlindSelection(scale);
 
     std::string ctrlTitle = "CONTROLS";
@@ -356,7 +385,7 @@ void SettingsMenu::render()
         _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
     float ctrlTitleX = (windowWidth / 2.0f) - (ctrlTitleW / 2.0f);
     _graphics.drawText(ctrlTitle, ctrlTitleX, 500.0f * scale, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+                       255, 255, 255, _fontPath);
 
     for (const auto& button : _keyBindingButtons) {
         renderKeyBindingButton(button, scale);
