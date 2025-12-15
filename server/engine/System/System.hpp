@@ -18,6 +18,20 @@
 namespace engine {
 
 /**
+ * @brief Enum for system types to enable efficient switch-case handling
+ */
+enum class SystemType {
+    MOVEMENT,
+    COLLISION,
+    BULLET_CLEANUP,
+    ENEMY_CLEANUP,
+    PLAYER_SHOOTING,
+    ENEMY_SHOOTING,
+    LIFETIME,
+    OTHER
+};
+
+/**
  * @brief Base interface for all systems in the ECS
  *
  * Systems contain the game logic and operate on entities with specific
@@ -39,6 +53,12 @@ class ISystem {
      * @return System name
      */
     virtual std::string getName() const = 0;
+
+    /**
+     * @brief Get the system's type for efficient switching
+     * @return System type
+     */
+    virtual SystemType getType() const { return SystemType::OTHER; }
 
     /**
      * @brief Get the system's priority (lower = earlier execution)
