@@ -56,18 +56,6 @@ Welcome to the **R-Type Server Technical Documentation**. This comprehensive gui
    - Client session management
    - Bandwidth optimization
 
-### For Contributors
-
-**For contributing to the project**:
-
-6. **[Contributing Guide](./07-contributing.md)** 🤝 **Join Us**
-   - Coding conventions
-   - Git workflow
-   - Testing guidelines
-   - Code review process
-
----
-
 ## 🎯 Quick Start
 
 ### Building the Server
@@ -188,12 +176,6 @@ Each document follows a consistent format:
 - **Debugging techniques**
 - **Testing examples**
 
-### 6. Contributing
-- **Coding conventions**
-- **Git workflow**
-- **Review process**
-- **Testing guidelines**
-
 ---
 
 ## 🔑 Key Concepts
@@ -305,16 +287,13 @@ ctest --test-dir build/debug --output-on-failure
 → Start with **[Architecture Overview](./02-architecture-overview.md)**
 
 ### I Want to Add a Feature
-→ Read **[Tutorials](./06-tutorials.md)** then **[Contributing](./07-contributing.md)**
+→ Read **[Tutorials](./06-tutorials.md)**
 
 ### I Need to Understand Networking
 → Deep dive into **[Networking Architecture](./04-networking.md)**
 
 ### I'm Evaluating Technologies
 → Read **[Technical Comparison Study](./05-technical-comparison.md)**
-
-### I Want to Contribute
-→ Check **[Contributing Guide](./07-contributing.md)**
 
 ---
 

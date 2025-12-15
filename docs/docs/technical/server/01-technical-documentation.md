@@ -654,5 +654,4 @@ For more detailed information, please refer to:
 - **[Networking Architecture](./04-networking.md)**: Protocol and network implementation
 - **[Technical Comparison](./05-technical-comparison.md)**: Technology choices justified
 - **[Tutorials](./06-tutorials.md)**: Step-by-step development guides
-- **[Contributing Guide](./07-contributing.md)**: How to contribute to the project
 
