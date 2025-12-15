@@ -126,13 +126,13 @@ Transmits current control state as an eight-bit bitmask where UP=1, DOWN=2, LEFT
 
 | Field       | Type      | Size    | Description                                        |
 |:------------|:----------|:--------|:---------------------------------------------------|
-| Header      | struct    | 7 bytes | Standard header with OpCode 0x04                   |
+| Header      | struct    | 7 bytes | Standard header with OpCode 0x05                   |
 | inputMask   | uint8_t   | 1 byte  | Bitmask encoding active controls                   |
 
 ```text
 +-------------------+-----------+
 | Header            | InputMask |
-| Op: 0x04          | 00010011  |
+| Op: 0x05          | 00010011  |
 +-------------------+-----------+
 Total Size: 8 bytes
 ```
