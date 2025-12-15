@@ -18,25 +18,19 @@ class MusicSFML : public IMusic {
     MusicSFML() = default;
     ~MusicSFML() override = default;
 
-    bool openFromFile(const std::string& filename) override
-    {
-        return _music.openFromFile(filename);
-    }
+    bool openFromFile(const std::string& filename) override;
 
-    void play() override { _music.play(); }
+    void play() override;
 
-    void stop() override { _music.stop(); }
+    void stop() override;
 
-    void pause() override { _music.pause(); }
+    void pause() override;
 
-    void setLoop(bool loop) override { _music.setLoop(loop); }
+    void setLoop(bool loop) override;
 
-    void setVolume(float volume) override { _music.setVolume(volume); }
+    void setVolume(float volume) override;
 
-    bool isPlaying() const override
-    {
-        return _music.getStatus() == sf::Music::Playing;
-    }
+    bool isPlaying() const override;
 
    private:
     sf::Music _music;
