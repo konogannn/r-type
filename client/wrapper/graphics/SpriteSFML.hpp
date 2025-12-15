@@ -45,6 +45,13 @@ class SpriteSFML : public ISprite {
      */
     const sf::Sprite& getSFMLSprite() const;
 
+    /**
+     * @brief Set texture from an external SFML texture
+     * @param texture The SFML texture to use
+     * @note Use with caution - the texture must remain valid
+     */
+    void setTexture(const sf::Texture& texture);
+
    private:
     std::unique_ptr<sf::Texture> _texture;
     std::unique_ptr<sf::Sprite> _sprite;

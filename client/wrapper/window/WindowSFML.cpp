@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "../graphics/RenderStatesSFML.hpp"
+#include "../graphics/SpriteSFML.hpp"
 #include "../input/Input.hpp"
 
 namespace rtype {
@@ -277,5 +279,20 @@ void WindowSFML::recreateWindow()
 sf::RenderWindow& WindowSFML::getSFMLWindow() { return *_window; }
 
 const sf::Event& WindowSFML::getLastEvent() const { return _lastEvent; }
+
+void WindowSFML::draw(const ISprite& sprite, const IRenderStates& states)
+{
+    const SpriteSFML* spriteSFML = dynamic_cast<const SpriteSFML*>(&sprite);
+    const RenderStatesSFML* statesSFML =
+        dynamic_cast<const RenderStatesSFML*>(&states);
+
+    if (spriteSFML && statesSFML) {
+        _window->draw(spriteSFML->getSFMLSprite(),
+                      statesSFML->getSFMLRenderStates());
+    } else {
+        std::cerr << "WindowSFML::draw() - Invalid sprite or render states"
+                  << std::endl;
+    }
+}
 
 }  // namespace rtype

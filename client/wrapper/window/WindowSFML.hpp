@@ -12,6 +12,12 @@
 
 #include "Window.hpp"
 
+// Forward declarations
+namespace rtype {
+class ISprite;
+class IRenderStates;
+}  // namespace rtype
+
 namespace rtype {
 
 /**
@@ -59,6 +65,13 @@ class WindowSFML : public IWindow {
      * @return Reference to the last event
      */
     const sf::Event& getLastEvent() const;
+
+    /**
+     * @brief Draw a sprite to the window with render states
+     * @param sprite The sprite to draw
+     * @param states The render states to apply
+     */
+    void draw(const class ISprite& sprite, const class IRenderStates& states);
 
    private:
     void recreateWindow();

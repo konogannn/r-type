@@ -22,31 +22,21 @@ class ShaderSFML : public IShader {
     ShaderSFML() = default;
     ~ShaderSFML() override = default;
 
-    bool loadFromFile(const std::string& filename, Type type) override
-    {
-        sf::Shader::Type sfmlType =
-            (type == Vertex) ? sf::Shader::Vertex : sf::Shader::Fragment;
-        return _shader.loadFromFile(filename, sfmlType);
-    }
+    bool loadFromFile(const std::string& filename, Type type) override;
 
-    void setUniformInt(const std::string& name, int value) override
-    {
-        _shader.setUniform(name, value);
-    }
+    void setUniformInt(const std::string& name, int value) override;
 
-    void setUniformTexture(const std::string& name, CurrentTextureType) override
-    {
-        _shader.setUniform(name, sf::Shader::CurrentTexture);
-    }
+    void setUniformTexture(const std::string& name,
+                           CurrentTextureType) override;
 
-    bool isAvailable() const override { return sf::Shader::isAvailable(); }
+    bool isAvailable() const override;
 
-    bool isValid() const override { return true; }
+    bool isValid() const override;
 
     /**
      * @brief Get the underlying SFML shader (for internal wrapper use only)
      */
-    sf::Shader* getSFMLShader() { return &_shader; }
+    sf::Shader* getSFMLShader();
 
    private:
     sf::Shader _shader;
