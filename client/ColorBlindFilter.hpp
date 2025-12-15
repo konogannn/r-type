@@ -11,6 +11,8 @@
 #include <memory>
 #include <string>
 
+#include "wrapper/graphics/RenderTarget.hpp"
+#include "wrapper/graphics/Shader.hpp"
 #include "wrapper/window/WindowSFML.hpp"
 
 namespace rtype {
@@ -49,7 +51,7 @@ class ColorBlindFilter {
     /**
      * @brief Get the current mode
      */
-    ColorBlindMode getMode() const { return _currentMode; }
+    ColorBlindMode getMode() const;
 
     /**
      * @brief Get mode name as string for UI display
@@ -66,24 +68,17 @@ class ColorBlindFilter {
     /**
      * @brief Convert mode enum to index
      */
-    static int modeToIndex(ColorBlindMode mode)
-    {
-        return static_cast<int>(mode);
-    }
+    static int modeToIndex(ColorBlindMode mode);
 
     /**
      * @brief Convert index to mode enum
      */
-    static ColorBlindMode indexToMode(int index)
-    {
-        if (index < 0 || index >= getModeCount()) return ColorBlindMode::None;
-        return static_cast<ColorBlindMode>(index);
-    }
+    static ColorBlindMode indexToMode(int index);
 
     /**
      * @brief Check if a shader is currently active
      */
-    bool isActive() const { return _currentMode != ColorBlindMode::None; }
+    bool isActive() const;
 
     /**
      * @brief Initialize the filter with window dimensions
@@ -105,10 +100,10 @@ class ColorBlindFilter {
     void endCaptureAndApply(WindowSFML& window);
 
     /**
-     * @brief Get the render texture for drawing (when filter is active)
-     * @return Pointer to RenderTexture or nullptr if filter is inactive
+     * @brief Get the render target for drawing (when filter is active)
+     * @return Pointer to IRenderTarget or nullptr if filter is inactive
      */
-    sf::RenderTexture* getRenderTexture();
+    IRenderTarget* getRenderTarget();
 
    private:
     ColorBlindFilter();
@@ -118,8 +113,8 @@ class ColorBlindFilter {
 
     ColorBlindMode _currentMode;
     bool _shaderAvailable;
-    sf::Shader _shader;
-    std::unique_ptr<sf::RenderTexture> _renderTexture;
+    std::unique_ptr<IShader> _shader;
+    std::unique_ptr<IRenderTarget> _renderTarget;
     sf::Sprite _renderSprite;
     unsigned int _windowWidth;
     unsigned int _windowHeight;

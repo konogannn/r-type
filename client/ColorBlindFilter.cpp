@@ -9,6 +9,9 @@
 
 #include <iostream>
 
+#include "wrapper/graphics/RenderTargetSFML.hpp"
+#include "wrapper/graphics/ShaderSFML.hpp"
+
 namespace rtype {
 
 ColorBlindFilter& ColorBlindFilter::getInstance()
@@ -37,6 +40,8 @@ bool ColorBlindFilter::setMode(ColorBlindMode mode)
     return loadShader(mode);
 }
 
+ColorBlindMode ColorBlindFilter::getMode() const { return _currentMode; }
+
 std::string ColorBlindFilter::getModeName(ColorBlindMode mode)
 {
     switch (mode) {
@@ -59,6 +64,24 @@ std::string ColorBlindFilter::getModeName(ColorBlindMode mode)
     }
 }
 
+int ColorBlindFilter::modeToIndex(ColorBlindMode mode)
+{
+    return static_cast<int>(mode);
+}
+
+ColorBlindMode ColorBlindFilter::indexToMode(int index)
+{
+    if (index < 0 || index >= getModeCount()) {
+        return ColorBlindMode::None;
+    }
+    return static_cast<ColorBlindMode>(index);
+}
+
+bool ColorBlindFilter::isActive() const
+{
+    return _currentMode != ColorBlindMode::None;
+}
+
 bool ColorBlindFilter::loadShader(ColorBlindMode mode)
 {
     if (mode == ColorBlindMode::None) {
@@ -73,8 +96,9 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
             return false;
         }
 
-        if (!_shader.loadFromFile("assets/shaders/colorblind.frag",
-                                  sf::Shader::Fragment)) {
+        _shader = std::make_unique<ShaderSFML>();
+        if (!_shader->loadFromFile("assets/shaders/colorblind.frag",
+                                   IShader::Fragment)) {
             std::cerr << "ColorBlindFilter: Failed to load shader from "
                          "assets/shaders/colorblind.frag"
                       << std::endl;
@@ -86,8 +110,8 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
         _shaderAvailable = true;
     }
     int modeValue = static_cast<int>(mode);
-    _shader.setUniform("mode", modeValue);
-    _shader.setUniform("texture", sf::Shader::CurrentTexture);
+    _shader->setUniformInt("mode", modeValue);
+    _shader->setUniformTexture("texture", IShader::CurrentTexture);
 
     std::cout << "ColorBlindFilter: Set mode to " << getModeName(mode)
               << " (value: " << modeValue << ")" << std::endl;
@@ -108,12 +132,12 @@ bool ColorBlindFilter::initialize(WindowSFML& window)
 void ColorBlindFilter::updateRenderTexture(unsigned int width,
                                            unsigned int height)
 {
-    if (!_renderTexture || _windowWidth != width || _windowHeight != height) {
+    if (!_renderTarget || _windowWidth != width || _windowHeight != height) {
         _windowWidth = width;
         _windowHeight = height;
 
-        _renderTexture = std::make_unique<sf::RenderTexture>();
-        if (!_renderTexture->create(width, height)) {
+        _renderTarget = std::make_unique<RenderTargetSFML>();
+        if (!_renderTarget->create(width, height)) {
             std::cerr << "ColorBlindFilter: Failed to create render texture"
                       << std::endl;
             return;
@@ -126,16 +150,16 @@ void ColorBlindFilter::updateRenderTexture(unsigned int width,
 
 void ColorBlindFilter::beginCapture()
 {
-    if (!isActive() || !_shaderAvailable || !_renderTexture) {
+    if (!isActive() || !_shaderAvailable || !_renderTarget) {
         return;
     }
 
-    _renderTexture->clear();
+    _renderTarget->clear();
 }
 
 void ColorBlindFilter::endCaptureAndApply(WindowSFML& window)
 {
-    if (!isActive() || !_shaderAvailable || !_renderTexture) {
+    if (!isActive() || !_shaderAvailable || !_renderTarget || !_shader) {
         return;
     }
     if (_windowWidth != window.getWidth() ||
@@ -143,19 +167,28 @@ void ColorBlindFilter::endCaptureAndApply(WindowSFML& window)
         updateRenderTexture(window.getWidth(), window.getHeight());
     }
 
-    _renderTexture->display();
-    _renderSprite.setTexture(_renderTexture->getTexture());
+    _renderTarget->display();
+
+    RenderTargetSFML* renderTargetSFML =
+        dynamic_cast<RenderTargetSFML*>(_renderTarget.get());
+    if (renderTargetSFML) {
+        _renderSprite.setTexture(renderTargetSFML->getTexture());
+    }
+
     _renderSprite.setPosition(0, 0);
     sf::RenderStates states;
-    states.shader = &_shader;
+    ShaderSFML* shaderSFML = dynamic_cast<ShaderSFML*>(_shader.get());
+    if (shaderSFML) {
+        states.shader = shaderSFML->getSFMLShader();
+    }
 
     window.getSFMLWindow().draw(_renderSprite, states);
 }
 
-sf::RenderTexture* ColorBlindFilter::getRenderTexture()
+IRenderTarget* ColorBlindFilter::getRenderTarget()
 {
-    if (isActive() && _shaderAvailable && _renderTexture) {
-        return _renderTexture.get();
+    if (isActive() && _shaderAvailable && _renderTarget) {
+        return _renderTarget.get();
     }
     return nullptr;
 }
