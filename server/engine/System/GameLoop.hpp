@@ -188,10 +188,6 @@ class GameLoop {
      * @brief Set callback for when a player dies
      * @param callback Function to call with clientId when player dies
      */
-    void setOnPlayerDeath(std::function<void(uint32_t)> callback)
-    {
-        _onPlayerDeathCallback = std::move(callback);
-    }
+    void setOnPlayerDeath(std::function<void(uint32_t)> callback);
 };
-
 }  // namespace engine

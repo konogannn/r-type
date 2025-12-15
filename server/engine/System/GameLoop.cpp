@@ -338,4 +338,9 @@ void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
     }
 }
 
+void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
+{
+    _onPlayerDeathCallback = std::move(callback);
+}
+
 }  // namespace engine
