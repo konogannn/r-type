@@ -175,10 +175,6 @@ void NetworkServer::resendPendingPackets()
 void NetworkServer::disconnectClient(uint32_t clientId,
                                      const std::string& reason)
 {
-    uint32_t playerId = 0;
-    bool shouldNotify = false;
-    uint8_t crashReason = 0;
-
     // First, gather info and remove session (with lock)
     {
         std::lock_guard<std::mutex> lock(_clientsMutex);
@@ -193,21 +189,7 @@ void NetworkServer::disconnectClient(uint32_t clientId,
                                       " (reason: " + reason + ")",
                                   LogLevel::INFO_L, "NetworkServer");
 
-        playerId = it->second.playerId;
-        shouldNotify = it->second.isAuthenticated && playerId != 0;
-
         _endpointToId.erase(it->second.endpoint);
-
-        // Determine crash reason code
-        if (reason.find("timeout") != std::string::npos ||
-            reason.find("timed out") != std::string::npos) {
-            crashReason = 1;  // timeout
-        } else if (reason.find("disconnect") != std::string::npos) {
-            crashReason = 2;  // graceful disconnect
-        } else {
-            crashReason = 3;  // crash/error
-        }
-
         _sessions.erase(it);
 
         NetworkEvent event;
@@ -216,14 +198,9 @@ void NetworkServer::disconnectClient(uint32_t clientId,
         pushEvent(event);
     }
 
-    if (shouldNotify) {
-        try {
-            sendClientCrashed(0, clientId, playerId, crashReason);
-        } catch (const std::exception& e) {
-            std::cerr << "[NetworkServer] Error sending crash notification: "
-                      << e.what() << std::endl;
-        }
-    }
+    // Client crash notifications would be handled via generic entity destruction
+    // if needed - the disconnected player entity will be destroyed which sends
+    // an EntityDeadPacket to all clients.
 }
 
 void NetworkServer::setTimeoutDuration(uint32_t seconds)
@@ -498,225 +475,9 @@ bool NetworkServer::sendScoreUpdate(uint32_t clientId, uint32_t score)
     return true;
 }
 
-// --- Extended Game Event Notifications Implementation ---
-
-bool NetworkServer::sendMonsterSpawned(uint32_t clientId, uint32_t monsterId,
-                                       uint8_t monsterType, float x, float y)
-{
-    MonsterSpawnedPacket packet;
-    packet.header.opCode = OpCode::S2C_MONSTER_SPAWNED;
-    packet.header.packetSize = sizeof(MonsterSpawnedPacket);
-    packet.header.sequenceId = 0;
-    packet.monsterId = monsterId;
-    packet.monsterType = monsterType;
-    packet.x = x;
-    packet.y = y;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendMonsterMoved(uint32_t clientId, uint32_t monsterId,
-                                     float x, float y, float velocityX,
-                                     float velocityY)
-{
-    MonsterMovedPacket packet;
-    packet.header.opCode = OpCode::S2C_MONSTER_MOVED;
-    packet.header.packetSize = sizeof(MonsterMovedPacket);
-    packet.header.sequenceId = 0;
-    packet.monsterId = monsterId;
-    packet.x = x;
-    packet.y = y;
-    packet.velocityX = velocityX;
-    packet.velocityY = velocityY;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendMonsterFired(uint32_t clientId, uint32_t monsterId,
-                                     uint32_t projectileId, float x, float y,
-                                     float velocityX, float velocityY)
-{
-    MonsterFiredPacket packet;
-    packet.header.opCode = OpCode::S2C_MONSTER_FIRED;
-    packet.header.packetSize = sizeof(MonsterFiredPacket);
-    packet.header.sequenceId = 0;
-    packet.monsterId = monsterId;
-    packet.projectileId = projectileId;
-    packet.x = x;
-    packet.y = y;
-    packet.velocityX = velocityX;
-    packet.velocityY = velocityY;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendMonsterKilled(uint32_t clientId, uint32_t monsterId,
-                                      uint32_t killerId, uint8_t killerType)
-{
-    MonsterKilledPacket packet;
-    packet.header.opCode = OpCode::S2C_MONSTER_KILLED;
-    packet.header.packetSize = sizeof(MonsterKilledPacket);
-    packet.header.sequenceId = 0;
-    packet.monsterId = monsterId;
-    packet.killerId = killerId;
-    packet.killerType = killerType;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendPlayerMoved(uint32_t clientId, uint32_t playerId,
-                                    float x, float y)
-{
-    PlayerMovedPacket packet;
-    packet.header.opCode = OpCode::S2C_PLAYER_MOVED;
-    packet.header.packetSize = sizeof(PlayerMovedPacket);
-    packet.header.sequenceId = 0;
-    packet.playerId = playerId;
-    packet.x = x;
-    packet.y = y;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendPlayerFired(uint32_t clientId, uint32_t playerId,
-                                    uint32_t projectileId, float x, float y)
-{
-    PlayerFiredPacket packet;
-    packet.header.opCode = OpCode::S2C_PLAYER_FIRED;
-    packet.header.packetSize = sizeof(PlayerFiredPacket);
-    packet.header.sequenceId = 0;
-    packet.playerId = playerId;
-    packet.projectileId = projectileId;
-    packet.x = x;
-    packet.y = y;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendPlayerKilled(uint32_t clientId, uint32_t playerId,
-                                     uint32_t killerId, uint8_t killerType)
-{
-    PlayerKilledPacket packet;
-    packet.header.opCode = OpCode::S2C_PLAYER_KILLED;
-    packet.header.packetSize = sizeof(PlayerKilledPacket);
-    packet.header.sequenceId = 0;
-    packet.playerId = playerId;
-    packet.killerId = killerId;
-    packet.killerType = killerType;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendPlayerDamaged(uint32_t clientId, uint32_t playerId,
-                                      uint32_t attackerId, float damageAmount,
-                                      float remainingHealth)
-{
-    PlayerDamagedPacket packet;
-    packet.header.opCode = OpCode::S2C_PLAYER_DAMAGED;
-    packet.header.packetSize = sizeof(PlayerDamagedPacket);
-    packet.header.sequenceId = 0;
-    packet.playerId = playerId;
-    packet.attackerId = attackerId;
-    packet.damageAmount = damageAmount;
-    packet.remainingHealth = remainingHealth;
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendClientCrashed(uint32_t clientId,
-                                      uint32_t crashedClientId,
-                                      uint32_t playerId, uint8_t reason)
-{
-    ClientCrashedPacket packet;
-    packet.header.opCode = OpCode::S2C_CLIENT_CRASHED;
-    packet.header.packetSize = sizeof(ClientCrashedPacket);
-    packet.header.sequenceId = 0;
-    packet.clientId = crashedClientId;
-    packet.playerId = playerId;
-    packet.reason = reason;
-
-    if (clientId == 0) {
-        // Broadcast to all except the crashed client
-        broadcast(&packet, sizeof(packet), crashedClientId);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
-
-bool NetworkServer::sendGameEvent(uint32_t clientId, uint16_t eventType,
-                                  uint32_t entityId, uint32_t secondaryId,
-                                  const uint8_t* data, size_t dataSize)
-{
-    if (dataSize > 32) {
-        Logger::getInstance().log(
-            "GameEvent data size exceeds 32 bytes, truncating",
-            LogLevel::WARNING_L, "NetworkServer");
-        dataSize = 32;
-    }
-
-    GameEventPacket packet;
-    packet.header.opCode = OpCode::S2C_GAME_EVENT;
-    packet.header.packetSize = sizeof(GameEventPacket);
-    packet.header.sequenceId = 0;
-    packet.eventType = eventType;
-    packet.entityId = entityId;
-    packet.secondaryId = secondaryId;
-
-    if (data && dataSize > 0) {
-        std::memcpy(packet.data, data, dataSize);
-    }
-    if (dataSize < 32) {
-        std::memset(packet.data + dataSize, 0, 32 - dataSize);
-    }
-
-    if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0);
-    } else {
-        sendToClient(&packet, sizeof(packet), clientId);
-    }
-    return true;
-}
+// All entity events (spawn, move, death) are handled by the generic
+// EntitySpawnPacket, EntityPositionPacket, and EntityDeadPacket methods above.
+// No need for specialized monster/player packets as they are redundant.
 
 size_t NetworkServer::broadcast(const void* data, size_t size,
                                 uint32_t excludeClient, bool reliable)

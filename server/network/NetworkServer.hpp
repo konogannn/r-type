@@ -226,33 +226,6 @@ class NetworkServer : public INetworkServer {
      */
     bool sendScoreUpdate(uint32_t clientId, uint32_t score) override;
 
-    // --- Extended Game Event Notifications ---
-
-    bool sendMonsterSpawned(uint32_t clientId, uint32_t monsterId,
-                            uint8_t monsterType, float x, float y) override;
-    bool sendMonsterMoved(uint32_t clientId, uint32_t monsterId, float x,
-                          float y, float velocityX = 0.0f,
-                          float velocityY = 0.0f) override;
-    bool sendMonsterFired(uint32_t clientId, uint32_t monsterId,
-                          uint32_t projectileId, float x, float y,
-                          float velocityX, float velocityY) override;
-    bool sendMonsterKilled(uint32_t clientId, uint32_t monsterId,
-                           uint32_t killerId, uint8_t killerType) override;
-    bool sendPlayerMoved(uint32_t clientId, uint32_t playerId, float x,
-                         float y) override;
-    bool sendPlayerFired(uint32_t clientId, uint32_t playerId,
-                         uint32_t projectileId, float x, float y) override;
-    bool sendPlayerKilled(uint32_t clientId, uint32_t playerId,
-                          uint32_t killerId, uint8_t killerType) override;
-    bool sendPlayerDamaged(uint32_t clientId, uint32_t playerId,
-                           uint32_t attackerId, float damageAmount,
-                           float remainingHealth) override;
-    bool sendClientCrashed(uint32_t clientId, uint32_t crashedClientId,
-                           uint32_t playerId, uint8_t reason) override;
-    bool sendGameEvent(uint32_t clientId, uint16_t eventType, uint32_t entityId,
-                       uint32_t secondaryId, const uint8_t* data,
-                       size_t dataSize) override;
-
     /**
      * @brief Broadcast raw data to all connected clients
      *
