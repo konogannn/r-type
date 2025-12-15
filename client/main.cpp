@@ -31,8 +31,7 @@ int main()
     int width = config.getInt("resolutionWidth", 1920);
     int height = config.getInt("resolutionHeight", 1080);
 
-    auto window =
-        std::make_unique<WindowSFML>(width, height, "R-Type - Main Menu");
+    auto window = std::make_unique<WindowSFML>(width, height, "R-Type");
 
     window->setFramerateLimit(60);
 
