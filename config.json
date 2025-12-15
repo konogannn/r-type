@@ -1,9 +1,9 @@
 {
   "fullscreen": 1,
-  "keyMoveDown": "S",
-  "keyMoveLeft": "Q",
-  "keyMoveRight": "D",
-  "keyMoveUp": "Z",
+  "keyMoveDown": "Down",
+  "keyMoveLeft": "Left",
+  "keyMoveRight": "Right",
+  "keyMoveUp": "Up",
   "keyShoot": "Space",
   "musicVolume": 55.399990,
   "resolutionHeight": 900,
