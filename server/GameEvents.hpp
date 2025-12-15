@@ -15,7 +15,8 @@ namespace rtype {
  * @brief Guidelines for adding new game features:
  *
  * 1. For basic entity events (spawn, move, destroy), use the generic methods:
- *    - sendEntitySpawn (for all entity types: players, enemies, bullets, powerups)
+ *    - sendEntitySpawn (for all entity types: players, enemies, bullets,
+ * powerups)
  *    - sendEntityPosition (for all position updates)
  *    - sendEntityDead (for all entity destruction)
  *
