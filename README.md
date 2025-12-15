@@ -1,6 +1,10 @@
 # R-Type
 > A game engine that roars!
 
+[![Build Status](https://github.com/konogannn/r-type/actions/workflows/build-test.yml/badge.svg)](https://github.com/konogannn/r-type/actions/workflows/build-test.yml)
+[![Epitech Sync Status](https://github.com/konogannn/r-type/actions/workflows/sync-epitech.yml/badge.svg)](https://github.com/konogannn/r-type/actions/workflows/sync-epitech.yml)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+
 **R-Type** is a modern, multi-threaded game engine and game clone of the classic 90s shoot-'em-up. Built using **C++17**, it features a robust Client/Server architecture designed for performance and extensibility.
 
 ## 🚀 Features & Tech Stack
