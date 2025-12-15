@@ -102,7 +102,8 @@ class GameLoop {
      * @brief Process destroyed entities from cleanup systems
      */
     template <typename T>
-    void processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath = false);
+    void processDestroyedEntities(T* cleanupSystem,
+                                  bool checkPlayerDeath = false);
 
    public:
     /**

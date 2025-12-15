@@ -44,8 +44,8 @@ int main()
         rtype::GameServer server(60.0f, 30);
         g_serverInstance = &server;
 
-        Logger::getInstance().log("Starting on port 8080...",
-                                  LogLevel::INFO_L, "Server");
+        Logger::getInstance().log("Starting on port 8080...", LogLevel::INFO_L,
+                                  "Server");
         if (!server.start(8080)) {
             Logger::getInstance().log("Failed to start server",
                                       LogLevel::ERROR_L, "Error");
@@ -62,13 +62,12 @@ int main()
 
         g_serverInstance = nullptr;
 
-        Logger::getInstance().log("Server stopped", LogLevel::INFO_L,
-                                  "Server");
+        Logger::getInstance().log("Server stopped", LogLevel::INFO_L, "Server");
 
     } catch (const std::exception& e) {
-        Logger::getInstance().log("Unhandled exception: " +
-                                      std::string(e.what()),
-                                  LogLevel::CRITICAL_L, "FATAL");
+        Logger::getInstance().log(
+            "Unhandled exception: " + std::string(e.what()),
+            LogLevel::CRITICAL_L, "FATAL");
         Logger::getInstance().log("Server terminated abnormally",
                                   LogLevel::CRITICAL_L, "FATAL");
         return 84;
@@ -80,7 +79,6 @@ int main()
         return 84;
     }
 
-    Logger::getInstance().log("Shutdown complete", LogLevel::INFO_L,
-                              "Server");
+    Logger::getInstance().log("Shutdown complete", LogLevel::INFO_L, "Server");
     return 0;
 }

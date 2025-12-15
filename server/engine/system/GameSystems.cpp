@@ -62,10 +62,7 @@ void LifetimeSystem::update(float deltaTime, EntityManager& entityManager)
     }
 }
 
-std::string EnemySpawnerSystem::getName() const
-{
-    return "EnemySpawnerSystem";
-}
+std::string EnemySpawnerSystem::getName() const { return "EnemySpawnerSystem"; }
 
 int EnemySpawnerSystem::getPriority() const { return 5; }
 
@@ -145,12 +142,11 @@ void BulletCleanupSystem::update(float /* deltaTime */,
 
         if (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
             pos->y > MAX_Y) {
-            auto* netEntity =
-                entityManager.getComponent<NetworkEntity>(entity);
+            auto* netEntity = entityManager.getComponent<NetworkEntity>(entity);
             if (netEntity) {
-                _entitiesToDestroy.push_back(
-                    {entity.getId(), netEntity->entityId,
-                     netEntity->entityType});
+                _entitiesToDestroy.push_back({entity.getId(),
+                                              netEntity->entityId,
+                                              netEntity->entityType});
             }
         }
     }
@@ -160,10 +156,7 @@ void BulletCleanupSystem::update(float /* deltaTime */,
     }
 }
 
-std::string EnemyCleanupSystem::getName() const
-{
-    return "EnemyCleanupSystem";
-}
+std::string EnemyCleanupSystem::getName() const { return "EnemyCleanupSystem"; }
 
 SystemType EnemyCleanupSystem::getType() const
 {
@@ -195,12 +188,11 @@ void EnemyCleanupSystem::update([[maybe_unused]] float deltaTime,
         if (!pos) continue;
 
         if (pos->x < MIN_X) {
-            auto* netEntity =
-                entityManager.getComponent<NetworkEntity>(entity);
+            auto* netEntity = entityManager.getComponent<NetworkEntity>(entity);
             if (netEntity) {
-                _entitiesToDestroy.push_back(
-                    {entity.getId(), netEntity->entityId,
-                     netEntity->entityType});
+                _entitiesToDestroy.push_back({entity.getId(),
+                                              netEntity->entityId,
+                                              netEntity->entityType});
             }
         }
     }
@@ -222,10 +214,7 @@ CollisionSystem::getDestroyedEntities() const
     return _entitiesToDestroy;
 }
 
-void CollisionSystem::clearDestroyedEntities()
-{
-    _entitiesToDestroy.clear();
-}
+void CollisionSystem::clearDestroyedEntities() { _entitiesToDestroy.clear(); }
 
 bool CollisionSystem::checkCollision(const Position& pos1,
                                      const BoundingBox& box1,
@@ -277,8 +266,7 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
 
         for (auto& enemyEntity : enemies) {
             auto* enemyPos = entityManager.getComponent<Position>(enemyEntity);
-            auto* enemyHealth =
-                entityManager.getComponent<Health>(enemyEntity);
+            auto* enemyHealth = entityManager.getComponent<Health>(enemyEntity);
             auto* enemyBox =
                 entityManager.getComponent<BoundingBox>(enemyEntity);
 
@@ -299,9 +287,9 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
                 auto* bulletNetEntity =
                     entityManager.getComponent<NetworkEntity>(bulletEntity);
                 if (bulletNetEntity) {
-                    _entitiesToDestroy.push_back(
-                        {bulletEntity.getId(), bulletNetEntity->entityId,
-                         bulletNetEntity->entityType});
+                    _entitiesToDestroy.push_back({bulletEntity.getId(),
+                                                  bulletNetEntity->entityId,
+                                                  bulletNetEntity->entityType});
                 }
                 _immediateDestroyList.push_back(bulletEntity.getId());
 
@@ -327,8 +315,7 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     for (auto& playerEntity : players) {
         auto* playerPos = entityManager.getComponent<Position>(playerEntity);
         auto* playerHealth = entityManager.getComponent<Health>(playerEntity);
-        auto* playerBox =
-            entityManager.getComponent<BoundingBox>(playerEntity);
+        auto* playerBox = entityManager.getComponent<BoundingBox>(playerEntity);
 
         if (!playerPos || !playerHealth || !playerBox) continue;
 
@@ -363,16 +350,15 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
                 auto* enemyNetEntity =
                     entityManager.getComponent<NetworkEntity>(enemyEntity);
                 if (enemyNetEntity) {
-                    _entitiesToDestroy.push_back(
-                        {enemyEntity.getId(), enemyNetEntity->entityId,
-                         enemyNetEntity->entityType});
+                    _entitiesToDestroy.push_back({enemyEntity.getId(),
+                                                  enemyNetEntity->entityId,
+                                                  enemyNetEntity->entityType});
                 }
                 _immediateDestroyList.push_back(enemyEntity.getId());
 
                 if (!playerHealth->isAlive()) {
                     auto* playerNetEntity =
-                        entityManager.getComponent<NetworkEntity>(
-                            playerEntity);
+                        entityManager.getComponent<NetworkEntity>(playerEntity);
                     if (playerNetEntity) {
                         _entitiesToDestroy.push_back(
                             {playerEntity.getId(), playerNetEntity->entityId,
@@ -399,8 +385,8 @@ std::string PlayerCooldownSystem::getName() const
 int PlayerCooldownSystem::getPriority() const { return 15; }
 
 void PlayerCooldownSystem::processEntity(float deltaTime,
-                                        [[maybe_unused]] Entity& entity,
-                                        Player* player)
+                                         [[maybe_unused]] Entity& entity,
+                                         Player* player)
 {
     if (player->shootCooldown > 0.0f) {
         player->shootCooldown -= deltaTime;

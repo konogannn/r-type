@@ -279,8 +279,7 @@ void GameLoop::removePlayer(uint32_t clientId)
 }
 
 template <typename T>
-void GameLoop::processDestroyedEntities(T* cleanupSystem,
-                                        bool checkPlayerDeath)
+void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
 {
     if (!cleanupSystem) {
         return;
