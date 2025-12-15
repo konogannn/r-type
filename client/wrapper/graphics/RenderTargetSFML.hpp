@@ -22,49 +22,32 @@ class RenderTargetSFML : public IRenderTarget {
     /**
      * @brief Default constructor
      */
-    RenderTargetSFML() : _renderTexture(std::make_unique<sf::RenderTexture>())
-    {
-    }
+    RenderTargetSFML();
 
     ~RenderTargetSFML() override = default;
 
-    bool create(unsigned int width, unsigned int height) override
-    {
-        return _renderTexture->create(width, height);
-    }
+    bool create(unsigned int width, unsigned int height) override;
 
-    void clear() override { _renderTexture->clear(); }
+    void clear() override;
 
-    void display() override { _renderTexture->display(); }
+    void display() override;
 
-    unsigned int getWidth() const override
-    {
-        return _renderTexture->getSize().x;
-    }
+    unsigned int getWidth() const override;
 
-    unsigned int getHeight() const override
-    {
-        return _renderTexture->getSize().y;
-    }
+    unsigned int getHeight() const override;
 
-    bool isValid() const override { return _renderTexture != nullptr; }
+    bool isValid() const override;
 
     /**
      * @brief Get the underlying SFML render texture (for internal wrapper use
      * only)
      */
-    sf::RenderTexture* getSFMLRenderTexture() const
-    {
-        return _renderTexture.get();
-    }
+    sf::RenderTexture* getSFMLRenderTexture() const;
 
     /**
      * @brief Get the texture for rendering
      */
-    const sf::Texture& getTexture() const
-    {
-        return _renderTexture->getTexture();
-    }
+    const sf::Texture& getTexture() const;
 
    private:
     std::unique_ptr<sf::RenderTexture> _renderTexture;
