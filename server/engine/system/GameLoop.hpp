@@ -17,6 +17,7 @@
 #include "../component/GameComponents.hpp"
 #include "../entity/Entity.hpp"
 #include "../entity/EntityManager.hpp"
+#include "../entity/GameEntityFactory.hpp"
 #include "../threading/ThreadSafeQueue.hpp"
 #include "System.hpp"
 
@@ -53,6 +54,7 @@ struct EntityStateUpdate {
 class GameLoop {
    private:
     EntityManager _entityManager;
+    GameEntityFactory _entityFactory;
     std::vector<std::unique_ptr<ISystem>> _systems;
 
     // Threading
@@ -69,7 +71,6 @@ class GameLoop {
 
     // Player tracking
     std::unordered_map<uint32_t, EntityId> _clientToEntity;
-    uint32_t _nextBulletId;
 
     // Pending entity destructions (sent to network before actual destruction)
     std::vector<EntityId> _pendingDestructions;
@@ -91,12 +92,6 @@ class GameLoop {
      * @brief Generate network state updates
      */
     void generateNetworkUpdates();
-
-    /**
-     * @brief Create a bullet entity
-     */
-    void createBullet(EntityId ownerEntityId, uint32_t clientId,
-                      const Position& ownerPos, bool fromPlayer);
 
     /**
      * @brief Process destroyed entities from cleanup systems
