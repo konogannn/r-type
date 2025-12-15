@@ -20,6 +20,20 @@ void SoundManager::loadAll()
     loadSound("shot", "assets/sound/shot_1.wav");
     loadSound("hit", "assets/sound/hit.wav");
     loadSound("explosion", "assets/sound/explosion.wav");
+    loadSound("click", "assets/sound/clique_sound.wav");
+
+    if (!_music) {
+        _music = std::make_unique<rtype::MusicSFML>();
+        if (_music->openFromFile("assets/sound/menu_sound.wav")) {
+            _music->setLoop(true);
+            _music->setVolume(_musicVolume);
+            std::cout << "  Loaded: music -> assets/sound/menu_sound.wav"
+                      << std::endl;
+        } else {
+            std::cerr << "  Failed to load music: assets/sound/menu_sound.wav"
+                      << std::endl;
+        }
+    }
 }
 
 void SoundManager::loadSound(const std::string& name,
@@ -51,10 +65,54 @@ void SoundManager::playSound(const std::string& name)
     }
 }
 
+void SoundManager::playSoundAtVolume(const std::string& name, float volume)
+{
+    auto bufferIt = _buffers.find(name);
+    if (bufferIt != _buffers.end()) {
+        // Clean up old finished sounds periodically
+        if (_tempSounds.size() > 10) {
+            _tempSounds.clear();
+        }
+
+        // Create a temporary sound with the specific volume
+        auto tempSound = std::make_unique<rtype::SoundSFML>();
+        tempSound->setBuffer(*bufferIt->second);
+        tempSound->setVolume(volume);
+        tempSound->play();
+
+        // Keep the sound alive by storing it
+        _tempSounds.push_back(std::move(tempSound));
+    } else {
+        std::cerr << "Sound not found: " << name << std::endl;
+    }
+}
+
 void SoundManager::setVolume(float volume)
 {
     _volume = volume;
     for (auto& pair : _sounds) {
         pair.second->setVolume(volume);
+    }
+}
+
+void SoundManager::playMusic()
+{
+    if (_music && !_music->isPlaying()) {
+        _music->play();
+    }
+}
+
+void SoundManager::stopMusic()
+{
+    if (_music) {
+        _music->stop();
+    }
+}
+
+void SoundManager::setMusicVolume(float volume)
+{
+    _musicVolume = volume;
+    if (_music) {
+        _music->setVolume(volume);
     }
 }
