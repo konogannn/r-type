@@ -1,6 +1,10 @@
 name: Build & Test (Windows & Linux)
 run-name: ${{ github.actor }} has run the build & test workflow
 
+permissions:
+  contents: read
+  actions: write
+
 on:
   pull_request:
     branches: [main]
@@ -77,12 +81,52 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
 
+      - name: Setup vcpkg cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/vcpkg/buildtrees
+            ${{ github.workspace }}/vcpkg/packages
+            ${{ github.workspace }}/vcpkg/downloads
+            ${{ github.workspace }}/vcpkg/installed
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg/vcpkg') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Bootstrap vcpkg
+        run: |
+          cd ${{ github.workspace }}/vcpkg
+          if [ ! -f vcpkg ]; then
+            ./bootstrap-vcpkg.sh
+          fi
+        shell: bash
+        if: runner.os != 'Windows'
+
+      - name: Bootstrap vcpkg (Windows)
+        run: |
+          cd ${{ github.workspace }}/vcpkg
+          if (-not (Test-Path vcpkg.exe)) {
+            .\bootstrap-vcpkg.bat
+          }
+        shell: pwsh
+        if: runner.os == 'Windows'
+
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: ${{ github.workspace }}/vcpkg
           vcpkgJsonGlob: "vcpkg.json"
           runVcpkgInstall: true
+        continue-on-error: false
+        env:
+          VCPKG_FEATURE_FLAGS: manifests,binarycaching
+
+      - name: Display vcpkg logs on failure
+        if: failure()
+        run: |
+          echo "=== Displaying vcpkg logs ==="
+          find ${{ github.workspace }}/vcpkg/buildtrees -name "*.log" -exec echo "File: {}" \; -exec cat {} \; || true
+        shell: bash
 
       - name: Run CMake with Presets
         uses: lukka/run-cmake@v10
