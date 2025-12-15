@@ -197,9 +197,10 @@ Systems are executed in **priority order** every frame. Lower priority number = 
 
 | Priority | System | Description |
 |----------|--------|-------------|
-| 5 | EnemySpawnerSystem | Spawns new enemies |
+| 5 | EnemySpawnerSystem | Emits enemy spawn events |
 | 10 | MovementSystem | Updates positions |
-| 15 | PlayerCooldownSystem | Updates cooldowns |
+| 15 | PlayerCooldownSystem | Updates player shoot cooldowns |
+| 20 | EnemyShootingSystem | Makes enemies emit bullet spawn events |
 | 50 | CollisionSystem | Detects and handles collisions |
 | 90 | BulletCleanupSystem | Removes off-screen bullets |
 | 95 | EnemyCleanupSystem | Removes off-screen enemies |
@@ -210,29 +211,43 @@ Systems are executed in **priority order** every frame. Lower priority number = 
 #### 1. EnemySpawnerSystem
 
 **Priority**: 5 (Early)  
-**Purpose**: Periodically spawns enemy entities
+**Purpose**: Periodically emits enemy spawn events (does NOT create entities directly)
+
+**Architecture**: Event-driven - emits `SpawnEnemyEvent` to spawn queue
 
 **Algorithm**:
 ```cpp
-void update(float deltaTime, EntityManager& entityManager) {
-    _spawnTimer += deltaTime;
+class EnemySpawnerSystem : public ISystem {
+    std::vector<SpawnEvent>& _spawnQueue;  // Reference to GameLoop's event queue
     
-    if (_spawnTimer >= _spawnInterval) {
-        _spawnTimer = 0.0f;
-        spawnEnemy(entityManager);  // Create new enemy
+    void update(float deltaTime, EntityManager& entityManager) {
+        _spawnTimer += deltaTime;
+        
+        if (_spawnTimer >= _spawnInterval) {
+            _spawnTimer = 0.0f;
+            spawnEnemy();  // Emit spawn event
+        }
     }
-}
+    
+    void spawnEnemy() {
+        // Emit event instead of creating entity directly
+        _spawnQueue.push_back(SpawnEnemyEvent{type, x, y});
+    }
+};
 ```
 
 **Enemy Types**:
-- **BASIC**: Standard speed (100 px/s), 30 HP
-- **FAST**: Double speed (200 px/s), 20 HP  
-- **TANK**: Half speed (50 px/s), 100 HP
+- **BASIC**: Standard speed (-100 px/s), 30 HP, shoots bullets
+- **FAST**: Double speed (-200 px/s), 20 HP, no shooting
+- **TANK**: Half speed (-50 px/s), 100 HP, shoots bullets
 
 **Configuration**:
-- Spawn interval: 2.0 seconds (configurable)
+- Spawn interval: 5.0 seconds (configurable at construction)
 - Spawn position: Right side of screen (x=1900)
 - Random Y position: 50-1000 pixels
+- Random enemy type selection (33% each type)
+
+**Pure ECS Design**: System only emits events. GameLoop processes events and uses GameEntityFactory to create actual entities.
 
 ---
 
@@ -287,7 +302,53 @@ void update(float deltaTime, EntityManager& entityManager) {
 
 ---
 
-#### 4. CollisionSystem
+#### 4. EnemyShootingSystem
+
+**Priority**: 20  
+**Purpose**: Makes enemies shoot bullets at regular intervals (event-driven)
+
+**Components Required**: `Enemy`, `Position`
+
+**Architecture**: Event-driven - emits `SpawnEnemyBulletEvent` to spawn queue
+
+**Algorithm**:
+```cpp
+class EnemyShootingSystem : public System<Enemy, Position> {
+    std::vector<SpawnEvent>& _spawnQueue;
+    const float SHOOT_INTERVAL = 2.0f;
+    
+    void processEntity(float deltaTime, Entity& entity, 
+                      Enemy* enemy, Position* pos) {
+        // Decrement cooldown
+        if (enemy->shootCooldown > 0.0f) {
+            enemy->shootCooldown -= deltaTime;
+            return;
+        }
+        
+        // Only BASIC and TANK enemies shoot (FAST doesn't)
+        if (enemy->type != Enemy::Type::BASIC) {
+            return;
+        }
+        
+        // Emit bullet spawn event
+        _spawnQueue.push_back(SpawnEnemyBulletEvent{entity.getId(), *pos});
+        enemy->shootCooldown = SHOOT_INTERVAL;
+    }
+};
+```
+
+**Shooting Behavior**:
+- **BASIC enemies**: Shoot every 2 seconds
+- **TANK enemies**: Shoot every 2 seconds (if implemented)
+- **FAST enemies**: Never shoot
+- Bullet velocity: -300 px/s (moving left)
+- Bullet damage: 20 HP
+
+**Pure ECS Design**: System only emits events. GameLoop creates bullet entities via GameEntityFactory.
+
+---
+
+#### 5. CollisionSystem
 
 **Priority**: 50 (Mid)  
 **Purpose**: Detects and resolves collisions between entities
@@ -296,7 +357,8 @@ void update(float deltaTime, EntityManager& entityManager) {
 
 **Collision Pairs Checked**:
 1. **Player Bullets ↔ Enemies**: Damages enemy, destroys bullet
-2. **Players ↔ Enemies**: Damages player, destroys enemy
+2. **Enemy Bullets ↔ Players**: Damages player, destroys bullet
+3. **Players ↔ Enemies**: Damages player (20 HP), destroys enemy
 
 **Algorithm**:
 ```cpp

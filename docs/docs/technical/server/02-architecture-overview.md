@@ -229,6 +229,7 @@ The server uses a **data-oriented ECS architecture** for game logic.
 1. **Entities**: Just an ID (uint32_t)
 2. **Components**: Pure data structures (Position, Velocity, Health)
 3. **Systems**: Logic that operates on components
+4. **Factory**: Centralized entity creation (GameEntityFactory)
 
 ### Why ECS?
 
@@ -239,22 +240,120 @@ The server uses a **data-oriented ECS architecture** for game logic.
 | **Maintainability** | Clear separation of data and logic |
 | **Scalability** | Systems can be parallelized (future) |
 
-### Example: Player Entity
+### GameEntityFactory & Event-Driven Spawning
+
+**Location**: `server/engine/entity/GameEntityFactory.{hpp,cpp}`
+
+The `GameEntityFactory` centralizes all entity creation logic. Systems **do not create entities directly** - instead, they emit **spawn events** that the `GameLoop` processes using the factory. This follows **pure ECS architecture** where systems only contain logic, not entity creation.
+
+**Key Responsibilities**:
+- Create all game entities (players, enemies, bullets)
+- Manage entity IDs (network synchronization)
+- Ensure consistent component configuration
+- Provide a single source of truth for entity templates
+
+**Architecture Pattern**: **Factory Pattern** + **Event-Driven Architecture**
 
 ```cpp
-// Create player entity
-EntityId player = entityManager.createEntity();
+class GameEntityFactory {
+private:
+    EntityManager& _entityManager;
+    uint32_t _nextEnemyId;
+    uint32_t _nextBulletId;
 
-// Add components (data)
-entityManager.addComponent<Position>(player, {x, y});
-entityManager.addComponent<Velocity>(player, {0, 0});
-entityManager.addComponent<Health>(player, {100});
-entityManager.addComponent<Player>(player, {clientId, shootCooldown});
-
-// Systems (logic) automatically process entities with required components
-// MovementSystem: operates on Position + Velocity
-// CollisionSystem: operates on Position + Hitbox + Health
+public:
+    // Creates a player with all required components
+    Entity createPlayer(uint32_t clientId, uint32_t playerId, float x, float y);
+    
+    // Creates an enemy with type-specific stats
+    Entity createEnemy(Enemy::Type type, float x, float y);
+    
+    // Creates player/enemy bullets
+    Entity createPlayerBullet(EntityId ownerId, const Position& pos);
+    Entity createEnemyBullet(EntityId ownerId, const Position& pos);
+};
 ```
+
+**Benefits**:
+- ✅ **Single Responsibility**: Entity creation isolated in factory
+- ✅ **Consistency**: All entities created the same way
+- ✅ **Maintainability**: Change entity structure in one place
+- ✅ **Testability**: Easy to mock spawn events and factory
+- ✅ **Pure ECS**: Systems only process logic, never create entities
+- ✅ **Minimal Coupling**: Systems only know about spawn event queue
+
+**Event-Driven Spawning Flow**:
+
+```cpp
+// 1. Define spawn events (server/engine/events/SpawnEvents.hpp)
+struct SpawnEnemyEvent { Enemy::Type type; float x, y; };
+struct SpawnPlayerBulletEvent { EntityId ownerId; Position position; };
+struct SpawnEnemyBulletEvent { EntityId ownerId; Position position; };
+
+using SpawnEvent = std::variant<SpawnEnemyEvent, 
+                                 SpawnPlayerBulletEvent, 
+                                 SpawnEnemyBulletEvent>;
+
+// 2. Systems receive spawn queue reference at construction
+class EnemySpawnerSystem : public ISystem {
+    std::vector<SpawnEvent>& _spawnQueue;
+    
+public:
+    EnemySpawnerSystem(std::vector<SpawnEvent>& spawnQueue) 
+        : _spawnQueue(spawnQueue) {}
+    
+    void spawnEnemy() {
+        // Emit spawn event instead of creating entity directly
+        _spawnQueue.push_back(SpawnEnemyEvent{Enemy::Type::BASIC, x, y});
+    }
+};
+
+// 3. GameLoop processes events each frame
+void GameLoop::processSpawnEvents() {
+    for (const auto& event : _spawnEvents) {
+        std::visit([this](const auto& e) { 
+            processSpawnEvent(e);  // Compile-time dispatch
+        }, event);
+    }
+    _spawnEvents.clear();
+}
+
+// Overloaded handlers for each event type
+void processSpawnEvent(const SpawnEnemyEvent& e) {
+    _entityFactory.createEnemy(e.type, e.x, e.y);
+}
+```
+
+### Entity Creation Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                       GameLoop                           │
+│  - Owns GameEntityFactory                                │
+│  - Owns spawn event queue (vector<SpawnEvent>)           │
+│  - Processes spawn events each frame                     │
+└────────────────┬─────────────────────────────────────────┘
+                 │
+                 ├─► Creates systems with spawn queue ref
+                 │   system = new EnemySpawnerSystem(_spawnEvents)
+                 │
+                 ├─► Systems emit spawn events
+                 │   _spawnQueue.push_back(SpawnEnemyEvent{...})
+                 │
+                 └─► GameLoop processes events via factory
+                     processSpawnEvent() → _entityFactory.createEnemy()
+```
+
+**Why Event-Driven Spawning?**
+- 🎯 **Decoupling**: Systems don't need to know about GameLoop or Factory
+- 🧪 **Testability**: Easy to mock a `vector<SpawnEvent>` for testing
+- 📈 **Extensibility**: Add new entity types without changing systems
+- 🔧 **Maintainability**: Single spawn processing location in GameLoop
+- ⚡ **Performance**: Batch entity creation, better cache locality
+
+**Systems (logic)** automatically process entities with required components:
+- MovementSystem: operates on Position + Velocity
+- CollisionSystem: operates on Position + Hitbox + Health
 
 ---
 
@@ -265,17 +364,23 @@ entityManager.addComponent<Player>(player, {clientId, shootCooldown});
 - **Why**: Performance, flexibility, maintainability
 - **Implementation**: EntityManager + ComponentManager + Systems
 
-### 2. Reactor Pattern (Asio)
+### 2. Factory Pattern + Event-Driven Architecture
+- **Where**: Entity creation (GameEntityFactory + SpawnEvents)
+- **Why**: Centralize entity creation, decouple systems from factory, pure ECS
+- **Implementation**: Systems emit spawn events, GameLoop processes via factory
+- **Benefits**: Pure ECS, minimal coupling, testability, extensibility
+
+### 3. Reactor Pattern (Asio)
 - **Where**: Network layer
 - **Why**: Asynchronous I/O without threads-per-connection
 - **Implementation**: Boost.Asio io_context
 
-### 3. Producer-Consumer Pattern
+### 4. Producer-Consumer Pattern
 - **Where**: Thread communication
 - **Why**: Safe data exchange between threads
 - **Implementation**: ThreadSafeQueue
 
-### 4. Facade Pattern
+### 5. Facade Pattern
 - **Where**: GameServer
 - **Why**: Simplify complex subsystem interactions
 - **Implementation**: GameServer provides simple start()/run()/stop()
