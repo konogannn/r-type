@@ -107,7 +107,7 @@ Confirms authentication and provides game initialization parameters.
 
 | Field       | Type       | Size    | Description                                       |
 |:------------|:-----------|:--------|:--------------------------------------------------|
-| Header      | struct     | 7 bytes | Standard header with OpCode 0x06                  |
+| Header      | struct     | 7 bytes | Standard header with OpCode 0x0B                  |
 | playerId    | uint32_t   | 4 bytes | Unique identifier for player's entity             |
 | mapWidth    | uint16_t   | 2 bytes | Game area width                                   |
 | mapHeight   | uint16_t   | 2 bytes | Game area height                                  |
@@ -115,7 +115,7 @@ Confirms authentication and provides game initialization parameters.
 ```text
 +-------------------+-----------+-----------+-----------+
 | Header            | Player ID | Map Width | Map Height|
-| Op: 0x06          | uint32    | uint16    | uint16    |
+| Op: 0x0B          | uint32    | uint16    | uint16    |
 +-------------------+-----------+-----------+-----------+
 Total Size: 15 bytes
 ```
@@ -192,4 +192,4 @@ Unreliable packets are transmitted without storage or acknowledgment expectation
 
 ### 5.3 Packet Classification
 
-Reliable packets requiring acknowledgment: C2S_LOGIN, S2C_LOGIN_OK, S2C_ENTITY_NEW, S2C_ENTITY_DEAD. All other packet types are unreliable.
+Reliable packets requiring acknowledgment: S2C_LOGIN_OK, S2C_ENTITY_NEW, S2C_ENTITY_DEAD. All other packet types are unreliable.
