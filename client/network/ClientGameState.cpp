@@ -248,7 +248,7 @@ void ClientGameState::onEntityDead(uint32_t entityId)
 
     auto* entity = getEntity(entityId);
     if (entity) {
-        if (entity->type == 3) {
+        if (entity->type == 3 || entity->type == 4) {
             _explosions.push_back(std::make_unique<Explosion>(
                 "assets/sprites/blowup_1.png", entity->x, entity->y, 1.0f));
         } else if (entity->type == 2) {
@@ -297,9 +297,13 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             texturePath = "assets/sprites/boss_3.png";
             scale = 1.0f;  // Enemy size (doubled from original)
             break;
-        case 3:  // Projectile
+        case 3:  // Player Projectile
             texturePath = "assets/sprites/projectile_player_1.png";
             scale = 6.0f;  // Projectile size (doubled from original)
+            break;
+        case 4:  // Enemy Projectile
+            texturePath = "assets/sprites/projectile_enemy_1.png";
+            scale = 6.0f;  // Enemy bullet (using same sprite for now)
             break;
         default:
             texturePath = "assets/sprites/player1.png";

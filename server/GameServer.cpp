@@ -26,6 +26,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(5.0f));
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>());
     _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
