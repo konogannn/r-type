@@ -3,6 +3,7 @@
 
 set(COMPONENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameComponents.cpp
 )
 
 set(COMPONENT_HEADERS
