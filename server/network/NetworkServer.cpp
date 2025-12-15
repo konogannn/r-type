@@ -175,13 +175,12 @@ void NetworkServer::resendPendingPackets()
 void NetworkServer::disconnectClient(uint32_t clientId,
                                      const std::string& reason)
 {
-    // First, gather info and remove session (with lock)
     {
         std::lock_guard<std::mutex> lock(_clientsMutex);
 
         auto it = _sessions.find(clientId);
         if (it == _sessions.end()) {
-            return;  // Client already disconnected
+            return;
         }
 
         Logger::getInstance().log("Disconnecting client " +
@@ -197,10 +196,6 @@ void NetworkServer::disconnectClient(uint32_t clientId,
         event.clientId = clientId;
         pushEvent(event);
     }
-
-    // Client crash notifications would be handled via generic entity destruction
-    // if needed - the disconnected player entity will be destroyed which sends
-    // an EntityDeadPacket to all clients.
 }
 
 void NetworkServer::setTimeoutDuration(uint32_t seconds)
@@ -416,7 +411,6 @@ bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
     packet.y = y;
 
     if (clientId == 0) {
-        // Broadcast as unreliable
         broadcast(&packet, sizeof(packet), 0, false);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
@@ -474,10 +468,6 @@ bool NetworkServer::sendScoreUpdate(uint32_t clientId, uint32_t score)
     }
     return true;
 }
-
-// All entity events (spawn, move, death) are handled by the generic
-// EntitySpawnPacket, EntityPositionPacket, and EntityDeadPacket methods above.
-// No need for specialized monster/player packets as they are redundant.
 
 size_t NetworkServer::broadcast(const void* data, size_t size,
                                 uint32_t excludeClient, bool reliable)
