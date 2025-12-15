@@ -26,9 +26,6 @@ GameLoop::~GameLoop() { stop(); }
 
 void GameLoop::addSystem(std::unique_ptr<ISystem> system)
 {
-    // Inject factory into all systems (no-op for systems that don't need it)
-    system->setFactory(&_entityFactory);
-
     _systems.push_back(std::move(system));
 
     std::sort(_systems.begin(), _systems.end(),
@@ -85,6 +82,9 @@ void GameLoop::gameThreadLoop()
         }
 
         processInputCommands(deltaTime);
+        
+        processSpawnEvents();
+        
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
 
@@ -286,11 +286,6 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
     cleanupSystem->clearDestroyedEntities();
 }
 
-void GameLoop::queueEntityDestruction(EntityId entityId)
-{
-    _pendingDestructions.push_back(entityId);
-}
-
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
 {
     auto players =
@@ -316,6 +311,31 @@ void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
 void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 {
     _onPlayerDeathCallback = std::move(callback);
+}
+
+void GameLoop::processSpawnEvents()
+{
+    // Use compile-time dispatch via overload resolution
+    // This is more efficient than runtime type checking with if constexpr
+    for (const auto& event : _spawnEvents) {
+        std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
+    }
+    _spawnEvents.clear();
+}
+
+void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
+{
+    _entityFactory.createEnemy(event.type, event.x, event.y);
+}
+
+void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
+{
+    _entityFactory.createPlayerBullet(event.ownerId, event.position);
+}
+
+void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
+{
+    _entityFactory.createEnemyBullet(event.ownerId, event.position);
 }
 
 }  // namespace engine

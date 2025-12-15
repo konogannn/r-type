@@ -18,10 +18,16 @@
 #include "../entity/Entity.hpp"
 #include "../entity/EntityManager.hpp"
 #include "../entity/GameEntityFactory.hpp"
+#include "../events/SpawnEvents.hpp"
 #include "../threading/ThreadSafeQueue.hpp"
 #include "System.hpp"
 
+#include <variant>
+
 namespace engine {
+
+// Unified spawn event type - can hold any entity spawn request
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent>;
 
 /**
  * @brief Network input command from clients
@@ -65,15 +71,15 @@ class GameLoop {
     ThreadSafeQueue<NetworkInputCommand> _inputQueue;
     ThreadSafeQueue<EntityStateUpdate> _outputQueue;
 
+    // Unified spawn event queue (systems write, GameLoop reads)
+    std::vector<SpawnEvent> _spawnEvents;
+
     // Timing
     float _targetFPS;
     std::chrono::milliseconds _targetFrameTime;
 
     // Player tracking
     std::unordered_map<uint32_t, EntityId> _clientToEntity;
-
-    // Pending entity destructions (sent to network before actual destruction)
-    std::vector<EntityId> _pendingDestructions;
 
     // Player death callback
     std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
@@ -99,6 +105,18 @@ class GameLoop {
     template <typename T>
     void processDestroyedEntities(T* cleanupSystem,
                                   bool checkPlayerDeath = false);
+
+    /**
+     * @brief Process all spawn events and create entities
+     */
+    void processSpawnEvents();
+
+    /**
+     * @brief Overloaded spawn event handlers (compile-time dispatch)
+     */
+    void processSpawnEvent(const SpawnEnemyEvent& event);
+    void processSpawnEvent(const SpawnPlayerBulletEvent& event);
+    void processSpawnEvent(const SpawnEnemyBulletEvent& event);
 
    public:
     /**
@@ -168,13 +186,6 @@ class GameLoop {
     void removePlayer(uint32_t clientId);
 
     /**
-     * @brief Queue an entity for destruction (will be destroyed after network
-     * sync)
-     * @param entityId The entity to destroy
-     */
-    void queueEntityDestruction(EntityId entityId);
-
-    /**
      * @brief Get all existing player entity states
      * @param updates Vector to receive the player states
      */
@@ -185,5 +196,10 @@ class GameLoop {
      * @param callback Function to call with clientId when player dies
      */
     void setOnPlayerDeath(std::function<void(uint32_t)> callback);
+
+    /**
+     * @brief Get unified spawn event queue (for systems to write to)
+     */
+    std::vector<SpawnEvent>& getSpawnEvents() { return _spawnEvents; }
 };
 }  // namespace engine
