@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "common/utils/PathHelper.hpp"
+
 namespace rtype {
 
 ClientGameState::ClientGameState()
@@ -251,17 +253,17 @@ void ClientGameState::onEntityDead(uint32_t entityId)
         switch (entity->type) {
             case 4:  // Enemy Projectile
                 _explosions.push_back(std::make_unique<Explosion>(
-                    "assets/sprites/blowup_1.png", entity->x - 16, entity->y,
+                    utils::PathHelper::getAssetPath("assets/sprites/blowup_1.png"), entity->x - 16, entity->y,
                     1.0f, 32, 32, 6));
                 break;
             case 3:  // Player Projectile
                 _explosions.push_back(std::make_unique<Explosion>(
-                    "assets/sprites/blowup_1.png", entity->x + 16, entity->y,
+                    utils::PathHelper::getAssetPath("assets/sprites/blowup_1.png"), entity->x + 16, entity->y,
                     1.0f, 32, 32, 6));
                 break;
             case 2:  // Enemy/Boss
                 _explosions.push_back(std::make_unique<Explosion>(
-                    "assets/sprites/blowup_2.png", entity->x, entity->y, 2.0f,
+                    utils::PathHelper::getAssetPath("assets/sprites/blowup_2.png"), entity->x, entity->y, 2.0f,
                     64, 64, 8));
                 break;
         }
@@ -288,35 +290,35 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
 
     switch (entity.type) {
         case 1:  // Player
-            texturePath = "assets/sprites/player1.png";
+            texturePath = utils::PathHelper::getAssetPath("assets/sprites/player1.png");
             scale = 4.0f;  // Player size (doubled from original)
 
             // Load animation sprites (player1=static, player2=down, player3=up)
             entity.spriteUp = std::make_unique<SpriteSFML>();
             entity.spriteDown = std::make_unique<SpriteSFML>();
 
-            entity.spriteUp->loadTexture("assets/sprites/player3.png");
+            entity.spriteUp->loadTexture(utils::PathHelper::getAssetPath("assets/sprites/player3.png"));
             entity.spriteUp->setScale(scale, scale);
 
-            entity.spriteDown->loadTexture("assets/sprites/player2.png");
+            entity.spriteDown->loadTexture(utils::PathHelper::getAssetPath("assets/sprites/player2.png"));
             entity.spriteDown->setScale(scale, scale);
 
             entity.currentSprite = entity.sprite.get();
             break;
         case 2:  // Enemy/Boss
-            texturePath = "assets/sprites/boss_3.png";
+            texturePath = utils::PathHelper::getAssetPath("assets/sprites/boss_3.png");
             scale = 1.0f;  // Enemy size (doubled from original)
             break;
         case 3:  // Player Projectile
-            texturePath = "assets/sprites/projectile_player_1.png";
+            texturePath = utils::PathHelper::getAssetPath("assets/sprites/projectile_player_1.png");
             scale = 6.0f;  // Projectile size (doubled from original)
             break;
         case 4:  // Enemy Projectile
-            texturePath = "assets/sprites/projectile_enemy_1.png";
+            texturePath = utils::PathHelper::getAssetPath("assets/sprites/projectile_enemy_1.png");
             scale = 6.0f;  // Enemy bullet (using same sprite for now)
             break;
         default:
-            texturePath = "assets/sprites/player1.png";
+            texturePath = utils::PathHelper::getAssetPath("assets/sprites/player1.png");
             scale = 2.0f;
             break;
     }
