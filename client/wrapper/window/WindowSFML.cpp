@@ -305,5 +305,6 @@ void WindowSFML::draw(const ISprite& sprite, const IRenderStates& states)
                   << std::endl;
     }
 }
+bool WindowSFML::hasFocus() const { return _window && _window->hasFocus(); }
 
 }  // namespace rtype

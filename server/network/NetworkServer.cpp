@@ -7,6 +7,8 @@
 
 #include "NetworkServer.hpp"
 
+#include "../../common/utils/Logger.hpp"
+
 namespace rtype {
 
 NetworkServer::NetworkServer(uint32_t timeoutSeconds)
@@ -140,49 +142,61 @@ void NetworkServer::checkTimeouts()
 void NetworkServer::resendPendingPackets()
 {
     auto now = std::chrono::steady_clock::now();
-    std::lock_guard<std::mutex> lock(_clientsMutex);
+    std::vector<uint32_t> clientsToDisconnect;
 
-    for (auto& pair : _sessions) {
-        auto& session = pair.second;
-        for (auto& packet : session.pendingPackets) {
-            auto elapsed =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    now - packet.lastSentTime);
+    {
+        std::lock_guard<std::mutex> lock(_clientsMutex);
 
-            if (elapsed.count() >= 1000) {
-                if (packet.retryCount < 5) {
-                    sendToEndpoint(session.endpoint, packet.data.data(),
-                                   packet.data.size(), false, nullptr);
-                    packet.lastSentTime = now;
-                    packet.retryCount++;
-                } else {
-                    disconnectClient(pair.first, "too many retries");
+        for (auto& pair : _sessions) {
+            auto& session = pair.second;
+            for (auto& packet : session.pendingPackets) {
+                auto elapsed =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        now - packet.lastSentTime);
+
+                if (elapsed.count() >= 1000) {
+                    if (packet.retryCount < 5) {
+                        sendToEndpoint(session.endpoint, packet.data.data(),
+                                       packet.data.size(), false, nullptr);
+                        packet.lastSentTime = now;
+                        packet.retryCount++;
+                    } else {
+                        clientsToDisconnect.push_back(pair.first);
+                        break;
+                    }
                 }
             }
         }
+    }
+
+    for (uint32_t clientId : clientsToDisconnect) {
+        disconnectClient(clientId, "too many retries");
     }
 }
 
 void NetworkServer::disconnectClient(uint32_t clientId,
                                      const std::string& reason)
 {
-    std::lock_guard<std::mutex> lock(_clientsMutex);
+    {
+        std::lock_guard<std::mutex> lock(_clientsMutex);
 
-    auto it = _sessions.find(clientId);
-    if (it != _sessions.end()) {
+        auto it = _sessions.find(clientId);
+        if (it == _sessions.end()) {
+            return;
+        }
+
         Logger::getInstance().log("Disconnecting client " +
                                       std::to_string(clientId) +
                                       " (reason: " + reason + ")",
                                   LogLevel::INFO_L, "NetworkServer");
 
         _endpointToId.erase(it->second.endpoint);
+        _sessions.erase(it);
 
         NetworkEvent event;
         event.type = EventType::Disconnect;
         event.clientId = clientId;
         pushEvent(event);
-
-        _sessions.erase(it);
     }
 }
 
@@ -227,14 +241,27 @@ void NetworkServer::handleReceive(const boost::system::error_code& error,
                                   size_t bytesTransferred)
 {
     if (!error) {
-        processPacket(_receiveBuffer.data(), bytesTransferred, _remoteEndpoint);
+        try {
+            processPacket(_receiveBuffer.data(), bytesTransferred,
+                          _remoteEndpoint);
+        } catch (const std::exception& e) {
+            Logger::getInstance().log(
+                "Error processing packet: " + std::string(e.what()),
+                LogLevel::ERROR_L, "NetworkServer");
+        }
     } else if (error != boost::asio::error::operation_aborted) {
         Logger::getInstance().log("Receive error: " + error.message(),
                                   LogLevel::ERROR_L, "NetworkServer");
     }
 
     if (_running) {
-        startReceive();
+        try {
+            startReceive();
+        } catch (const std::exception& e) {
+            Logger::getInstance().log(
+                "Failed to restart receive: " + std::string(e.what()),
+                LogLevel::ERROR_L, "NetworkServer");
+        }
     }
 }
 
@@ -337,11 +364,13 @@ void NetworkServer::processPacket(const uint8_t* data, size_t size,
                               pending.end());
                 auto afterSize = pending.size();
 
-                std::cout << "[Callback] ACK Received.\n"
-                          << "  - Client ID: " << session->clientId << "\n"
-                          << "  - ACK Seq: " << ack->ackedSequenceId << "\n"
-                          << "  - Pending before: " << beforeSize << "\n"
-                          << "  - Pending after: " << afterSize << std::endl;
+                Logger::getInstance().log(
+                    "ACK Received. Client ID: " +
+                        std::to_string(session->clientId) +
+                        ", ACK Seq: " + std::to_string(ack->ackedSequenceId) +
+                        ", Pending before: " + std::to_string(beforeSize) +
+                        ", Pending after: " + std::to_string(afterSize),
+                    LogLevel::DEBUG_L, "Callback");
             }
             break;
 
@@ -368,8 +397,8 @@ bool NetworkServer::sendLoginResponse(uint32_t clientId, uint32_t playerId,
     response.mapWidth = mapWidth;
     response.mapHeight = mapHeight;
 
-    sendToEndpoint(it->second.endpoint, &response, sizeof(response), true,
-                   &it->second);
+    sendToEndpoint(it->second.endpoint, &response, sizeof(response), false,
+                   nullptr);
     return true;
 }
 
@@ -386,7 +415,6 @@ bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
     packet.y = y;
 
     if (clientId == 0) {
-        // Broadcast as unreliable
         broadcast(&packet, sizeof(packet), 0, false);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
@@ -422,7 +450,7 @@ bool NetworkServer::sendEntityDead(uint32_t clientId, uint32_t entityId)
     packet.entityId = entityId;
 
     if (clientId == 0) {
-        broadcast(&packet, sizeof(packet), 0, true);
+        broadcast(&packet, sizeof(packet), 0, false);
     } else {
         sendToClient(&packet, sizeof(packet), clientId);
     }
@@ -453,7 +481,7 @@ size_t NetworkServer::broadcast(const void* data, size_t size,
     for (auto& session : _sessions) {
         if (session.first != excludeClient && session.second.isAuthenticated) {
             sendToEndpoint(session.second.endpoint, data, size, reliable,
-                           &session.second);
+                           reliable ? &session.second : nullptr);
             count++;
         }
     }
@@ -558,12 +586,7 @@ void NetworkServer::sendToClient(const void* data, size_t size,
     std::lock_guard<std::mutex> lock(_clientsMutex);
     ClientSession* session = getSessionById(clientId);
     if (session) {
-        const Header* h = reinterpret_cast<const Header*>(data);
-        bool reliable = (h->opCode == OpCode::S2C_LOGIN_OK ||
-                         h->opCode == OpCode::S2C_ENTITY_NEW ||
-                         h->opCode == OpCode::S2C_ENTITY_DEAD);
-
-        sendToEndpoint(session->endpoint, data, size, reliable, session);
+        sendToEndpoint(session->endpoint, data, size, false, nullptr);
     }
 }
 
