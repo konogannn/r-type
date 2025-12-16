@@ -34,7 +34,7 @@ struct ClientEntity {
     std::unique_ptr<SpriteSFML> spriteDown;
     SpriteSFML* currentSprite = nullptr;
     float spriteScale = 1.0f;
-    float verticalIdleTime = 0.0f;  // time since last vertical movement
+    float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
