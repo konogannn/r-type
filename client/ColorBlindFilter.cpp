@@ -9,6 +9,7 @@
 
 #include <iostream>
 
+#include "common/utils/PathHelper.hpp"
 #include "wrapper/graphics/RenderStatesSFML.hpp"
 #include "wrapper/graphics/RenderTargetSFML.hpp"
 #include "wrapper/graphics/ShaderSFML.hpp"
@@ -97,11 +98,11 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
             return false;
         }
 
-        if (!_shader->loadFromFile("assets/shaders/colorblind.frag",
-                                   IShader::Fragment)) {
+        std::string resolvedPath =
+            utils::PathHelper::getAssetPath("assets/shaders/colorblind.frag");
+        if (!_shader->loadFromFile(resolvedPath, IShader::Fragment)) {
             std::cerr << "ColorBlindFilter: Failed to load shader from "
-                         "assets/shaders/colorblind.frag"
-                      << std::endl;
+                      << resolvedPath << std::endl;
             return false;
         }
 
