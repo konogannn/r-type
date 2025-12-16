@@ -1,0 +1,8 @@
+set(THREADING_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeQueue.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeQueue.tpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeEntityManager.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeEntityManager.tpp
+)
+
+set(THREADING_MODULE_HEADERS ${THREADING_HEADERS} PARENT_SCOPE)

@@ -1,9 +1,9 @@
 {
-  "label": "Technical - Server",
-  "description": "Server-side technical documentation and guides.",
-  "position": 1,
+  "label": "Server",
+  "description": "Complete R-Type server technical documentation - architecture, systems, networking, and development guides.",
+  "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "Comprehensive technical documentation for developers and engineers."
-    }
+    "description": "Comprehensive technical documentation covering architecture, ECS implementation, networking, technology choices, and practical tutorials for R-Type multiplayer server development."
+  }
 }

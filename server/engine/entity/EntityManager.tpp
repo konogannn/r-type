@@ -161,7 +161,7 @@ void EntityManager::forEach(Func&& func)
                 continue;
             }
 
-            const Entity& entity = it->second;
+            Entity& entity = it->second;
             auto components =
                 std::make_tuple(_componentManager.getComponent<Components>(
                     archetype->id, static_cast<uint32_t>(i))...);

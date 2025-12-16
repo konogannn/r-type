@@ -47,6 +47,7 @@ class WindowSFML : public IWindow {
     void setFullscreen(bool fullscreen) override;
     bool isFullscreen() const override;
     void setResolution(unsigned int width, unsigned int height) override;
+    bool hasFocus() const override;
 
     /**
      * @brief Get the underlying SFML window (for drawing)

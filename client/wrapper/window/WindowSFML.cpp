@@ -289,4 +289,6 @@ sf::RenderWindow& WindowSFML::getSFMLWindow() { return *_window; }
 
 const sf::Event& WindowSFML::getLastEvent() const { return _lastEvent; }
 
+bool WindowSFML::hasFocus() const { return _window && _window->hasFocus(); }
+
 }  // namespace rtype

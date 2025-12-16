@@ -190,7 +190,7 @@ uint32_t ComponentManager::moveEntityBetweenArchetypes(
         throw std::runtime_error("Failed to clone components during move");
     }
 
-    uint32_t newIndex;
+    uint32_t newIndex = 0;
     try {
         newIndex = toArchetype->addEntity(entityId);
 

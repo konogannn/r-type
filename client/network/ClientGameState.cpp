@@ -119,13 +119,22 @@ void ClientGameState::update(float deltaTime)
             entity->x += entity->velocityX * deltaTime;
         }
     }
+
+    // Update explosions
+    for (auto& explosion : _explosions) {
+        explosion->update(deltaTime);
+    }
+
+    // Remove finished explosions
+    _explosions.erase(std::remove_if(_explosions.begin(), _explosions.end(),
+                                     [](const std::unique_ptr<Explosion>& exp) {
+                                         return exp->isFinished();
+                                     }),
+                      _explosions.end());
 }
 
 void ClientGameState::render(IGraphics& graphics)
 {
-    // TEMPO for warning
-    (void)graphics;
-
     if (!_gameStarted) {
         return;
     }
@@ -134,6 +143,11 @@ void ClientGameState::render(IGraphics& graphics)
         if (entity->sprite) {
             entity->sprite->setPosition(entity->x, entity->y);
         }
+    }
+
+    // Render explosions
+    for (auto& explosion : _explosions) {
+        explosion->draw(graphics);
     }
 }
 
@@ -231,6 +245,18 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
 void ClientGameState::onEntityDead(uint32_t entityId)
 {
     std::cout << "[INFO] Entity died: ID=" << entityId << std::endl;
+
+    auto* entity = getEntity(entityId);
+    if (entity) {
+        if (entity->type == 3) {
+            _explosions.push_back(std::make_unique<Explosion>(
+                "assets/sprites/blowup_1.png", entity->x, entity->y, 1.0f));
+        } else if (entity->type == 2) {
+            _explosions.push_back(std::make_unique<Explosion>(
+                "assets/sprites/blowup_2.png", entity->x, entity->y, 2.0f));
+        }
+    }
+
     removeEntity(entityId);
 }
 
@@ -268,8 +294,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.currentSprite = entity.sprite.get();
             break;
         case 2:  // Enemy/Boss
-            texturePath = "assets/sprites/boss_1.png";
-            scale = 9.0f;  // Enemy size (doubled from original)
+            texturePath = "assets/sprites/boss_3.png";
+            scale = 1.0f;  // Enemy size (doubled from original)
             break;
         case 3:  // Projectile
             texturePath = "assets/sprites/projectile_player_1.png";

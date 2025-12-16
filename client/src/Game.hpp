@@ -49,4 +49,5 @@ class Game {
     int _currentFps;
     float _scale;
     std::chrono::steady_clock::time_point _lastShootTime;
+    std::chrono::steady_clock::time_point _lastInputTime;
 };

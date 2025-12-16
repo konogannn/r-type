@@ -30,7 +30,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _fpsCounter(0),
       _currentFps(0),
       _scale(1.0f),
-      _lastShootTime(std::chrono::steady_clock::now())
+      _lastShootTime(std::chrono::steady_clock::now()),
+      _lastInputTime(std::chrono::steady_clock::now())
 {
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
@@ -146,8 +147,13 @@ void Game::update(float deltaTime)
             }
         }
 
-        if (inputMask != 0 && _gameState->isConnected()) {
-            _gameState->sendInput(inputMask);
+        if (inputMask != 0 && _gameState->isConnected() && _window.hasFocus()) {
+            auto currentTime = std::chrono::steady_clock::now();
+            const auto inputCooldown = std::chrono::milliseconds(16);
+            if (currentTime - _lastInputTime >= inputCooldown) {
+                _gameState->sendInput(inputMask);
+                _lastInputTime = currentTime;
+            }
         }
     }
 
@@ -185,6 +191,9 @@ void Game::render()
                 }
             }
         }
+
+        // Render explosions on top of entities
+        _gameState->render(_graphics);
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
