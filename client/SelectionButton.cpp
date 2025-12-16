@@ -34,8 +34,10 @@ bool SelectionButton::update(int mouseX, int mouseY, bool isMousePressed)
 
     if (isHovered(mouseX, mouseY)) {
         if (isMousePressed && !_lastMouseState) {
-            _selectedIndex = (_selectedIndex + 1) % _options.size();
-            changed = true;
+            if (!_options.empty()) {
+                _selectedIndex = (_selectedIndex + 1) % _options.size();
+                changed = true;
+            }
         }
     }
 

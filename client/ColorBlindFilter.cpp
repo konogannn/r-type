@@ -35,7 +35,6 @@ bool ColorBlindFilter::setMode(ColorBlindMode mode)
     _currentMode = mode;
 
     if (mode == ColorBlindMode::None) {
-        _shaderAvailable = false;
         return true;
     }
 
@@ -88,10 +87,6 @@ bool ColorBlindFilter::isActive() const
 
 bool ColorBlindFilter::loadShader(ColorBlindMode mode)
 {
-    if (mode == ColorBlindMode::None) {
-        _shaderAvailable = false;
-        return true;
-    }
     if (!_shaderAvailable) {
         _shader = std::make_unique<ShaderSFML>();
 
