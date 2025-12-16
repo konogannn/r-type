@@ -619,13 +619,13 @@ void NetworkServer::handleReceive(size_t bytes) {
 
 | Stage | Typical Time | Notes |
 |-------|-------------|-------|
-| Client input | ~1ms | Hardware/OS dependent |
-| Network send | ~10-50ms | Depends on connection |
-| Server receive | <1ms | Asio is very fast |
-| Event queue | <0.1ms | Lock-free operation |
-| Game processing | ~5ms | 60 FPS budget |
-| State update gen | <1ms | Delta updates |
-| Network send | ~10-50ms | Return trip |
+| Client input | `<1ms` | Hardware/OS dependent |
+| Network send | `~10-50ms` | Depends on connection |
+| Server receive | `<1ms` | Asio is very fast |
+| Event queue | `<0.1ms` | Lock-free operation |
+| Game processing | `<5ms` | 60 FPS budget |
+| State update gen | `<1ms` | Delta updates |
+| Network send | `~10-50ms` | Return trip |
 | **Total** | **~30-110ms** | Typical range |
 
 ### Throughput

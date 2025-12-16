@@ -622,10 +622,10 @@ At 60 FPS, each frame has **16.67ms** budget:
 
 | System | Typical Time | % of Frame |
 |--------|--------------|------------|
-| Movement | ~0.5ms | 3% |
-| Collision | ~2-3ms | 15% |
-| Spawning | ~0.1ms | <1% |
-| Other | ~1ms | 6% |
+| Movement | `~0.5ms` | `3%` |
+| Collision | `~2-3ms` | `15%` |
+| Spawning | `~0.1ms` | `<1%` |
+| Other | `~1ms` | `6%` |
 | **Total** | **~5ms** | **30%** |
 
 Plenty of headroom for future features!

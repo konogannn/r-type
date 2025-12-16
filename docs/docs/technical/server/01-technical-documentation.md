@@ -19,7 +19,7 @@ description: Complete architecture and technical overview of the R-Type server
 
 ---
 
-## 🎯 Overview
+## Overview
 
 The R-Type server is a multithreaded application that manages game logic, network connections, and state synchronization between clients. It uses an **Entity Component System (ECS)** architecture for optimal performance and maximum extensibility.
 
@@ -34,7 +34,7 @@ The R-Type server is a multithreaded application that manages game logic, networ
 
 ---
 
-## 🏗️ Global Architecture
+## Global Architecture
 
 ### Component Hierarchy
 
@@ -83,19 +83,21 @@ GameServer
 
 ---
 
-## 🧩 Main Components
+## Main Components
 
 ### 1. GameServer (Main Class)
 
 **File**: `server/GameServer.cpp` / `server/GameServer.hpp`
 
 **Responsibilities**:
+
 - Server initialization and shutdown
 - Coordination between network thread and game thread
 - Lobby management (waiting for players)
 - Network callbacks (connection, disconnection, login, inputs)
 
 **Key Attributes**:
+
 ```cpp
 NetworkServer _networkServer;          // Network management
 engine::GameLoop _gameLoop;            // Game loop
@@ -107,6 +109,7 @@ std::unordered_map<uint32_t, bool> _playersReady;  // Ready players
 ```
 
 **Main Methods**:
+
 - `start(uint16_t port)`: Start the server on a specific port
 - `run()`: Main execution loop
 - `stop()`: Stop the server gracefully
@@ -120,6 +123,7 @@ std::unordered_map<uint32_t, bool> _playersReady;  // Ready players
 **File**: `server/network/NetworkServer.cpp` / `server/network/NetworkServer.hpp`
 
 **Responsibilities**:
+
 - Asynchronous reception/transmission of UDP packets
 - Client session management
 - Protocol encoding/decoding
@@ -127,6 +131,7 @@ std::unordered_map<uint32_t, bool> _playersReady;  // Ready players
 - Detection of client timeouts
 
 **Key Attributes**:
+
 ```cpp
 boost::asio::io_context _ioContext;               // Asio event loop
 boost::asio::ip::udp::socket _socket;             // UDP socket
@@ -136,6 +141,7 @@ ThreadSafeQueue<NetworkEvent> _eventQueue;        // Events for main thread
 ```
 
 **Client Session**:
+
 ```cpp
 struct ClientSession {
     uint32_t clientId;                 // Internal identifier
@@ -149,6 +155,7 @@ struct ClientSession {
 ```
 
 **Main Methods**:
+
 - `start(uint16_t port)`: Start network server
 - `update()`: Process event queue (called by main thread)
 - `sendEntitySpawn()`, `sendEntityPosition()`, `sendEntityDead()`: Send game state
@@ -162,6 +169,7 @@ struct ClientSession {
 **File**: `server/engine/system/GameLoop.cpp` / `server/engine/system/GameLoop.hpp`
 
 **Responsibilities**:
+
 - Manage the Entity Component System
 - Execute systems in priority order
 - Process player input commands
@@ -169,6 +177,7 @@ struct ClientSession {
 - Manage entity lifecycle (spawn, update, destroy)
 
 **Key Attributes**:
+
 ```cpp
 EntityManager _entityManager;                         // Entity manager
 std::vector<std::unique_ptr<ISystem>> _systems;       // Game systems
@@ -184,6 +193,7 @@ std::unordered_map<uint32_t, EntityId> _clientToEntity;  // Client to entity map
 ```
 
 **Main Methods**:
+
 - `start()`: Start game thread
 - `stop()`: Stop game thread
 - `queueInput()`: Add input command (from network)
@@ -192,22 +202,23 @@ std::unordered_map<uint32_t, EntityId> _clientToEntity;  // Client to entity map
 - `removePlayer()`: Remove a player entity
 
 **Game Thread Loop**:
+
 ```cpp
 void gameThreadLoop() {
     while (_running) {
         auto frameStart = now();
-        
+
         // 1. Process input commands
         processInputCommands(deltaTime);
-        
+
         // 2. Execute systems
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
         }
-        
+
         // 3. Generate network updates
         generateNetworkUpdates();
-        
+
         // 4. Wait to maintain 60 FPS
         sleepUntil(frameStart + 16.67ms);
     }
@@ -216,16 +227,18 @@ void gameThreadLoop() {
 
 ---
 
-## 🎮 ECS Architecture
+## ECS Architecture
 
 ### Entity Component System Principles
 
 **Entity**: A simple identifier (uint32_t)
+
 ```cpp
 using EntityId = uint32_t;
 ```
 
 **Component**: Pure data structure (no logic)
+
 ```cpp
 struct Position {
     float x, y;
@@ -241,15 +254,16 @@ struct Health {
 ```
 
 **System**: Logic operating on components
+
 ```cpp
 class MovementSystem : public ISystem {
     void update(float deltaTime, EntityManager& em) override {
         auto entities = em.getEntitiesWith<Position, Velocity>();
-        
+
         for (auto& entity : entities) {
             auto* pos = em.getComponent<Position>(entity);
             auto* vel = em.getComponent<Velocity>(entity);
-            
+
             pos->x += vel->vx * deltaTime;
             pos->y += vel->vy * deltaTime;
         }
@@ -259,30 +273,30 @@ class MovementSystem : public ISystem {
 
 ### ECS Benefits
 
-| Benefit | Explanation |
-|---------|-------------|
-| **Performance** | Cache-friendly, data-oriented design |
-| **Flexibility** | Easy to add new entity types |
-| **Maintainability** | Clear separation of data and logic |
-| **Scalability** | Systems can be parallelized (future) |
+| Benefit             | Explanation                          |
+| ------------------- | ------------------------------------ |
+| **Performance**     | Cache-friendly, data-oriented design |
+| **Flexibility**     | Easy to add new entity types         |
+| **Maintainability** | Clear separation of data and logic   |
+| **Scalability**     | Systems can be parallelized (future) |
 
 ---
 
-## 🔧 Game Systems
+## Game Systems
 
 Systems are executed in **priority order** each frame. Lower priority number = executes first.
 
 ### System Execution Order
 
-| Priority | System | Description |
-|----------|--------|-------------|
-| 5 | EnemySpawnerSystem | Spawns new enemies periodically |
-| 10 | MovementSystem | Updates positions based on velocity |
-| 15 | PlayerCooldownSystem | Updates shooting cooldowns |
-| 50 | CollisionSystem | Detects and handles collisions |
-| 90 | BulletCleanupSystem | Removes off-screen bullets |
-| 95 | EnemyCleanupSystem | Removes off-screen enemies |
-| 100 | LifetimeSystem | Destroys expired entities |
+| Priority | System               | Description                         |
+| -------- | -------------------- | ----------------------------------- |
+| 5        | EnemySpawnerSystem   | Spawns new enemies periodically     |
+| 10       | MovementSystem       | Updates positions based on velocity |
+| 15       | PlayerCooldownSystem | Updates shooting cooldowns          |
+| 50       | CollisionSystem      | Detects and handles collisions      |
+| 90       | BulletCleanupSystem  | Removes off-screen bullets          |
+| 95       | EnemyCleanupSystem   | Removes off-screen enemies          |
+| 100      | LifetimeSystem       | Destroys expired entities           |
 
 ### System Details
 
@@ -291,11 +305,13 @@ Systems are executed in **priority order** each frame. Lower priority number = e
 **Purpose**: Periodically spawns enemy entities
 
 **Configuration**:
+
 - Spawn interval: 2.0 seconds (configurable)
 - Spawn position: Right side of screen (x=1900)
 - Random Y position: 50-1000 pixels
 
 **Enemy Types**:
+
 - **BASIC**: Standard speed (100 px/s), 30 HP
 - **FAST**: Double speed (200 px/s), 20 HP
 - **TANK**: Half speed (50 px/s), 100 HP
@@ -305,6 +321,7 @@ Systems are executed in **priority order** each frame. Lower priority number = e
 **Purpose**: Updates entity positions based on velocity
 
 **Algorithm**:
+
 ```cpp
 pos->x += vel->vx * deltaTime;
 pos->y += vel->vy * deltaTime;
@@ -317,6 +334,7 @@ pos->y += vel->vy * deltaTime;
 **Purpose**: Detects and resolves collisions between entities
 
 **Collision Algorithm**: AABB (Axis-Aligned Bounding Box)
+
 ```cpp
 bool checkCollision(pos1, box1, pos2, box2) {
     return !(right1 < left2 || left1 > right2 ||
@@ -325,6 +343,7 @@ bool checkCollision(pos1, box1, pos2, box2) {
 ```
 
 **Collision Pairs Checked**:
+
 1. **Player Bullets ↔ Enemies**: Damages enemy, destroys bullet
 2. **Players ↔ Enemies**: Damages player, destroys enemy
 
@@ -333,6 +352,7 @@ bool checkCollision(pos1, box1, pos2, box2) {
 **Purpose**: Remove entities that leave the screen boundaries
 
 **Boundaries**:
+
 ```cpp
 MIN_X = -50.0f or -200.0f
 MAX_X = 2100.0f
@@ -345,23 +365,24 @@ MAX_Y = 1200.0f
 **Purpose**: Destroys entities after their lifetime expires
 
 **Use Cases**:
+
 - Bullets with maximum range
 - Temporary power-ups
 - Timed effects
 
 ---
 
-## 🧵 Multithreading Management
+## Multithreading Management
 
 ### Threading Model
 
 The server uses **two primary threads**:
 
-| Thread | Purpose | Frequency | Components |
-|--------|---------|-----------|------------|
-| **Main Thread** | Server lifecycle, lobby management | Event-driven | GameServer |
-| **Network Thread** | Asynchronous I/O, packet handling | Event-driven (Boost.Asio) | NetworkServer, io_context |
-| **Game Thread** | Game simulation loop | 60 FPS (16.67ms) | GameLoop, ECS Systems |
+| Thread             | Purpose                            | Frequency                 | Components                |
+| ------------------ | ---------------------------------- | ------------------------- | ------------------------- |
+| **Main Thread**    | Server lifecycle, lobby management | Event-driven              | GameServer                |
+| **Network Thread** | Asynchronous I/O, packet handling  | Event-driven (Boost.Asio) | NetworkServer, io_context |
+| **Game Thread**    | Game simulation loop               | 60 FPS (16.67ms)          | GameLoop, ECS Systems     |
 
 ### Thread Communication
 
@@ -375,18 +396,20 @@ class ThreadSafeQueue {
     std::queue<T> _queue;
     std::mutex _mutex;
     std::condition_variable _condVar;
-    
+
     void push(T item);
     std::optional<T> tryPop();
 };
 ```
 
 **Communication Flow**:
+
 ```
 Network Thread → InputQueue → Game Thread → OutputQueue → Network Thread
 ```
 
 **Benefits**:
+
 - ✅ No data races
 - ✅ Lock-free reads (tryPop is non-blocking)
 - ✅ Minimal contention
@@ -394,7 +417,7 @@ Network Thread → InputQueue → Game Thread → OutputQueue → Network Thread
 
 ---
 
-## 🌐 Network Synchronization
+## Network Synchronization
 
 ### Network Protocol
 
@@ -414,23 +437,23 @@ struct Header {
 
 #### Client-to-Server (C2S)
 
-| OpCode | Name | Purpose |
-|--------|------|---------|
-| 1 | C2S_LOGIN | Join game with username |
-| 2 | C2S_START_GAME | Request to start game |
-| 3 | C2S_DISCONNECT | Graceful disconnect |
-| 4 | C2S_ACK | Acknowledge reliable packet |
-| 5 | C2S_INPUT | Player input state |
+| OpCode | Name           | Purpose                     |
+| ------ | -------------- | --------------------------- |
+| 1      | C2S_LOGIN      | Join game with username     |
+| 2      | C2S_START_GAME | Request to start game       |
+| 3      | C2S_DISCONNECT | Graceful disconnect         |
+| 4      | C2S_ACK        | Acknowledge reliable packet |
+| 5      | C2S_INPUT      | Player input state          |
 
 #### Server-to-Client (S2C)
 
-| OpCode | Name | Purpose |
-|--------|------|---------|
-| 10 | S2C_LOGIN_OK | Login accepted + player ID |
-| 11 | S2C_ENTITY_NEW | Spawn entity |
-| 12 | S2C_ENTITY_POS | Update position |
-| 13 | S2C_ENTITY_DEAD | Destroy entity |
-| 15 | S2C_SCORE_UPDATE | Update score |
+| OpCode | Name             | Purpose                    |
+| ------ | ---------------- | -------------------------- |
+| 10     | S2C_LOGIN_OK     | Login accepted + player ID |
+| 11     | S2C_ENTITY_NEW   | Spawn entity               |
+| 12     | S2C_ENTITY_POS   | Update position            |
+| 13     | S2C_ENTITY_DEAD  | Destroy entity             |
+| 15     | S2C_SCORE_UPDATE | Update score               |
 
 ### Reliability Mechanism
 
@@ -454,22 +477,23 @@ Client                           Server
 ```
 
 **Retry Parameters**:
+
 - Retry Interval: 500ms
 - Max Retries: 5 attempts (~2.5s total)
 - Timeout: 30 seconds of inactivity
 
 ### Network Optimization
 
-| Technique | Description | Savings |
-|-----------|-------------|---------|
-| **Selective Sync** | Only sync changed entities | ~70% |
-| **30 Hz Rate** | Half of game loop rate | ~50% |
-| **No ACK for Pos** | Position updates unreliable | ~30% |
-| **Binary Protocol** | No JSON/XML overhead | ~80% |
+| Technique           | Description                 | Savings |
+| ------------------- | --------------------------- | ------- |
+| **Selective Sync**  | Only sync changed entities  | ~70%    |
+| **30 Hz Rate**      | Half of game loop rate      | ~50%    |
+| **No ACK for Pos**  | Position updates unreliable | ~30%    |
+| **Binary Protocol** | No JSON/XML overhead        | ~80%    |
 
 ---
 
-## 📊 Data Flow
+## Data Flow
 
 ### Complete Data Flow
 
@@ -489,11 +513,13 @@ Client Input → NetworkServer → Input Queue → GameLoop → ECS Systems
 ### Step-by-Step Flow
 
 1. **Input Reception**
+
    - Client sends input packet (UDP)
    - NetworkServer receives and validates
    - Input queued to thread-safe input queue
 
 2. **Game Simulation**
+
    - GameLoop dequeues inputs from queue
    - Each system processes entities in order:
      - MovementSystem: Updates positions
@@ -509,7 +535,7 @@ Client Input → NetworkServer → Input Queue → GameLoop → ECS Systems
 
 ---
 
-## 📈 Performance Characteristics
+## Performance Characteristics
 
 ### Target Metrics
 
@@ -522,28 +548,30 @@ Client Input → NetworkServer → Input Queue → GameLoop → ECS Systems
 
 At 60 FPS, each frame has **16.67ms** budget:
 
-| System | Typical Time | % of Frame |
-|--------|--------------|------------|
-| Movement | ~0.5ms | 3% |
-| Collision | ~2-3ms | 15% |
-| Spawning | ~0.1ms | <1% |
-| Other | ~1ms | 6% |
-| **Total** | **~5ms** | **30%** |
+| System    | Typical Time | % of Frame |
+| --------- | ------------ | ---------- |
+| Movement  | `~0.5ms`     | `3%`       |
+| Collision | `~2-3ms`     | `15%`      |
+| Spawning  | `~0.1ms`     | `<1%`      |
+| Other     | `~1ms`       | `6%`       |
+| **Total** | **~5ms**     | **30%**    |
 
 ### Bandwidth
 
 **Downstream (Server → Client)**:
+
 - Entity spawns: ~20 bytes × sparse = ~400 bytes/s
 - Position updates: 16 bytes × 20 entities × 30/s = 9.6 KB/s
 - **Total per client**: ~10 KB/s
 
 **Server Total** (4 clients):
+
 - Outgoing: 4 × 10 KB/s = 40 KB/s
 - **Total bandwidth**: ~41 KB/s (0.3 Mbps) ✅ Very manageable
 
 ---
 
-## 🔒 Error Handling & Resilience
+## Error Handling & Resilience
 
 ### Defensive Programming
 
@@ -568,22 +596,22 @@ try {
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
-| Layer | Technology | Justification |
-|-------|------------|---------------|
-| **Language** | C++17 | Performance, control, ecosystem |
-| **Networking** | Boost.Asio | Async I/O, cross-platform |
-| **Protocol** | UDP + custom reliability | Low latency, no head-of-line blocking |
-| **Architecture** | ECS | Cache-friendly, flexible, scalable |
-| **Threading** | Network + Game threads | Separation of concerns, deterministic |
-| **Build** | CMake | Industry standard, cross-platform |
-| **Dependencies** | vcpkg | Easy, reproducible, cross-platform |
-| **Testing** | Google Test | De facto standard for C++ |
+| Layer            | Technology               | Justification                         |
+| ---------------- | ------------------------ | ------------------------------------- |
+| **Language**     | C++17                    | Performance, control, ecosystem       |
+| **Networking**   | Boost.Asio               | Async I/O, cross-platform             |
+| **Protocol**     | UDP + custom reliability | Low latency, no head-of-line blocking |
+| **Architecture** | ECS                      | Cache-friendly, flexible, scalable    |
+| **Threading**    | Network + Game threads   | Separation of concerns, deterministic |
+| **Build**        | CMake                    | Industry standard, cross-platform     |
+| **Dependencies** | vcpkg                    | Easy, reproducible, cross-platform    |
+| **Testing**      | Google Test              | De facto standard for C++             |
 
 ---
 
-## 📁 File Structure
+## File Structure
 
 ```
 server/
@@ -610,7 +638,7 @@ server/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Building the Server
 
@@ -645,7 +673,7 @@ cmake --build build/debug --target r-type_server -j 8
 
 ---
 
-## 📚 Additional Documentation
+## Additional Documentation
 
 For more detailed information, please refer to:
 
@@ -654,4 +682,3 @@ For more detailed information, please refer to:
 - **[Networking Architecture](./04-networking.md)**: Protocol and network implementation
 - **[Technical Comparison](./05-technical-comparison.md)**: Technology choices justified
 - **[Tutorials](./06-tutorials.md)**: Step-by-step development guides
-
