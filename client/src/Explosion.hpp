@@ -14,12 +14,13 @@
 namespace rtype {
 
 /**
- * @brief Explosion animation with spritesheet (8 frames of 64x64)
+ * @brief Explosion animation with spritesheet
  */
 class Explosion {
    public:
     Explosion(const std::string& texturePath, float x, float y,
-              float scale = 1.0f);
+              float scale = 1.0f, int frameWidth = 64, int frameHeight = 64,
+              int totalFrames = 8);
 
     void update(float deltaTime);
     void draw(IGraphics& graphics);
@@ -30,6 +31,9 @@ class Explosion {
     std::unique_ptr<ISprite> _sprite;
     float _x, _y;
     float _scale;
+    int _frameWidth;
+    int _frameHeight;
+    int _totalFrames;
     int _currentFrame;
     float _frameTimer;
     float _frameDuration;
