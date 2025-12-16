@@ -120,7 +120,6 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
-        // Update vertical idle timer and revert to static sprite if idle
         entity->verticalIdleTime += deltaTime;
         if (entity->verticalIdleTime > 0.15f) {
             if (entity->type == 1 && entity->currentSprite && entity->sprite) {
@@ -149,7 +148,6 @@ void ClientGameState::render(IGraphics& graphics, float windowScale,
         return;
     }
 
-    // Render explosions with scaling/offset
     for (auto& explosion : _explosions) {
         explosion->draw(graphics, windowScale, offsetX, offsetY);
     }
@@ -238,22 +236,16 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
         } else if (deltaY > 0.5f) {  // Moving down
             entity->currentSprite = entity->spriteDown.get();
             entity->verticalIdleTime = 0.0f;
-        } else {  // Small or no vertical movement -> keep current and let idle
-                  // timer handle revert
-            // do not reset idle timer here so that after a short idle we revert
-            // to static
+        } else {
         }
         entity->lastY = y;
     }
 
-    // Clamp positions to map bounds (avoid entities appearing outside the map)
     float clampedX = x;
     float clampedY = y;
     if (_mapWidth > 0 && _mapHeight > 0) {
         if (clampedX < 0.0f) clampedX = 0.0f;
         if (clampedY < 0.0f) clampedY = 0.0f;
-        // Compute sprite height in world units (texture height * entity sprite
-        // base scale)
         float spriteHeight = 0.0f;
         if (entity->sprite) {
             spriteHeight =
@@ -262,7 +254,6 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
             spriteHeight = 0.0f;
         }
 
-        // Add a small padding so sprites are fully visible (tweak if needed)
         const float bottomPadding = 64.0f;
         float maxY =
             static_cast<float>(_mapHeight) - spriteHeight - bottomPadding;
