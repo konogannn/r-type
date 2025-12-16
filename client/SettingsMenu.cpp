@@ -11,6 +11,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "src/SoundManager.hpp"
+
 namespace rtype {
 
 SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
@@ -21,9 +23,14 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
       _backButton(960.0f - (BUTTON_WIDTH / 2.0f), 900.0f, BUTTON_WIDTH,
                   BUTTON_HEIGHT, "BACK"),
       _fullscreenToggle(1100.0f, 485.0f, 200.0f, 50.0f, "Fullscreen", false),
+      _colorBlindSelection(0.0f, 0.0f, 400.0f, 50.0f, "Color Blind Filter",
+                           {"None", "Protanopia", "Deuteranopia", "Tritanopia",
+                            "Protanomaly", "Deuteranomaly", "Tritanomaly"},
+                           0),
       _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
+      _colorBlindFilter(ColorBlindFilter::getInstance()),
       _currentResolution(Resolution::R1920x1080)
 {
     setupBackground();
@@ -46,17 +53,21 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     for (auto& button : _resolutionButtons) {
         button.setActive(button.getResolution() == _currentResolution);
     }
+    int colorBlindMode = _config.getInt("colorBlindMode", 0);
+    _colorBlindSelection.setSelectedIndex(colorBlindMode);
+    _colorBlindFilter.setMode(ColorBlindFilter::indexToMode(colorBlindMode));
 
     updateLayout();
 }
 
 void SettingsMenu::setupBackground()
 {
-    _background = std::make_unique<SpriteSFML>();
-    if (!_background->loadTexture("assets/sprite_fond.jpg")) {
-        std::cerr << "Warning: Failed to load background image" << std::endl;
-        return;
-    }
+    float windowWidth = static_cast<float>(_window.getWidth());
+    float windowHeight = static_cast<float>(_window.getHeight());
+
+    _background = std::make_shared<Background>(
+        "assets/background/bg-back.png", "assets/background/bg-stars.png",
+        "assets/background/bg-planet.png", windowWidth, windowHeight);
 }
 
 void SettingsMenu::setupSliders()
@@ -100,10 +111,9 @@ void SettingsMenu::updateLayout()
     float windowHeight = static_cast<float>(_window.getHeight());
 
     if (_background) {
-        float scaleX = windowWidth / 450.0f;
-        float scaleY = windowHeight / 225.0f;
-        _background->setScale(scaleX, scaleY);
-        _background->setPosition(0, 0);
+        _background = std::make_shared<Background>(
+            "assets/background/bg-back.png", "assets/background/bg-stars.png",
+            "assets/background/bg-planet.png", windowWidth, windowHeight);
     }
 
     float scaleW = windowWidth / 1920.0f;
@@ -162,6 +172,19 @@ void SettingsMenu::updateLayout()
         ToggleButton(toggleX, toggleY, toggleWidth, toggleHeight, "Fullscreen",
                      _fullscreenToggle.isOn());
 
+    float colorBlindWidth = resButtonWidth;
+    float colorBlindHeight = 50.0f * scaleH;
+    float colorBlindX =
+        leftColX + (resButtonWidth / 2.0f) - (colorBlindWidth / 2.0f);
+    float colorBlindY = toggleY + toggleHeight + (40.0f * scaleH);
+    int currentSelection = _colorBlindSelection.getSelectedIndex();
+    _colorBlindSelection =
+        SelectionButton(colorBlindX, colorBlindY, colorBlindWidth,
+                        colorBlindHeight, "Color Blind Filter",
+                        {"None", "Protanopia", "Deuteranopia", "Tritanopia",
+                         "Protanomaly", "Deuteranomaly", "Tritanomaly"},
+                        currentSelection);
+
     float keyBindStartY = 500.0f * scaleH;
     float keyBindHeight = 50.0f * scaleH;
     float keyBindSpacing = 60.0f * scaleH;
@@ -184,24 +207,41 @@ void SettingsMenu::updateLayout()
 
 bool SettingsMenu::update()
 {
+    if (_background) {
+        _background->update(1.0f / 60.0f);
+    }
+
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
     bool anyInEditMode = isWaitingForKeyPress();
 
     if (!anyInEditMode) {
-        for (auto& slider : _sliders) {
-            slider.update(mouseX, mouseY, isMousePressed);
+        for (size_t i = 0; i < _sliders.size(); ++i) {
+            if (_sliders[i].update(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSoundAtVolume(
+                    "click", _sliders[i].getValue());
+                if (i == 0) {
+                    SoundManager::getInstance().setMusicVolume(
+                        _sliders[i].getValue());
+                } else if (i == 1) {
+                    SoundManager::getInstance().setVolume(
+                        _sliders[i].getValue());
+                }
+            }
         }
     }
     if (!anyInEditMode) {
         for (auto& button : _keyBindingButtons) {
-            button.isClicked(mouseX, mouseY, isMousePressed);
+            if (button.isClicked(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSound("click");
+            }
         }
     }
     if (!anyInEditMode) {
         _fullscreenToggle.update(mouseX, mouseY);
         if (_fullscreenToggle.isClicked(mouseX, mouseY, isMousePressed)) {
+            SoundManager::getInstance().playSound("click");
             _window.setFullscreen(_fullscreenToggle.isOn());
             _config.setInt("fullscreen", _fullscreenToggle.isOn() ? 1 : 0);
             _config.save();
@@ -212,6 +252,7 @@ bool SettingsMenu::update()
         for (auto& button : _resolutionButtons) {
             button.update(mouseX, mouseY);
             if (button.isClicked(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSound("click");
                 _currentResolution = button.getResolution();
                 for (auto& btn : _resolutionButtons) {
                     btn.setActive(btn.getResolution() == _currentResolution);
@@ -227,8 +268,20 @@ bool SettingsMenu::update()
             }
         }
     }
+    if (!anyInEditMode) {
+        if (_colorBlindSelection.update(mouseX, mouseY, isMousePressed)) {
+            SoundManager::getInstance().playSound("click");
+            int selectedMode = _colorBlindSelection.getSelectedIndex();
+            _colorBlindFilter.setMode(
+                ColorBlindFilter::indexToMode(selectedMode));
+            _config.setInt("colorBlindMode", selectedMode);
+            _config.save();
+        }
+    }
+
     if (!anyInEditMode &&
         _backButton.isClicked(mouseX, mouseY, isMousePressed)) {
+        SoundManager::getInstance().playSound("click");
         saveSettings();
         return true;
     }
@@ -262,11 +315,16 @@ void SettingsMenu::render()
     float windowHeight = static_cast<float>(_window.getHeight());
     float scale = windowHeight / 1080.0f;
 
-    if (_background) {
-        _graphics.drawSprite(*_background);
+    rtype::IRenderTarget* filterTexture = _colorBlindFilter.getRenderTarget();
+
+    if (filterTexture) {
+        _colorBlindFilter.beginCapture();
+        _graphics.setRenderTarget(filterTexture);
     }
 
-    _graphics.drawRectangle(0, 0, windowWidth, windowHeight, 0, 0, 0);
+    if (_background) {
+        _background->draw(_graphics);
+    }
 
     unsigned int titleSize = static_cast<unsigned int>(48 * scale);
     float titleWidth = _graphics.getTextWidth("SETTINGS", titleSize, _fontPath);
@@ -286,7 +344,7 @@ void SettingsMenu::render()
     float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
     float sectionTitleY = _layout.sectionTitleY;
     _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+                       255, 255, 255, _fontPath);
 
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
@@ -298,7 +356,7 @@ void SettingsMenu::render()
         centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
     float audioTitleY = sectionTitleY;
     _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+                       255, 255, 255, _fontPath);
 
     for (const auto& slider : _sliders) {
         renderSlider(slider, scale);
@@ -309,22 +367,40 @@ void SettingsMenu::render()
     float toggleYRender = _layout.toggleY;
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
     float dispTitleY = toggleYRender - 30.0f * scale;
-    _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 100,
-                       200, 255, _fontPath);
+    _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 255,
+                       255, 255, _fontPath);
 
     renderToggleButton(scale);
+
+    std::string colorBlindTitle = "COLOR-BLINDNESS";
+    float colorBlindTitleW =
+        _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, _fontPath);
+    float colorBlindTitleX =
+        leftColX + (resButtonWidth / 2.0f) - (colorBlindTitleW / 2.0f);
+    float toggleHeight = 60.0f * scale;
+    float colorBlindTitleY = toggleYRender + toggleHeight + 10.0f * scale;
+    _graphics.drawText(colorBlindTitle, colorBlindTitleX, colorBlindTitleY,
+                       sectionTitleSize, 255, 255, 255, _fontPath);
+
+    renderColorBlindSelection(scale);
+
     std::string ctrlTitle = "CONTROLS";
     float ctrlTitleW =
         _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
     float ctrlTitleX = (windowWidth / 2.0f) - (ctrlTitleW / 2.0f);
     _graphics.drawText(ctrlTitle, ctrlTitleX, 500.0f * scale, sectionTitleSize,
-                       100, 200, 255, _fontPath);
+                       255, 255, 255, _fontPath);
 
     for (const auto& button : _keyBindingButtons) {
         renderKeyBindingButton(button, scale);
     }
 
     renderBackButton(scale);
+
+    if (filterTexture) {
+        _graphics.setRenderTarget(nullptr);
+        _colorBlindFilter.endCaptureAndApply(_window);
+    }
 }
 
 void SettingsMenu::renderBackButton(float scale)
@@ -583,6 +659,56 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
         button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
     float textY = button.getY() + 15.0f * scale;
     _graphics.drawText(button.getLabel(), textX, textY, fontSize, 255, 255, 255,
+                       _fontPath);
+}
+
+void SettingsMenu::renderColorBlindSelection(float scale)
+{
+    unsigned int fontSize = static_cast<unsigned int>(24 * scale);
+
+    unsigned char r, g, b;
+    int mouseX = _input.getMouseX();
+    int mouseY = _input.getMouseY();
+
+    if (_colorBlindSelection.isHovered(mouseX, mouseY)) {
+        r = 0;
+        g = 200;
+        b = 255;
+    } else {
+        r = 30;
+        g = 30;
+        b = 100;
+    }
+
+    _graphics.drawRectangle(_colorBlindSelection.getX(),
+                            _colorBlindSelection.getY(),
+                            _colorBlindSelection.getWidth(),
+                            _colorBlindSelection.getHeight(), r, g, b);
+
+    float borderThickness = 3.0f * scale;
+    _graphics.drawRectangle(
+        _colorBlindSelection.getX(), _colorBlindSelection.getY(),
+        _colorBlindSelection.getWidth(), borderThickness, 100, 150, 255);
+    _graphics.drawRectangle(
+        _colorBlindSelection.getX(),
+        _colorBlindSelection.getY() + _colorBlindSelection.getHeight() -
+            borderThickness,
+        _colorBlindSelection.getWidth(), borderThickness, 100, 150, 255);
+    _graphics.drawRectangle(_colorBlindSelection.getX(),
+                            _colorBlindSelection.getY(), borderThickness,
+                            _colorBlindSelection.getHeight(), 100, 150, 255);
+    _graphics.drawRectangle(_colorBlindSelection.getX() +
+                                _colorBlindSelection.getWidth() -
+                                borderThickness,
+                            _colorBlindSelection.getY(), borderThickness,
+                            _colorBlindSelection.getHeight(), 100, 150, 255);
+
+    std::string displayText = _colorBlindSelection.getSelectedOption();
+    float textWidth = _graphics.getTextWidth(displayText, fontSize, _fontPath);
+    float textX = _colorBlindSelection.getX() +
+                  (_colorBlindSelection.getWidth() / 2.0f) - (textWidth / 2.0f);
+    float textY = _colorBlindSelection.getY() + 15.0f * scale;
+    _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255,
                        _fontPath);
 }
 

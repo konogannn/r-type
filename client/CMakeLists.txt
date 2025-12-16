@@ -21,6 +21,8 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/KeyBindingButton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ToggleButton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ResolutionButton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SelectionButton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ColorBlindFilter.cpp
 )
 
 add_executable(r-type_client

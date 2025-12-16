@@ -26,6 +26,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _running(false),
       _returnToMenu(false),
       _background(sharedBackground),
+      _colorBlindFilter(rtype::ColorBlindFilter::getInstance()),
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
@@ -36,6 +37,11 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
+    int colorBlindMode = config.getInt("colorBlindMode", 0);
+    _colorBlindFilter.setMode(
+        rtype::ColorBlindFilter::indexToMode(colorBlindMode));
+    _colorBlindFilter.initialize(_window);
+
     int actualWidth = _window.getWidth();
     int actualHeight = _window.getHeight();
     float scaleX = static_cast<float>(actualWidth) / 800.0f;
@@ -43,10 +49,10 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
     _scale = std::min(scaleX, scaleY);
 
     TextureManager::getInstance().loadAll();
-    SoundManager::getInstance().loadAll();
-
     float sfxVolume = config.getFloat("sfxVolume", 100.0f);
+    float musicVolume = config.getFloat("musicVolume", 100.0f);
     SoundManager::getInstance().setVolume(sfxVolume);
+    SoundManager::getInstance().setMusicVolume(musicVolume);
 
     if (!_background) {
         _background = std::make_shared<Background>(
@@ -164,7 +170,14 @@ void Game::update(float deltaTime)
 
 void Game::render()
 {
-    _window.clear(0, 0, 0);
+    rtype::IRenderTarget* filterTexture = _colorBlindFilter.getRenderTarget();
+
+    if (filterTexture) {
+        _colorBlindFilter.beginCapture();
+        _graphics.setRenderTarget(filterTexture);
+    } else {
+        _window.clear(0, 0, 0);
+    }
 
     if (_background) {
         _background->draw(_graphics);
@@ -204,20 +217,27 @@ void Game::render()
     if (_gameState) {
         std::string scoreStr =
             "Score: " + std::to_string(_gameState->getScore());
-        _graphics.drawText(scoreStr, 10 * _scale, 40 * _scale, 20 * _scale, 255,
-                           255, 0, "assets/fonts/Retro_Gaming.ttf");
+        _graphics.drawText(scoreStr, 10 * _scale, 40 * _scale,
+                           static_cast<unsigned int>(20 * _scale), 255, 255, 0,
+                           "assets/fonts/Retro_Gaming.ttf");
 
         if (_gameState->isConnected()) {
             std::string entityCount =
                 "Entities: " + std::to_string(_gameState->getEntityCount());
             _graphics.drawText(entityCount, 10 * _scale, 70 * _scale,
-                               16 * _scale, 255, 255, 255,
-                               "assets/fonts/Retro_Gaming.ttf");
+                               static_cast<unsigned int>(16 * _scale), 255, 255,
+                               255, "assets/fonts/Retro_Gaming.ttf");
         } else {
             _graphics.drawText("Disconnected", 10 * _scale, 70 * _scale,
-                               20 * _scale, 255, 0, 0,
-                               "assets/fonts/Retro_Gaming.ttf");
+                               static_cast<unsigned int>(20 * _scale), 255, 0,
+                               0, "assets/fonts/Retro_Gaming.ttf");
         }
+    }
+
+    if (filterTexture) {
+        _graphics.setRenderTarget(nullptr);
+        _window.clear(0, 0, 0);
+        _colorBlindFilter.endCaptureAndApply(_window);
     }
 
     _window.display();
