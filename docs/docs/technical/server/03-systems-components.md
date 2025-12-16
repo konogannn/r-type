@@ -339,7 +339,7 @@ class EnemyShootingSystem : public System<Enemy, Position> {
 
 **Shooting Behavior**:
 - **BASIC enemies**: Shoot every 2 seconds
-- **TANK enemies**: Shoot every 2 seconds (if implemented)
+- **TANK enemies**: Never shoot (will shoot every 2 seconds)
 - **FAST enemies**: Never shoot
 - Bullet velocity: -300 px/s (moving left)
 - Bullet damage: 20 HP
