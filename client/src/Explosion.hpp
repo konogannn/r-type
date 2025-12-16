@@ -23,7 +23,8 @@ class Explosion {
               int totalFrames = 8);
 
     void update(float deltaTime);
-    void draw(IGraphics& graphics, float windowScale, float offsetX, float offsetY);
+    void draw(IGraphics& graphics, float windowScale, float offsetX,
+              float offsetY);
 
     bool isFinished() const;
 
