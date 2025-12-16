@@ -345,19 +345,26 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             }
             entity.spriteScale = scale;
             break;
-        case 3:
-            texturePath = "assets/sprites/projectile_player_1.png";
+        case 3: {
+            texturePath = utils::PathHelper::getAssetPath(
+                "assets/sprites/projectile_player_1.png");
             scale = 6.0f;
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
             break;
-        case 4:
+        }
+        case 4: {
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_enemy_1.png");
             scale = 6.0f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
             break;
+        }
         default:
             texturePath = "assets/sprites/players/player1-1.png";
             scale = 2.0f;
