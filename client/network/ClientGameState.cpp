@@ -338,11 +338,11 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             std::string downPath = "assets/sprites/players/player" +
                                    std::to_string(playerIdx) + "-2.png";
             entity.spriteDown->loadTexture(downPath);
-            entity.spriteDown->setScale(scale, scale);  // Static
+            entity.spriteDown->setScale(scale, scale);
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
             }
-            entity.spriteScale = scale;  // store base scale
+            entity.spriteScale = scale;
             entity.currentSprite = entity.sprite.get();
             break;
         }
@@ -362,10 +362,10 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             }
             entity.spriteScale = scale;
             break;
-        case 4:  // Enemy Projectile
+        case 4:
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_enemy_1.png");
-            scale = 6.0f;  // Enemy bullet (using same sprite for now)
+            scale = 6.0f;
             break;
         default:
             texturePath = "assets/sprites/players/player1-1.png";
