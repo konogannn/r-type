@@ -120,6 +120,12 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
+        entity->verticalIdleTime += deltaTime;
+        if (entity->verticalIdleTime > 0.15f) {
+            if (entity->type == 1 && entity->currentSprite && entity->sprite) {
+                entity->currentSprite = entity->sprite.get();
+            }
+        }
     }
 
     // Update explosions
@@ -135,21 +141,15 @@ void ClientGameState::update(float deltaTime)
                       _explosions.end());
 }
 
-void ClientGameState::render(IGraphics& graphics)
+void ClientGameState::render(IGraphics& graphics, float windowScale,
+                             float offsetX, float offsetY)
 {
     if (!_gameStarted) {
         return;
     }
 
-    for (const auto& [entityId, entity] : _entities) {
-        if (entity->sprite) {
-            entity->sprite->setPosition(entity->x, entity->y);
-        }
-    }
-
-    // Render explosions
     for (auto& explosion : _explosions) {
-        explosion->draw(graphics);
+        explosion->draw(graphics, windowScale, offsetX, offsetY);
     }
 }
 
@@ -232,16 +232,39 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
         float deltaY = y - entity->lastY;
         if (deltaY < -0.5f) {  // Moving up
             entity->currentSprite = entity->spriteUp.get();
+            entity->verticalIdleTime = 0.0f;
         } else if (deltaY > 0.5f) {  // Moving down
             entity->currentSprite = entity->spriteDown.get();
-        } else {  // Static
-            entity->currentSprite = entity->sprite.get();
+            entity->verticalIdleTime = 0.0f;
+        } else {
         }
         entity->lastY = y;
     }
 
-    entity->x = x;
-    entity->y = y;
+    float clampedX = x;
+    float clampedY = y;
+    if (_mapWidth > 0 && _mapHeight > 0) {
+        if (clampedX < 0.0f) clampedX = 0.0f;
+        if (clampedY < 0.0f) clampedY = 0.0f;
+        float spriteHeight = 0.0f;
+        if (entity->sprite) {
+            spriteHeight =
+                entity->sprite->getTextureHeight() * entity->spriteScale;
+        } else {
+            spriteHeight = 0.0f;
+        }
+
+        const float bottomPadding = 64.0f;
+        float maxY =
+            static_cast<float>(_mapHeight) - spriteHeight - bottomPadding;
+        if (maxY < 0.0f) maxY = 0.0f;
+        float maxX = static_cast<float>(_mapWidth);
+        if (clampedX > maxX) clampedX = maxX;
+        if (clampedY > maxY) clampedY = maxY;
+    }
+
+    entity->x = clampedX;
+    entity->y = clampedY;
 }
 
 void ClientGameState::onEntityDead(uint32_t entityId)
@@ -292,49 +315,64 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
     float scale = 1.0f;
 
     switch (entity.type) {
-        case 1:  // Player
-            texturePath =
-                utils::PathHelper::getAssetPath("assets/sprites/player1.png");
-            scale = 4.0f;  // Player size (doubled from original)
-
-            // Load animation sprites (player1=static, player2=down, player3=up)
+        case 1: {
+            int playerIdx = (entity.id % 4) + 1;
+            scale = 4.0f;
+            texturePath = "assets/sprites/players/player" +
+                          std::to_string(playerIdx) + "-1.png";
             entity.spriteUp = std::make_unique<SpriteSFML>();
-            entity.spriteDown = std::make_unique<SpriteSFML>();
-
-            entity.spriteUp->loadTexture(
-                utils::PathHelper::getAssetPath("assets/sprites/player3.png"));
+            std::string upPath = "assets/sprites/players/player" +
+                                 std::to_string(playerIdx) + "-3.png";
+            entity.spriteUp->loadTexture(upPath);
             entity.spriteUp->setScale(scale, scale);
-
-            entity.spriteDown->loadTexture(
-                utils::PathHelper::getAssetPath("assets/sprites/player2.png"));
+            entity.spriteDown = std::make_unique<SpriteSFML>();
+            std::string downPath = "assets/sprites/players/player" +
+                                   std::to_string(playerIdx) + "-2.png";
+            entity.spriteDown->loadTexture(downPath);
             entity.spriteDown->setScale(scale, scale);
-
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
             entity.currentSprite = entity.sprite.get();
             break;
-        case 2:  // Enemy/Boss
-            texturePath =
-                utils::PathHelper::getAssetPath("assets/sprites/boss_3.png");
-            scale = 1.0f;  // Enemy size (doubled from original)
+        }
+        case 2:
+            texturePath = "assets/sprites/boss_3.png";
+            scale = 1.0f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
             break;
-        case 3:  // Player Projectile
+        case 3: {
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_player_1.png");
-            scale = 6.0f;  // Projectile size (doubled from original)
+            scale = 6.0f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
             break;
-        case 4:  // Enemy Projectile
+        }
+        case 4: {
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_enemy_1.png");
-            scale = 6.0f;  // Enemy bullet (using same sprite for now)
+            scale = 6.0f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
             break;
+        }
         default:
-            texturePath =
-                utils::PathHelper::getAssetPath("assets/sprites/player1.png");
+            texturePath = "assets/sprites/players/player1-1.png";
             scale = 2.0f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
             break;
-    }
-
-    if (entity.sprite->loadTexture(texturePath)) {
-        entity.sprite->setScale(scale, scale);
     }
 }
 

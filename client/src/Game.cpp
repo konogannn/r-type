@@ -179,6 +179,22 @@ void Game::render()
         _window.clear(0, 0, 0);
     }
 
+    int mapWidth = 800;
+    int mapHeight = 600;
+    if (_gameState && _gameState->getMapWidth() > 0 &&
+        _gameState->getMapHeight() > 0) {
+        mapWidth = static_cast<int>(_gameState->getMapWidth());
+        mapHeight = static_cast<int>(_gameState->getMapHeight());
+    }
+
+    int winW = static_cast<int>(_window.getWidth());
+    int winH = static_cast<int>(_window.getHeight());
+    float scaleX = static_cast<float>(winW) / static_cast<float>(mapWidth);
+    float scaleY = static_cast<float>(winH) / static_cast<float>(mapHeight);
+    float windowScale = std::min(scaleX, scaleY);
+    float offsetX = (winW - mapWidth * windowScale) / 2.0f;
+    float offsetY = (winH - mapHeight * windowScale) / 2.0f;
+
     if (_background) {
         _background->draw(_graphics);
     }
@@ -187,26 +203,30 @@ void Game::render()
         const auto& entities = _gameState->getAllEntities();
 
         for (const auto& [id, entity] : entities) {
-            if (!entity) {
-                continue;
-            }
+            if (!entity) continue;
+
             rtype::ISprite* spriteToRender = entity->currentSprite
                                                  ? entity->currentSprite
                                                  : entity->sprite.get();
 
-            if (spriteToRender) {
-                try {
-                    spriteToRender->setPosition(entity->x, entity->y);
-                    _graphics.drawSprite(*spriteToRender);
-                } catch (const std::exception& e) {
-                    std::cout << "[ERROR] Exception while drawing entity ID "
-                              << id << ": " << e.what() << std::endl;
-                }
+            if (!spriteToRender) continue;
+
+            try {
+                float baseScale = 1.0f;
+                if (entity->spriteScale > 0.0f) baseScale = entity->spriteScale;
+                spriteToRender->setScale(baseScale * windowScale,
+                                         baseScale * windowScale);
+                float sx = entity->x * windowScale + offsetX;
+                float sy = entity->y * windowScale + offsetY;
+                spriteToRender->setPosition(sx, sy);
+                _graphics.drawSprite(*spriteToRender);
+            } catch (const std::exception& e) {
+                std::cout << "[ERROR] Exception while drawing entity ID " << id
+                          << ": " << e.what() << std::endl;
             }
         }
 
-        // Render explosions on top of entities
-        _gameState->render(_graphics);
+        _gameState->render(_graphics, windowScale, offsetX, offsetY);
     }
 
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);

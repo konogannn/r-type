@@ -33,6 +33,8 @@ struct ClientEntity {
     std::unique_ptr<SpriteSFML> spriteUp;
     std::unique_ptr<SpriteSFML> spriteDown;
     SpriteSFML* currentSprite = nullptr;
+    float spriteScale = 1.0f;
+    float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
@@ -88,7 +90,8 @@ class ClientGameState {
 
     // Game loop integration
     void update(float deltaTime);
-    void render(IGraphics& graphics);
+    void render(IGraphics& graphics, float windowScale, float offsetX,
+                float offsetY);
     void sendInput(uint8_t inputMask);
 
     // State getters
