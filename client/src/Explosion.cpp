@@ -62,8 +62,6 @@ void Explosion::draw(IGraphics& graphics, float windowScale, float offsetX,
 {
     if (_finished || !_sprite) return;
 
-    // Apply window scaling and offset so explosion appears at correct screen
-    // position
     _sprite->setScale(2.0f * _scale * windowScale, 2.0f * _scale * windowScale);
     _sprite->setPosition(_x * windowScale + offsetX,
                          _y * windowScale + offsetY);
