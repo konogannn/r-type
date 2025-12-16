@@ -142,7 +142,8 @@ void ClientGameState::update(float deltaTime)
                       _explosions.end());
 }
 
-void ClientGameState::render(IGraphics& graphics, float windowScale, float offsetX, float offsetY)
+void ClientGameState::render(IGraphics& graphics, float windowScale,
+                             float offsetX, float offsetY)
 {
     if (!_gameStarted) {
         return;
@@ -237,8 +238,10 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
         } else if (deltaY > 0.5f) {  // Moving down
             entity->currentSprite = entity->spriteDown.get();
             entity->verticalIdleTime = 0.0f;
-        } else {  // Small or no vertical movement -> keep current and let idle timer handle revert
-            // do not reset idle timer here so that after a short idle we revert to static
+        } else {  // Small or no vertical movement -> keep current and let idle
+                  // timer handle revert
+            // do not reset idle timer here so that after a short idle we revert
+            // to static
         }
         entity->lastY = y;
     }
@@ -249,17 +252,20 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (_mapWidth > 0 && _mapHeight > 0) {
         if (clampedX < 0.0f) clampedX = 0.0f;
         if (clampedY < 0.0f) clampedY = 0.0f;
-        // Compute sprite height in world units (texture height * entity sprite base scale)
+        // Compute sprite height in world units (texture height * entity sprite
+        // base scale)
         float spriteHeight = 0.0f;
         if (entity->sprite) {
-            spriteHeight = entity->sprite->getTextureHeight() * entity->spriteScale;
+            spriteHeight =
+                entity->sprite->getTextureHeight() * entity->spriteScale;
         } else {
             spriteHeight = 0.0f;
         }
 
         // Add a small padding so sprites are fully visible (tweak if needed)
         const float bottomPadding = 64.0f;
-        float maxY = static_cast<float>(_mapHeight) - spriteHeight - bottomPadding;
+        float maxY =
+            static_cast<float>(_mapHeight) - spriteHeight - bottomPadding;
         if (maxY < 0.0f) maxY = 0.0f;
         float maxX = static_cast<float>(_mapWidth);
         if (clampedX > maxX) clampedX = maxX;
@@ -326,18 +332,18 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.spriteUp = std::make_unique<SpriteSFML>();
             std::string upPath = "assets/sprites/players/player" +
                                  std::to_string(playerIdx) + "-3.png";
-                entity.spriteUp->loadTexture(upPath);
-                entity.spriteUp->setScale(scale, scale);
+            entity.spriteUp->loadTexture(upPath);
+            entity.spriteUp->setScale(scale, scale);
             entity.spriteDown = std::make_unique<SpriteSFML>();
             std::string downPath = "assets/sprites/players/player" +
                                    std::to_string(playerIdx) + "-2.png";
-                entity.spriteDown->loadTexture(downPath);
-                entity.spriteDown->setScale(scale, scale);  // Static
+            entity.spriteDown->loadTexture(downPath);
+            entity.spriteDown->setScale(scale, scale);  // Static
             if (entity.sprite->loadTexture(texturePath)) {
-                    entity.sprite->setScale(scale, scale);
-                }
-                entity.spriteScale = scale; // store base scale
-                entity.currentSprite = entity.sprite.get();
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;  // store base scale
+            entity.currentSprite = entity.sprite.get();
             break;
         }
         case 2:
