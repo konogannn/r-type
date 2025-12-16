@@ -20,6 +20,7 @@
 #include "SelectionButton.hpp"
 #include "Slider.hpp"
 #include "ToggleButton.hpp"
+#include "src/Background.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/graphics/SpriteSFML.hpp"
 #include "wrapper/input/InputSFML.hpp"
@@ -72,7 +73,7 @@ class SettingsMenu {
     GraphicsSFML& _graphics;
     InputSFML& _input;
 
-    std::unique_ptr<SpriteSFML> _background;
+    std::shared_ptr<Background> _background;
     std::vector<Slider> _sliders;
     std::vector<KeyBindingButton> _keyBindingButtons;
     std::vector<ResolutionButton> _resolutionButtons;

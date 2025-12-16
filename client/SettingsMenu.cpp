@@ -62,11 +62,12 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
 
 void SettingsMenu::setupBackground()
 {
-    _background = std::make_unique<SpriteSFML>();
-    if (!_background->loadTexture("assets/sprite_fond.jpg")) {
-        std::cerr << "Warning: Failed to load background image" << std::endl;
-        return;
-    }
+    float windowWidth = static_cast<float>(_window.getWidth());
+    float windowHeight = static_cast<float>(_window.getHeight());
+
+    _background = std::make_shared<Background>(
+        "assets/background/bg-back.png", "assets/background/bg-stars.png",
+        "assets/background/bg-planet.png", windowWidth, windowHeight);
 }
 
 void SettingsMenu::setupSliders()
@@ -110,10 +111,9 @@ void SettingsMenu::updateLayout()
     float windowHeight = static_cast<float>(_window.getHeight());
 
     if (_background) {
-        float scaleX = windowWidth / 450.0f;
-        float scaleY = windowHeight / 225.0f;
-        _background->setScale(scaleX, scaleY);
-        _background->setPosition(0, 0);
+        _background = std::make_shared<Background>(
+            "assets/background/bg-back.png", "assets/background/bg-stars.png",
+            "assets/background/bg-planet.png", windowWidth, windowHeight);
     }
 
     float scaleW = windowWidth / 1920.0f;
@@ -207,6 +207,10 @@ void SettingsMenu::updateLayout()
 
 bool SettingsMenu::update()
 {
+    if (_background) {
+        _background->update(1.0f / 60.0f);
+    }
+
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
@@ -319,7 +323,7 @@ void SettingsMenu::render()
     }
 
     if (_background) {
-        _graphics.drawSprite(*_background);
+        _background->draw(_graphics);
     }
 
     unsigned int titleSize = static_cast<unsigned int>(48 * scale);
