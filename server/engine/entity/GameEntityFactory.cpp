@@ -92,7 +92,7 @@ Entity GameEntityFactory::createEnemyBullet(EntityId ownerId,
     _entityManager.addComponent(bullet, Velocity(-300.0f, 0.0f));
     _entityManager.addComponent(bullet, Bullet(ownerId, false, 20.0f));
     _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
-    _entityManager.addComponent(bullet, NetworkEntity(_nextBulletId++, 4));
+    _entityManager.addComponent(bullet, NetworkEntity(_nextBulletId++, 3));
     _entityManager.addComponent(bullet, Lifetime(15.0f));
 
     return bullet;
