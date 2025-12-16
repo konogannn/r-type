@@ -5,6 +5,7 @@ set(ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Entity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/EntityManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/EntityFactory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameEntityFactory.cpp
 )
 
 set(ENTITY_HEADERS
@@ -13,6 +14,7 @@ set(ENTITY_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/EntityManager.tpp
     ${CMAKE_CURRENT_SOURCE_DIR}/EntityFactory.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/EntityFactory.tpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameEntityFactory.hpp
 )
 
 # Export sources to parent scope

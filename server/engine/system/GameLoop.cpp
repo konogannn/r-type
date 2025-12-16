@@ -15,10 +15,10 @@
 namespace engine {
 
 GameLoop::GameLoop(float targetFPS)
-    : _running(false),
+    : _entityFactory(_entityManager),
+      _running(false),
       _targetFPS(targetFPS),
-      _targetFrameTime(static_cast<int>(1000.0f / targetFPS)),
-      _nextBulletId(10000)
+      _targetFrameTime(static_cast<int>(1000.0f / targetFPS))
 {
 }
 
@@ -82,6 +82,9 @@ void GameLoop::gameThreadLoop()
         }
 
         processInputCommands(deltaTime);
+
+        processSpawnEvents();
+
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
 
@@ -169,7 +172,7 @@ void GameLoop::processInputCommands(float deltaTime)
 
         if (cmd.inputMask & 16) {
             if (player->shootCooldown <= 0.0f) {
-                createBullet(entityId, cmd.clientId, *pos, true);
+                _entityFactory.createPlayerBullet(entityId, *pos);
                 player->shootCooldown = player->shootDelay;
             }
         }
@@ -200,25 +203,6 @@ void GameLoop::generateNetworkUpdates()
     }
 }
 
-void GameLoop::createBullet(EntityId ownerEntityId,
-                            [[maybe_unused]] uint32_t clientId,
-                            const Position& ownerPos, bool fromPlayer)
-{
-    Entity bullet = _entityManager.createEntity();
-
-    float bulletX = ownerPos.x + 50.0f;
-    float bulletY = ownerPos.y;
-    float bulletSpeed = fromPlayer ? 500.0f : -500.0f;
-
-    _entityManager.addComponent(bullet, Position(bulletX, bulletY));
-    _entityManager.addComponent(bullet, Velocity(bulletSpeed, 0.0f));
-    _entityManager.addComponent(bullet,
-                                Bullet(ownerEntityId, fromPlayer, 10.0f));
-    _entityManager.addComponent(bullet, BoundingBox(16.0f, 8.0f));
-    _entityManager.addComponent(bullet, NetworkEntity(_nextBulletId++, 3));
-    _entityManager.addComponent(bullet, Lifetime(5.0f));
-}
-
 void GameLoop::queueInput(const NetworkInputCommand& command)
 {
     _inputQueue.push(command);
@@ -237,15 +221,7 @@ void GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
         return;
     }
 
-    Entity player = _entityManager.createEntity();
-
-    _entityManager.addComponent(player, Position(x, y));
-    _entityManager.addComponent(player, Velocity(0.0f, 0.0f));
-    _entityManager.addComponent(player, Player(clientId, playerId));
-    _entityManager.addComponent(player, Health(100.0f));
-    _entityManager.addComponent(player, BoundingBox(48.0f, 48.0f));
-    _entityManager.addComponent(player, NetworkEntity(player.getId(), 1));
-
+    Entity player = _entityFactory.createPlayer(clientId, playerId, x, y);
     _clientToEntity[clientId] = player.getId();
 }
 
@@ -310,11 +286,6 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
     cleanupSystem->clearDestroyedEntities();
 }
 
-void GameLoop::queueEntityDestruction(EntityId entityId)
-{
-    _pendingDestructions.push_back(entityId);
-}
-
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
 {
     auto players =
@@ -340,6 +311,31 @@ void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
 void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 {
     _onPlayerDeathCallback = std::move(callback);
+}
+
+void GameLoop::processSpawnEvents()
+{
+    // Use compile-time dispatch via overload resolution
+    // This is more efficient than runtime type checking
+    for (const auto& event : _spawnEvents) {
+        std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
+    }
+    _spawnEvents.clear();
+}
+
+void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
+{
+    _entityFactory.createEnemy(event.type, event.x, event.y);
+}
+
+void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
+{
+    _entityFactory.createPlayerBullet(event.ownerId, event.position);
+}
+
+void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
+{
+    _entityFactory.createEnemyBullet(event.ownerId, event.position);
 }
 
 }  // namespace engine

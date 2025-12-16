@@ -17,6 +17,8 @@ This guide provides **practical, step-by-step tutorials** for common development
 ### Goal
 Add a "Power-Up" entity that players can collect for temporary buffs.
 
+**Note**: This tutorial demonstrates direct `EntityManager` calls for educational purposes. For production code in systems that need to create entities, use the **event-driven spawning pattern** (emit spawn events that GameLoop processes via GameEntityFactory). See [Architecture Overview](./02-architecture-overview.md#gameentityfactory--event-driven-spawning).
+
 ### Step 1: Define the Component
 
 **File**: `server/engine/component/GameComponents.hpp`
@@ -75,6 +77,10 @@ public:
     }
 
     void spawnPowerUp(EntityManager& entityManager) {
+        // Educational example: Direct entity creation
+        // Production approach: Emit SpawnPowerUpEvent to spawn queue
+        // See EnemySpawnerSystem for event-driven spawn pattern
+        
         Entity powerup = entityManager.createEntity();
         
         float x = _xDist(_rng);
