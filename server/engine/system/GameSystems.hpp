@@ -10,6 +10,7 @@
 #include <random>
 #include <variant>
 #include <vector>
+#include <unordered_set>
 
 #include "../component/GameComponents.hpp"
 #include "../entity/Entity.hpp"
@@ -147,10 +148,30 @@ class CollisionSystem : public ISystem {
         uint8_t entityType;
     };
     std::vector<DestroyInfo> _entitiesToDestroy;
-    std::vector<EntityId> _immediateDestroyList;
+    std::unordered_set<EntityId> _markedForDestruction;
 
+    // Helper methods for collision checking
     bool checkCollision(const Position& pos1, const BoundingBox& box1,
                         const Position& pos2, const BoundingBox& box2);
+    
+    bool isMarkedForDestruction(EntityId id) const;
+    void markForDestruction(EntityId entityId, uint32_t networkId, uint8_t type);
+    
+    // Collision handlers for different entity pairs
+    void handlePlayerBulletVsEnemy(EntityManager& entityManager,
+                                   const std::vector<Entity>& bullets,
+                                   const std::vector<Entity>& enemies);
+    
+    void handlePlayerVsEnemy(EntityManager& entityManager,
+                            const std::vector<Entity>& players,
+                            const std::vector<Entity>& enemies);
+    
+    void handleEnemyBulletVsPlayer(EntityManager& entityManager,
+                                   const std::vector<Entity>& bullets,
+                                   const std::vector<Entity>& players);
+    
+    void handleBulletVsBullet(EntityManager& entityManager,
+                             const std::vector<Entity>& bullets);
 
    public:
     std::string getName() const override;
