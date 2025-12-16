@@ -82,9 +82,9 @@ void GameLoop::gameThreadLoop()
         }
 
         processInputCommands(deltaTime);
-        
+
         processSpawnEvents();
-        
+
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
 

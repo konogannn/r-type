@@ -15,7 +15,7 @@ GameEntityFactory::GameEntityFactory(EntityManager& entityManager)
 }
 
 Entity GameEntityFactory::createPlayer(uint32_t clientId, uint32_t playerId,
-                                      float x, float y)
+                                       float x, float y)
 {
     Entity player = _entityManager.createEntity();
 
@@ -63,7 +63,7 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
 }
 
 Entity GameEntityFactory::createPlayerBullet(EntityId ownerId,
-                                            const Position& ownerPos)
+                                             const Position& ownerPos)
 {
     Entity bullet = _entityManager.createEntity();
 
@@ -81,7 +81,7 @@ Entity GameEntityFactory::createPlayerBullet(EntityId ownerId,
 }
 
 Entity GameEntityFactory::createEnemyBullet(EntityId ownerId,
-                                           const Position& ownerPos)
+                                            const Position& ownerPos)
 {
     Entity bullet = _entityManager.createEntity();
 

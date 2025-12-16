@@ -17,7 +17,7 @@ namespace engine {
 
 /**
  * @brief Factory for creating game-specific entities
- * 
+ *
  * Centralizes all entity creation logic for the R-Type game.
  * Ensures consistency and provides a single point for entity configuration.
  */
@@ -42,8 +42,7 @@ class GameEntityFactory {
      * @param y Starting Y position
      * @return Created player entity
      */
-    Entity createPlayer(uint32_t clientId, uint32_t playerId, float x,
-                       float y);
+    Entity createPlayer(uint32_t clientId, uint32_t playerId, float x, float y);
 
     /**
      * @brief Create an enemy entity

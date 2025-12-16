@@ -8,9 +8,9 @@
 #pragma once
 
 #include <random>
+#include <unordered_set>
 #include <variant>
 #include <vector>
-#include <unordered_set>
 
 #include "../component/GameComponents.hpp"
 #include "../entity/Entity.hpp"
@@ -20,7 +20,8 @@
 namespace engine {
 
 // Import SpawnEvent type from events
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent>;
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
+                                SpawnEnemyBulletEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -69,7 +70,8 @@ class EnemySpawnerSystem : public ISystem {
     std::vector<SpawnEvent>& _spawnQueue;
 
    public:
-    EnemySpawnerSystem(std::vector<SpawnEvent>& spawnQueue, float spawnInterval = 2.0f)
+    EnemySpawnerSystem(std::vector<SpawnEvent>& spawnQueue,
+                       float spawnInterval = 2.0f)
         : _spawnTimer(0.0f),
           _spawnInterval(spawnInterval),
           _rng(std::random_device{}()),
@@ -153,25 +155,26 @@ class CollisionSystem : public ISystem {
     // Helper methods for collision checking
     bool checkCollision(const Position& pos1, const BoundingBox& box1,
                         const Position& pos2, const BoundingBox& box2);
-    
+
     bool isMarkedForDestruction(EntityId id) const;
-    void markForDestruction(EntityId entityId, uint32_t networkId, uint8_t type);
-    
+    void markForDestruction(EntityId entityId, uint32_t networkId,
+                            uint8_t type);
+
     // Collision handlers for different entity pairs
     void handlePlayerBulletVsEnemy(EntityManager& entityManager,
                                    const std::vector<Entity>& bullets,
                                    const std::vector<Entity>& enemies);
-    
+
     void handlePlayerVsEnemy(EntityManager& entityManager,
-                            const std::vector<Entity>& players,
-                            const std::vector<Entity>& enemies);
-    
+                             const std::vector<Entity>& players,
+                             const std::vector<Entity>& enemies);
+
     void handleEnemyBulletVsPlayer(EntityManager& entityManager,
                                    const std::vector<Entity>& bullets,
                                    const std::vector<Entity>& players);
-    
+
     void handleBulletVsBullet(EntityManager& entityManager,
-                             const std::vector<Entity>& bullets);
+                              const std::vector<Entity>& bullets);
 
    public:
     std::string getName() const override;
@@ -210,7 +213,10 @@ class EnemyShootingSystem : public System<Enemy, Position> {
                        Position* pos) override;
 
    public:
-    EnemyShootingSystem(std::vector<SpawnEvent>& spawnQueue) : _spawnQueue(spawnQueue) {}
+    EnemyShootingSystem(std::vector<SpawnEvent>& spawnQueue)
+        : _spawnQueue(spawnQueue)
+    {
+    }
 
     std::string getName() const override;
     SystemType getType() const override;

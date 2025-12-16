@@ -12,6 +12,7 @@
 #include <memory>
 #include <thread>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include "../component/GameComponents.hpp"
@@ -22,12 +23,11 @@
 #include "../threading/ThreadSafeQueue.hpp"
 #include "System.hpp"
 
-#include <variant>
-
 namespace engine {
 
 // Unified spawn event type - can hold any entity spawn request
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent>;
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
+                                SpawnEnemyBulletEvent>;
 
 /**
  * @brief Network input command from clients

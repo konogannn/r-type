@@ -6,6 +6,7 @@
 */
 
 #include "GameSystems.hpp"
+
 #include <unordered_set>
 
 namespace engine {
@@ -229,15 +230,16 @@ bool CollisionSystem::isMarkedForDestruction(EntityId id) const
     return _markedForDestruction.find(id) != _markedForDestruction.end();
 }
 
-void CollisionSystem::markForDestruction(EntityId entityId, uint32_t networkId, uint8_t type)
+void CollisionSystem::markForDestruction(EntityId entityId, uint32_t networkId,
+                                         uint8_t type)
 {
     _markedForDestruction.insert(entityId);
     _entitiesToDestroy.push_back({entityId, networkId, type});
 }
 
-void CollisionSystem::handlePlayerBulletVsEnemy(EntityManager& entityManager,
-                                                const std::vector<Entity>& bullets,
-                                                const std::vector<Entity>& enemies)
+void CollisionSystem::handlePlayerBulletVsEnemy(
+    EntityManager& entityManager, const std::vector<Entity>& bullets,
+    const std::vector<Entity>& enemies)
 {
     for (auto& bulletEntity : bullets) {
         if (isMarkedForDestruction(bulletEntity.getId())) continue;
@@ -254,21 +256,28 @@ void CollisionSystem::handlePlayerBulletVsEnemy(EntityManager& entityManager,
 
             auto* enemyPos = entityManager.getComponent<Position>(enemyEntity);
             auto* enemyHealth = entityManager.getComponent<Health>(enemyEntity);
-            auto* enemyBox = entityManager.getComponent<BoundingBox>(enemyEntity);
+            auto* enemyBox =
+                entityManager.getComponent<BoundingBox>(enemyEntity);
             if (!enemyPos || !enemyHealth || !enemyBox) continue;
 
             if (checkCollision(*bulletPos, *bulletBox, *enemyPos, *enemyBox)) {
                 enemyHealth->takeDamage(bullet->damage);
 
-                auto* bulletNet = entityManager.getComponent<NetworkEntity>(bulletEntity);
+                auto* bulletNet =
+                    entityManager.getComponent<NetworkEntity>(bulletEntity);
                 if (bulletNet) {
-                    markForDestruction(bulletEntity.getId(), bulletNet->entityId, bulletNet->entityType);
+                    markForDestruction(bulletEntity.getId(),
+                                       bulletNet->entityId,
+                                       bulletNet->entityType);
                 }
 
                 if (!enemyHealth->isAlive()) {
-                    auto* enemyNet = entityManager.getComponent<NetworkEntity>(enemyEntity);
+                    auto* enemyNet =
+                        entityManager.getComponent<NetworkEntity>(enemyEntity);
                     if (enemyNet) {
-                        markForDestruction(enemyEntity.getId(), enemyNet->entityId, enemyNet->entityType);
+                        markForDestruction(enemyEntity.getId(),
+                                           enemyNet->entityId,
+                                           enemyNet->entityType);
                     }
                 }
 
@@ -279,8 +288,8 @@ void CollisionSystem::handlePlayerBulletVsEnemy(EntityManager& entityManager,
 }
 
 void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
-                                         const std::vector<Entity>& players,
-                                         const std::vector<Entity>& enemies)
+                                          const std::vector<Entity>& players,
+                                          const std::vector<Entity>& enemies)
 {
     for (auto& playerEntity : players) {
         if (isMarkedForDestruction(playerEntity.getId())) continue;
@@ -294,21 +303,27 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
             if (isMarkedForDestruction(enemyEntity.getId())) continue;
 
             auto* enemyPos = entityManager.getComponent<Position>(enemyEntity);
-            auto* enemyBox = entityManager.getComponent<BoundingBox>(enemyEntity);
+            auto* enemyBox =
+                entityManager.getComponent<BoundingBox>(enemyEntity);
             if (!enemyPos || !enemyBox) continue;
 
             if (checkCollision(*playerPos, *playerBox, *enemyPos, *enemyBox)) {
                 playerHealth->takeDamage(20.0f);
 
-                auto* enemyNet = entityManager.getComponent<NetworkEntity>(enemyEntity);
+                auto* enemyNet =
+                    entityManager.getComponent<NetworkEntity>(enemyEntity);
                 if (enemyNet) {
-                    markForDestruction(enemyEntity.getId(), enemyNet->entityId, enemyNet->entityType);
+                    markForDestruction(enemyEntity.getId(), enemyNet->entityId,
+                                       enemyNet->entityType);
                 }
 
                 if (!playerHealth->isAlive()) {
-                    auto* playerNet = entityManager.getComponent<NetworkEntity>(playerEntity);
+                    auto* playerNet =
+                        entityManager.getComponent<NetworkEntity>(playerEntity);
                     if (playerNet) {
-                        markForDestruction(playerEntity.getId(), playerNet->entityId, playerNet->entityType);
+                        markForDestruction(playerEntity.getId(),
+                                           playerNet->entityId,
+                                           playerNet->entityType);
                     }
                 }
 
@@ -318,9 +333,9 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
     }
 }
 
-void CollisionSystem::handleEnemyBulletVsPlayer(EntityManager& entityManager,
-                                                const std::vector<Entity>& bullets,
-                                                const std::vector<Entity>& players)
+void CollisionSystem::handleEnemyBulletVsPlayer(
+    EntityManager& entityManager, const std::vector<Entity>& bullets,
+    const std::vector<Entity>& players)
 {
     for (auto& bulletEntity : bullets) {
         if (isMarkedForDestruction(bulletEntity.getId())) continue;
@@ -335,23 +350,33 @@ void CollisionSystem::handleEnemyBulletVsPlayer(EntityManager& entityManager,
         for (auto& playerEntity : players) {
             if (isMarkedForDestruction(playerEntity.getId())) continue;
 
-            auto* playerPos = entityManager.getComponent<Position>(playerEntity);
-            auto* playerHealth = entityManager.getComponent<Health>(playerEntity);
-            auto* playerBox = entityManager.getComponent<BoundingBox>(playerEntity);
+            auto* playerPos =
+                entityManager.getComponent<Position>(playerEntity);
+            auto* playerHealth =
+                entityManager.getComponent<Health>(playerEntity);
+            auto* playerBox =
+                entityManager.getComponent<BoundingBox>(playerEntity);
             if (!playerPos || !playerHealth || !playerBox) continue;
 
-            if (checkCollision(*bulletPos, *bulletBox, *playerPos, *playerBox)) {
+            if (checkCollision(*bulletPos, *bulletBox, *playerPos,
+                               *playerBox)) {
                 playerHealth->takeDamage(bullet->damage);
 
-                auto* bulletNet = entityManager.getComponent<NetworkEntity>(bulletEntity);
+                auto* bulletNet =
+                    entityManager.getComponent<NetworkEntity>(bulletEntity);
                 if (bulletNet) {
-                    markForDestruction(bulletEntity.getId(), bulletNet->entityId, bulletNet->entityType);
+                    markForDestruction(bulletEntity.getId(),
+                                       bulletNet->entityId,
+                                       bulletNet->entityType);
                 }
 
                 if (!playerHealth->isAlive()) {
-                    auto* playerNet = entityManager.getComponent<NetworkEntity>(playerEntity);
+                    auto* playerNet =
+                        entityManager.getComponent<NetworkEntity>(playerEntity);
                     if (playerNet) {
-                        markForDestruction(playerEntity.getId(), playerNet->entityId, playerNet->entityType);
+                        markForDestruction(playerEntity.getId(),
+                                           playerNet->entityId,
+                                           playerNet->entityType);
                     }
                 }
 
@@ -362,7 +387,7 @@ void CollisionSystem::handleEnemyBulletVsPlayer(EntityManager& entityManager,
 }
 
 void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
-                                          const std::vector<Entity>& bullets)
+                                           const std::vector<Entity>& bullets)
 {
     for (size_t i = 0; i < bullets.size(); ++i) {
         auto& bullet1Entity = bullets[i];
@@ -372,7 +397,8 @@ void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
         if (!bullet1) continue;
 
         auto* bullet1Pos = entityManager.getComponent<Position>(bullet1Entity);
-        auto* bullet1Box = entityManager.getComponent<BoundingBox>(bullet1Entity);
+        auto* bullet1Box =
+            entityManager.getComponent<BoundingBox>(bullet1Entity);
         if (!bullet1Pos || !bullet1Box) continue;
 
         for (size_t j = i + 1; j < bullets.size(); ++j) {
@@ -384,19 +410,28 @@ void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
 
             if (bullet1->fromPlayer == bullet2->fromPlayer) continue;
 
-            auto* bullet2Pos = entityManager.getComponent<Position>(bullet2Entity);
-            auto* bullet2Box = entityManager.getComponent<BoundingBox>(bullet2Entity);
+            auto* bullet2Pos =
+                entityManager.getComponent<Position>(bullet2Entity);
+            auto* bullet2Box =
+                entityManager.getComponent<BoundingBox>(bullet2Entity);
             if (!bullet2Pos || !bullet2Box) continue;
 
-            if (checkCollision(*bullet1Pos, *bullet1Box, *bullet2Pos, *bullet2Box)) {
-                auto* bullet1Net = entityManager.getComponent<NetworkEntity>(bullet1Entity);
+            if (checkCollision(*bullet1Pos, *bullet1Box, *bullet2Pos,
+                               *bullet2Box)) {
+                auto* bullet1Net =
+                    entityManager.getComponent<NetworkEntity>(bullet1Entity);
                 if (bullet1Net) {
-                    markForDestruction(bullet1Entity.getId(), bullet1Net->entityId, bullet1Net->entityType);
+                    markForDestruction(bullet1Entity.getId(),
+                                       bullet1Net->entityId,
+                                       bullet1Net->entityType);
                 }
 
-                auto* bullet2Net = entityManager.getComponent<NetworkEntity>(bullet2Entity);
+                auto* bullet2Net =
+                    entityManager.getComponent<NetworkEntity>(bullet2Entity);
                 if (bullet2Net) {
-                    markForDestruction(bullet2Entity.getId(), bullet2Net->entityId, bullet2Net->entityType);
+                    markForDestruction(bullet2Entity.getId(),
+                                       bullet2Net->entityId,
+                                       bullet2Net->entityType);
                 }
 
                 break;
@@ -411,9 +446,12 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     _entitiesToDestroy.clear();
     _markedForDestruction.clear();
 
-    auto bullets = entityManager.getEntitiesWith<Position, Bullet, BoundingBox>();
-    auto enemies = entityManager.getEntitiesWith<Position, Enemy, Health, BoundingBox>();
-    auto players = entityManager.getEntitiesWith<Position, Player, Health, BoundingBox>();
+    auto bullets =
+        entityManager.getEntitiesWith<Position, Bullet, BoundingBox>();
+    auto enemies =
+        entityManager.getEntitiesWith<Position, Enemy, Health, BoundingBox>();
+    auto players =
+        entityManager.getEntitiesWith<Position, Player, Health, BoundingBox>();
 
     handleBulletVsBullet(entityManager, bullets);
     handlePlayerBulletVsEnemy(entityManager, bullets, enemies);

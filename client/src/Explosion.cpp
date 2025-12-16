@@ -50,7 +50,8 @@ void Explosion::update(float deltaTime)
             _finished = true;
         } else {
             if (_sprite) {
-                _sprite->setTextureRect(_currentFrame * _frameWidth, 0, _frameWidth, _frameHeight);
+                _sprite->setTextureRect(_currentFrame * _frameWidth, 0,
+                                        _frameWidth, _frameHeight);
             }
         }
     }

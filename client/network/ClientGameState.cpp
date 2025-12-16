@@ -250,17 +250,20 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     if (entity) {
         switch (entity->type) {
             case 4:  // Enemy Projectile
-            _explosions.push_back(std::make_unique<Explosion>(
-                "assets/sprites/blowup_1.png", entity->x - 16, entity->y, 1.0f, 32, 32, 6));
-            break;
+                _explosions.push_back(std::make_unique<Explosion>(
+                    "assets/sprites/blowup_1.png", entity->x - 16, entity->y,
+                    1.0f, 32, 32, 6));
+                break;
             case 3:  // Player Projectile
-            _explosions.push_back(std::make_unique<Explosion>(
-                "assets/sprites/blowup_1.png", entity->x + 16, entity->y, 1.0f, 32, 32, 6));
-            break;
+                _explosions.push_back(std::make_unique<Explosion>(
+                    "assets/sprites/blowup_1.png", entity->x + 16, entity->y,
+                    1.0f, 32, 32, 6));
+                break;
             case 2:  // Enemy/Boss
-            _explosions.push_back(std::make_unique<Explosion>(
-                "assets/sprites/blowup_2.png", entity->x, entity->y, 2.0f, 64, 64, 8));
-            break;
+                _explosions.push_back(std::make_unique<Explosion>(
+                    "assets/sprites/blowup_2.png", entity->x, entity->y, 2.0f,
+                    64, 64, 8));
+                break;
         }
     }
 
