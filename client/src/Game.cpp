@@ -196,7 +196,8 @@ void Game::render()
     float offsetX = (winW - mapWidth * windowScale) / 2.0f;
     float offsetY = (winH - mapHeight * windowScale) / 2.0f;
 
-    // Draw background (background layers already scale to window size at creation)
+    // Draw background (background layers already scale to window size at
+    // creation)
     if (_background) {
         _background->draw(_graphics);
     }
