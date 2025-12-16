@@ -316,7 +316,7 @@ void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 void GameLoop::processSpawnEvents()
 {
     // Use compile-time dispatch via overload resolution
-    // This is more efficient than runtime type checking with if constexpr
+    // This is more efficient than runtime type checking
     for (const auto& event : _spawnEvents) {
         std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
     }
