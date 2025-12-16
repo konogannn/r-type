@@ -619,7 +619,7 @@ void NetworkServer::handleReceive(size_t bytes) {
 
 | Stage | Typical Time | Notes |
 |-------|-------------|-------|
-| Client input | `<1ms` | Hardware/OS dependent |
+| Client input | `~1ms` | Hardware/OS dependent |
 | Network send | `~10-50ms` | Depends on connection |
 | Server receive | `<1ms` | Asio is very fast |
 | Event queue | `<0.1ms` | Lock-free operation |
