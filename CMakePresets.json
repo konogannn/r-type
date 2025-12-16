@@ -5,14 +5,14 @@
     {
       "name": "default",
       "displayName": "Default (Debug)",
-      "description": "Local debug build using Ninja",
-      "generator": "Ninja",
+      "description": "Local debug build",
       "binaryDir": "${sourceDir}/build/default",
       "architecture": {
         "value": "x64"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
 
@@ -22,40 +22,38 @@
       "inherits": "default",
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
 
     {
       "name": "with-vcpkg",
-      "displayName": "Use vcpkg toolchain (if VCPKG_ROOT set)",
-      "generator": "Ninja",
+      "displayName": "Use vcpkg toolchain",
       "binaryDir": "${sourceDir}/build/vcpkg",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
 
     {
       "name": "ci-debug",
       "displayName": "CI Debug",
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/ci-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
 
     {
       "name": "ci-release",
       "displayName": "CI Release",
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/ci-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     }
   ],
