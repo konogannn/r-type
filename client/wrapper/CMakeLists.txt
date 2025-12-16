@@ -6,6 +6,7 @@ add_subdirectory(utils)
 
 set(WRAPPER_TOP_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/SoundSFML.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MusicSFML.cpp
 )
 
 set(WRAPPER_SOURCES

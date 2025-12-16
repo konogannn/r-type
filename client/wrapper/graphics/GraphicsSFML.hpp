@@ -13,6 +13,7 @@
 #include <string>
 
 #include "Graphics.hpp"
+#include "RenderTarget.hpp"
 #include "SpriteSFML.hpp"
 
 namespace rtype {
@@ -51,10 +52,18 @@ class GraphicsSFML : public IGraphics {
     float getTextWidth(const std::string& text, unsigned int fontSize,
                        const std::string& fontPath) override;
 
+    /**
+     * @brief Set a render target as the draw target (for post-processing)
+     * @param renderTarget Pointer to IRenderTarget, or nullptr to reset to
+     * window
+     */
+    void setRenderTarget(IRenderTarget* renderTarget);
+
    private:
     sf::Font* loadFont(const std::string& fontPath);
 
     WindowSFML& _window;
+    IRenderTarget* _renderTarget;
     mutable std::map<std::string, sf::Font> _fontCache;
 };
 

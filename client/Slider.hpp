@@ -35,8 +35,9 @@ class Slider {
      * @param mouseX Mouse X position
      * @param mouseY Mouse Y position
      * @param isMousePressed True if left mouse button is pressed
+     * @return true if value changed
      */
-    void update(int mouseX, int mouseY, bool isMousePressed);
+    bool update(int mouseX, int mouseY, bool isMousePressed);
 
     /**
      * @brief Set the slider value

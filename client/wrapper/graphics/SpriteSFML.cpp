@@ -79,4 +79,9 @@ void SpriteSFML::setAlpha(unsigned char alpha)
 
 const sf::Sprite& SpriteSFML::getSFMLSprite() const { return *_sprite; }
 
+void SpriteSFML::setTexture(const sf::Texture& texture)
+{
+    _sprite->setTexture(texture);
+}
+
 }  // namespace rtype
