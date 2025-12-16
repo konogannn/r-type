@@ -100,16 +100,6 @@ jobs:
             ./bootstrap-vcpkg.sh
           fi
         shell: bash
-        if: runner.os != 'Windows'
-
-      - name: Bootstrap vcpkg (Windows)
-        run: |
-          cd ${{ github.workspace }}/vcpkg
-          if (-not (Test-Path vcpkg.exe)) {
-            .\bootstrap-vcpkg.bat
-          }
-        shell: pwsh
-        if: runner.os == 'Windows'
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
