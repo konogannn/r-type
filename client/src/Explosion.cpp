@@ -57,11 +57,14 @@ void Explosion::update(float deltaTime)
     }
 }
 
-void Explosion::draw(IGraphics& graphics)
+void Explosion::draw(IGraphics& graphics, float windowScale, float offsetX, float offsetY)
 {
-    if (!_finished && _sprite) {
-        graphics.drawSprite(*_sprite);
-    }
+    if (_finished || !_sprite) return;
+
+    // Apply window scaling and offset so explosion appears at correct screen position
+    _sprite->setScale(2.0f * _scale * windowScale, 2.0f * _scale * windowScale);
+    _sprite->setPosition(_x * windowScale + offsetX, _y * windowScale + offsetY);
+    graphics.drawSprite(*_sprite);
 }
 
 bool Explosion::isFinished() const { return _finished; }

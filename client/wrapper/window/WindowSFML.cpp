@@ -29,7 +29,7 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _isFullscreen(false),
       _title(title)
 {
-    _icon.loadFromFile(utils::PathHelper::getAssetPath("icon/logo.png"));
+    _icon.loadFromFile(utils::PathHelper::getAssetPath("assets/icon/logo.png"));
     if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
         _window->setIcon(_icon.getSize().x, _icon.getSize().y,
                          _icon.getPixelsPtr());
@@ -37,7 +37,16 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
 
 bool WindowSFML::isOpen() const { return _window->isOpen(); }
 
-bool WindowSFML::pollEvent() { return _window->pollEvent(_lastEvent); }
+bool WindowSFML::pollEvent()
+{
+    bool result = _window->pollEvent(_lastEvent);
+    if (result && _lastEvent.type == sf::Event::Resized) {
+        // Update stored size when the window is resized in windowed mode
+        _width = static_cast<unsigned int>(_lastEvent.size.width);
+        _height = static_cast<unsigned int>(_lastEvent.size.height);
+    }
+    return result;
+}
 
 EventType WindowSFML::getEventType() const
 {
@@ -215,9 +224,21 @@ void WindowSFML::display() { _window->display(); }
 
 void WindowSFML::close() { _window->close(); }
 
-unsigned int WindowSFML::getWidth() const { return _width; }
+unsigned int WindowSFML::getWidth() const
+{
+    if (_window) {
+        return static_cast<unsigned int>(_window->getSize().x);
+    }
+    return _width;
+}
 
-unsigned int WindowSFML::getHeight() const { return _height; }
+unsigned int WindowSFML::getHeight() const
+{
+    if (_window) {
+        return static_cast<unsigned int>(_window->getSize().y);
+    }
+    return _height;
+}
 
 void WindowSFML::setFramerateLimit(unsigned int fps)
 {
