@@ -41,7 +41,6 @@ bool WindowSFML::pollEvent()
 {
     bool result = _window->pollEvent(_lastEvent);
     if (result && _lastEvent.type == sf::Event::Resized) {
-        // Update stored size when the window is resized in windowed mode
         _width = static_cast<unsigned int>(_lastEvent.size.width);
         _height = static_cast<unsigned int>(_lastEvent.size.height);
     }
