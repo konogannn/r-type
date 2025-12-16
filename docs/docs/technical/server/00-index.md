@@ -1,7 +1,8 @@
 ---
-sidebar_position: 1
+id: server-index
 title: Server Documentation Index
 description: Complete guide to R-Type multiplayer server architecture and development
+sidebar_position: 1
 ---
 
 # R-Type Server Documentation
@@ -237,19 +238,19 @@ This hybrid approach gives low latency without data loss.
 
 | Metric | Target | Actual |
 |--------|--------|--------|
-| **Frame time** | 16.67ms | ~5ms (30%) |
-| **Network latency** | <50ms | 10-50ms (depends on connection) |
-| **Bandwidth per client** | <20 KB/s | ~10 KB/s |
-| **Max entities** | 1000+ | Tested up to 200 |
+| **Frame time** | `16.67ms` | `~5ms (30%)` |
+| **Network latency** | `<50ms` | `10-50ms (depends on connection)` |
+| **Bandwidth per client** | `<20 KB/s` | `~10 KB/s` |
+| **Max entities** | `1000+` | `Tested up to 200` |
 
 ### System Breakdown
 
 | System | Time per Frame | % of Budget |
 |--------|----------------|-------------|
-| Movement | ~0.5ms | 3% |
-| Collision | ~2-3ms | 15% |
-| Spawning | ~0.1ms | <1% |
-| Other | ~1ms | 6% |
+| Movement | `~0.5ms` | `3%` |
+| Collision | `~2-3ms` | `15%` |
+| Spawning | `~0.1ms` | `<1%` |
+| Other | `~1ms` | `6%` |
 | **Total** | **~5ms** | **30%** |
 
 ---
@@ -373,7 +374,7 @@ This documentation is **actively maintained** and should be updated when:
 ## 🎯 Project Goals
 
 ### Technical Goals
-- ⚡ **Low latency** (<50ms typical)
+- ⚡ **Low latency** (`<50ms` typical)
 - 📈 **Scalable** (supports 4 players effortlessly)
 - 🛡️ **Robust** (never crashes from client input)
 - 🔧 **Maintainable** (easy to add features)
