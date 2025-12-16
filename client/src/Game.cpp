@@ -179,7 +179,6 @@ void Game::render()
         _window.clear(0, 0, 0);
     }
 
-    // Compute mapping from world (map) coords to window coords
     int mapWidth = 800;
     int mapHeight = 600;
     if (_gameState && _gameState->getMapWidth() > 0 &&
@@ -196,8 +195,6 @@ void Game::render()
     float offsetX = (winW - mapWidth * windowScale) / 2.0f;
     float offsetY = (winH - mapHeight * windowScale) / 2.0f;
 
-    // Draw background (background layers already scale to window size at
-    // creation)
     if (_background) {
         _background->draw(_graphics);
     }
@@ -215,7 +212,6 @@ void Game::render()
             if (!spriteToRender) continue;
 
             try {
-                // Apply entity base scale multiplied by windowScale
                 float baseScale = 1.0f;
                 if (entity->spriteScale > 0.0f) baseScale = entity->spriteScale;
                 spriteToRender->setScale(baseScale * windowScale,
@@ -230,7 +226,6 @@ void Game::render()
             }
         }
 
-        // Render explosions on top of entities (pass scale/offset)
         _gameState->render(_graphics, windowScale, offsetX, offsetY);
     }
 
