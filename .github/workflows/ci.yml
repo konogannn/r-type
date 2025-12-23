@@ -1,0 +1,340 @@
+name: Integration / Deployment
+
+on:
+  push:
+    branches: [ main ]
+    tags: 
+      - 'v*.*.*'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  MIRROR_URL: "git@github.com:EpitechPGE3-2025/G-CPP-500-NAN-5-2-rtype-7.git"
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
+jobs:
+  check_repository:
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.new.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if we are in the mirrored repository
+        id: new
+        run: |
+          if [[ "${{ github.repository }}" == *"Epitech"* ]]; then
+            echo "::notice::You are in the Epitech repository"
+            echo "value=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "value=0" >> "$GITHUB_OUTPUT"
+          exit 0
+
+  check_changes:
+    needs: check_repository
+    if: ${{ needs.check_repository.outputs.target == 0 }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      server: ${{ steps.changes.outputs.server }}
+      client: ${{ steps.changes.outputs.client }}
+      docs: ${{ steps.changes.outputs.docs }}
+      all: ${{ steps.changes.outputs.all }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filter changed files
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            server:
+              - 'common/**'
+              - 'server/**'
+              - 'CMakeLists.txt'
+            client:
+              - 'common/**'
+              - 'client/**'
+              - 'CMakeLists.txt'
+            docs:
+              - 'docs/**'
+            all:
+              - '.github/workflows/ci.yml'
+              - 'scripts/**'
+
+  check_formatting:
+    needs: check_changes
+    if: >
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'workflow_dispatch' ||
+      needs.check_changes.outputs.all == 'true' ||
+      needs.check_changes.outputs.server == 'true' ||
+      needs.check_changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'client'
+          - 'common'
+          - 'server'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run clang-format style check for C/C++/Protobuf programs.
+      uses: jidicula/clang-format-action@v4.16.0
+      with:
+        clang-format-version: '18'
+        check-path: ${{ matrix.path }}
+
+  build_server:
+    needs: [check_changes, check_formatting]
+    if: >
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'workflow_dispatch' ||
+      needs.check_changes.outputs.all == 'true' ||
+      needs.check_changes.outputs.server == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        include:
+          - os: ubuntu-latest
+            triplet: x64-linux
+            bin_path: "r-type_server"
+          - os: windows-latest
+            triplet: x64-windows
+            bin_path: "Release/r-type_server.exe"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Support Long Paths (Windows)
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential \
+              libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
+              libgl1-mesa-dev \
+              libglu1-mesa-dev \
+              libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+              libfreetype6-dev
+
+      - name: Restore vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path:
+            ${{ env.VCPKG_ROOT }}
+            ${{ env.VCPKG_ROOT }}/vcpkg_installed
+            build/_deps/vcpkg-*
+          key: server-${{ runner.os }}-vcpkg-${{ matrix.triplet }}-${{ hashFiles('**/vcpkg.json') }}
+
+      - name: Setup vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          if [ ! -d "${{ env.VCPKG_ROOT }}" ]; then
+            git clone https://github.com/microsoft/vcpkg.git
+            ./vcpkg/bootstrap-vcpkg.sh
+          fi
+
+      - name: Setup vcpkg (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if (!(Test-Path vcpkg)) {
+            git clone https://github.com/microsoft/vcpkg.git
+            .\vcpkg\bootstrap-vcpkg.bat
+          }
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build Server
+        run: cmake --build build --config ${{ matrix.build_type }} --target r-type_server --parallel 4
+
+      - name: Run Unit Tests
+        if: runner.os == 'Linux'
+        run: ctest --test-dir build -V
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_server-${{ matrix.os }}
+          path: ${{ matrix.bin_path }}
+
+  build_client:
+    needs: [check_changes, check_formatting]
+    if: >
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'workflow_dispatch' ||
+      needs.check_changes.outputs.all == 'true' ||
+      needs.check_changes.outputs.client == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        include:
+          - os: ubuntu-latest
+            triplet: x64-linux
+            bin_path: "r-type_client"
+          - os: windows-latest
+            triplet: x64-windows
+            bin_path: "Release/r-type_client.exe"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Support Long Paths (Windows)
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential \
+              libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
+              libgl1-mesa-dev \
+              libglu1-mesa-dev \
+              libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+              libfreetype6-dev
+
+      - name: Restore vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path:
+            ${{ env.VCPKG_ROOT }}
+            ${{ env.VCPKG_ROOT }}/vcpkg_installed
+            build/_deps/vcpkg-*
+          key: client-${{ runner.os }}-vcpkg-${{ matrix.triplet }}-${{ hashFiles('**/vcpkg.json') }}
+
+      - name: Setup vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          if [ ! -d "${{ env.VCPKG_ROOT }}" ]; then
+            git clone https://github.com/microsoft/vcpkg.git
+            ./vcpkg/bootstrap-vcpkg.sh
+          fi
+
+      - name: Setup vcpkg (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if (!(Test-Path vcpkg)) {
+            git clone https://github.com/microsoft/vcpkg.git
+            .\vcpkg\bootstrap-vcpkg.bat
+          }
+
+      - name: Configure CMake
+        run:  cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build Client
+        run: cmake --build build --config ${{ matrix.build_type }} --target r-type_client --parallel 4
+
+      - name: Run Unit Tests
+        if: runner.os == 'Linux'
+        run: ctest --test-dir build -V
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_client-${{ matrix.os }}
+          path: ${{ matrix.bin_path }}
+
+  publish_release:
+    needs: [build_server, build_client]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ./artifacts/r-type_server-ubuntu-latest/r-type_server
+            ./artifacts/r-type_server-windows-latest/r-type_server.exe
+            ./artifacts/r-type_client-ubuntu-latest/r-type_client
+            ./artifacts/r-type_client-windows-latest/r-type_client.exe
+
+  build_documentation:
+    needs: check_changes
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (needs.check_changes.outputs.docs == 'true' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: docs
+      - name: Build website
+        run: npm run build
+        working-directory: docs
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/build
+
+  deploy_documentation:
+    needs: build_documentation
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  push_to_mirror:
+    needs: [build_server, build_client]
+    if: github.ref == 'refs/heads/main'
+    name: Push to the mirror repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to mirror
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: ${{ env.MIRROR_URL }}
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
