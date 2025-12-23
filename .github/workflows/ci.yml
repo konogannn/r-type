@@ -97,17 +97,17 @@ jobs:
       needs.check_changes.outputs.all == 'true' ||
       needs.check_changes.outputs.server == 'true'
     strategy:
-          fail-fast: false
-          matrix:
-            os: [ubuntu-latest, windows-latest]
-            build_type: [Release]
-            include:
-              - os: ubuntu-latest
-                triplet: x64-linux
-                bin_path: "r-type_server"
-              - os: windows-latest
-                triplet: x64-windows
-                bin_path: "Release/r-type_server.exe"
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        include:
+          - os: ubuntu-latest
+            triplet: x64-linux
+            bin_path: "r-type_server"
+          - os: windows-latest
+            triplet: x64-windows
+            bin_path: "Release/r-type_server.exe"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -178,17 +178,17 @@ jobs:
       needs.check_changes.outputs.all == 'true' ||
       needs.check_changes.outputs.client == 'true'
     strategy:
-          fail-fast: false
-          matrix:
-            os: [ubuntu-latest, windows-latest]
-            build_type: [Release]
-            include:
-              - os: ubuntu-latest
-                triplet: x64-linux
-                bin_path: "r-type_client"
-              - os: windows-latest
-                triplet: x64-windows
-                bin_path: "Release/r-type_client.exe"
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        include:
+          - os: ubuntu-latest
+            triplet: x64-linux
+            bin_path: "r-type_client"
+          - os: windows-latest
+            triplet: x64-windows
+            bin_path: "Release/r-type_client.exe"
     runs-on: ${{ matrix.os }}
 
     steps:
