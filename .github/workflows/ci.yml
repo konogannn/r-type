@@ -5,8 +5,8 @@ on:
     branches: [ main ]
     tags: 
       - 'v*.*.*'
-    pull_request:
-    workflow_dispatch:
+  pull_request:
+  workflow_dispatch:
 
 env:
   MIRROR_URL: "git@github.com:EpitechPGE3-2025/G-CPP-500-NAN-5-2-rtype-7.git"
@@ -37,7 +37,7 @@ jobs:
     if: ${{ needs.check_repository.outputs.target == 0 }}
     runs-on: ubuntu-latest
     permissions:
-      pull_request: read
+      pull-requests: read
     outputs:
       server: ${{ steps.changes.outputs.server }}
       client: ${{ steps.changes.outputs.client }}
