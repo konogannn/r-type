@@ -25,6 +25,7 @@ namespace rtype {
 struct ClientEntity {
     uint32_t id;
     uint8_t type;
+    uint8_t subtype;
     float x, y;
     float lastY = 0;
     float velocityX = 0.0f;
@@ -37,9 +38,11 @@ struct ClientEntity {
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
 
-    ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
+    ClientEntity(uint32_t entityId, uint8_t entityType, uint8_t entitySubtype,
+                 float posX, float posY)
         : id(entityId),
           type(entityType),
+          subtype(entitySubtype),
           x(posX),
           y(posY),
           sprite(std::make_unique<SpriteSFML>())
@@ -117,7 +120,8 @@ class ClientGameState {
     void onDisconnected();
     void onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                          uint16_t mapHeight);
-    void onEntitySpawn(uint32_t entityId, uint8_t type, float x, float y);
+    void onEntitySpawn(uint32_t entityId, uint8_t type, uint8_t subtype,
+                       float x, float y);
     void onEntityPosition(uint32_t entityId, float x, float y);
     void onEntityDead(uint32_t entityId);
     void onError(const std::string& error);

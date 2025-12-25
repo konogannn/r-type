@@ -24,7 +24,8 @@ ClientGameState::ClientGameState()
         });
     _networkClient->setOnEntitySpawnCallback(
         [this](const EntitySpawnPacket& packet) {
-            onEntitySpawn(packet.entityId, packet.type, packet.x, packet.y);
+            onEntitySpawn(packet.entityId, packet.type, packet.subtype,
+                         packet.x, packet.y);
         });
     _networkClient->setOnEntityPositionCallback(
         [this](const EntityPositionPacket& packet) {
@@ -204,18 +205,19 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
               << ", Map size: " << _mapWidth << "x" << _mapHeight << std::endl;
 }
 
-void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
-                                    float y)
+void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type,
+                                    uint8_t subtype, float x, float y)
 {
     if (_entities.find(entityId) != _entities.end()) {
         return;
     }
 
     std::cout << "[INFO] Entity spawned: ID=" << entityId
-              << ", Type=" << static_cast<int>(type) << ", Position=(" << x
-              << "," << y << ")" << std::endl;
+              << ", Type=" << static_cast<int>(type)
+              << ", Subtype=" << static_cast<int>(subtype) << ", Position=("
+              << x << "," << y << ")" << std::endl;
 
-    auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
+    auto entity = std::make_unique<ClientEntity>(entityId, type, subtype, x, y);
     entity->isLocalPlayer = (entityId == _playerId);
     createEntitySprite(*entity);
     _entities[entityId] = std::move(entity);
@@ -337,14 +339,28 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.currentSprite = entity.sprite.get();
             break;
         }
-        case 2:
-            texturePath = "assets/sprites/boss_3.png";
+        case 2: {
             scale = 1.0f;
+            switch (entity.subtype) {
+                case 0:
+                    texturePath = "assets/sprites/boss_3.png";
+                    break;
+                case 1:
+                    texturePath = "assets/sprites/boss_1.png";
+                    break;
+                case 2:
+                    texturePath = "assets/sprites/boss_2.png";
+                    break;
+                default:
+                    texturePath = "assets/sprites/boss_3.png";
+                    break;
+            }
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
             break;
+        }
         case 3: {
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_player_1.png");
