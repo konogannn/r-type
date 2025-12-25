@@ -46,7 +46,7 @@ class GameEntityFactory {
 
     /**
      * @brief Create an enemy entity
-     * @param type Enemy type (BASIC, FAST, TANK)
+     * @param type Enemy type (BASIC, KAMIKAZE, TANK)
      * @param x Starting X position
      * @param y Starting Y position
      * @return Created enemy entity

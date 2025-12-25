@@ -37,9 +37,9 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
     float health = 30.0f;
 
     switch (type) {
-        case Enemy::Type::FAST:
-            speed = -200.0f;
-            health = 20.0f;
+        case Enemy::Type::KAMIKAZE:
+            speed = 250.0f;
+            health = 15.0f;
             break;
         case Enemy::Type::TANK:
             speed = -50.0f;
@@ -57,7 +57,12 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
     _entityManager.addComponent(enemy, Enemy(type));
     _entityManager.addComponent(enemy, Health(health));
     _entityManager.addComponent(enemy, BoundingBox(56.0f, 56.0f, 0.0f, 0.0f));
-    _entityManager.addComponent(enemy, NetworkEntity(_nextEnemyId++, 2));
+    _entityManager.addComponent(enemy, NetworkEntity(_nextEnemyId++, 2,
+                                                      static_cast<uint8_t>(type)));
+
+    if (type == Enemy::Type::KAMIKAZE) {
+        _entityManager.addComponent(enemy, Following(Following::TargetType::PLAYER));
+    }
 
     return enemy;
 }
