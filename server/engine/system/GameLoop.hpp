@@ -44,10 +44,11 @@ struct NetworkInputCommand {
 struct EntityStateUpdate {
     uint32_t entityId;
     uint8_t entityType;
+    uint8_t subtype;
     float x;
     float y;
-    bool spawned;    // true if new spawn, false if position update
-    bool destroyed;  // true if entity destroyed
+    bool spawned;
+    bool destroyed;
 };
 
 /**

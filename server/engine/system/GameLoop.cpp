@@ -191,6 +191,7 @@ void GameLoop::generateNetworkUpdates()
             EntityStateUpdate update;
             update.entityId = netEntity->entityId;
             update.entityType = netEntity->entityType;
+            update.subtype = netEntity->subtype;
             update.x = pos->x;
             update.y = pos->y;
             update.spawned = netEntity->isFirstSync;
@@ -299,6 +300,7 @@ void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
             EntityStateUpdate update;
             update.entityId = netEntity->entityId;
             update.entityType = netEntity->entityType;
+            update.subtype = netEntity->subtype;
             update.x = pos->x;
             update.y = pos->y;
             update.spawned = true;
