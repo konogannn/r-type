@@ -90,13 +90,15 @@ class NetworkMessage {
      * @brief Create entity spawn packet
      * @param entityId Entity unique ID
      * @param type Entity type (player, enemy, missile...)
+     * @param subtype Entity subtype
      * @param x Initial X position
      * @param y Initial Y position
      * @param sequenceId Sequence ID for the packet
      * @return EntitySpawnPacket ready to send
      */
     static ::EntitySpawnPacket createEntitySpawnPacket(uint32_t entityId,
-                                                       uint8_t type, float x,
+                                                       uint8_t type,
+                                                       uint8_t subtype, float x,
                                                        float y,
                                                        uint32_t sequenceId);
 

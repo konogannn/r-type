@@ -72,6 +72,7 @@ namespace rtype {
 
 ::EntitySpawnPacket NetworkMessage::createEntitySpawnPacket(uint32_t entityId,
                                                             uint8_t type,
+                                                            uint8_t subtype,
                                                             float x, float y,
                                                             uint32_t sequenceId)
 {
@@ -81,6 +82,7 @@ namespace rtype {
     packet.header.sequenceId = sequenceId;
     packet.entityId = entityId;
     packet.type = type;
+    packet.subtype = subtype;
     packet.x = x;
     packet.y = y;
     return packet;
