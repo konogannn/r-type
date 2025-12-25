@@ -142,9 +142,9 @@ struct Player {
 ```cpp
 struct Enemy {
     enum class Type : uint8_t {
-        BASIC = 0,  // Standard enemy
-        FAST = 1,   // Fast, low HP
-        TANK = 2    // Slow, high HP
+        BASIC = 0,
+        KAMIKAZE = 1,
+        TANK = 2
     };
     
     Type type;
@@ -238,7 +238,7 @@ class EnemySpawnerSystem : public ISystem {
 
 **Enemy Types**:
 - **BASIC**: Standard speed (-100 px/s), 30 HP, shoots bullets
-- **FAST**: Double speed (-200 px/s), 20 HP, no shooting
+- **KAMIKAZE**: Follows nearest player (250 px/s), 15 HP
 - **TANK**: Half speed (-50 px/s), 100 HP, shoots bullets
 
 **Configuration**:
