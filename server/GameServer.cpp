@@ -26,6 +26,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
         _gameLoop.getSpawnEvents(), 5.0f));
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::FollowingSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
@@ -151,6 +152,7 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
         for (const auto& playerUpdate : existingPlayers) {
             _networkServer.sendEntitySpawn(clientId, playerUpdate.entityId,
                                            playerUpdate.entityType,
+                                           playerUpdate.subtype,
                                            playerUpdate.x, playerUpdate.y);
 
             Logger::getInstance().log(
@@ -264,6 +266,7 @@ void GameServer::processNetworkUpdates()
                     if (update.spawned) {
                         _networkServer.sendEntitySpawn(0, update.entityId,
                                                        update.entityType,
+                                                       update.subtype,
                                                        update.x, update.y);
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);

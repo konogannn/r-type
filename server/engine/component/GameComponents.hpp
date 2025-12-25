@@ -37,10 +37,10 @@ struct Velocity : public ComponentBase<Velocity> {
  * @brief Player component - Tags an entity as a player
  */
 struct Player : public ComponentBase<Player> {
-    uint32_t clientId;              // Network client ID
-    uint32_t playerId;              // Game player ID
-    float shootCooldown;            // Time until next shot
-    const float shootDelay = 0.2f;  // Minimum time between shots
+    uint32_t clientId;
+    uint32_t playerId;
+    float shootCooldown;
+    const float shootDelay = 0.2f;
 
     Player(uint32_t clientId_ = 0, uint32_t playerId_ = 0);
 };
@@ -49,7 +49,7 @@ struct Player : public ComponentBase<Player> {
  * @brief Enemy component - Tags an entity as an enemy
  */
 struct Enemy : public ComponentBase<Enemy> {
-    enum class Type { BASIC, FAST, TANK, BOSS };
+    enum class Type { BASIC, KAMIKAZE, TANK, BOSS };
 
     Type type;
     float shootCooldown;
@@ -61,8 +61,8 @@ struct Enemy : public ComponentBase<Enemy> {
  * @brief Bullet component - Projectile information
  */
 struct Bullet : public ComponentBase<Bullet> {
-    uint32_t ownerId;  // Entity ID of who fired it (player or enemy)
-    bool fromPlayer;   // true if player bullet, false if enemy bullet
+    uint32_t ownerId;
+    bool fromPlayer;
     float damage;
 
     Bullet(uint32_t ownerId_ = 0, bool fromPlayer_ = true,
@@ -87,12 +87,14 @@ struct Health : public ComponentBase<Health> {
  * @brief NetworkEntity component - Sync with network
  */
 struct NetworkEntity : public ComponentBase<NetworkEntity> {
-    uint32_t entityId;   // Network entity ID
-    uint8_t entityType;  // Type for clients (1=player, 2=enemy, 3=bullet)
-    bool needsSync;      // Flag for position sync
-    bool isFirstSync;    // True for spawn, false for position updates
+    uint32_t entityId;
+    uint8_t entityType;
+    uint8_t subtype;
+    bool needsSync;
+    bool isFirstSync;
 
-    NetworkEntity(uint32_t entityId_ = 0, uint8_t entityType_ = 0);
+    NetworkEntity(uint32_t entityId_ = 0, uint8_t entityType_ = 0,
+                  uint8_t subtype_ = 0);
 };
 
 /**
@@ -119,12 +121,20 @@ struct Lifetime : public ComponentBase<Lifetime> {
 
 /**
  * @brief MarkedForDestruction component - Tags entity for deferred destruction
- *
- * Entities with this component will be destroyed after network notification
- * is sent in the next frame.
  */
 struct MarkedForDestruction : public ComponentBase<MarkedForDestruction> {
     MarkedForDestruction() = default;
+};
+
+/**
+ * @brief Following component - Makes entity follow nearest target
+ */
+struct Following : public ComponentBase<Following> {
+    enum class TargetType { PLAYER, ENEMY };
+
+    TargetType targetType;
+
+    Following(TargetType targetType_ = TargetType::PLAYER);
 };
 
 }  // namespace engine

@@ -41,9 +41,11 @@ void Health::heal(float amount)
     if (current > max) current = max;
 }
 
-NetworkEntity::NetworkEntity(uint32_t entityId_, uint8_t entityType_)
+NetworkEntity::NetworkEntity(uint32_t entityId_, uint8_t entityType_,
+                             uint8_t subtype_)
     : entityId(entityId_),
       entityType(entityType_),
+      subtype(subtype_),
       needsSync(true),
       isFirstSync(true)
 {
@@ -56,5 +58,7 @@ BoundingBox::BoundingBox(float width_, float height_, float offsetX_,
 }
 
 Lifetime::Lifetime(float duration) : remaining(duration) {}
+
+Following::Following(TargetType targetType_) : targetType(targetType_) {}
 
 }  // namespace engine
