@@ -19,8 +19,8 @@
 
 namespace engine {
 
-// Import SpawnEvent type from events
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
+    // Import SpawnEvent type from events
+    using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
                                 SpawnEnemyBulletEvent>;
 
 /**
@@ -221,5 +221,23 @@ class EnemyShootingSystem : public System<Enemy, Position> {
     std::string getName() const override;
     SystemType getType() const override;
     int getPriority() const override;
+};
+
+/**
+ * @brief Following system - Makes entities follow nearest target
+ */
+class FollowingSystem : public ISystem {
+   private:
+    float calculateDistance(const Position& pos1, const Position& pos2);
+
+    const Position* findNearestPlayer(const Position& entityPos,
+                                     const std::vector<Entity>& players,
+                                     EntityManager& entityManager);
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+
+    void update(float deltaTime, EntityManager& entityManager) override;
 };
 }  // namespace engine

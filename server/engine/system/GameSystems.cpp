@@ -7,6 +7,8 @@
 
 #include "GameSystems.hpp"
 
+#include <cmath>
+#include <limits>
 #include <unordered_set>
 
 namespace engine {
@@ -88,7 +90,7 @@ void EnemySpawnerSystem::spawnEnemy()
     Enemy::Type type = Enemy::Type::BASIC;
 
     if (typeRoll == 1) {
-        type = Enemy::Type::FAST;
+        type = Enemy::Type::KAMIKAZE;
     } else if (typeRoll == 2) {
         type = Enemy::Type::TANK;
     }
@@ -509,6 +511,73 @@ void EnemyShootingSystem::processEntity(float deltaTime,
 
     _spawnQueue.push_back(SpawnEnemyBulletEvent{entity.getId(), *pos});
     enemy->shootCooldown = SHOOT_INTERVAL;
+}
+
+std::string FollowingSystem::getName() const { return "FollowingSystem"; }
+
+int FollowingSystem::getPriority() const { return 12; }
+
+float FollowingSystem::calculateDistance(const Position& pos1,
+                                          const Position& pos2)
+{
+    float dx = pos2.x - pos1.x;
+    float dy = pos2.y - pos1.y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+const Position* FollowingSystem::findNearestPlayer(
+    const Position& entityPos, const std::vector<Entity>& players,
+    EntityManager& entityManager)
+{
+    const Position* nearestPos = nullptr;
+    float nearestDistance = std::numeric_limits<float>::max();
+
+    for (const auto& playerEntity : players) {
+        auto* playerPos = entityManager.getComponent<Position>(playerEntity);
+        if (!playerPos) continue;
+
+        float distance = calculateDistance(entityPos, *playerPos);
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestPos = playerPos;
+        }
+    }
+
+    return nearestPos;
+}
+
+void FollowingSystem::update(float /* deltaTime */,
+                              EntityManager& entityManager)
+{
+    auto entities = entityManager.getEntitiesWith<Position, Velocity, Following>();
+    auto players = entityManager.getEntitiesWith<Position, Player>();
+
+    if (players.empty()) {
+        return;
+    }
+
+    for (auto& entity : entities) {
+        auto* following = entityManager.getComponent<Following>(entity);
+        if (!following || following->targetType != Following::TargetType::PLAYER) continue;
+
+        auto* pos = entityManager.getComponent<Position>(entity);
+        auto* vel = entityManager.getComponent<Velocity>(entity);
+        if (!pos || !vel) continue;
+
+        const Position* targetPos =
+            findNearestPlayer(*pos, players, entityManager);
+        if (!targetPos) continue;
+
+        float dx = targetPos->x - pos->x;
+        float dy = targetPos->y - pos->y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance > 0.001f) {
+            float speed = std::sqrt(vel->vx * vel->vx + vel->vy * vel->vy);
+            vel->vx = (dx / distance) * speed;
+            vel->vy = (dy / distance) * speed;
+        }
+    }
 }
 
 }  // namespace engine
