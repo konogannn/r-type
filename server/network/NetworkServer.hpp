@@ -179,13 +179,14 @@ class NetworkServer : public INetworkServer {
      * @param clientId Target client (0 to broadcast)
      * @param entityId Unique entity identifier
      * @param type Entity type (0=Player, 1=Missile, 2=Powerup, 3=Enemy)
+     * @param subtype Entity subtype (for enemies: 0=BASIC, 1=KAMIKAZE, 2=TANK)
      * @param x Initial X position (pixels)
      * @param y Initial Y position (pixels)
      * @return true if sent successfully
      * @return false if client not found
      */
     bool sendEntitySpawn(uint32_t clientId, uint32_t entityId, uint8_t type,
-                         float x, float y) override;
+                         uint8_t subtype, float x, float y) override;
 
     /**
      * @brief Send entity position update

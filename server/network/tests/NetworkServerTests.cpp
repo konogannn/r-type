@@ -233,13 +233,14 @@ TEST_F(NetworkMessageTest, CreateLoginResponsePacket)
 TEST_F(NetworkMessageTest, CreateEntitySpawnPacket)
 {
     auto packet = NetworkMessage::createEntitySpawnPacket(
-        123, EntityType::PLAYER, 100.5f, 200.75f, 161718);
+        123, EntityType::PLAYER, 0, 100.5f, 200.75f, 161718);
 
     EXPECT_EQ(packet.header.opCode, OpCode::S2C_ENTITY_NEW);
     EXPECT_EQ(packet.header.packetSize, sizeof(EntitySpawnPacket));
     EXPECT_EQ(packet.header.sequenceId, 161718u);
     EXPECT_EQ(packet.entityId, 123u);
     EXPECT_EQ(packet.type, EntityType::PLAYER);
+    EXPECT_EQ(packet.subtype, 0u);
     EXPECT_FLOAT_EQ(packet.x, 100.5f);
     EXPECT_FLOAT_EQ(packet.y, 200.75f);
 }

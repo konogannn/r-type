@@ -403,7 +403,7 @@ bool NetworkServer::sendLoginResponse(uint32_t clientId, uint32_t playerId,
 }
 
 bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
-                                    uint8_t type, float x, float y)
+                                    uint8_t type, uint8_t subtype, float x, float y)
 {
     EntitySpawnPacket packet;
     packet.header.opCode = OpCode::S2C_ENTITY_NEW;
@@ -411,6 +411,7 @@ bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
     packet.header.sequenceId = 0;
     packet.entityId = entityId;
     packet.type = type;
+    packet.subtype = subtype;
     packet.x = x;
     packet.y = y;
 
