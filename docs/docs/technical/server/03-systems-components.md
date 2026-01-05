@@ -174,7 +174,7 @@ struct NetworkEntity {
     // Some Entity types
     static constexpr uint8_t PLAYER = 1;
     static constexpr uint8_t PLAYER_MISSILE = 2;
-    static constexpr uint8_t BASIC = 3;
+    static constexpr uint8_t BASIC = 10;
     // ...
 };
 ```
