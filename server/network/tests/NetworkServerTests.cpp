@@ -302,7 +302,7 @@ TEST_F(NetworkMessageTest, StringUtilities)
 
     EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::PLAYER), "PLAYER");
     EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::PLAYER_MISSILE),
-    "PLAYER_MISSILE");
+              "PLAYER_MISSILE");
     EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::BASIC), "BASIC");
     EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::TANK), "TANK");
     EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::FAST), "FAST");

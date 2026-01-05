@@ -53,7 +53,7 @@ bool NetworkClientAsio::connect(const std::string& serverAddress, uint16_t port)
                 _onConnected();
             } catch (const std::exception& e) {
                 std::cerr << "Error in _onConnected callback: " << e.what()
-                        << std::endl;
+                          << std::endl;
             }
         }
         return true;
@@ -100,7 +100,8 @@ bool NetworkClientAsio::sendLogin(const std::string& username)
     packet.header.packetSize = sizeof(::LoginPacket);
     packet.header.sequenceId = getNextSequenceId();
 
-    strncpy_s(packet.username, sizeof(packet.username), username.c_str(), _TRUNCATE);
+    strncpy_s(packet.username, sizeof(packet.username), username.c_str(),
+              _TRUNCATE);
     packet.username[sizeof(packet.username) - 1] = '\0';
 
     return sendPacket(packet);

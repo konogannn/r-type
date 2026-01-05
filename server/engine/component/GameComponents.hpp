@@ -50,7 +50,12 @@ struct Player : public ComponentBase<Player> {
  * @brief Enemy component - Tags an entity as an enemy
  */
 struct Enemy : public ComponentBase<Enemy> {
-    enum class Type { BASIC = EntityType::BASIC, FAST = EntityType::FAST, TANK = EntityType::TANK, BOSS };
+    enum class Type {
+        BASIC = EntityType::BASIC,
+        FAST = EntityType::FAST,
+        TANK = EntityType::TANK,
+        BOSS
+    };
 
     Type type;
     float shootCooldown;
