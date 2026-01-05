@@ -59,6 +59,9 @@ void SoundManager::playSound(const std::string& name)
 {
     auto it = _sounds.find(name);
     if (it != _sounds.end()) {
+        if (_volume <= 0.0f) {
+            return;
+        }
         it->second->play();
     } else {
         std::cerr << "Sound not found: " << name << std::endl;
@@ -69,12 +72,16 @@ void SoundManager::playSoundAtVolume(const std::string& name, float volume)
 {
     auto bufferIt = _buffers.find(name);
     if (bufferIt != _buffers.end()) {
+        if (volume <= 0.0f || _volume <= 0.0f) {
+            return;
+        }
         if (_tempSounds.size() > 10) {
             _tempSounds.clear();
         }
         auto tempSound = std::make_unique<rtype::SoundSFML>();
         tempSound->setBuffer(*bufferIt->second);
-        tempSound->setVolume(volume);
+        float effectiveVolume = volume * (_volume / 100.0f);
+        tempSound->setVolume(effectiveVolume);
         tempSound->play();
         _tempSounds.push_back(std::move(tempSound));
     } else {
