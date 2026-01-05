@@ -11,20 +11,11 @@
 #include <string>
 #include <vector>
 
+#include "EntityType.hpp"
 #include "InputMask.hpp"
 #include "Protocol.hpp"
 
 namespace rtype {
-
-/**
- * @brief Entity type constants
- */
-namespace EntityType {
-constexpr uint8_t PLAYER = 1;
-constexpr uint8_t BYDOS = 2;
-constexpr uint8_t MISSILE = 3;
-}  // namespace EntityType
-
 /**
  * @brief Utility class for network message operations
  * Shared between client and server

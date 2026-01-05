@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 
 # Create network library
 add_library(network STATIC
+    EntityType.hpp
     InputMask.hpp
     INetworkBase.hpp
     INetworkClient.hpp
