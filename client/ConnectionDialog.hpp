@@ -1,0 +1,121 @@
+/*
+** EPITECH PROJECT, 2025
+** r-type
+** File description:
+** ConnectionDialog
+*/
+
+#pragma once
+
+#include <functional>
+#include <string>
+
+#include "Button.hpp"
+#include "InputField.hpp"
+#include "wrapper/graphics/GraphicsSFML.hpp"
+#include "wrapper/input/InputSFML.hpp"
+
+namespace rtype {
+
+/**
+ * @brief Dialog for entering server connection details
+ */
+class ConnectionDialog {
+   public:
+    /**
+     * @brief Construct a new ConnectionDialog
+     * @param graphics Graphics renderer reference
+     * @param input Input handler reference
+     * @param windowWidth Width of the window
+     * @param windowHeight Height of the window
+     */
+    ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
+                     float windowWidth, float windowHeight);
+
+    /**
+     * @brief Update the dialog state
+     * @param mouseX Mouse X position
+     * @param mouseY Mouse Y position
+     * @param isMousePressed True if mouse button is pressed
+     * @return true if user clicked Connect button
+     */
+    bool update(int mouseX, int mouseY, bool isMousePressed);
+
+    /**
+     * @brief Handle text input for active input fields
+     * @param text The text character entered
+     */
+    void handleTextInput(char text);
+
+    /**
+     * @brief Handle key press events
+     * @param key The key that was pressed
+     */
+    void handleKeyPress(Key key);
+
+    /**
+     * @brief Render the dialog
+     * @param scale UI scale factor
+     * @param fontPath Path to the font file
+     */
+    void render(float scale, const std::string& fontPath);
+
+    /**
+     * @brief Check if any input field is active
+     */
+    bool isAnyInputFieldActive() const;
+
+    /**
+     * @brief Get the server address entered by the user
+     */
+    std::string getServerAddress() const { return _inputFields[0].getValue(); }
+
+    /**
+     * @brief Get the server port entered by the user
+     */
+    int getServerPort() const;
+
+    /**
+     * @brief Check if the dialog action was cancelled
+     */
+    bool wasCancelled() const { return _cancelled; }
+
+    /**
+     * @brief Reset the dialog state
+     */
+    void reset()
+    {
+        _cancelled = false;
+        _confirmed = false;
+    }
+
+    /**
+     * @brief Set the error message to display
+     */
+    void setErrorMessage(const std::string& message)
+    {
+        _errorMessage = message;
+    }
+
+   private:
+    GraphicsSFML& _graphics;
+    InputSFML& _input;
+
+    float _windowWidth;
+    float _windowHeight;
+    float _dialogWidth;
+    float _dialogHeight;
+    float _dialogX;
+    float _dialogY;
+
+    InputField _inputFields[2];
+    Button _connectButton;
+    Button _cancelButton;
+
+    bool _cancelled;
+    bool _confirmed;
+    std::string _errorMessage;
+    std::string _fontPath;
+};
+
+}  // namespace rtype
