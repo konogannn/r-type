@@ -101,7 +101,8 @@ bool NetworkClientAsio::sendLogin(const std::string& username)
     packet.header.sequenceId = getNextSequenceId();
 
 #ifdef UNIX
-    strncpy(packet.username, username.c_str(), sizeof(packet.username));
+    std::strncpy(packet.username, username.c_str(),
+                 sizeof(packet.username) - 1);
 #else
     strncpy_s(packet.username, sizeof(packet.username), username.c_str(),
               _TRUNCATE);
