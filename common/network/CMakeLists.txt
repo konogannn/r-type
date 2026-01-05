@@ -3,12 +3,13 @@ cmake_minimum_required(VERSION 3.16)
 
 # Create network library
 add_library(network STATIC
-    NetworkMessage.cpp
-    NetworkMessage.hpp
-    Protocol.hpp
+    InputMask.hpp
     INetworkBase.hpp
     INetworkClient.hpp
     INetworkServer.hpp
+    NetworkMessage.cpp
+    NetworkMessage.hpp
+    Protocol.hpp
 )
 
 # Include directory for this library

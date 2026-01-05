@@ -11,20 +11,10 @@
 #include <string>
 #include <vector>
 
+#include "InputMask.hpp"
 #include "Protocol.hpp"
 
 namespace rtype {
-
-/**
- * @brief Input mask constants for easier input handling
- */
-namespace InputMask {
-constexpr uint8_t UP = 1;
-constexpr uint8_t DOWN = 2;
-constexpr uint8_t LEFT = 4;
-constexpr uint8_t RIGHT = 8;
-constexpr uint8_t SHOOT = 16;
-}  // namespace InputMask
 
 /**
  * @brief Entity type constants
