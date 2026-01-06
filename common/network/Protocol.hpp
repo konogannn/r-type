@@ -52,6 +52,10 @@ enum OpCode : uint8_t {
     S2C_ENTITY_DEAD = 13,  ///< Despawn/Destroy an entity.
     S2C_MAP = 14,          ///< Map information (unused/reserved).
     S2C_SCORE_UPDATE = 15,  ///< Update current game score.
+    S2C_BOSS_SPAWN = 16,  ///< Boss has spawned (trigger warning/music change).
+    S2C_BOSS_STATE = 17,  ///< Boss state update (HP, phase).
+    S2C_BOSS_DEATH = 18,  ///< Boss defeated (trigger victory sequence).
+    S2C_HEALTH_UPDATE = 19,  ///< Entity health update (player or boss).
 };
 
 /**
@@ -161,6 +165,54 @@ struct MapPacket {
 struct ScoreUpdatePacket {
     Header header;
     uint32_t score;  ///< Current game score.
+};
+
+/**
+ * @brief Packet to notify boss spawn.
+ * OpCode: S2C_BOSS_SPAWN
+ */
+struct BossSpawnPacket {
+    Header header;
+    uint32_t bossEntityId;  ///< ID of the boss entity.
+    float x;                ///< Initial X position.
+    float y;                ///< Initial Y position.
+    uint8_t bossType;       ///< Boss type/variant (for different boss models).
+};
+
+/**
+ * @brief Packet to update boss state.
+ * OpCode: S2C_BOSS_STATE
+ */
+struct BossStatePacket {
+    Header header;
+    uint32_t bossEntityId;  ///< ID of the boss entity.
+    float currentHP;        ///< Current health.
+    float maxHP;            ///< Maximum health (scaled by player count).
+    uint8_t phase;  ///< Current phase (0=Entry, 1=Phase1, 2=Phase2, 3=Enraged,
+                    ///< 4=Death).
+    uint8_t
+        isFlashing;  ///< 1 if boss is flashing (damage feedback), 0 otherwise.
+};
+
+/**
+ * @brief Packet to notify boss death.
+ * OpCode: S2C_BOSS_DEATH
+ */
+struct BossDeathPacket {
+    Header header;
+    uint32_t bossEntityId;  ///< ID of the defeated boss.
+    uint32_t score;         ///< Score reward for defeating boss.
+};
+
+/**
+ * @brief Packet to update entity health.
+ * OpCode: S2C_HEALTH_UPDATE
+ */
+struct HealthUpdatePacket {
+    Header header;
+    uint32_t entityId;    ///< ID of the entity (player or boss).
+    float currentHealth;  ///< Current health.
+    float maxHealth;      ///< Maximum health.
 };
 
 #pragma pack(pop)
