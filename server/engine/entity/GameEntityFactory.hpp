@@ -76,10 +76,10 @@ class GameEntityFactory {
     uint32_t getNextBulletId() { return _nextBulletId++; }
 
     /**
-     * @brief Get the next available enemy ID
+     * @brief Allocate and return the next available enemy ID
      * @return Next enemy ID
      */
-    uint32_t getNextEnemyId() const { return _nextEnemyId; }
+    uint32_t getNextEnemyId() { return _nextEnemyId++; }
 
     /**
      * @brief Create a boss entity with multiple parts
