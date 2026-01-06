@@ -50,7 +50,7 @@ enum class Key {
     Escape,
     Space,
     Enter,
-    Return,
+    Return = Enter,
     Backspace,
     Tab,
     Left,
