@@ -47,6 +47,13 @@ class ISprite {
     virtual void setRotation(float angle) = 0;
 
     /**
+     * @brief Set the origin point for transformations
+     * @param x X coordinate of the origin
+     * @param y Y coordinate of the origin
+     */
+    virtual void setOrigin(float x, float y) = 0;
+
+    /**
      * @brief Move the sprite
      * @param offsetX X offset
      * @param offsetY Y offset
