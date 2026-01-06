@@ -60,8 +60,10 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
 
     std::string serverAddress = _config.getString("serverAddress", "127.0.0.1");
     int serverPort = _config.getInt("serverPort", 8080);
-    _inputFields[0].setValue(serverAddress);
-    _inputFields[1].setValue(std::to_string(serverPort));
+    _inputFields[static_cast<size_t>(SettingsInputField::ServerAddress)]
+        .setValue(serverAddress);
+    _inputFields[static_cast<size_t>(SettingsInputField::ServerPort)]
+        .setValue(std::to_string(serverPort));
 
     updateLayout();
 }
@@ -608,13 +610,28 @@ void SettingsMenu::saveSettings()
     _keyBinding.saveToConfig();
 
     if (_inputFields.size() >= 2) {
-        _config.setString("serverAddress", _inputFields[0].getValue());
+        _config.setString(
+            "serverAddress",
+            _inputFields[static_cast<size_t>(SettingsInputField::ServerAddress)]
+                .getValue());
+        const std::string portStr =
+            _inputFields[static_cast<size_t>(SettingsInputField::ServerPort)]
+                .getValue();
+        int port = 8080;
         try {
-            int port = std::stoi(_inputFields[1].getValue());
-            _config.setInt("serverPort", port);
-        } catch (...) {
-            _config.setInt("serverPort", 8080);
+            port = std::stoi(portStr);
+            if (port < 1 || port > 65535) {
+                std::cerr << "Invalid server port '" << portStr
+                          << "' (must be between 1-65535). Using default port 8080."
+                          << std::endl;
+                port = 8080;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Invalid server port '" << portStr
+                      << "'. Using default port 8080. Error: " << e.what()
+                      << std::endl;
         }
+        _config.setInt("serverPort", port);
     }
 
     _config.save();

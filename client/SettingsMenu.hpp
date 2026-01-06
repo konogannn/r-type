@@ -81,6 +81,8 @@ class SettingsMenu {
     void saveSettings();
 
    private:
+    enum class SettingsInputField { ServerAddress = 0, ServerPort = 1 };
+
     WindowSFML& _window;
     GraphicsSFML& _graphics;
     InputSFML& _input;
