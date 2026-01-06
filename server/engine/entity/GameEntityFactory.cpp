@@ -107,6 +107,7 @@ Entity GameEntityFactory::createEnemyBullet(EntityId ownerId,
 Entity GameEntityFactory::createBoss(uint8_t bossType, float x, float y,
                                      uint32_t playerCount)
 {
+    (void)bossType;
     Entity boss = _entityManager.createEntity();
 
     float baseHealth = 1000.0f;  // Reduced from 2000 to 800
@@ -168,9 +169,8 @@ Entity GameEntityFactory::createBossPart(uint32_t bossEntityId,
 
     if (vulnerable) {
         _entityManager.addComponent(part, Health(100.0f));
-        _entityManager.addComponent(
-            part,
-            BoundingBox(48.0f, 34.5f, 0.0f, 0.0f));
+        _entityManager.addComponent(part,
+                                    BoundingBox(48.0f, 34.5f, 0.0f, 0.0f));
     }
 
     return part;
@@ -178,6 +178,7 @@ Entity GameEntityFactory::createBossPart(uint32_t bossEntityId,
 
 Entity GameEntityFactory::createExplosion(EntityId ownerId, const Position& pos)
 {
+    (void)ownerId;
     Entity explosion = _entityManager.createEntity();
 
     _entityManager.addComponent(explosion, Position(pos.x, pos.y));
