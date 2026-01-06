@@ -229,8 +229,7 @@ void Game::render()
         const auto& entities = _gameState->getAllEntities();
 
         for (const auto& [id, entity] : entities) {
-            if (!entity || entity->type == 7)
-                continue;
+            if (!entity || entity->type == 7) continue;
 
             rtype::ISprite* spriteToRender = entity->currentSprite
                                                  ? entity->currentSprite
@@ -255,8 +254,7 @@ void Game::render()
 
                     switch (entity->type) {
                         case 1:
-                            hitboxWidth =
-                                80.0f;
+                            hitboxWidth = 80.0f;
                             hitboxHeight = 68.0f;
                             break;
                         case 2:
@@ -264,13 +262,11 @@ void Game::render()
                             hitboxHeight = 56.0f;
                             break;
                         case 3:
-                            hitboxWidth =
-                                114.0f;
+                            hitboxWidth = 114.0f;
                             hitboxHeight = 36.0f;
                             break;
                         case 4:
-                            hitboxWidth =
-                                114.0f;
+                            hitboxWidth = 114.0f;
                             hitboxHeight = 36.0f;
                             break;
                         case 5:
@@ -304,8 +300,7 @@ void Game::render()
         }
 
         for (const auto& [id, entity] : entities) {
-            if (!entity || entity->type != 7)
-                continue;
+            if (!entity || entity->type != 7) continue;
 
             rtype::ISprite* spriteToRender = entity->sprite.get();
             if (!spriteToRender) continue;
@@ -360,8 +355,7 @@ void Game::render()
                                 255);
         _graphics.drawRectangle(barX - 2, barY + barHeight, barWidth + 4, 2,
                                 255, 255, 255);
-        _graphics.drawRectangle(barX - 2, barY, 2, barHeight, 255, 255,
-                                255);
+        _graphics.drawRectangle(barX - 2, barY, 2, barHeight, 255, 255, 255);
         _graphics.drawRectangle(barX + barWidth, barY, 2, barHeight, 255, 255,
                                 255);
     }
@@ -382,9 +376,7 @@ void Game::render()
             float healthBarWidth = barWidth * healthPercent;
 
             int r = 255;
-            int g = healthPercent < 0.3f
-                        ? 50
-                        : 0;
+            int g = healthPercent < 0.3f ? 50 : 0;
             int b = 0;
 
             _graphics.drawRectangle(barX, barY, healthBarWidth, barHeight, r, g,
