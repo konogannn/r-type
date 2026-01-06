@@ -13,6 +13,15 @@
 namespace rtype {
 
 /**
+ * @brief Input field type for validation rules
+ */
+enum class InputFieldType {
+    Default,    // Alphanumeric + dots + colons
+    ServerIP,   // Digits and dots only (IP address)
+    ServerPort  // Digits only (port number)
+};
+
+/**
  * @brief Text input field for settings menu
  */
 class InputField {
@@ -25,9 +34,11 @@ class InputField {
      * @param height Height of the input field
      * @param label Label text to display
      * @param initialValue Initial value for the field
+     * @param type Type of input field for validation rules
      */
     InputField(float x, float y, float width, float height,
-               const std::string& label, const std::string& initialValue = "");
+               const std::string& label, const std::string& initialValue = "",
+               InputFieldType type = InputFieldType::Default);
 
     /**
      * @brief Update the input field state
@@ -106,6 +117,7 @@ class InputField {
     bool _isHovered;
     bool _wasPressed;
     size_t _maxLength = 30;
+    InputFieldType _type;
     std::function<void(const std::string&)> _onChange;
 };
 

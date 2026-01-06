@@ -14,7 +14,7 @@ namespace rtype {
 
 InputField::InputField(float x, float y, float width, float height,
                        const std::string& label,
-                       const std::string& initialValue)
+                       const std::string& initialValue, InputFieldType type)
     : _x(x),
       _y(y),
       _width(width),
@@ -23,7 +23,8 @@ InputField::InputField(float x, float y, float width, float height,
       _value(initialValue),
       _isActive(false),
       _isHovered(false),
-      _wasPressed(false)
+      _wasPressed(false),
+      _type(type)
 {
 }
 
@@ -72,15 +73,25 @@ void InputField::handleTextInput(char character)
     if (!_isActive) {
         return;
     }
+
+    // Validate character based on field type instead of label text
     bool allow = false;
-    if (_label == "Server IP") {
-        allow = (character >= '0' && character <= '9') || character == '.';
-    } else if (_label == "Server Port") {
-        allow = (character >= '0' && character <= '9');
-    } else {
-        allow = ((character >= '0' && character <= '9') || character == '.' ||
-                 character == ':' || (character >= 'a' && character <= 'z') ||
-                 (character >= 'A' && character <= 'Z'));
+    switch (_type) {
+        case InputFieldType::ServerIP:
+            // IP address: digits and dots only
+            allow = (character >= '0' && character <= '9') || character == '.';
+            break;
+        case InputFieldType::ServerPort:
+            // Port number: digits only
+            allow = (character >= '0' && character <= '9');
+            break;
+        case InputFieldType::Default:
+        default:
+            // Default: alphanumeric, dots, and colons
+            allow = ((character >= '0' && character <= '9') || character == '.' ||
+                     character == ':' || (character >= 'a' && character <= 'z') ||
+                     (character >= 'A' && character <= 'Z'));
+            break;
     }
 
     if (allow) {
