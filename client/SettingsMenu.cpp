@@ -115,8 +115,9 @@ void SettingsMenu::setupInputFields()
 {
     _inputFields.clear();
     _inputFields.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, "Server IP",
-                              "127.0.0.1");
-    _inputFields.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, "Server Port", "8080");
+                              "127.0.0.1", InputFieldType::ServerIP);
+    _inputFields.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, "Server Port", "8080",
+                              InputFieldType::ServerPort);
 }
 
 void SettingsMenu::updateLayout()
@@ -227,9 +228,11 @@ void SettingsMenu::updateLayout()
     for (size_t i = 0; i < _inputFields.size(); i++) {
         std::string label = _inputFields[i].getLabel();
         std::string value = _inputFields[i].getValue();
+        // Preserve the field type when recreating (0=ServerIP, 1=ServerPort)
+        InputFieldType type = (i == 0) ? InputFieldType::ServerIP : InputFieldType::ServerPort;
         _inputFields[i] =
             InputField(centerColX, inputFieldStartY + i * inputFieldSpacing,
-                       inputFieldWidth, inputFieldHeight, label, value);
+                       inputFieldWidth, inputFieldHeight, label, value, type);
     }
 
     float backButtonWidth = 200.0f * scaleW;
