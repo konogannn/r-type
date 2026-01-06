@@ -45,7 +45,7 @@ bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed)
     bool previousHovered = _isHovered;
     _isHovered = isHovered(mouseX, mouseY);
     if (_isHovered && !_wasHovered) {
-        SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+        SoundManager::getInstance().playSoundAtVolume("click", HOVER_SOUND_VOLUME);
     }
     _wasHovered = _isHovered;
     _targetScale = _isHovered ? HOVER_SCALE : NORMAL_SCALE;

@@ -91,6 +91,7 @@ class Button {
     static constexpr float HOVER_SCALE = 1.05f;
     static constexpr float NORMAL_SCALE = 1.0f;
     static constexpr float ANIMATION_SPEED = 8.0f;
+    static constexpr float HOVER_SOUND_VOLUME = 30.0f;
 };
 
 }  // namespace rtype
