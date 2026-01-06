@@ -174,7 +174,7 @@ void ClientGameState::render(IGraphics& graphics, float windowScale,
 
 void ClientGameState::sendInput(uint8_t inputMask)
 {
-    if (!_gameStarted || !isConnected()) {
+    if (!_gameStarted || !isConnected() || inputMask == 0) {
         return;
     }
 
@@ -311,17 +311,19 @@ void ClientGameState::onEntityDead(uint32_t entityId)
                         "assets/sprites/blowup_1.png"),
                     entity->x - 16, entity->y, 1.0f, 32, 32, 6));
                 break;
-            case 3:  // Player Projectile
+            case 2:
                 _explosions.push_back(std::make_unique<Explosion>(
                     utils::PathHelper::getAssetPath(
                         "assets/sprites/blowup_1.png"),
                     entity->x + 16, entity->y, 1.0f, 32, 32, 6));
                 break;
-            case 2:  // Enemy/Boss
-                _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_2.png"),
-                    entity->x, entity->y, 2.0f, 64, 64, 8));
+            default:
+                if (entity->type >= 10 || entity->type == 5) {
+                    _explosions.push_back(std::make_unique<Explosion>(
+                        utils::PathHelper::getAssetPath(
+                            "assets/sprites/blowup_2.png"),
+                        entity->x, entity->y, 2.0f, 64, 64, 8));
+                }
                 break;
         }
     }
@@ -378,15 +380,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.currentSprite = entity.sprite.get();
             break;
         }
-        case 2:
-            texturePath = "assets/sprites/boss_3.png";
-            scale = 1.0f;
-            if (entity.sprite->loadTexture(texturePath)) {
-                entity.sprite->setScale(scale, scale);
-            }
-            entity.spriteScale = scale;
-            break;
-        case 3: {
+        case 2: {
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_player_1.png");
             scale = 6.0f;
@@ -469,8 +463,13 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         default:
-            texturePath = "assets/sprites/players/player1-1.png";
-            scale = 2.0f;
+            if (entity.type >= 10) {
+                texturePath = "assets/sprites/boss_3.png";
+                scale = 1.0f;
+            } else {
+                texturePath = "assets/sprites/players/player1-1.png";
+                scale = 2.0f;
+            }
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
             }
