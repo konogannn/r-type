@@ -42,7 +42,7 @@ struct Player : public ComponentBase<Player> {
     uint32_t clientId;               // Network client ID
     uint32_t playerId;               // Game player ID
     float shootCooldown;             // Time until next shot
-    const float shootDelay = 0.25f;  // Minimum time between shots (increased)
+    const float shootDelay = 0.25f;  // Minimum time between shots
 
     Player(uint32_t clientId_ = 0, uint32_t playerId_ = 0);
 };
@@ -71,9 +71,18 @@ struct Bullet : public ComponentBase<Bullet> {
     uint32_t ownerId;  // Entity ID of who fired it (player or enemy)
     bool fromPlayer;   // true if player bullet, false if enemy bullet
     float damage;
+    bool isExplosion;  // true if this is an explosion effect, not a real bullet
+    uint8_t explosionType;  // Type of explosion (1 or 2) if isExplosion is true
 
     Bullet(uint32_t ownerId_ = 0, bool fromPlayer_ = true,
-           float damage_ = 10.0f);
+           float damage_ = 10.0f)
+        : ownerId(ownerId_),
+          fromPlayer(fromPlayer_),
+          damage(damage_),
+          isExplosion(false),
+          explosionType(0)
+    {
+    }
 };
 
 /**
