@@ -57,10 +57,7 @@ LifetimeSystem::getDestroyedEntities() const
     return _entitiesToDestroy;
 }
 
-void LifetimeSystem::clearDestroyedEntities()
-{
-    _entitiesToDestroy.clear();
-}
+void LifetimeSystem::clearDestroyedEntities() { _entitiesToDestroy.clear(); }
 
 void LifetimeSystem::processEntity(float deltaTime, Entity& entity,
                                    Lifetime* lifetime)
@@ -339,16 +336,6 @@ void CollisionSystem::handlePlayerBulletVsBoss(
             auto* bossBox = entityManager.getComponent<BoundingBox>(bossEntity);
             if (!bossPos || !bossHealth || !bossBox) continue;
 
-            float bulletLeft = bulletPos->x + bulletBox->offsetX;
-            float bulletRight = bulletLeft + bulletBox->width;
-            float bulletTop = bulletPos->y + bulletBox->offsetY;
-            float bulletBottom = bulletTop + bulletBox->height;
-
-            float bossLeft = bossPos->x + bossBox->offsetX;
-            float bossRight = bossLeft + bossBox->width;
-            float bossTop = bossPos->y + bossBox->offsetY;
-            float bossBottom = bossTop + bossBox->height;
-
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
                 bossHealth->takeDamage(bullet->damage);
 
@@ -379,16 +366,6 @@ void CollisionSystem::handlePlayerBulletVsBoss(
             auto* partPos = entityManager.getComponent<Position>(partEntity);
             auto* partBox = entityManager.getComponent<BoundingBox>(partEntity);
             if (!part || !partPos || !partBox) continue;
-
-            float bulletLeft = bulletPos->x + bulletBox->offsetX;
-            float bulletRight = bulletLeft + bulletBox->width;
-            float bulletTop = bulletPos->y + bulletBox->offsetY;
-            float bulletBottom = bulletTop + bulletBox->height;
-
-            float partLeft = partPos->x + partBox->offsetX;
-            float partRight = partLeft + partBox->width;
-            float partTop = partPos->y + partBox->offsetY;
-            float partBottom = partTop + partBox->height;
 
             if (checkCollision(*bulletPos, *bulletBox, *partPos, *partBox)) {
                 Entity* bossEntity =
@@ -458,8 +435,7 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
                     std::cout << "[COLLISION] Player " << playerEntity.getId()
                               << " set deathTimer (enemy collision)"
                               << std::endl;
-                    playerHealth->deathTimer =
-                        0.5f;
+                    playerHealth->deathTimer = 0.5f;
                 }
 
                 break;
@@ -507,8 +483,7 @@ void CollisionSystem::handleEnemyBulletVsPlayer(
 
                 if (!playerHealth->isAlive() &&
                     playerHealth->deathTimer < 0.0f) {
-                    playerHealth->deathTimer =
-                        0.5f;
+                    playerHealth->deathTimer = 0.5f;
                 }
 
                 break;
