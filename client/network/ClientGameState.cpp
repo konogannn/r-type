@@ -36,6 +36,11 @@ ClientGameState::ClientGameState()
         _score = score;
         std::cout << "[INFO] Score updated: " << score << std::endl;
     });
+    _networkClient->setOnHealthUpdateCallback(
+        [this](const HealthUpdatePacket& packet) {
+            onHealthUpdate(packet.entityId, packet.currentHealth,
+                           packet.maxHealth);
+        });
     _networkClient->setOnErrorCallback(
         [this](const std::string& error) { onError(error); });
 }
@@ -126,6 +131,20 @@ void ClientGameState::update(float deltaTime)
                 entity->currentSprite = entity->sprite.get();
             }
         }
+
+        if (entity->type == 7 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = entity->animFrameCount - 1;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+            }
+        }
     }
 
     // Update explosions
@@ -188,6 +207,7 @@ void ClientGameState::onConnected()
 void ClientGameState::onDisconnected()
 {
     std::cout << "[INFO] Disconnected from server" << std::endl;
+    _playerId = 0;
     _gameStarted = false;
     _entities.clear();
 }
@@ -202,6 +222,17 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
 
     std::cout << "[INFO] Login successful! Player ID: " << _playerId
               << ", Map size: " << _mapWidth << "x" << _mapHeight << std::endl;
+
+    for (auto& [id, entity] : _entities) {
+        if (entity) {
+            bool wasLocalPlayer = entity->isLocalPlayer;
+            entity->isLocalPlayer = (id == _playerId);
+            if (entity->isLocalPlayer && !wasLocalPlayer) {
+                std::cout << "[INFO] Marked entity " << id << " as local player"
+                          << std::endl;
+            }
+        }
+    }
 }
 
 void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
@@ -298,6 +329,16 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     removeEntity(entityId);
 }
 
+void ClientGameState::onHealthUpdate(uint32_t entityId, float currentHealth,
+                                     float maxHealth)
+{
+    auto* entity = getEntity(entityId);
+    if (entity) {
+        entity->health = currentHealth;
+        entity->maxHealth = maxHealth;
+    }
+}
+
 void ClientGameState::onError(const std::string& error)
 {
     _lastError = error;
@@ -365,6 +406,68 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.spriteScale = scale;
             break;
         }
+        case 5: {
+            texturePath = "assets/sprites/boss_2.png";
+            scale = 2.0f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/boss_3.png";
+                if (!entity.sprite->loadTexture(texturePath)) {
+                    std::cout
+                        << "[WARN] Could not load boss sprites, using fallback"
+                        << std::endl;
+                }
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 6: {
+            texturePath = "assets/sprites/turret.png";
+            scale = 1.5f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/boss_3.png";
+                scale = 0.8f;
+                entity.sprite->loadTexture(texturePath);
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 7: {
+            int explosionType = static_cast<int>(-entity.velocityX);
+            if (explosionType == 1) {
+                texturePath = "assets/sprites/blowup_1.png";
+            } else {
+                texturePath = "assets/sprites/blowup_2.png";
+            }
+            scale = 2.0f;
+
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/bullet1.png";
+                entity.sprite->loadTexture(texturePath);
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+
+            if (explosionType == 1) {
+                entity.animFrameCount = 6;
+                entity.animFrameWidth = 32;
+                entity.animFrameHeight = 32;
+                entity.animFrameDuration = 0.08f;
+            } else {
+                entity.animFrameCount = 8;
+                entity.animFrameWidth = 64;
+                entity.animFrameHeight = 64;
+                entity.animFrameDuration = 0.06f;
+            }
+            entity.animCurrentFrame = 0;
+            entity.animFrameTime = 0.0f;
+            entity.sprite->setTextureRect(0, 0, entity.animFrameWidth,
+                                          entity.animFrameHeight);
+            entity.velocityX = 0.0f;
+            entity.velocityY = 0.0f;
+            break;
+        }
         default:
             texturePath = "assets/sprites/players/player1-1.png";
             scale = 2.0f;
@@ -382,6 +485,48 @@ void ClientGameState::removeEntity(uint32_t entityId)
     if (it != _entities.end()) {
         _entities.erase(it);
     }
+}
+
+bool ClientGameState::isGameStarted() const { return _gameStarted; }
+
+float ClientGameState::getPlayerHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->isLocalPlayer && entity->type == 1) {
+            return entity->health;
+        }
+    }
+    return 0.0f;
+}
+
+float ClientGameState::getPlayerMaxHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->isLocalPlayer && entity->type == 1) {
+            return entity->maxHealth;
+        }
+    }
+    return 100.0f;
+}
+
+float ClientGameState::getBossHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->type == 5) {
+            return entity->health;
+        }
+    }
+    return 0.0f;
+}
+
+float ClientGameState::getBossMaxHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->type == 5) {
+            return entity->maxHealth;
+        }
+    }
+    return 0.0f;
 }
 
 }  // namespace rtype
