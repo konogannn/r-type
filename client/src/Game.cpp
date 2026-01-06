@@ -157,7 +157,8 @@ void Game::update(float deltaTime)
         bool isMousePressed =
             _input.isMouseButtonPressed(rtype::MouseButton::Left);
 
-        if (_connectionDialog->update(mouseX, mouseY, isMousePressed)) {
+        if (_connectionDialog->update(mouseX, mouseY, isMousePressed,
+                                      deltaTime)) {
             if (_connectionDialog->wasCancelled()) {
                 _running = false;
                 _returnToMenu = true;
