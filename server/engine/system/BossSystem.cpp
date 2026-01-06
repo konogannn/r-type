@@ -17,10 +17,7 @@ namespace engine {
 
 std::string BossSystem::getName() const { return "BossSystem"; }
 
-int BossSystem::getPriority() const
-{
-    return 15;
-}
+int BossSystem::getPriority() const { return 15; }
 
 void BossSystem::markForDestruction(EntityId entityId, uint32_t networkId,
                                     uint8_t type)
@@ -88,6 +85,8 @@ void BossSystem::processEntity(float deltaTime, Entity& entity, Boss* boss,
 void BossSystem::handleEntryPhase(float deltaTime, Entity& entity, Boss* boss,
                                   Health* health, Position* pos)
 {
+    (void)entity;
+    (void)health;
     if (pos->x > 1400.0f) {
         pos->x -= 50.0f * deltaTime;
     } else {
@@ -100,6 +99,8 @@ void BossSystem::handleEntryPhase(float deltaTime, Entity& entity, Boss* boss,
 void BossSystem::handlePhase1(float deltaTime, Entity& entity, Boss* boss,
                               Health* health, Position* pos)
 {
+    (void)entity;
+    (void)health;
     float oscillation = std::sin(boss->phaseTimer * 2.0f) * 100.0f;
     pos->y = 400.0f + oscillation;
 
@@ -123,6 +124,9 @@ void BossSystem::handlePhase1(float deltaTime, Entity& entity, Boss* boss,
 void BossSystem::handlePhase2(float deltaTime, Entity& entity, Boss* boss,
                               Health* health, Position* pos)
 {
+    (void)deltaTime;
+    (void)entity;
+    (void)health;
     boss->attackInterval = 1.5f;
 
     float radiusX = 150.0f;
@@ -141,6 +145,9 @@ void BossSystem::handlePhase2(float deltaTime, Entity& entity, Boss* boss,
 void BossSystem::handleEnragedPhase(float deltaTime, Entity& entity, Boss* boss,
                                     Health* health, Position* pos)
 {
+    (void)deltaTime;
+    (void)entity;
+    (void)health;
     boss->attackInterval = 0.8f;
 
     float radiusX = 200.0f;
@@ -163,6 +170,7 @@ void BossSystem::handleEnragedPhase(float deltaTime, Entity& entity, Boss* boss,
 void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
                                   Health* health, Position* pos)
 {
+    (void)health;
     std::cout << "[BOSS] handleDeathPhase: destructionStarted="
               << boss->destructionStarted << " deathTimer=" << boss->deathTimer
               << " explosionCount=" << boss->explosionCount << std::endl;
@@ -207,8 +215,7 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
         }
 
         SpawnEnemyBulletEvent explosionEvent;
-        explosionEvent.ownerId =
-            (rand() % 2) + 1;
+        explosionEvent.ownerId = (rand() % 2) + 1;
         explosionEvent.x = pos->x + offsetX;
         explosionEvent.y = pos->y + offsetY;
         explosionEvent.vx = 0.0f;
@@ -283,6 +290,7 @@ void BossSystem::checkPhaseTransition(Boss* boss, Health* health)
 
 void BossSystem::shootSpreadPattern(Position* pos, float angleOffset)
 {
+    (void)angleOffset;  // Reserved for future pattern variations
     const int bulletCount = 3;
     const float spreadAngle = 0.6f;
     const float baseAngle = 3.14159f;
@@ -400,10 +408,7 @@ void BossSystem::shootTurretBullets(Position* bossPos, float relativeX,
 
 std::string BossPartSystem::getName() const { return "BossPartSystem"; }
 
-int BossPartSystem::getPriority() const
-{
-    return 14;
-}
+int BossPartSystem::getPriority() const { return 14; }
 
 void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
 {
@@ -422,6 +427,8 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
 void BossPartSystem::processEntity(float deltaTime, Entity& entity,
                                    BossPart* part, Position* pos)
 {
+    (void)entity;
+    (void)pos;
     if (part->partType == BossPart::TURRET) {
         part->currentRotation += part->rotationSpeed * deltaTime;
     }
@@ -432,6 +439,7 @@ void BossPartSystem::updateBossParts(float deltaTime,
                                      uint32_t bossEntityId,
                                      Position& bossPosition)
 {
+    (void)deltaTime;
     auto parts = entityManager.getEntitiesWith<BossPart, Position>();
 
     for (const auto& partEntity : parts) {
@@ -447,14 +455,12 @@ void BossPartSystem::updateBossParts(float deltaTime,
 
 std::string AnimationSystem::getName() const { return "AnimationSystem"; }
 
-int AnimationSystem::getPriority() const
-{
-    return 5;
-}
+int AnimationSystem::getPriority() const { return 5; }
 
 void AnimationSystem::processEntity(float deltaTime, Entity& entity,
                                     Animation* animation)
 {
+    (void)entity;
     if (animation->finished && !animation->loop) return;
 
     animation->frameTimer += deltaTime;
@@ -476,14 +482,12 @@ void AnimationSystem::processEntity(float deltaTime, Entity& entity,
 
 std::string BossDamageSystem::getName() const { return "BossDamageSystem"; }
 
-int BossDamageSystem::getPriority() const
-{
-    return 16;
-}
+int BossDamageSystem::getPriority() const { return 16; }
 
 void BossDamageSystem::processEntity(float deltaTime, Entity& entity,
                                      Boss* boss, Health* health)
 {
+    (void)deltaTime;
     EntityId entityId = entity.getId();
 
     if (_previousHealth.find(entityId) != _previousHealth.end()) {
