@@ -19,6 +19,14 @@
 
 namespace engine {
 
+constexpr float PI = 3.14159265358979323846f;
+constexpr float TWO_PI = 6.28318530717958647692f;
+
+constexpr float SPREAD_ANGLE = 0.6f;
+constexpr int SPREAD_BULLET_COUNT = 3;
+constexpr float BULLET_SPEED = 300.0f;
+constexpr float TURRET_BULLET_SPEED = 350.0f;
+
 using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
                                 SpawnEnemyBulletEvent, SpawnBossEvent>;
 
@@ -41,6 +49,8 @@ class BossSystem : public System<Boss, Health, Position> {
     EntityManager* _entityManager;
     std::mt19937 _rng;
     std::uniform_real_distribution<float> _angleDistribution;
+    std::uniform_int_distribution<int> _explosionOffsetDist;
+    std::uniform_int_distribution<int> _explosionTypeDist;
     float _turretShootTimer;
 
     void markForDestruction(EntityId entityId, uint32_t networkId,
@@ -80,7 +90,9 @@ class BossSystem : public System<Boss, Health, Position> {
         : _spawnQueue(spawnQueue),
           _entityManager(nullptr),
           _rng(std::random_device{}()),
-          _angleDistribution(0.0f, 6.28318f),
+          _angleDistribution(0.0f, TWO_PI),
+          _explosionOffsetDist(-100, 100),
+          _explosionTypeDist(1, 2),
           _turretShootTimer(0.0f)
     {
     }
