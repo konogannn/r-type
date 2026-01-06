@@ -39,19 +39,20 @@ ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
     Config& config = Config::getInstance();
     std::string serverAddress = config.getString("serverAddress", "127.0.0.1");
     int serverPort = config.getInt("serverPort", 8080);
-    _inputFields[0].setValue(serverAddress);
-    _inputFields[1].setValue(std::to_string(serverPort));
+    _inputFields[static_cast<size_t>(ConnectionInputField::ServerAddress)].setValue(serverAddress);
+    _inputFields[static_cast<size_t>(ConnectionInputField::ServerPort)].setValue(std::to_string(serverPort));
 }
 
-bool ConnectionDialog::update(int mouseX, int mouseY, bool isMousePressed)
+bool ConnectionDialog::update(int mouseX, int mouseY, bool isMousePressed,
+                              float deltaTime)
 {
     for (auto& field : _inputFields) {
         if (field.update(mouseX, mouseY, isMousePressed)) {
             SoundManager::getInstance().playSound("click");
         }
     }
-    _connectButton.updateAnimation(1.0f / 60.0f);
-    _cancelButton.updateAnimation(1.0f / 60.0f);
+    _connectButton.updateAnimation(deltaTime);
+    _cancelButton.updateAnimation(deltaTime);
 
     if (_connectButton.isClicked(mouseX, mouseY, isMousePressed)) {
         SoundManager::getInstance().playSound("click");
@@ -113,11 +114,22 @@ bool ConnectionDialog::isAnyInputFieldActive() const
 
 int ConnectionDialog::getServerPort() const
 {
+    const std::string portStr = _inputFields[static_cast<size_t>(ConnectionInputField::ServerPort)].getValue();
+    int port = 8080;
     try {
-        return std::stoi(_inputFields[1].getValue());
-    } catch (...) {
-        return 8080;
+        port = std::stoi(portStr);
+        if (port < 1 || port > 65535) {
+            std::cerr << "Invalid server port '" << portStr
+                      << "' (must be between 1-65535). Using default port 8080."
+                      << std::endl;
+            port = 8080;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Invalid server port '" << portStr
+                  << "'. Using default port 8080. Error: " << e.what()
+                  << std::endl;
     }
+    return port;
 }
 
 void ConnectionDialog::render(float scale, const std::string& fontPath)
@@ -136,7 +148,8 @@ void ConnectionDialog::render(float scale, const std::string& fontPath)
     _graphics.drawRectangle(_dialogX + _dialogWidth - borderThickness, _dialogY,
                             borderThickness, _dialogHeight, 100, 150, 255, 255);
     unsigned int titleSize = static_cast<unsigned int>(32 * scale);
-    std::string title = "Connection Failed";
+    std::string title =
+        _errorMessage.empty() ? "Server Connection" : "Connection Failed";
     float titleWidth = _graphics.getTextWidth(title, titleSize, fontPath);
     float titleX = _dialogX + (_dialogWidth / 2.0f) - (titleWidth / 2.0f);
     _graphics.drawText(title, titleX, _dialogY + 30.0f * scale, titleSize, 255,

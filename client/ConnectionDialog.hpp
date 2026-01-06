@@ -19,6 +19,14 @@
 namespace rtype {
 
 /**
+ * @brief Input field indices for ConnectionDialog
+ */
+enum class ConnectionInputField {
+    ServerAddress = 0,
+    ServerPort = 1
+};
+
+/**
  * @brief Dialog for entering server connection details
  */
 class ConnectionDialog {
@@ -38,9 +46,10 @@ class ConnectionDialog {
      * @param mouseX Mouse X position
      * @param mouseY Mouse Y position
      * @param isMousePressed True if mouse button is pressed
+     * @param deltaTime Time elapsed since last frame in seconds
      * @return true if user clicked Connect button
      */
-    bool update(int mouseX, int mouseY, bool isMousePressed);
+    bool update(int mouseX, int mouseY, bool isMousePressed, float deltaTime);
 
     /**
      * @brief Handle text input for active input fields
@@ -69,7 +78,10 @@ class ConnectionDialog {
     /**
      * @brief Get the server address entered by the user
      */
-    std::string getServerAddress() const { return _inputFields[0].getValue(); }
+    std::string getServerAddress() const
+    {
+        return _inputFields[static_cast<size_t>(ConnectionInputField::ServerAddress)].getValue();
+    }
 
     /**
      * @brief Get the server port entered by the user
