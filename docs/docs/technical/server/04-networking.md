@@ -178,12 +178,11 @@ struct BossStatePacket {
 };
 ```
 
-**Purpose**: Synchronizes boss state for visual feedback:
-- **Health bar** rendering (current/max HP)
-- **Phase indicator** (changes attack patterns client-side)
-- **Damage flash** effect when hit
+**Status**: ⚠️ **NOT CURRENTLY IMPLEMENTED** - Packet structure defined but not sent by server.
 
-**Sent every frame** (unreliable) - clients interpolate missed packets.
+**Intended Purpose**: Would synchronize boss state for visual feedback (health bar, phase indicator, damage flash).
+
+**Current Implementation**: Boss health/state is synchronized through `S2C_HEALTH_UPDATE` instead (see below).
 
 **Note**: Boss position synced via normal `S2C_ENTITY_POS` packets.
 
@@ -218,15 +217,12 @@ struct HealthUpdatePacket {
 
 **Purpose**: Synchronizes health for all entities (players, enemies, boss):
 - Updates health bars for players
-- Updates boss health bar (redundant with BOSS_STATE but more frequent)
+- Updates boss health bar
 - Shows enemy health indicators
 
 **Sent every 10 frames** (~166ms at 60 FPS) to reduce network spam while maintaining responsiveness.
 
-**Why separate from BOSS_STATE?**
-- Generic health sync for all entity types (not just bosses)
-- Different update frequency (10 frames vs every frame)
-- Lighter packet (no phase/flash data)
+**Implementation**: Replaces the non-implemented `S2C_BOSS_STATE` packet for boss health synchronization. This provides a unified health update mechanism for all entity types with an acceptable update frequency.
 
 ---
 
