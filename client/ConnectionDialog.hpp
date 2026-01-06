@@ -21,10 +21,7 @@ namespace rtype {
 /**
  * @brief Input field indices for ConnectionDialog
  */
-enum class ConnectionInputField {
-    ServerAddress = 0,
-    ServerPort = 1
-};
+enum class ConnectionInputField { ServerAddress = 0, ServerPort = 1 };
 
 /**
  * @brief Dialog for entering server connection details
@@ -80,7 +77,9 @@ class ConnectionDialog {
      */
     std::string getServerAddress() const
     {
-        return _inputFields[static_cast<size_t>(ConnectionInputField::ServerAddress)].getValue();
+        return _inputFields[static_cast<size_t>(
+                                ConnectionInputField::ServerAddress)]
+            .getValue();
     }
 
     /**

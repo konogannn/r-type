@@ -62,8 +62,8 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     int serverPort = _config.getInt("serverPort", 8080);
     _inputFields[static_cast<size_t>(SettingsInputField::ServerAddress)]
         .setValue(serverAddress);
-    _inputFields[static_cast<size_t>(SettingsInputField::ServerPort)]
-        .setValue(std::to_string(serverPort));
+    _inputFields[static_cast<size_t>(SettingsInputField::ServerPort)].setValue(
+        std::to_string(serverPort));
 
     updateLayout();
 }
@@ -231,7 +231,8 @@ void SettingsMenu::updateLayout()
         std::string label = _inputFields[i].getLabel();
         std::string value = _inputFields[i].getValue();
         // Preserve the field type when recreating (0=ServerIP, 1=ServerPort)
-        InputFieldType type = (i == 0) ? InputFieldType::ServerIP : InputFieldType::ServerPort;
+        InputFieldType type =
+            (i == 0) ? InputFieldType::ServerIP : InputFieldType::ServerPort;
         _inputFields[i] =
             InputField(centerColX, inputFieldStartY + i * inputFieldSpacing,
                        inputFieldWidth, inputFieldHeight, label, value, type);
@@ -621,9 +622,10 @@ void SettingsMenu::saveSettings()
         try {
             port = std::stoi(portStr);
             if (port < 1 || port > 65535) {
-                std::cerr << "Invalid server port '" << portStr
-                          << "' (must be between 1-65535). Using default port 8080."
-                          << std::endl;
+                std::cerr
+                    << "Invalid server port '" << portStr
+                    << "' (must be between 1-65535). Using default port 8080."
+                    << std::endl;
                 port = 8080;
             }
         } catch (const std::exception& e) {

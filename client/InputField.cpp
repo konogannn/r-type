@@ -88,9 +88,10 @@ void InputField::handleTextInput(char character)
         case InputFieldType::Default:
         default:
             // Default: alphanumeric, dots, and colons
-            allow = ((character >= '0' && character <= '9') || character == '.' ||
-                     character == ':' || (character >= 'a' && character <= 'z') ||
-                     (character >= 'A' && character <= 'Z'));
+            allow =
+                ((character >= '0' && character <= '9') || character == '.' ||
+                 character == ':' || (character >= 'a' && character <= 'z') ||
+                 (character >= 'A' && character <= 'Z'));
             break;
     }
 

@@ -39,8 +39,10 @@ ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
     Config& config = Config::getInstance();
     std::string serverAddress = config.getString("serverAddress", "127.0.0.1");
     int serverPort = config.getInt("serverPort", 8080);
-    _inputFields[static_cast<size_t>(ConnectionInputField::ServerAddress)].setValue(serverAddress);
-    _inputFields[static_cast<size_t>(ConnectionInputField::ServerPort)].setValue(std::to_string(serverPort));
+    _inputFields[static_cast<size_t>(ConnectionInputField::ServerAddress)]
+        .setValue(serverAddress);
+    _inputFields[static_cast<size_t>(ConnectionInputField::ServerPort)]
+        .setValue(std::to_string(serverPort));
 }
 
 bool ConnectionDialog::update(int mouseX, int mouseY, bool isMousePressed,
@@ -114,7 +116,9 @@ bool ConnectionDialog::isAnyInputFieldActive() const
 
 int ConnectionDialog::getServerPort() const
 {
-    const std::string portStr = _inputFields[static_cast<size_t>(ConnectionInputField::ServerPort)].getValue();
+    const std::string portStr =
+        _inputFields[static_cast<size_t>(ConnectionInputField::ServerPort)]
+            .getValue();
     int port = 8080;
     try {
         port = std::stoi(portStr);
