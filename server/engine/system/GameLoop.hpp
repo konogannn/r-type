@@ -27,7 +27,7 @@ namespace engine {
 
 // Unified spawn event type - can hold any entity spawn request
 using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent>;
+                                SpawnEnemyBulletEvent, SpawnBossEvent>;
 
 /**
  * @brief Network input command from clients
@@ -95,6 +95,11 @@ class GameLoop {
     void processInputCommands(float deltaTime);
 
     /**
+     * @brief Process death timers for dying entities
+     */
+    void processDeathTimers(float deltaTime);
+
+    /**
      * @brief Generate network state updates
      */
     void generateNetworkUpdates();
@@ -117,6 +122,7 @@ class GameLoop {
     void processSpawnEvent(const SpawnEnemyEvent& event);
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
+    void processSpawnEvent(const SpawnBossEvent& event);
 
    public:
     /**
@@ -169,6 +175,13 @@ class GameLoop {
      * @return Number of updates retrieved
      */
     size_t popEntityUpdates(std::vector<EntityStateUpdate>& updates);
+
+    /**
+     * @brief Get all entities with their health info (players and bosses)
+     * @param updates Vector to receive health info (entityId, currentHP, maxHP)
+     */
+    void getAllHealthUpdates(
+        std::vector<std::tuple<uint32_t, float, float>>& healthUpdates);
 
     /**
      * @brief Spawn a player entity for a client
