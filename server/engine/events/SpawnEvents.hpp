@@ -30,5 +30,15 @@ struct SpawnPlayerBulletEvent {
 
 struct SpawnEnemyBulletEvent {
     engine::EntityId ownerId;
-    engine::Position position;
+    float x;
+    float y;
+    float vx;
+    float vy;
+};
+
+struct SpawnBossEvent {
+    uint8_t bossType;
+    float x;
+    float y;
+    uint32_t playerCount;
 };
