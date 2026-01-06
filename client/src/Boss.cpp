@@ -103,10 +103,7 @@ void Boss::updateHealth(float current, float max)
     }
 }
 
-void Boss::setPhase(uint8_t phase)
-{
-    _currentPhase = phase;
-}
+void Boss::setPhase(uint8_t phase) { _currentPhase = phase; }
 
 void Boss::setFlashing(bool flashing)
 {
@@ -218,7 +215,6 @@ void Boss::updateFlashEffect(float deltaTime)
     if (_isFlashing) {
         _flashTimer -= deltaTime;
 
-        float t = _flashTimer / _flashDuration;
         if (std::fmod(_flashTimer * 10.0f, 1.0f) > 0.5f) {
             _sprite.setColor(_flashColor);
         } else {
