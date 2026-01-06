@@ -7,8 +7,6 @@
 
 #include "GameEntityFactory.hpp"
 
-#include <iostream>
-
 namespace engine {
 
 GameEntityFactory::GameEntityFactory(EntityManager& entityManager)
@@ -91,8 +89,6 @@ Entity GameEntityFactory::createEnemyBullet(EntityId ownerId,
     float bulletY = ownerPos.y;
 
     uint32_t bulletId = _nextBulletId++;
-    std::cout << "[FACTORY] Creating enemy bullet ID=" << bulletId << " at ("
-              << bulletX << "," << bulletY << ")" << std::endl;
 
     _entityManager.addComponent(bullet, Position(bulletX, bulletY));
     _entityManager.addComponent(bullet, Velocity(-300.0f, 0.0f));
@@ -110,7 +106,7 @@ Entity GameEntityFactory::createBoss(uint8_t bossType, float x, float y,
     (void)bossType;
     Entity boss = _entityManager.createEntity();
 
-    float baseHealth = 1000.0f;  // Reduced from 2000 to 800
+    float baseHealth = 1000.0f;
     float scaledHealth = baseHealth * (1.0f + 0.5f * (playerCount - 1));
 
     _entityManager.addComponent(boss, Position(x, y));
