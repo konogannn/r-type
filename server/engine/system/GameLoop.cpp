@@ -445,8 +445,7 @@ void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
         _entityManager.addComponent(bullet, Position(event.x, event.y));
         _entityManager.addComponent(
             bullet, Velocity(-static_cast<float>(explosionType), 0.0f));
-        _entityManager.addComponent(
-            bullet, NetworkEntity(bulletId, 7));
+        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 7));
         _entityManager.addComponent(bullet, Lifetime(0.5f));
     } else {
         std::cout << "[GAMELOOP] Creating enemy bullet ID=" << bulletId
