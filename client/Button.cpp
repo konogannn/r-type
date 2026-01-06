@@ -42,7 +42,6 @@ bool Button::isHovered(int mouseX, int mouseY) const
 
 bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed)
 {
-    bool previousHovered = _isHovered;
     _isHovered = isHovered(mouseX, mouseY);
     if (_isHovered && !_wasHovered) {
         SoundManager::getInstance().playSoundAtVolume("click", HOVER_SOUND_VOLUME);
