@@ -125,7 +125,7 @@ struct LoginResponsePacket {
 struct EntitySpawnPacket {
     Header header;
     uint32_t entityId;  ///< Unique identifier for the entity.
-    uint8_t type;       ///< Entity type (1=Player, 2=Missile, 3=Enemy, etc.).
+    uint8_t type;       ///< Entity type
     float x;            ///< Initial X position.
     float y;            ///< Initial Y position.
 };

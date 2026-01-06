@@ -301,9 +301,17 @@ TEST_F(NetworkMessageTest, StringUtilities)
         "UP+SHOOT");
 
     EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::PLAYER), "PLAYER");
-    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::BYDOS), "BYDOS");
-    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::MISSILE),
-              "MISSILE");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::PLAYER_MISSILE),
+              "PLAYER_MISSILE");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::BASIC), "BASIC");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::BASIC_MISSILE),
+              "BASIC_MISSILE");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::TANK), "TANK");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::TANK_MISSILE),
+              "TANK_MISSILE");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::FAST), "FAST");
+    EXPECT_EQ(NetworkMessage::entityTypeToString(EntityType::FAST_MISSILE),
+              "FAST_MISSILE");
 
     EXPECT_EQ(NetworkMessage::opCodeToString(OpCode::C2S_LOGIN), "C2S_LOGIN");
     EXPECT_EQ(NetworkMessage::opCodeToString(OpCode::S2C_LOGIN_OK),

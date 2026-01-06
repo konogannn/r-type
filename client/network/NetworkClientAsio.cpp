@@ -48,20 +48,19 @@ bool NetworkClientAsio::connect(const std::string& serverAddress, uint16_t port)
 
         setState(NetworkState::Connected);
 
+        if (_onConnected) {
+            try {
+                _onConnected();
+            } catch (const std::exception& e) {
+                std::cerr << "Error in _onConnected callback: " << e.what()
+                          << std::endl;
+            }
+        }
         return true;
     } catch (const std::exception& e) {
         setState(NetworkState::Error);
         callErrorCallback("Connection failed: " + std::string(e.what()));
         return false;
-    }
-
-    if (_onConnected) {
-        try {
-            _onConnected();
-        } catch (const std::exception& e) {
-            std::cerr << "Error in _onConnected callback: " << e.what()
-                      << std::endl;
-        }
     }
 }
 
@@ -101,8 +100,13 @@ bool NetworkClientAsio::sendLogin(const std::string& username)
     packet.header.packetSize = sizeof(::LoginPacket);
     packet.header.sequenceId = getNextSequenceId();
 
+#ifdef _WIN32
+    strncpy_s(packet.username, sizeof(packet.username), username.c_str(),
+              _TRUNCATE);
+#else
     std::strncpy(packet.username, username.c_str(),
                  sizeof(packet.username) - 1);
+#endif
     packet.username[sizeof(packet.username) - 1] = '\0';
 
     return sendPacket(packet);

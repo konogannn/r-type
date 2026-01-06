@@ -171,10 +171,11 @@ struct NetworkEntity {
     uint8_t entityType;   // Type identifier for clients
     bool needsSync;       // Flag for network synchronization
     
-    // Entity types
-    static constexpr uint8_t TYPE_PLAYER = 1;
-    static constexpr uint8_t TYPE_ENEMY = 2;
-    static constexpr uint8_t TYPE_BULLET = 3;
+    // Some Entity types
+    static constexpr uint8_t PLAYER = 1;
+    static constexpr uint8_t PLAYER_MISSILE = 2;
+    static constexpr uint8_t BASIC = 10;
+    // ...
 };
 ```
 **Used by**: All entities that need network synchronization
