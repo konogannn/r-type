@@ -164,7 +164,7 @@ void ConnectionDialog::render(float scale, const std::string& fontPath)
                            msgSize, 255, 200, 200, fontPath);
     }
 
-    for (size_t i = 0; i < 2; i++) {
+    for (size_t i = 0; i < _inputFields.size(); i++) {
         const auto& field = _inputFields[i];
         unsigned int fontSize = static_cast<unsigned int>(20 * scale);
 
