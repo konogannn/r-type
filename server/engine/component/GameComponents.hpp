@@ -76,8 +76,7 @@ struct Bullet : public ComponentBase<Bullet> {
 struct Health : public ComponentBase<Health> {
     float current;
     float max;
-    float deathTimer =
-        -1.0f;
+    float deathTimer = -1.0f;
 
     Health(float max_ = 100.0f);
 
