@@ -178,7 +178,7 @@ class NetworkServer : public INetworkServer {
      *
      * @param clientId Target client (0 to broadcast)
      * @param entityId Unique entity identifier
-     * @param type Entity type (0=Player, 1=Missile, 2=Powerup, 3=Enemy)
+     * @param type Entity type (see EntityType.hpp)
      * @param x Initial X position (pixels)
      * @param y Initial Y position (pixels)
      * @return true if sent successfully

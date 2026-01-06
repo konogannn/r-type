@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "Component.hpp"
+#include "EntityType.hpp"
 
 namespace engine {
 
@@ -49,7 +50,12 @@ struct Player : public ComponentBase<Player> {
  * @brief Enemy component - Tags an entity as an enemy
  */
 struct Enemy : public ComponentBase<Enemy> {
-    enum class Type { BASIC, FAST, TANK, BOSS };
+    enum class Type {
+        BASIC = EntityType::BASIC,
+        FAST = EntityType::FAST,
+        TANK = EntityType::TANK,
+        BOSS
+    };
 
     Type type;
     float shootCooldown;
@@ -88,7 +94,7 @@ struct Health : public ComponentBase<Health> {
  */
 struct NetworkEntity : public ComponentBase<NetworkEntity> {
     uint32_t entityId;   // Network entity ID
-    uint8_t entityType;  // Type for clients (1=player, 2=enemy, 3=bullet)
+    uint8_t entityType;  // Type for clients (see EntityType.hpp)
     bool needsSync;      // Flag for position sync
     bool isFirstSync;    // True for spawn, false for position updates
 
