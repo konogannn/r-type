@@ -65,6 +65,10 @@ struct Header {
 | 12 | S2C_ENTITY_POS | Update position | No |
 | 13 | S2C_ENTITY_DEAD | Destroy entity | Yes |
 | 15 | S2C_SCORE_UPDATE | Update score | No |
+| 16 | S2C_BOSS_SPAWN | Boss spawned (triggers music/warning) | Yes |
+| 17 | S2C_BOSS_STATE | Boss health/phase sync (every frame) | No |
+| 18 | S2C_BOSS_DEATH | Boss defeated (triggers victory) | Yes |
+| 19 | S2C_HEALTH_UPDATE | Entity health sync (every 10 frames) | No |
 
 ---
 
@@ -143,6 +147,87 @@ struct EntityDeadPacket {
 };
 ```
 
+### S2C_BOSS_SPAWN (Boss Spawned)
+
+```cpp
+struct BossSpawnPacket {
+    Header header;
+    uint32_t bossEntityId;
+    float x, y;
+    uint8_t bossType;  // 0 = standard, 1 = fast, 2 = tank, etc.
+};
+```
+
+**Purpose**: Notifies clients that a boss has spawned, allowing them to:
+- Play boss warning music/sound
+- Display "WARNING: BOSS APPROACHING" message
+- Initialize boss-specific rendering (health bar, animations)
+
+**Sent once** when boss is created (reliable packet).
+
+### S2C_BOSS_STATE (Boss Health/Phase Sync)
+
+```cpp
+struct BossStatePacket {
+    Header header;
+    uint32_t bossEntityId;
+    float currentHP;
+    float maxHP;
+    uint8_t phase;       // 0=ENTRY, 1=PHASE_1, 2=PHASE_2, 3=ENRAGED, 4=DEATH
+    uint8_t isFlashing;  // Damage flash effect (0 or 1)
+};
+```
+
+**Purpose**: Synchronizes boss state for visual feedback:
+- **Health bar** rendering (current/max HP)
+- **Phase indicator** (changes attack patterns client-side)
+- **Damage flash** effect when hit
+
+**Sent every frame** (unreliable) - clients interpolate missed packets.
+
+**Note**: Boss position synced via normal `S2C_ENTITY_POS` packets.
+
+### S2C_BOSS_DEATH (Boss Defeated)
+
+```cpp
+struct BossDeathPacket {
+    Header header;
+    uint32_t bossEntityId;
+    uint32_t score;  // Bonus points awarded
+};
+```
+
+**Purpose**: Triggers victory sequence:
+- Add bonus score to player
+- Play victory music
+- Display "BOSS DEFEATED" message
+- Trigger death animation (explosions, screen shake)
+
+**Sent once** when boss HP reaches 0 (reliable packet).
+
+### S2C_HEALTH_UPDATE (Health Synchronization)
+
+```cpp
+struct HealthUpdatePacket {
+    Header header;
+    uint32_t entityId;
+    float currentHealth;
+    float maxHealth;
+};
+```
+
+**Purpose**: Synchronizes health for all entities (players, enemies, boss):
+- Updates health bars for players
+- Updates boss health bar (redundant with BOSS_STATE but more frequent)
+- Shows enemy health indicators
+
+**Sent every 10 frames** (~166ms at 60 FPS) to reduce network spam while maintaining responsiveness.
+
+**Why separate from BOSS_STATE?**
+- Generic health sync for all entity types (not just bosses)
+- Different update frequency (10 frames vs every frame)
+- Lighter packet (no phase/flash data)
+
 ---
 
 ## Reliability Mechanism
@@ -156,7 +241,7 @@ UDP packets can be:
 
 ### Solution: Selective Reliability
 
-**Critical packets** (login, spawns, deaths) use a custom reliability layer:
+**Critical packets** (login, spawns, deaths, boss events) use a custom reliability layer:
 
 ```
 Client                           Server
