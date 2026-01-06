@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 
 #include "../Config.hpp"
 #include "../KeyBinding.hpp"
@@ -249,37 +250,16 @@ void Game::render()
                 _graphics.drawSprite(*spriteToRender);
 
                 if (_showHitboxes) {
-                    float hitboxWidth = 0.0f;
-                    float hitboxHeight = 0.0f;
+                    static const std::unordered_map<uint8_t,
+                                                    std::pair<float, float>>
+                        hitboxSizes = {
+                            {1, {80.0f, 68.0f}},   {2, {56.0f, 56.0f}},
+                            {3, {114.0f, 36.0f}},  {4, {114.0f, 36.0f}},
+                            {5, {260.0f, 100.0f}}, {6, {48.0f, 34.5f}}};
 
-                    switch (entity->type) {
-                        case 1:
-                            hitboxWidth = 80.0f;
-                            hitboxHeight = 68.0f;
-                            break;
-                        case 2:
-                            hitboxWidth = 56.0f;
-                            hitboxHeight = 56.0f;
-                            break;
-                        case 3:
-                            hitboxWidth = 114.0f;
-                            hitboxHeight = 36.0f;
-                            break;
-                        case 4:
-                            hitboxWidth = 114.0f;
-                            hitboxHeight = 36.0f;
-                            break;
-                        case 5:
-                            hitboxWidth = 260.0f;
-                            hitboxHeight = 100.0f;
-                            break;
-                        case 6:
-                            hitboxWidth = 48.0f;
-                            hitboxHeight = 34.5f;
-                            break;
-                    }
-
-                    if (hitboxWidth > 0.0f && hitboxHeight > 0.0f) {
+                    auto it = hitboxSizes.find(entity->type);
+                    if (it != hitboxSizes.end()) {
+                        const auto& [hitboxWidth, hitboxHeight] = it->second;
                         float hbX = sx;
                         float hbY = sy;
                         float hbW = hitboxWidth * windowScale;
