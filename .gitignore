@@ -25,6 +25,7 @@ r-type_server*
 *.exe
 *.out
 *.app
+config.json
 
 # Object files
 *.o
