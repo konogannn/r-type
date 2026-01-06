@@ -30,7 +30,7 @@ class SpriteSFML : public ISprite {
     void setPosition(float x, float y) override;
     void setScale(float scaleX, float scaleY) override;
     void setRotation(float angle) override;
-    void setOrigin(float x, float y);
+    void setOrigin(float x, float y) override;
     void move(float offsetX, float offsetY) override;
     float getPositionX() const override;
     float getPositionY() const override;
