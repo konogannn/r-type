@@ -197,25 +197,25 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
         int quadrant = boss->explosionCount % 4;
         switch (quadrant) {
             case 0:
-                offsetX = 20.0f + (rand() % 80);
-                offsetY = -80.0f - (rand() % 40);
+                offsetX = 20.0f + (_explosionOffsetDist(_rng) % 80);
+                offsetY = -80.0f - (_explosionOffsetDist(_rng) % 40);
                 break;
             case 1:
-                offsetX = 20.0f + (rand() % 80);
-                offsetY = 20.0f + (rand() % 60);
+                offsetX = 20.0f + (_explosionOffsetDist(_rng) % 80);
+                offsetY = 20.0f + (_explosionOffsetDist(_rng) % 60);
                 break;
             case 2:
-                offsetX = -100.0f - (rand() % 60);
-                offsetY = -80.0f - (rand() % 40);
+                offsetX = -100.0f - (_explosionOffsetDist(_rng) % 60);
+                offsetY = -80.0f - (_explosionOffsetDist(_rng) % 40);
                 break;
             case 3:
-                offsetX = -100.0f - (rand() % 60);
-                offsetY = 20.0f + (rand() % 60);
+                offsetX = -100.0f - (_explosionOffsetDist(_rng) % 60);
+                offsetY = 20.0f + (_explosionOffsetDist(_rng) % 60);
                 break;
         }
 
         SpawnEnemyBulletEvent explosionEvent;
-        explosionEvent.ownerId = (rand() % 2) + 1;
+        explosionEvent.ownerId = _explosionTypeDist(_rng);
         explosionEvent.x = pos->x + offsetX;
         explosionEvent.y = pos->y + offsetY;
         explosionEvent.vx = 0.0f;
@@ -228,7 +228,7 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
 
     boss->deathTimer -= deltaTime;
 
-    if (boss->deathTimer <= 0.0f || boss->explosionCount >= 15) {
+    if (boss->deathTimer <= 0.0f || boss->explosionCount == 15) {
         std::cout << "[BOSS] Death animation complete (" << boss->explosionCount
                   << " explosions), destroying boss and parts" << std::endl;
 
@@ -290,16 +290,13 @@ void BossSystem::checkPhaseTransition(Boss* boss, Health* health)
 
 void BossSystem::shootSpreadPattern(Position* pos, float angleOffset)
 {
-    (void)angleOffset;  // Reserved for future pattern variations
-    const int bulletCount = 3;
-    const float spreadAngle = 0.6f;
-    const float baseAngle = 3.14159f;
+    (void)angleOffset;
 
-    for (int i = 0; i < bulletCount; i++) {
-        float angle =
-            baseAngle + (i - bulletCount / 2.0f) * (spreadAngle / bulletCount);
-        float vx = std::cos(angle) * 300.0f;
-        float vy = std::sin(angle) * 300.0f;
+    for (int i = 0; i < SPREAD_BULLET_COUNT; i++) {
+        float angle = PI + (i - SPREAD_BULLET_COUNT / 2.0f) *
+                               (SPREAD_ANGLE / SPREAD_BULLET_COUNT);
+        float vx = std::cos(angle) * BULLET_SPEED;
+        float vy = std::sin(angle) * BULLET_SPEED;
 
         SpawnEnemyBulletEvent event;
         event.x = pos->x - 50.0f;
@@ -315,7 +312,7 @@ void BossSystem::shootSpreadPattern(Position* pos, float angleOffset)
 void BossSystem::shootCircularPattern(Position* pos)
 {
     const int bulletCount = 6;
-    const float angleStep = 6.28318f / bulletCount;
+    const float angleStep = TWO_PI / bulletCount;
 
     for (int i = 0; i < bulletCount; i++) {
         float angle = i * angleStep;
@@ -387,13 +384,12 @@ void BossSystem::shootTurretBullets(Position* bossPos, float relativeX,
 {
     const int bulletCount = 1;
     const float spreadAngle = 0.3f;
-    const float baseAngle = 3.14159f;
 
     for (int i = 0; i < bulletCount; i++) {
         float angle =
-            baseAngle + (i - bulletCount / 2.0f) * (spreadAngle / bulletCount);
-        float vx = std::cos(angle) * 350.0f;
-        float vy = std::sin(angle) * 350.0f;
+            PI + (i - bulletCount / 2.0f) * (spreadAngle / bulletCount);
+        float vx = std::cos(angle) * TURRET_BULLET_SPEED;
+        float vy = std::sin(angle) * TURRET_BULLET_SPEED;
 
         SpawnEnemyBulletEvent event;
         event.x = bossPos->x + relativeX;
