@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <array>
 #include <functional>
 #include <string>
 
@@ -108,7 +109,7 @@ class ConnectionDialog {
     float _dialogX;
     float _dialogY;
 
-    InputField _inputFields[2];
+    std::array<InputField, 2> _inputFields;
     Button _connectButton;
     Button _cancelButton;
 
