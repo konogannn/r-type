@@ -50,7 +50,6 @@ class Game {
 
     std::unique_ptr<rtype::ConnectionDialog> _connectionDialog;
     bool _showConnectionDialog;
-    bool _connectionAttempted;
 
     float _fpsUpdateTime;
     int _fpsCounter;

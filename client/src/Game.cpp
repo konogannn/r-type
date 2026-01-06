@@ -28,7 +28,6 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _background(sharedBackground),
       _colorBlindFilter(rtype::ColorBlindFilter::getInstance()),
       _showConnectionDialog(false),
-      _connectionAttempted(false),
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
@@ -89,7 +88,6 @@ bool Game::tryConnect(const std::string& address, uint16_t port)
     if (_gameState->connectToServer(address, port)) {
         std::cout << "[Game] Connection initiated" << std::endl;
         _gameState->sendLogin("Player1");
-        _connectionAttempted = true;
         return true;
     } else {
         std::cout << "[Game] Failed to connect to server" << std::endl;
