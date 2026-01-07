@@ -226,8 +226,19 @@ class NetworkServer : public INetworkServer {
      */
     bool sendScoreUpdate(uint32_t clientId, uint32_t score) override;
 
-    /**
-     * @brief Broadcast raw data to all connected clients
+    /**     * @brief Send shield status update to specific client
+     *
+     * Sends an S2C_SHIELD_STATUS packet.
+     *
+     * @param clientId Target client
+     * @param playerId Player entity ID
+     * @param hasShield True if player has shield, false if destroyed
+     * @return true if sent successfully
+     */
+    bool sendShieldStatus(uint32_t clientId, uint32_t playerId,
+                          bool hasShield) override;
+
+    /**     * @brief Broadcast raw data to all connected clients
      *
      * Sends arbitrary binary data to all authenticated clients, optionally
      * excluding one client (useful for echoing back to sender).
