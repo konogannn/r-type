@@ -32,10 +32,13 @@ struct ClientEntity {
     std::unique_ptr<SpriteSFML> sprite;
     std::unique_ptr<SpriteSFML> spriteUp;
     std::unique_ptr<SpriteSFML> spriteDown;
+    std::unique_ptr<SpriteSFML> spriteShield;
     SpriteSFML* currentSprite = nullptr;
     float spriteScale = 1.0f;
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
+    bool hasShield = false;
+    float shieldTimer = 0.0f;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
         : id(entityId),

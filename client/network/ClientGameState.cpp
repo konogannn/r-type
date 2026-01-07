@@ -36,6 +36,16 @@ ClientGameState::ClientGameState()
         _score = score;
         std::cout << "[INFO] Score updated: " << score << std::endl;
     });
+    _networkClient->setOnShieldStatusCallback(
+        [this](uint32_t playerId, bool hasShield) {
+            // Trouver l'entité joueur correspondante par son network ID
+            for (auto& [entityId, entity] : _entities) {
+                if (entity->id == playerId && entity->type == 1) {
+                    entity->hasShield = hasShield;
+                    break;
+                }
+            }
+        });
     _networkClient->setOnErrorCallback(
         [this](const std::string& error) { onError(error); });
 }
@@ -125,6 +135,35 @@ void ClientGameState::update(float deltaTime)
             if (entity->type == 1 && entity->currentSprite && entity->sprite) {
                 entity->currentSprite = entity->sprite.get();
             }
+        }
+
+        // Le shield est géré côté serveur et disparaît lors du prochain hit
+        // Pas de timer automatique côté client
+    }
+
+    // Collision detection entre joueur et power-up items (SHIELD UNIQUEMENT)
+    // Le missile guidé est géré 100% côté serveur
+    auto* localPlayer = getLocalPlayer();
+    if (localPlayer) {
+        std::vector<uint32_t> itemsToRemove;
+        for (auto& [itemId, item] : _entities) {
+            if (item->type == 5) {  // shield_item uniquement
+                float dx = localPlayer->x - item->x;
+                float dy = localPlayer->y - item->y;
+                float distance = std::sqrt(dx * dx + dy * dy);
+                if (distance < 100.0f) {  // Collision détectée
+                    localPlayer->hasShield = true;
+                    std::cout << "[INFO] *** SHIELD PICKED UP! *** hasShield="
+                              << localPlayer->hasShield << ", spriteShield="
+                              << (localPlayer->spriteShield ? "YES" : "NO")
+                              << std::endl;
+                    itemsToRemove.push_back(itemId);
+                }
+            }
+        }
+        // Supprimer les items ramassés
+        for (uint32_t id : itemsToRemove) {
+            _entities.erase(id);
         }
     }
 
@@ -219,6 +258,11 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     entity->isLocalPlayer = (entityId == _playerId);
     createEntitySprite(*entity);
     _entities[entityId] = std::move(entity);
+
+    if (type == 7) {
+        std::cout << "[CLIENT GUIDED MISSILE] Spawned missile entityId="
+                  << entityId << " at (" << x << ", " << y << ")" << std::endl;
+    }
 }
 
 void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
@@ -333,6 +377,11 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
             }
+            // Chargement temporaire du shield
+            entity.spriteShield = std::make_unique<SpriteSFML>();
+            std::string shieldPath = "assets/sprites/player_shield.png";
+            entity.spriteShield->loadTexture(shieldPath);
+            entity.spriteShield->setScale(0.3f, 0.3f);
             entity.spriteScale = scale;
             entity.currentSprite = entity.sprite.get();
             break;
@@ -359,6 +408,33 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             texturePath = utils::PathHelper::getAssetPath(
                 "assets/sprites/projectile_enemy_1.png");
             scale = 6.0f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 5: {
+            texturePath = "assets/sprites/shield_item.png";
+            scale = 0.5f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 6: {
+            texturePath = "assets/sprites/search_missile.png";
+            scale = 0.6f;
+            if (entity.sprite->loadTexture(texturePath)) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 7: {
+            texturePath = "assets/sprites/missile.png";
+            scale = 1.8f;
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
             }
