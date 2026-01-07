@@ -220,6 +220,39 @@ void Game::render()
                 float sy = entity->y * windowScale + offsetY;
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
+
+                // Affichage du shield si le joueur l'a récupéré
+                if (entity->type == 1 && entity->hasShield) {
+                    if (!entity->spriteShield) {
+                        std::cout << "[WARNING] Player has shield but "
+                                     "spriteShield is null!"
+                                  << std::endl;
+                    } else {
+                        float shieldScale = 0.2f * windowScale;
+                        entity->spriteShield->setScale(shieldScale,
+                                                       shieldScale);
+
+                        // Centrer le shield sur le joueur
+                        float playerWidth = spriteToRender->getTextureWidth() *
+                                            baseScale * windowScale;
+                        float playerHeight =
+                            spriteToRender->getTextureHeight() * baseScale *
+                            windowScale;
+                        float shieldWidth =
+                            entity->spriteShield->getTextureWidth() *
+                            shieldScale;
+                        float shieldHeight =
+                            entity->spriteShield->getTextureHeight() *
+                            shieldScale;
+
+                        float shieldX = sx + (playerWidth - shieldWidth) / 2.0f;
+                        float shieldY =
+                            sy + (playerHeight - shieldHeight) / 2.0f;
+
+                        entity->spriteShield->setPosition(shieldX, shieldY);
+                        _graphics.drawSprite(*entity->spriteShield);
+                    }
+                }
             } catch (const std::exception& e) {
                 std::cout << "[ERROR] Exception while drawing entity ID " << id
                           << ": " << e.what() << std::endl;
