@@ -26,6 +26,8 @@ using OnEntityPositionCallback =
     std::function<void(const ::EntityPositionPacket&)>;
 using OnEntityDeadCallback = std::function<void(uint32_t entityId)>;
 using OnScoreUpdateCallback = std::function<void(uint32_t score)>;
+using OnShieldStatusCallback =
+    std::function<void(uint32_t playerId, bool hasShield)>;
 
 /**
  * @brief Client-specific network interface
@@ -89,6 +91,7 @@ class INetworkClient : public INetworkBase {
         OnEntityPositionCallback callback) = 0;
     virtual void setOnEntityDeadCallback(OnEntityDeadCallback callback) = 0;
     virtual void setOnScoreUpdateCallback(OnScoreUpdateCallback callback) = 0;
+    virtual void setOnShieldStatusCallback(OnShieldStatusCallback callback) = 0;
 };
 
 }  // namespace rtype
