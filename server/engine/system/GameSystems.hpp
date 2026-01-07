@@ -21,7 +21,7 @@ namespace engine {
 
 // Import SpawnEvent type from events
 using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent>;
+                                SpawnEnemyBulletEvent, SpawnGuidedMissileEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -148,22 +148,35 @@ class CollisionSystem : public ISystem {
         EntityId entityId;
         uint32_t networkEntityId;
         uint8_t entityType;
+        float x;
+        float y;
     };
+
+    struct ShieldDestroyedInfo {
+        uint32_t playerId;  // Network entity ID du joueur
+    };
+
     std::vector<DestroyInfo> _entitiesToDestroy;
+    std::vector<ShieldDestroyedInfo> _shieldsDestroyed;
     std::unordered_set<EntityId> _markedForDestruction;
+    std::vector<SpawnEvent>& _spawnQueue;
 
     // Helper methods for collision checking
     bool checkCollision(const Position& pos1, const BoundingBox& box1,
                         const Position& pos2, const BoundingBox& box2);
 
     bool isMarkedForDestruction(EntityId id) const;
-    void markForDestruction(EntityId entityId, uint32_t networkId,
-                            uint8_t type);
+    void markForDestruction(EntityId entityId, uint32_t networkId, uint8_t type,
+                            float x = 0.0f, float y = 0.0f);
 
     // Collision handlers for different entity pairs
     void handlePlayerBulletVsEnemy(EntityManager& entityManager,
                                    const std::vector<Entity>& bullets,
                                    const std::vector<Entity>& enemies);
+
+    void handleGuidedMissileVsEnemy(EntityManager& entityManager,
+                                    const std::vector<Entity>& missiles,
+                                    const std::vector<Entity>& enemies);
 
     void handlePlayerVsEnemy(EntityManager& entityManager,
                              const std::vector<Entity>& players,
@@ -176,13 +189,24 @@ class CollisionSystem : public ISystem {
     void handleBulletVsBullet(EntityManager& entityManager,
                               const std::vector<Entity>& bullets);
 
+    void handlePlayerVsItem(EntityManager& entityManager,
+                            const std::vector<Entity>& players,
+                            const std::vector<Entity>& items);
+
    public:
+    CollisionSystem(std::vector<SpawnEvent>& spawnQueue)
+        : _spawnQueue(spawnQueue)
+    {
+    }
+
     std::string getName() const override;
     SystemType getType() const override;
     int getPriority() const override;
 
     const std::vector<DestroyInfo>& getDestroyedEntities() const;
+    const std::vector<ShieldDestroyedInfo>& getDestroyedShields() const;
     void clearDestroyedEntities();
+    void clearDestroyedShields();
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -222,4 +246,21 @@ class EnemyShootingSystem : public System<Enemy, Position> {
     SystemType getType() const override;
     int getPriority() const override;
 };
+
+/**
+ * @brief Guided missile system - Updates missiles to track nearest enemy
+ */
+class GuidedMissileSystem : public ISystem {
+   public:
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+
+    void update(float deltaTime, EntityManager& entityManager) override;
+
+   private:
+    Entity* findNearestEnemy(EntityManager& entityManager,
+                             const Position& missilePos);
+};
+
 }  // namespace engine
