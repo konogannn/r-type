@@ -25,7 +25,7 @@ Entity GameEntityFactory::createPlayer(uint32_t clientId, uint32_t playerId,
     _entityManager.addComponent(player, Velocity(0.0f, 0.0f));
     _entityManager.addComponent(player, Player(clientId, playerId));
     _entityManager.addComponent(player, Health(100.0f));
-    _entityManager.addComponent(player, BoundingBox(80.0f, 68.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(player, BoundingBox(35.0f, 21.0f, 0.0f, 0.0f));
     _entityManager.addComponent(
         player, NetworkEntity(player.getId(), EntityType::PLAYER));
 
