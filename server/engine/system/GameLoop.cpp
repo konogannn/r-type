@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <random>
 
 #include "GameSystems.hpp"
 
@@ -213,6 +214,11 @@ size_t GameLoop::popEntityUpdates(std::vector<EntityStateUpdate>& updates)
     return _outputQueue.popAll(updates);
 }
 
+size_t GameLoop::popShieldUpdates(std::vector<ShieldStatusUpdate>& updates)
+{
+    return _shieldUpdateQueue.popAll(updates);
+}
+
 void GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
                            float y)
 {
@@ -261,7 +267,15 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
         return;
     }
 
+    // Vérifier si c'est le CollisionSystem
+    if (CollisionSystem* collisionSys =
+            dynamic_cast<CollisionSystem*>(cleanupSystem)) {
+        processDestroyedEntitiesFromCollision(collisionSys, checkPlayerDeath);
+        return;
+    }
+
     const auto& destroyed = cleanupSystem->getDestroyedEntities();
+
     for (const auto& info : destroyed) {
         EntityStateUpdate update;
         update.entityId = info.networkEntityId;
@@ -284,6 +298,85 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
         }
     }
     cleanupSystem->clearDestroyedEntities();
+}
+
+void GameLoop::processDestroyedEntitiesFromCollision(
+    CollisionSystem* collisionSystem, bool checkPlayerDeath)
+{
+    if (!collisionSystem) {
+        return;
+    }
+
+    const auto& destroyed = collisionSystem->getDestroyedEntities();
+
+    for (const auto& info : destroyed) {
+        EntityStateUpdate update;
+        update.entityId = info.networkEntityId;
+        update.entityType = info.entityType;
+        update.x = 0.0f;
+        update.y = 0.0f;
+        update.spawned = false;
+        update.destroyed = true;
+        _outputQueue.push(update);
+
+        // Faire spawn un power-up quand un ennemi meurt (alternance
+        // shield/missile)
+        if (info.entityType == 2) {
+            static bool spawnShield = true;
+
+            Entity powerUpItem;
+            if (spawnShield) {
+                std::cout << "[POWER-UP] Spawning SHIELD at (" << info.x << ", "
+                          << info.y << ")" << std::endl;
+                powerUpItem = _entityFactory.createShieldItem(info.x, info.y);
+            } else {
+                std::cout << "[POWER-UP] Spawning GUIDED MISSILE at (" << info.x
+                          << ", " << info.y << ")" << std::endl;
+                powerUpItem =
+                    _entityFactory.createGuidedMissileItem(info.x, info.y);
+            }
+            spawnShield = !spawnShield;  // Alterner pour le prochain
+
+            auto* itemPos = _entityManager.getComponent<Position>(powerUpItem);
+            auto* itemNet =
+                _entityManager.getComponent<NetworkEntity>(powerUpItem);
+            if (itemPos && itemNet) {
+                std::cout << "[POWER-UP] Created with entityId="
+                          << itemNet->entityId
+                          << ", type=" << (int)itemNet->entityType << std::endl;
+                EntityStateUpdate spawnUpdate;
+                spawnUpdate.entityId = itemNet->entityId;
+                spawnUpdate.entityType = itemNet->entityType;
+                spawnUpdate.x = itemPos->x;
+                spawnUpdate.y = itemPos->y;
+                spawnUpdate.spawned = true;
+                spawnUpdate.destroyed = false;
+                _outputQueue.push(spawnUpdate);
+            }
+        }
+
+        if (checkPlayerDeath && info.entityType == 1 &&
+            _onPlayerDeathCallback) {
+            for (const auto& pair : _clientToEntity) {
+                if (pair.second == info.entityId) {
+                    _onPlayerDeathCallback(pair.first);
+                    _clientToEntity.erase(pair.first);
+                    break;
+                }
+            }
+        }
+    }
+    collisionSystem->clearDestroyedEntities();
+
+    // Traiter les shields détruits
+    const auto& destroyedShields = collisionSystem->getDestroyedShields();
+    for (const auto& shieldInfo : destroyedShields) {
+        ShieldStatusUpdate update;
+        update.playerId = shieldInfo.playerId;
+        update.hasShield = false;
+        _shieldUpdateQueue.push(update);
+    }
+    collisionSystem->clearDestroyedShields();
 }
 
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
@@ -336,6 +429,24 @@ void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
 void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
 {
     _entityFactory.createEnemyBullet(event.ownerId, event.position);
+}
+
+void GameLoop::processSpawnEvent(const SpawnGuidedMissileEvent& event)
+{
+    std::cout << "[GUIDED MISSILE] Processing spawn event at ("
+              << event.position.x << ", " << event.position.y << ")"
+              << std::endl;
+    Entity missile =
+        _entityFactory.createGuidedMissile(event.ownerId, event.position);
+
+    auto* missilePos = _entityManager.getComponent<Position>(missile);
+    auto* missileNet = _entityManager.getComponent<NetworkEntity>(missile);
+    if (missilePos && missileNet) {
+        std::cout << "[GUIDED MISSILE] Created missile entityId="
+                  << missileNet->entityId
+                  << ", type=" << (int)missileNet->entityType << " at ("
+                  << missilePos->x << ", " << missilePos->y << ")" << std::endl;
+    }
 }
 
 }  // namespace engine

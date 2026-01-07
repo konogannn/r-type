@@ -25,9 +25,12 @@
 
 namespace engine {
 
+// Forward declaration
+class CollisionSystem;
+
 // Unified spawn event type - can hold any entity spawn request
 using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent>;
+                                SpawnEnemyBulletEvent, SpawnGuidedMissileEvent>;
 
 /**
  * @brief Network input command from clients
@@ -51,6 +54,14 @@ struct EntityStateUpdate {
 };
 
 /**
+ * @brief Shield status update for network synchronization
+ */
+struct ShieldStatusUpdate {
+    uint32_t playerId;  // Network entity ID of the player
+    bool hasShield;     // true if shield active, false if destroyed
+};
+
+/**
  * @brief Multithreaded game loop for server-side game logic
  *
  * This class runs the game simulation in a separate thread, processes
@@ -70,6 +81,7 @@ class GameLoop {
     // Input/Output queues for inter-thread communication
     ThreadSafeQueue<NetworkInputCommand> _inputQueue;
     ThreadSafeQueue<EntityStateUpdate> _outputQueue;
+    ThreadSafeQueue<ShieldStatusUpdate> _shieldUpdateQueue;
 
     // Unified spawn event queue (systems write, GameLoop reads)
     std::vector<SpawnEvent> _spawnEvents;
@@ -106,6 +118,10 @@ class GameLoop {
     void processDestroyedEntities(T* cleanupSystem,
                                   bool checkPlayerDeath = false);
 
+    // Surcharge spécialisée pour CollisionSystem
+    void processDestroyedEntitiesFromCollision(CollisionSystem* collisionSystem,
+                                               bool checkPlayerDeath = false);
+
     /**
      * @brief Process all spawn events and create entities
      */
@@ -117,6 +133,7 @@ class GameLoop {
     void processSpawnEvent(const SpawnEnemyEvent& event);
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
+    void processSpawnEvent(const SpawnGuidedMissileEvent& event);
 
    public:
     /**
@@ -169,6 +186,13 @@ class GameLoop {
      * @return Number of updates retrieved
      */
     size_t popEntityUpdates(std::vector<EntityStateUpdate>& updates);
+
+    /**
+     * @brief Pop all pending shield status updates (called from network thread)
+     * @param updates Vector to receive the shield updates
+     * @return Number of updates retrieved
+     */
+    size_t popShieldUpdates(std::vector<ShieldStatusUpdate>& updates);
 
     /**
      * @brief Spawn a player entity for a client
