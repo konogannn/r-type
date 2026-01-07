@@ -51,7 +51,8 @@ enum OpCode : uint8_t {
     S2C_ENTITY_POS = 12,   ///< Update position of an existing entity.
     S2C_ENTITY_DEAD = 13,  ///< Despawn/Destroy an entity.
     S2C_MAP = 14,          ///< Map information (unused/reserved).
-    S2C_SCORE_UPDATE = 15,  ///< Update current game score.
+    S2C_SCORE_UPDATE = 15,   ///< Update current game score.
+    S2C_SHIELD_STATUS = 16,  ///< Update player shield status.
 };
 
 /**
@@ -161,6 +162,16 @@ struct MapPacket {
 struct ScoreUpdatePacket {
     Header header;
     uint32_t score;  ///< Current game score.
+};
+
+/**
+ * @brief Packet to update player shield status.
+ * OpCode: S2C_SHIELD_STATUS
+ */
+struct ShieldStatusPacket {
+    Header header;
+    uint32_t playerId;  ///< ID of the player entity.
+    uint8_t hasShield;  ///< 1 if player has shield, 0 if destroyed.
 };
 
 #pragma pack(pop)
