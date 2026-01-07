@@ -143,10 +143,7 @@ int ConnectionDialog::getServerPort() const
     return port;
 }
 
-bool ConnectionDialog::wasCancelled() const
-{
-    return _cancelled;
-}
+bool ConnectionDialog::wasCancelled() const { return _cancelled; }
 
 void ConnectionDialog::reset()
 {

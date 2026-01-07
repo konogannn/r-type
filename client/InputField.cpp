@@ -123,25 +123,13 @@ void InputField::handleEnter()
     }
 }
 
-bool InputField::isActive() const
-{
-    return _isActive;
-}
+bool InputField::isActive() const { return _isActive; }
 
-void InputField::setActive(bool active)
-{
-    _isActive = active;
-}
+void InputField::setActive(bool active) { _isActive = active; }
 
-const std::string& InputField::getValue() const
-{
-    return _value;
-}
+const std::string& InputField::getValue() const { return _value; }
 
-void InputField::setValue(const std::string& value)
-{
-    _value = value;
-}
+void InputField::setValue(const std::string& value) { _value = value; }
 
 void InputField::setOnChangeCallback(
     std::function<void(const std::string&)> callback)
@@ -149,34 +137,16 @@ void InputField::setOnChangeCallback(
     _onChange = callback;
 }
 
-float InputField::getX() const
-{
-    return _x;
-}
+float InputField::getX() const { return _x; }
 
-float InputField::getY() const
-{
-    return _y;
-}
+float InputField::getY() const { return _y; }
 
-float InputField::getWidth() const
-{
-    return _width;
-}
+float InputField::getWidth() const { return _width; }
 
-float InputField::getHeight() const
-{
-    return _height;
-}
+float InputField::getHeight() const { return _height; }
 
-const std::string& InputField::getLabel() const
-{
-    return _label;
-}
+const std::string& InputField::getLabel() const { return _label; }
 
-bool InputField::getIsHovered() const
-{
-    return _isHovered;
-}
+bool InputField::getIsHovered() const { return _isHovered; }
 
 }  // namespace rtype
