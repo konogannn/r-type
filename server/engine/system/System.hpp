@@ -27,6 +27,7 @@ enum class SystemType {
     ENEMY_CLEANUP,
     PLAYER_SHOOTING,
     ENEMY_SHOOTING,
+    GUIDED_MISSILE,
     LIFETIME,
     OTHER
 };

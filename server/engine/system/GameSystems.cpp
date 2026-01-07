@@ -325,13 +325,16 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
 
             if (checkCollision(*missilePos, *missileBox, *enemyPos,
                                *enemyBox)) {
-                std::cout << "[GUIDED MISSILE] HIT! Dealing " << missile->damage 
-                          << " damage to enemy. Health before: " << enemyHealth->current << std::endl;
+                std::cout << "[GUIDED MISSILE] HIT! Dealing " << missile->damage
+                          << " damage to enemy. Health before: "
+                          << enemyHealth->current << std::endl;
                 enemyHealth->takeDamage(missile->damage);
-                std::cout << "[GUIDED MISSILE] Health after: " << enemyHealth->current << std::endl;
+                std::cout << "[GUIDED MISSILE] Health after: "
+                          << enemyHealth->current << std::endl;
 
                 // Marquer l'ennemi pour sync réseau (effet visuel de toucher)
-                auto* enemyNet = entityManager.getComponent<NetworkEntity>(enemyEntity);
+                auto* enemyNet =
+                    entityManager.getComponent<NetworkEntity>(enemyEntity);
                 if (enemyNet) {
                     enemyNet->needsSync = true;
                 }
@@ -773,9 +776,12 @@ void GuidedMissileSystem::update(float deltaTime, EntityManager& entityManager)
 
                     // Interpoler vers la nouvelle direction (turn rate)
                     // Plus agressif pour un meilleur tracking
-                    float turnSpeed = std::min(1.0f, guidedMissile->turnRate * deltaTime);
-                    missileVel->vx = missileVel->vx + (targetVx - missileVel->vx) * turnSpeed;
-                    missileVel->vy = missileVel->vy + (targetVy - missileVel->vy) * turnSpeed;
+                    float turnSpeed =
+                        std::min(1.0f, guidedMissile->turnRate * deltaTime);
+                    missileVel->vx = missileVel->vx +
+                                     (targetVx - missileVel->vx) * turnSpeed;
+                    missileVel->vy = missileVel->vy +
+                                     (targetVy - missileVel->vy) * turnSpeed;
 
                     // Limiter la vitesse
                     float currentSpeed =

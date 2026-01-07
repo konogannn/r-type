@@ -32,3 +32,8 @@ struct SpawnEnemyBulletEvent {
     engine::EntityId ownerId;
     engine::Position position;
 };
+
+struct SpawnGuidedMissileEvent {
+    engine::EntityId ownerId;
+    engine::Position position;
+};
