@@ -70,6 +70,30 @@ class GameEntityFactory {
     Entity createEnemyBullet(EntityId ownerId, const Position& ownerPos);
 
     /**
+     * @brief Create a shield item entity
+     * @param x Starting X position
+     * @param y Starting Y position
+     * @return Created shield item entity
+     */
+    Entity createShieldItem(float x, float y);
+
+    /**
+     * @brief Create a guided missile item entity
+     * @param x Starting X position
+     * @param y Starting Y position
+     * @return Created missile item entity
+     */
+    Entity createGuidedMissileItem(float x, float y);
+
+    /**
+     * @brief Create a guided missile projectile
+     * @param ownerId Entity ID of the player who fired
+     * @param ownerPos Position of the owner
+     * @return Created guided missile entity
+     */
+    Entity createGuidedMissile(EntityId ownerId, const Position& ownerPos);
+
+    /**
      * @brief Get the next available bullet ID
      * @return Next bullet ID
      */
