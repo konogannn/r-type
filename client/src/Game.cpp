@@ -232,9 +232,8 @@ void Game::render()
         for (const auto& [id, entity] : entities) {
             if (!entity || entity->type == 7) continue;
 
-            rtype::ISprite* spriteToRender = entity->currentSprite
-                                                 ? entity->currentSprite
-                                                 : entity->sprite.get();
+            // Always use the main sprite (no more currentSprite for players)
+            rtype::ISprite* spriteToRender = entity->sprite.get();
 
             if (!spriteToRender) continue;
 

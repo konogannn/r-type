@@ -125,13 +125,28 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
-        entity->verticalIdleTime += deltaTime;
-        if (entity->verticalIdleTime > 0.15f) {
-            if (entity->type == 1 && entity->currentSprite && entity->sprite) {
-                entity->currentSprite = entity->sprite.get();
+
+        // Player spritesheet animation
+        if (entity->type == 1 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;  // Loop animation
+                }
+
+                // Calculate texture rect based on animation state and frame
+                int row = static_cast<int>(entity->animState);
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                int frameY = row * entity->animFrameHeight;
+                entity->sprite->setTextureRect(frameX, frameY,
+                                               entity->animFrameWidth,
+                                               entity->animFrameHeight);
             }
         }
 
+        // Explosion animation (type 7)
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -259,17 +274,24 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
         return;
     }
 
-    if (entity->type == 1 && entity->spriteUp && entity->spriteDown) {
+    // Update animation state based on vertical movement for players
+    if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
         if (deltaY < -0.5f) {  // Moving up
-            entity->currentSprite = entity->spriteUp.get();
-            entity->verticalIdleTime = 0.0f;
+            entity->animState = ClientEntity::AnimationState::MOVING_UP;
         } else if (deltaY > 0.5f) {  // Moving down
-            entity->currentSprite = entity->spriteDown.get();
-            entity->verticalIdleTime = 0.0f;
-        } else {
+            entity->animState = ClientEntity::AnimationState::MOVING_DOWN;
+        } else {  // Idle or horizontal movement
+            entity->animState = ClientEntity::AnimationState::IDLE;
         }
         entity->lastY = y;
+
+        // Update texture rect immediately to reflect new state
+        int row = static_cast<int>(entity->animState);
+        int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+        int frameY = row * entity->animFrameHeight;
+        entity->sprite->setTextureRect(frameX, frameY, entity->animFrameWidth,
+                                       entity->animFrameHeight);
     }
 
     float clampedX = x;
@@ -279,8 +301,12 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
         if (clampedY < 0.0f) clampedY = 0.0f;
         float spriteHeight = 0.0f;
         if (entity->sprite) {
-            spriteHeight =
-                entity->sprite->getTextureHeight() * entity->spriteScale;
+            if (entity->type == 1 && entity->animFrameHeight > 0) {
+                spriteHeight = entity->animFrameHeight * entity->spriteScale;
+            } else {
+                spriteHeight =
+                    entity->sprite->getTextureHeight() * entity->spriteScale;
+            }
         } else {
             spriteHeight = 0.0f;
         }
@@ -362,22 +388,20 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             int playerIdx = (entity.id % 4) + 1;
             scale = 4.0f;
             texturePath = "assets/sprites/players/player" +
-                          std::to_string(playerIdx) + "-1.png";
-            entity.spriteUp = std::make_unique<SpriteSFML>();
-            std::string upPath = "assets/sprites/players/player" +
-                                 std::to_string(playerIdx) + "-3.png";
-            entity.spriteUp->loadTexture(upPath);
-            entity.spriteUp->setScale(scale, scale);
-            entity.spriteDown = std::make_unique<SpriteSFML>();
-            std::string downPath = "assets/sprites/players/player" +
-                                   std::to_string(playerIdx) + "-2.png";
-            entity.spriteDown->loadTexture(downPath);
-            entity.spriteDown->setScale(scale, scale);
+                          std::to_string(playerIdx) + ".png";
             if (entity.sprite->loadTexture(texturePath)) {
                 entity.sprite->setScale(scale, scale);
+
+                entity.animFrameCount = 3;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 35;
+                entity.animFrameHeight = 21;
+                entity.animState = ClientEntity::AnimationState::IDLE;
+                entity.sprite->setTextureRect(0, 0, 35, 21);
             }
             entity.spriteScale = scale;
-            entity.currentSprite = entity.sprite.get();
             break;
         }
         case 2: {
