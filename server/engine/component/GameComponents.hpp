@@ -127,4 +127,39 @@ struct MarkedForDestruction : public ComponentBase<MarkedForDestruction> {
     MarkedForDestruction() = default;
 };
 
+/**
+ * @brief Shield component - Player has an active shield
+ */
+struct Shield : public ComponentBase<Shield> {
+    bool active;
+
+    Shield(bool active_ = true) : active(active_) {}
+};
+
+/**
+ * @brief Item component - Tags entity as a collectible item
+ */
+struct Item : public ComponentBase<Item> {
+    enum class Type { SHIELD, GUIDED_MISSILE };
+
+    Type type;
+
+    Item(Type type_ = Type::SHIELD) : type(type_) {}
+};
+
+/**
+ * @brief GuidedMissile component - Bullet that tracks nearest enemy
+ */
+struct GuidedMissile : public ComponentBase<GuidedMissile> {
+    float damage;
+    float speed;
+    float turnRate;  // Vitesse de rotation vers la cible
+
+    GuidedMissile(float damage_ = 30.0f, float speed_ = 400.0f,
+                  float turnRate_ = 5.0f)
+        : damage(damage_), speed(speed_), turnRate(turnRate_)
+    {
+    }
+};
+
 }  // namespace engine
