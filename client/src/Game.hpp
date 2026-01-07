@@ -57,4 +57,9 @@ class Game {
     float _scale;
     std::chrono::steady_clock::time_point _lastShootTime;
     std::chrono::steady_clock::time_point _lastInputTime;
+
+    float _screenShakeIntensity;
+    float _screenShakeTimer;
+
+    bool _showHitboxes = false;
 };

@@ -29,13 +29,21 @@ struct ClientEntity {
     float lastY = 0;
     float velocityX = 0.0f;
     float velocityY = 0.0f;
+    float health = 100.0f;
+    float maxHealth = 100.0f;
     std::unique_ptr<SpriteSFML> sprite;
-    std::unique_ptr<SpriteSFML> spriteUp;
-    std::unique_ptr<SpriteSFML> spriteDown;
-    SpriteSFML* currentSprite = nullptr;
     float spriteScale = 1.0f;
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
+
+    enum class AnimationState { IDLE, MOVING_DOWN, MOVING_UP };
+    AnimationState animState = AnimationState::IDLE;
+    int animFrameCount = 0;
+    int animCurrentFrame = 0;
+    float animFrameTime = 0.0f;
+    float animFrameDuration = 0.0f;
+    int animFrameWidth = 0;
+    int animFrameHeight = 0;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
         : id(entityId),
@@ -86,7 +94,7 @@ class ClientGameState {
     bool sendLogin(const std::string& username);
     void disconnect();
     bool isConnected() const;
-    bool isGameStarted() const { return _gameStarted; }
+    bool isGameStarted() const;
 
     // Game loop integration
     void update(float deltaTime);
@@ -101,6 +109,12 @@ class ClientGameState {
     uint32_t getScore() const { return _score; }
     const std::string& getLastError() const { return _lastError; }
     size_t getEntityCount() const { return _entities.size(); }
+
+    float getPlayerHealth() const;
+    float getPlayerMaxHealth() const;
+
+    float getBossHealth() const;
+    float getBossMaxHealth() const;
 
     // Entity management
     ClientEntity* getEntity(uint32_t entityId);
@@ -120,6 +134,8 @@ class ClientGameState {
     void onEntitySpawn(uint32_t entityId, uint8_t type, float x, float y);
     void onEntityPosition(uint32_t entityId, float x, float y);
     void onEntityDead(uint32_t entityId);
+    void onHealthUpdate(uint32_t entityId, float currentHealth,
+                        float maxHealth);
     void onError(const std::string& error);
 
     // Entity helpers

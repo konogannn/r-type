@@ -210,6 +210,12 @@ void NetworkClientAsio::setOnScoreUpdateCallback(OnScoreUpdateCallback callback)
     _onScoreUpdate = callback;
 }
 
+void NetworkClientAsio::setOnHealthUpdateCallback(
+    std::function<void(const HealthUpdatePacket&)> callback)
+{
+    _onHealthUpdate = callback;
+}
+
 void NetworkClientAsio::setOnErrorCallback(
     std::function<void(const std::string&)> callback)
 {
@@ -279,6 +285,9 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
             break;
         case ::OpCode::S2C_SCORE_UPDATE:
             processScoreUpdate(data, size);
+            break;
+        case ::OpCode::S2C_HEALTH_UPDATE:
+            processHealthUpdate(data, size);
             break;
         default:
             break;
@@ -412,6 +421,20 @@ void NetworkClientAsio::processScoreUpdate(const uint8_t* data, size_t size)
 
     if (_onScoreUpdate) {
         _onScoreUpdate(*score);
+    }
+}
+
+void NetworkClientAsio::processHealthUpdate(const uint8_t* data, size_t size)
+{
+    if (size < sizeof(::HealthUpdatePacket)) {
+        return;
+    }
+
+    const ::HealthUpdatePacket* packet =
+        reinterpret_cast<const ::HealthUpdatePacket*>(data);
+
+    if (_onHealthUpdate) {
+        _onHealthUpdate(*packet);
     }
 }
 

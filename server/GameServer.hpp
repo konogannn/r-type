@@ -43,7 +43,9 @@ class GameServer {
 
     void waitForPlayers();
     void processNetworkUpdates();
+    void sendHealthUpdates();
     void resetGameState();
+    void spawnBoss(uint8_t bossType = 0);
 
    public:
     GameServer(float targetFPS = 60.0f, uint32_t timeoutSeconds = 30);

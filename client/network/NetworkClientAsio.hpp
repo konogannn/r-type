@@ -57,6 +57,8 @@ class NetworkClientAsio : public INetworkClient {
         OnEntityPositionCallback callback) override;
     void setOnEntityDeadCallback(OnEntityDeadCallback callback) override;
     void setOnScoreUpdateCallback(OnScoreUpdateCallback callback) override;
+    void setOnHealthUpdateCallback(
+        std::function<void(const HealthUpdatePacket&)> callback);
     void setOnErrorCallback(
         std::function<void(const std::string&)> callback) override;
 
@@ -93,6 +95,7 @@ class NetworkClientAsio : public INetworkClient {
     OnEntityPositionCallback _onEntityPosition;
     OnEntityDeadCallback _onEntityDead;
     OnScoreUpdateCallback _onScoreUpdate;
+    std::function<void(const HealthUpdatePacket&)> _onHealthUpdate;
     std::function<void(const std::string&)> _onError;
 
     // Private methods
@@ -114,6 +117,7 @@ class NetworkClientAsio : public INetworkClient {
     void processEntityPosition(const uint8_t* data, size_t size);
     void processEntityDead(const uint8_t* data, size_t size);
     void processScoreUpdate(const uint8_t* data, size_t size);
+    void processHealthUpdate(const uint8_t* data, size_t size);
 
     // Utility
     uint32_t getNextSequenceId();

@@ -7,6 +7,7 @@
 
 #include "GameSystems.hpp"
 
+#include <iostream>
 #include <unordered_set>
 
 namespace engine {
@@ -45,22 +46,48 @@ std::string LifetimeSystem::getName() const { return "LifetimeSystem"; }
 
 int LifetimeSystem::getPriority() const { return 100; }
 
+SystemType LifetimeSystem::getType() const
+{
+    return SystemType::LIFETIME_CLEANUP;
+}
+
+const std::vector<LifetimeSystem::DestroyInfo>&
+LifetimeSystem::getDestroyedEntities() const
+{
+    return _entitiesToDestroy;
+}
+
+void LifetimeSystem::clearDestroyedEntities() { _entitiesToDestroy.clear(); }
+
 void LifetimeSystem::processEntity(float deltaTime, Entity& entity,
                                    Lifetime* lifetime)
 {
     lifetime->remaining -= deltaTime;
     if (lifetime->remaining <= 0.0f) {
-        _entitiesToDestroy.push_back(entity.getId());
+        _expiredEntities.push_back(entity.getId());
     }
 }
 
 void LifetimeSystem::update(float deltaTime, EntityManager& entityManager)
 {
     _entitiesToDestroy.clear();
+    _expiredEntities.clear();
+
     System<Lifetime>::update(deltaTime, entityManager);
 
-    for (EntityId id : _entitiesToDestroy) {
-        entityManager.destroyEntity(id);
+    for (EntityId entityId : _expiredEntities) {
+        auto* entity = entityManager.getEntity(entityId);
+        if (entity) {
+            auto* netEntity =
+                entityManager.getComponent<NetworkEntity>(*entity);
+            if (netEntity) {
+                DestroyInfo info;
+                info.entityId = entityId;
+                info.networkEntityId = netEntity->entityId;
+                info.entityType = netEntity->entityType;
+                _entitiesToDestroy.push_back(info);
+            }
+        }
     }
 }
 
@@ -287,6 +314,92 @@ void CollisionSystem::handlePlayerBulletVsEnemy(
     }
 }
 
+void CollisionSystem::handlePlayerBulletVsBoss(
+    EntityManager& entityManager, const std::vector<Entity>& bullets,
+    const std::vector<Entity>& bosses, const std::vector<Entity>& bossParts)
+{
+    for (auto& bulletEntity : bullets) {
+        if (isMarkedForDestruction(bulletEntity.getId())) continue;
+
+        auto* bullet = entityManager.getComponent<Bullet>(bulletEntity);
+        if (!bullet || !bullet->fromPlayer) continue;
+
+        auto* bulletPos = entityManager.getComponent<Position>(bulletEntity);
+        auto* bulletBox = entityManager.getComponent<BoundingBox>(bulletEntity);
+        if (!bulletPos || !bulletBox) continue;
+
+        for (auto& bossEntity : bosses) {
+            if (isMarkedForDestruction(bossEntity.getId())) continue;
+
+            auto* bossPos = entityManager.getComponent<Position>(bossEntity);
+            auto* bossHealth = entityManager.getComponent<Health>(bossEntity);
+            auto* bossBox = entityManager.getComponent<BoundingBox>(bossEntity);
+            if (!bossPos || !bossHealth || !bossBox) continue;
+
+            if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
+                bossHealth->takeDamage(bullet->damage);
+
+                auto* bulletNet =
+                    entityManager.getComponent<NetworkEntity>(bulletEntity);
+                if (bulletNet) {
+                    markForDestruction(bulletEntity.getId(),
+                                       bulletNet->entityId,
+                                       bulletNet->entityType);
+                }
+
+                if (!bossHealth->isAlive()) {
+                    std::cout << "[COLLISION] Boss health depleted, entering "
+                                 "death phase"
+                              << std::endl;
+                }
+
+                break;
+            }
+        }
+
+        if (isMarkedForDestruction(bulletEntity.getId())) continue;
+
+        for (auto& partEntity : bossParts) {
+            if (isMarkedForDestruction(partEntity.getId())) continue;
+
+            auto* part = entityManager.getComponent<BossPart>(partEntity);
+            auto* partPos = entityManager.getComponent<Position>(partEntity);
+            auto* partBox = entityManager.getComponent<BoundingBox>(partEntity);
+            if (!part || !partPos || !partBox) continue;
+
+            if (checkCollision(*bulletPos, *bulletBox, *partPos, *partBox)) {
+                Entity* bossEntity =
+                    entityManager.getEntity(part->bossEntityId);
+                if (bossEntity) {
+                    auto* bossHealth =
+                        entityManager.getComponent<Health>(*bossEntity);
+                    auto* bossPos =
+                        entityManager.getComponent<Position>(*bossEntity);
+                    if (bossHealth && bossPos) {
+                        bossHealth->takeDamage(bullet->damage);
+
+                        if (!bossHealth->isAlive()) {
+                            std::cout << "[COLLISION] Boss health depleted via "
+                                         "part damage"
+                                      << std::endl;
+                        }
+                    }
+                }
+
+                auto* bulletNet =
+                    entityManager.getComponent<NetworkEntity>(bulletEntity);
+                if (bulletNet) {
+                    markForDestruction(bulletEntity.getId(),
+                                       bulletNet->entityId,
+                                       bulletNet->entityType);
+                }
+
+                break;
+            }
+        }
+    }
+}
+
 void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
                                           const std::vector<Entity>& players,
                                           const std::vector<Entity>& enemies)
@@ -317,14 +430,12 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
                                        enemyNet->entityType);
                 }
 
-                if (!playerHealth->isAlive()) {
-                    auto* playerNet =
-                        entityManager.getComponent<NetworkEntity>(playerEntity);
-                    if (playerNet) {
-                        markForDestruction(playerEntity.getId(),
-                                           playerNet->entityId,
-                                           playerNet->entityType);
-                    }
+                if (!playerHealth->isAlive() &&
+                    playerHealth->deathTimer < 0.0f) {
+                    std::cout << "[COLLISION] Player " << playerEntity.getId()
+                              << " set deathTimer (enemy collision)"
+                              << std::endl;
+                    playerHealth->deathTimer = 0.5f;
                 }
 
                 break;
@@ -370,14 +481,9 @@ void CollisionSystem::handleEnemyBulletVsPlayer(
                                        bulletNet->entityType);
                 }
 
-                if (!playerHealth->isAlive()) {
-                    auto* playerNet =
-                        entityManager.getComponent<NetworkEntity>(playerEntity);
-                    if (playerNet) {
-                        markForDestruction(playerEntity.getId(),
-                                           playerNet->entityId,
-                                           playerNet->entityType);
-                    }
+                if (!playerHealth->isAlive() &&
+                    playerHealth->deathTimer < 0.0f) {
+                    playerHealth->deathTimer = 0.5f;
                 }
 
                 break;
@@ -452,9 +558,15 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
         entityManager.getEntitiesWith<Position, Enemy, Health, BoundingBox>();
     auto players =
         entityManager.getEntitiesWith<Position, Player, Health, BoundingBox>();
+    auto bosses =
+        entityManager.getEntitiesWith<Position, Boss, Health, BoundingBox>();
+    auto bossParts =
+        entityManager
+            .getEntitiesWith<Position, BossPart, Health, BoundingBox>();
 
     handleBulletVsBullet(entityManager, bullets);
     handlePlayerBulletVsEnemy(entityManager, bullets, enemies);
+    handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
     handlePlayerVsEnemy(entityManager, players, enemies);
     handleEnemyBulletVsPlayer(entityManager, bullets, players);
 
@@ -507,7 +619,14 @@ void EnemyShootingSystem::processEntity(float deltaTime,
         return;
     }
 
-    _spawnQueue.push_back(SpawnEnemyBulletEvent{entity.getId(), *pos});
+    SpawnEnemyBulletEvent event;
+    event.ownerId = entity.getId();
+    event.x = pos->x - 32.0f;
+    event.y = pos->y;
+    event.vx = -300.0f;
+    event.vy = 0.0f;
+
+    _spawnQueue.push_back(event);
     enemy->shootCooldown = SHOOT_INTERVAL;
 }
 
