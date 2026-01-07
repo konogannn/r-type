@@ -13,6 +13,7 @@
 #include "Button.hpp"
 #include "ColorBlindFilter.hpp"
 #include "Config.hpp"
+#include "InputField.hpp"
 #include "KeyBinding.hpp"
 #include "KeyBindingButton.hpp"
 #include "Resolution.hpp"
@@ -54,9 +55,20 @@ class SettingsMenu {
     void handleKeyPress(Key key);
 
     /**
+     * @brief Handle text input for active input fields
+     * @param text The text character entered
+     */
+    void handleTextInput(char text);
+
+    /**
      * @brief Check if any key binding button is waiting for input
      */
     bool isWaitingForKeyPress() const;
+
+    /**
+     * @brief Check if any input field is active
+     */
+    bool isAnyInputFieldActive() const;
 
     /**
      * @brief Render the settings menu
@@ -69,6 +81,8 @@ class SettingsMenu {
     void saveSettings();
 
    private:
+    enum class SettingsInputField { ServerAddress = 0, ServerPort = 1 };
+
     WindowSFML& _window;
     GraphicsSFML& _graphics;
     InputSFML& _input;
@@ -77,6 +91,7 @@ class SettingsMenu {
     std::vector<Slider> _sliders;
     std::vector<KeyBindingButton> _keyBindingButtons;
     std::vector<ResolutionButton> _resolutionButtons;
+    std::vector<InputField> _inputFields;
     Button _backButton;
     ToggleButton _fullscreenToggle;
     SelectionButton _colorBlindSelection;
@@ -118,12 +133,14 @@ class SettingsMenu {
     void setupSliders();
     void setupKeyBindings();
     void setupResolutionButtons();
+    void setupInputFields();
     void updateLayout();
     void renderSlider(const Slider& slider, float scale);
     void renderKeyBindingButton(const KeyBindingButton& button, float scale);
     void renderToggleButton(float scale);
     void renderResolutionButton(const ResolutionButton& button, float scale);
     void renderColorBlindSelection(float scale);
+    void renderInputField(const InputField& field, float scale);
     void renderBackButton(float scale);
 };
 

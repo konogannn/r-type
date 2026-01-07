@@ -64,6 +64,8 @@ EventType WindowSFML::getEventType() const
             return EventType::MouseButtonReleased;
         case sf::Event::MouseMoved:
             return EventType::MouseMoved;
+        case sf::Event::TextEntered:
+            return EventType::TextEntered;
         default:
             return EventType::None;
     }
@@ -187,8 +189,10 @@ Key WindowSFML::getEventKey() const
             return Key::Space;
         case sf::Keyboard::Enter:
             return Key::Enter;
-        case sf::Keyboard::Backspace:
+        case sf::Keyboard::BackSpace:
             return Key::Backspace;
+        case sf::Keyboard::Tab:
+            return Key::Tab;
         case sf::Keyboard::Left:
             return Key::Left;
         case sf::Keyboard::Right:
@@ -212,6 +216,16 @@ Key WindowSFML::getEventKey() const
         default:
             return Key::Unknown;
     }
+}
+
+char WindowSFML::getEventText() const
+{
+    if (_lastEvent.type == sf::Event::TextEntered) {
+        if (_lastEvent.text.unicode < 128) {
+            return static_cast<char>(_lastEvent.text.unicode);
+        }
+    }
+    return '\0';
 }
 
 void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b)

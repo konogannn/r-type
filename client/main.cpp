@@ -137,6 +137,13 @@ int main()
                     Key key = window->getEventKey();
                     settingsMenu->handleKeyPress(key);
                 }
+
+                if (eventType == EventType::TextEntered) {
+                    char textChar = window->getEventText();
+                    if (textChar >= 32 && textChar < 127) {
+                        settingsMenu->handleTextInput(textChar);
+                    }
+                }
             }
 
             bool returnToMenu = settingsMenu->update();

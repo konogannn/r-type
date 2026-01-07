@@ -23,7 +23,8 @@ enum class EventType {
     KeyReleased,
     MouseButtonPressed,
     MouseButtonReleased,
-    MouseMoved
+    MouseMoved,
+    TextEntered
 };
 
 // Forward declaration of MouseButton (defined in Input.hpp)
@@ -73,6 +74,12 @@ class IWindow {
      * @return Key that was pressed/released
      */
     virtual Key getEventKey() const = 0;
+
+    /**
+     * @brief Get the text character from the last TextEntered event
+     * @return Character that was entered
+     */
+    virtual char getEventText() const = 0;
 
     /**
      * @brief Clear the window with a color

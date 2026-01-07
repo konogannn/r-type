@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "../ColorBlindFilter.hpp"
+#include "../ConnectionDialog.hpp"
 #include "../network/ClientGameState.hpp"
 #include "../wrapper/graphics/GraphicsSFML.hpp"
 #include "../wrapper/input/InputSFML.hpp"
@@ -34,6 +35,7 @@ class Game {
     void update(float deltaTime);
     void render();
     void updateFps(float deltaTime);
+    bool tryConnect(const std::string& address, uint16_t port);
 
    private:
     rtype::WindowSFML& _window;
@@ -45,6 +47,9 @@ class Game {
     std::unique_ptr<rtype::ClientGameState> _gameState;
     std::shared_ptr<Background> _background;
     rtype::ColorBlindFilter& _colorBlindFilter;
+
+    std::unique_ptr<rtype::ConnectionDialog> _connectionDialog;
+    bool _showConnectionDialog;
 
     float _fpsUpdateTime;
     int _fpsCounter;

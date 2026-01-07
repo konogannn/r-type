@@ -28,6 +28,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _returnToMenu(false),
       _background(sharedBackground),
       _colorBlindFilter(rtype::ColorBlindFilter::getInstance()),
+      _showConnectionDialog(false),
       _fpsUpdateTime(0.0f),
       _fpsCounter(0),
       _currentFps(0),
@@ -66,13 +67,12 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
     _gameState = std::make_unique<rtype::ClientGameState>();
 
-    std::cout << "[Game] Attempting to connect to server " << serverAddress
-              << ":" << serverPort << "..." << std::endl;
-    if (_gameState->connectToServer(serverAddress, serverPort)) {
-        std::cout << "[Game] Connection initiated" << std::endl;
-        _gameState->sendLogin("Player1");
-    } else {
-        std::cout << "[Game] Failed to connect to server" << std::endl;
+    if (!tryConnect(serverAddress, serverPort)) {
+        _connectionDialog = std::make_unique<rtype::ConnectionDialog>(
+            _graphics, _input, static_cast<float>(actualWidth),
+            static_cast<float>(actualHeight));
+        _connectionDialog->setErrorMessage("Could not connect to server");
+        _showConnectionDialog = true;
     }
 }
 
@@ -81,6 +81,20 @@ Game::~Game()
     if (_gameState && _gameState->isConnected()) {
         std::cout << "[Game] Disconnecting from server..." << std::endl;
         _gameState->disconnect();
+    }
+}
+
+bool Game::tryConnect(const std::string& address, uint16_t port)
+{
+    std::cout << "[Game] Attempting to connect to server " << address << ":"
+              << port << "..." << std::endl;
+    if (_gameState->connectToServer(address, port)) {
+        std::cout << "[Game] Connection initiated" << std::endl;
+        _gameState->sendLogin("Player1");
+        return true;
+    } else {
+        std::cout << "[Game] Failed to connect to server" << std::endl;
+        return false;
     }
 }
 
@@ -107,12 +121,29 @@ bool Game::run()
 void Game::handleEvents()
 {
     while (_window.pollEvent()) {
-        if (_window.getEventType() == rtype::EventType::Closed) {
+        rtype::EventType eventType = _window.getEventType();
+
+        if (eventType == rtype::EventType::Closed) {
             _running = false;
             _window.close();
+            return;
+        }
+        if (_showConnectionDialog && _connectionDialog) {
+            if (eventType == rtype::EventType::KeyPressed) {
+                rtype::Key key = _window.getEventKey();
+                _connectionDialog->handleKeyPress(key);
+            }
+
+            if (eventType == rtype::EventType::TextEntered) {
+                char textChar = _window.getEventText();
+                if (textChar >= 32 && textChar < 127) {
+                    _connectionDialog->handleTextInput(textChar);
+                }
+            }
+            continue;
         }
 
-        if (_window.getEventType() == rtype::EventType::KeyPressed) {
+        if (eventType == rtype::EventType::KeyPressed) {
             if (_input.isKeyPressed(rtype::Key::Escape)) {
                 _running = false;
                 _returnToMenu = true;
@@ -123,6 +154,34 @@ void Game::handleEvents()
 
 void Game::update(float deltaTime)
 {
+    if (_showConnectionDialog && _connectionDialog) {
+        int mouseX = _input.getMouseX();
+        int mouseY = _input.getMouseY();
+        bool isMousePressed =
+            _input.isMouseButtonPressed(rtype::MouseButton::Left);
+
+        if (_connectionDialog->update(mouseX, mouseY, isMousePressed,
+                                      deltaTime)) {
+            if (_connectionDialog->wasCancelled()) {
+                _running = false;
+                _returnToMenu = true;
+                _showConnectionDialog = false;
+            } else {
+                std::string address = _connectionDialog->getServerAddress();
+                int port = _connectionDialog->getServerPort();
+                if (tryConnect(address, port)) {
+                    _showConnectionDialog = false;
+                    _connectionDialog.reset();
+                } else {
+                    _connectionDialog->setErrorMessage(
+                        "Connection failed. Try again.");
+                    _connectionDialog->reset();
+                }
+            }
+        }
+        return;
+    }
+
     if (_gameState) {
         _gameState->update(deltaTime);
 
@@ -401,6 +460,9 @@ void Game::render()
         _graphics.setRenderTarget(nullptr);
         _window.clear(0, 0, 0);
         _colorBlindFilter.endCaptureAndApply(_window);
+    }
+    if (_showConnectionDialog && _connectionDialog) {
+        _connectionDialog->render(_scale, "assets/fonts/Retro_Gaming.ttf");
     }
 
     _window.display();

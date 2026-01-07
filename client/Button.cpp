@@ -7,6 +7,10 @@
 
 #include "Button.hpp"
 
+#include <cmath>
+
+#include "src/SoundManager.hpp"
+
 namespace rtype {
 
 Button::Button(float x, float y, float width, float height,
@@ -18,7 +22,10 @@ Button::Button(float x, float y, float width, float height,
       _text(text),
       _callback(nullptr),
       _isHovered(false),
-      _wasPressed(false)
+      _wasPressed(false),
+      _wasHovered(false),
+      _currentScale(1.0f),
+      _targetScale(1.0f)
 {
 }
 
@@ -36,6 +43,12 @@ bool Button::isHovered(int mouseX, int mouseY) const
 bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed)
 {
     _isHovered = isHovered(mouseX, mouseY);
+    if (_isHovered && !_wasHovered) {
+        SoundManager::getInstance().playSoundAtVolume("click",
+                                                      HOVER_SOUND_VOLUME);
+    }
+    _wasHovered = _isHovered;
+    _targetScale = _isHovered ? HOVER_SCALE : NORMAL_SCALE;
 
     bool clicked = false;
     if (_isHovered && isMousePressed) {
@@ -48,6 +61,17 @@ bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed)
     }
 
     return clicked;
+}
+
+void Button::updateAnimation(float deltaTime)
+{
+    if (_currentScale != _targetScale) {
+        float diff = _targetScale - _currentScale;
+        _currentScale += diff * ANIMATION_SPEED * deltaTime;
+        if (std::abs(diff) < 0.001f) {
+            _currentScale = _targetScale;
+        }
+    }
 }
 
 void Button::setCallback(std::function<void()> callback)

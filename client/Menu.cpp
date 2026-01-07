@@ -58,8 +58,6 @@ void Menu::setupButtons()
     _buttons.clear();
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "PLAY");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "SETTINGS");
-    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT,
-                          "CONNECT TO SERVER");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "QUIT");
 }
 
@@ -81,8 +79,6 @@ void Menu::updateLayout()
     _buttons[1] = Button(centerX, startY + spacing, buttonWidth, buttonHeight,
                          "SETTINGS");
     _buttons[2] = Button(centerX, startY + 2 * spacing, buttonWidth,
-                         buttonHeight, "CONNECT TO SERVER");
-    _buttons[3] = Button(centerX, startY + 3 * spacing, buttonWidth,
                          buttonHeight, "QUIT");
 }
 
@@ -108,6 +104,8 @@ MenuAction Menu::update(float deltaTime)
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
 
     for (size_t i = 0; i < _buttons.size(); ++i) {
+        _buttons[i].updateAnimation(deltaTime);
+
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
             SoundManager::getInstance().playSound("click");
             switch (i) {
@@ -117,8 +115,6 @@ MenuAction Menu::update(float deltaTime)
                 case 1:
                     return MenuAction::Settings;
                 case 2:
-                    return MenuAction::ConnectServer;
-                case 3:
                     return MenuAction::Quit;
             }
         }
@@ -148,6 +144,14 @@ void Menu::render()
 
     if (_uiAlpha > 0.0f) {
         for (const auto& button : _buttons) {
+            float buttonScale = button.getScale();
+            float scaledWidth = button.getWidth() * buttonScale;
+            float scaledHeight = button.getHeight() * buttonScale;
+            float offsetX = (scaledWidth - button.getWidth()) / 2.0f;
+            float offsetY = (scaledHeight - button.getHeight()) / 2.0f;
+            float scaledX = button.getX() - offsetX;
+            float scaledY = button.getY() - offsetY;
+
             unsigned char r, g, b;
             if (button.getIsHovered()) {
                 r = 0;
@@ -161,35 +165,29 @@ void Menu::render()
 
             unsigned char alpha = static_cast<unsigned char>(255 * _uiAlpha);
 
-            _graphics.drawRectangle(button.getX(), button.getY(),
-                                    button.getWidth(), button.getHeight(), r, g,
-                                    b, alpha);
+            _graphics.drawRectangle(scaledX, scaledY, scaledWidth, scaledHeight,
+                                    r, g, b, alpha);
 
             float borderThickness = 3.0f * scale;
 
-            _graphics.drawRectangle(button.getX(), button.getY(),
-                                    button.getWidth(), borderThickness, 100,
-                                    150, 255, alpha);
+            _graphics.drawRectangle(scaledX, scaledY, scaledWidth,
+                                    borderThickness, 100, 150, 255, alpha);
             _graphics.drawRectangle(
-                button.getX(),
-                button.getY() + button.getHeight() - borderThickness,
-                button.getWidth(), borderThickness, 100, 150, 255, alpha);
-            _graphics.drawRectangle(button.getX(), button.getY(),
-                                    borderThickness, button.getHeight(), 100,
+                scaledX, scaledY + scaledHeight - borderThickness, scaledWidth,
+                borderThickness, 100, 150, 255, alpha);
+            _graphics.drawRectangle(scaledX, scaledY, borderThickness,
+                                    scaledHeight, 100, 150, 255, alpha);
+            _graphics.drawRectangle(scaledX + scaledWidth - borderThickness,
+                                    scaledY, borderThickness, scaledHeight, 100,
                                     150, 255, alpha);
-            _graphics.drawRectangle(
-                button.getX() + button.getWidth() - borderThickness,
-                button.getY(), borderThickness, button.getHeight(), 100, 150,
-                255, alpha);
 
             unsigned int scaledFontSize =
                 static_cast<unsigned int>(FONT_SIZE * scale);
             float textWidth = _graphics.getTextWidth(button.getText(),
                                                      scaledFontSize, _fontPath);
-            float textX =
-                button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
-            float textY = button.getY() + (button.getHeight() / 2.0f) -
-                          (scaledFontSize / 2.0f);
+            float textX = scaledX + (scaledWidth / 2.0f) - (textWidth / 2.0f);
+            float textY =
+                scaledY + (scaledHeight / 2.0f) - (scaledFontSize / 2.0f);
 
             unsigned char textAlpha =
                 static_cast<unsigned char>(255 * _uiAlpha);

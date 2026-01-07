@@ -37,6 +37,7 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     setupSliders();
     setupKeyBindings();
     setupResolutionButtons();
+    setupInputFields();
 
     _config.load();
     _keyBinding.loadFromConfig();
@@ -56,6 +57,13 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
     int colorBlindMode = _config.getInt("colorBlindMode", 0);
     _colorBlindSelection.setSelectedIndex(colorBlindMode);
     _colorBlindFilter.setMode(ColorBlindFilter::indexToMode(colorBlindMode));
+
+    std::string serverAddress = _config.getString("serverAddress", "127.0.0.1");
+    int serverPort = _config.getInt("serverPort", 8080);
+    _inputFields[static_cast<size_t>(SettingsInputField::ServerAddress)]
+        .setValue(serverAddress);
+    _inputFields[static_cast<size_t>(SettingsInputField::ServerPort)].setValue(
+        std::to_string(serverPort));
 
     updateLayout();
 }
@@ -105,6 +113,15 @@ void SettingsMenu::setupResolutionButtons()
                                     Resolution::R1920x1080);
 }
 
+void SettingsMenu::setupInputFields()
+{
+    _inputFields.clear();
+    _inputFields.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, "Server IP",
+                              "127.0.0.1", InputFieldType::ServerIP);
+    _inputFields.emplace_back(0.0f, 0.0f, 400.0f, 50.0f, "Server Port", "8080",
+                              InputFieldType::ServerPort);
+}
+
 void SettingsMenu::updateLayout()
 {
     float windowWidth = static_cast<float>(_window.getWidth());
@@ -118,12 +135,22 @@ void SettingsMenu::updateLayout()
 
     float scaleW = windowWidth / 1920.0f;
     float scaleH = windowHeight / 1080.0f;
-    float sliderWidth = 400.0f * scaleW;
-    float keyBindWidth = 400.0f * scaleW;
-    float resButtonWidth = 320.0f * scaleW;
+
+    float columnWidth = 400.0f * scaleW;
+    float totalPadding = windowWidth - (3 * columnWidth);
+    float spacing = totalPadding / 4.0f;
+
+    float leftColX = spacing;
+    float centerColX = spacing + columnWidth + spacing;
+    float rightColX = spacing + columnWidth + spacing + columnWidth + spacing +
+                      (30.0f * scaleW);
+
+    float sliderWidth = columnWidth;
+    float keyBindWidth = columnWidth;
+    float resButtonWidth = columnWidth;
+    float inputFieldWidth = columnWidth;
+
     float resButtonHeight = 50.0f * scaleH;
-    float leftColX = windowWidth * 0.12f;
-    float centerColX = (windowWidth - sliderWidth) / 2.0f;
     float leftColY = 250.0f * scaleH;
     float resSpacing = 60.0f * scaleH;
 
@@ -167,7 +194,7 @@ void SettingsMenu::updateLayout()
     float toggleHeight = 60.0f * scaleH;
     float toggleX = leftColX + (resButtonWidth / 2.0f) - (toggleWidth / 2.0f);
     float toggleY =
-        leftColY + (_resolutionButtons.size() * resSpacing) + (40.0f * scaleH);
+        leftColY + (_resolutionButtons.size() * resSpacing) + (80.0f * scaleH);
     _fullscreenToggle =
         ToggleButton(toggleX, toggleY, toggleWidth, toggleHeight, "Fullscreen",
                      _fullscreenToggle.isOn());
@@ -176,7 +203,7 @@ void SettingsMenu::updateLayout()
     float colorBlindHeight = 50.0f * scaleH;
     float colorBlindX =
         leftColX + (resButtonWidth / 2.0f) - (colorBlindWidth / 2.0f);
-    float colorBlindY = toggleY + toggleHeight + (40.0f * scaleH);
+    float colorBlindY = toggleY + toggleHeight + (80.0f * scaleH);
     int currentSelection = _colorBlindSelection.getSelectedIndex();
     _colorBlindSelection =
         SelectionButton(colorBlindX, colorBlindY, colorBlindWidth,
@@ -185,16 +212,30 @@ void SettingsMenu::updateLayout()
                          "Protanomaly", "Deuteranomaly", "Tritanomaly"},
                         currentSelection);
 
-    float keyBindStartY = 500.0f * scaleH;
+    float keyBindStartY = sliderY;
     float keyBindHeight = 50.0f * scaleH;
     float keyBindSpacing = 60.0f * scaleH;
-    float keyBindX = (windowWidth - keyBindWidth) / 2.0f;
+    float keyBindX = rightColX;
 
     for (size_t i = 0; i < _keyBindingButtons.size(); i++) {
         GameAction action = _keyBindingButtons[i].getAction();
         _keyBindingButtons[i] =
             KeyBindingButton(keyBindX, keyBindStartY + i * keyBindSpacing,
                              keyBindWidth, keyBindHeight, action);
+    }
+    float inputFieldHeight = 50.0f * scaleH;
+    float inputFieldSpacing = 70.0f * scaleH;
+    float inputFieldStartY = sliderY + (2 * sliderSpacing) + (40.0f * scaleH);
+
+    for (size_t i = 0; i < _inputFields.size(); i++) {
+        std::string label = _inputFields[i].getLabel();
+        std::string value = _inputFields[i].getValue();
+        // Preserve the field type when recreating (0=ServerIP, 1=ServerPort)
+        InputFieldType type =
+            (i == 0) ? InputFieldType::ServerIP : InputFieldType::ServerPort;
+        _inputFields[i] =
+            InputField(centerColX, inputFieldStartY + i * inputFieldSpacing,
+                       inputFieldWidth, inputFieldHeight, label, value, type);
     }
 
     float backButtonWidth = 200.0f * scaleW;
@@ -279,6 +320,14 @@ bool SettingsMenu::update()
         }
     }
 
+    if (!anyInEditMode) {
+        for (auto& field : _inputFields) {
+            if (field.update(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSound("click");
+            }
+        }
+    }
+
     if (!anyInEditMode &&
         _backButton.isClicked(mouseX, mouseY, isMousePressed)) {
         SoundManager::getInstance().playSound("click");
@@ -291,10 +340,38 @@ bool SettingsMenu::update()
 
 void SettingsMenu::handleKeyPress(Key key)
 {
+    if (key == Key::Backspace) {
+        for (auto& field : _inputFields) {
+            if (field.isActive()) {
+                field.handleBackspace();
+                return;
+            }
+        }
+    }
+
+    if (key == Key::Enter || key == Key::Return) {
+        for (auto& field : _inputFields) {
+            if (field.isActive()) {
+                field.handleEnter();
+                return;
+            }
+        }
+    }
+
     for (auto& button : _keyBindingButtons) {
         if (button.tryAssignKey(key)) {
             saveSettings();
             break;
+        }
+    }
+}
+
+void SettingsMenu::handleTextInput(char text)
+{
+    for (auto& field : _inputFields) {
+        if (field.isActive()) {
+            field.handleTextInput(text);
+            return;
         }
     }
 }
@@ -309,11 +386,22 @@ bool SettingsMenu::isWaitingForKeyPress() const
     return false;
 }
 
+bool SettingsMenu::isAnyInputFieldActive() const
+{
+    for (const auto& field : _inputFields) {
+        if (field.isActive()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void SettingsMenu::render()
 {
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
     float scale = windowHeight / 1080.0f;
+    float scaleW = windowWidth / 1920.0f;
 
     rtype::IRenderTarget* filterTexture = _colorBlindFilter.getRenderTarget();
 
@@ -338,6 +426,12 @@ void SettingsMenu::render()
     float leftColX = _layout.leftColX;
     float centerColX = _layout.centerColX;
     float resButtonWidth = _layout.resButtonWidth;
+
+    float columnWidth = 400.0f * scaleW;
+    float totalPadding = windowWidth - (3 * columnWidth);
+    float spacing = totalPadding / 4.0f;
+    float rightColX = spacing + columnWidth + spacing + columnWidth + spacing;
+
     std::string resTitle = "RESOLUTION";
     float resTitleW =
         _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
@@ -349,11 +443,12 @@ void SettingsMenu::render()
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
     }
+
     std::string audioTitle = "AUDIO";
     float audioTitleW =
         _graphics.getTextWidth(audioTitle, sectionTitleSize, _fontPath);
     float audioTitleX =
-        centerColX + (sliderWidth / 2.0f) - (audioTitleW / 2.0f);
+        centerColX + (columnWidth / 2.0f) - (audioTitleW / 2.0f);
     float audioTitleY = sectionTitleY;
     _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
                        255, 255, 255, _fontPath);
@@ -361,12 +456,22 @@ void SettingsMenu::render()
     for (const auto& slider : _sliders) {
         renderSlider(slider, scale);
     }
+
+    std::string serverTitle = "SERVER";
+    float serverTitleW =
+        _graphics.getTextWidth(serverTitle, sectionTitleSize, _fontPath);
+    float serverTitleX =
+        centerColX + (columnWidth / 2.0f) - (serverTitleW / 2.0f);
+    float serverTitleY = sectionTitleY + 300.0f * scale;
+    _graphics.drawText(serverTitle, serverTitleX, serverTitleY,
+                       sectionTitleSize, 255, 255, 255, _fontPath);
+
     std::string dispTitle = "DISPLAY";
     float dispTitleW =
         _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
     float toggleYRender = _layout.toggleY;
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
-    float dispTitleY = toggleYRender - 30.0f * scale;
+    float dispTitleY = toggleYRender - 20.0f * scale;
     _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 255,
                        255, 255, _fontPath);
 
@@ -377,22 +482,23 @@ void SettingsMenu::render()
         _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, _fontPath);
     float colorBlindTitleX =
         leftColX + (resButtonWidth / 2.0f) - (colorBlindTitleW / 2.0f);
-    float toggleHeight = 60.0f * scale;
-    float colorBlindTitleY = toggleYRender + toggleHeight + 10.0f * scale;
+    float colorBlindTitleY = _colorBlindSelection.getY() - 50.0f * scale;
     _graphics.drawText(colorBlindTitle, colorBlindTitleX, colorBlindTitleY,
                        sectionTitleSize, 255, 255, 255, _fontPath);
 
     renderColorBlindSelection(scale);
-
     std::string ctrlTitle = "CONTROLS";
     float ctrlTitleW =
         _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
-    float ctrlTitleX = (windowWidth / 2.0f) - (ctrlTitleW / 2.0f);
-    _graphics.drawText(ctrlTitle, ctrlTitleX, 500.0f * scale, sectionTitleSize,
+    float ctrlTitleX = rightColX + (columnWidth / 2.0f) - (ctrlTitleW / 2.0f);
+    _graphics.drawText(ctrlTitle, ctrlTitleX, sectionTitleY, sectionTitleSize,
                        255, 255, 255, _fontPath);
 
     for (const auto& button : _keyBindingButtons) {
         renderKeyBindingButton(button, scale);
+    }
+    for (const auto& field : _inputFields) {
+        renderInputField(field, scale);
     }
 
     renderBackButton(scale);
@@ -503,6 +609,33 @@ void SettingsMenu::saveSettings()
     _config.setFloat("musicVolume", _sliders[0].getValue());
     _config.setFloat("sfxVolume", _sliders[1].getValue());
     _keyBinding.saveToConfig();
+
+    if (_inputFields.size() >= 2) {
+        _config.setString(
+            "serverAddress",
+            _inputFields[static_cast<size_t>(SettingsInputField::ServerAddress)]
+                .getValue());
+        const std::string portStr =
+            _inputFields[static_cast<size_t>(SettingsInputField::ServerPort)]
+                .getValue();
+        int port = 8080;
+        try {
+            port = std::stoi(portStr);
+            if (port < 1 || port > 65535) {
+                std::cerr
+                    << "Invalid server port '" << portStr
+                    << "' (must be between 1-65535). Using default port 8080."
+                    << std::endl;
+                port = 8080;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Invalid server port '" << portStr
+                      << "'. Using default port 8080. Error: " << e.what()
+                      << std::endl;
+        }
+        _config.setInt("serverPort", port);
+    }
+
     _config.save();
 }
 
@@ -709,6 +842,60 @@ void SettingsMenu::renderColorBlindSelection(float scale)
                   (_colorBlindSelection.getWidth() / 2.0f) - (textWidth / 2.0f);
     float textY = _colorBlindSelection.getY() + 15.0f * scale;
     _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255,
+                       _fontPath);
+}
+
+void SettingsMenu::renderInputField(const InputField& field, float scale)
+{
+    unsigned int fontSize = static_cast<unsigned int>(20 * scale);
+
+    unsigned char r, g, b;
+    if (field.isActive()) {
+        r = 255;
+        g = 180;
+        b = 0;
+    } else if (field.getIsHovered()) {
+        r = 0;
+        g = 200;
+        b = 255;
+    } else {
+        r = 30;
+        g = 30;
+        b = 100;
+    }
+
+    _graphics.drawRectangle(field.getX(), field.getY(), field.getWidth(),
+                            field.getHeight(), r, g, b);
+
+    float borderThickness = 3.0f * scale;
+    unsigned char borderR = field.isActive() ? 255 : 100;
+    unsigned char borderG = field.isActive() ? 180 : 150;
+    unsigned char borderB = field.isActive() ? 0 : 255;
+
+    _graphics.drawRectangle(field.getX(), field.getY(), field.getWidth(),
+                            borderThickness, borderR, borderG, borderB);
+    _graphics.drawRectangle(
+        field.getX(), field.getY() + field.getHeight() - borderThickness,
+        field.getWidth(), borderThickness, borderR, borderG, borderB);
+    _graphics.drawRectangle(field.getX(), field.getY(), borderThickness,
+                            field.getHeight(), borderR, borderG, borderB);
+    _graphics.drawRectangle(field.getX() + field.getWidth() - borderThickness,
+                            field.getY(), borderThickness, field.getHeight(),
+                            borderR, borderG, borderB);
+
+    std::string label = field.getLabel() + ":";
+    float labelY = field.getY() + 15.0f * scale;
+    _graphics.drawText(label, field.getX() + 20.0f * scale, labelY, fontSize,
+                       255, 255, 255, _fontPath);
+
+    std::string displayValue = field.getValue();
+    if (field.isActive()) {
+        displayValue += "_";
+    }
+    float valueWidth =
+        _graphics.getTextWidth(displayValue, fontSize, _fontPath);
+    float valueX = field.getX() + field.getWidth() - valueWidth - 20.0f * scale;
+    _graphics.drawText(displayValue, valueX, labelY, fontSize, 255, 255, 0,
                        _fontPath);
 }
 
