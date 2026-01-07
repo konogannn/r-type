@@ -68,12 +68,12 @@ class InputField {
     /**
      * @brief Check if the field is active (focused)
      */
-    bool isActive() const { return _isActive; }
+    bool isActive() const;
 
     /**
      * @brief Set the field active state
      */
-    void setActive(bool active) { _isActive = active; }
+    void setActive(bool active);
 
     /**
      * @brief Check if mouse is hovering over the field
@@ -83,28 +83,25 @@ class InputField {
     /**
      * @brief Get the current value of the input field
      */
-    const std::string& getValue() const { return _value; }
+    const std::string& getValue() const;
 
     /**
      * @brief Set the value of the input field
      */
-    void setValue(const std::string& value) { _value = value; }
+    void setValue(const std::string& value);
 
     /**
      * @brief Set a callback for when the value changes
      */
-    void setOnChangeCallback(std::function<void(const std::string&)> callback)
-    {
-        _onChange = callback;
-    }
+    void setOnChangeCallback(std::function<void(const std::string&)> callback);
 
     // Getters
-    float getX() const { return _x; }
-    float getY() const { return _y; }
-    float getWidth() const { return _width; }
-    float getHeight() const { return _height; }
-    const std::string& getLabel() const { return _label; }
-    bool getIsHovered() const { return _isHovered; }
+    float getX() const;
+    float getY() const;
+    float getWidth() const;
+    float getHeight() const;
+    const std::string& getLabel() const;
+    bool getIsHovered() const;
 
    private:
     float _x;
