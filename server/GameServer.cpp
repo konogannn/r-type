@@ -29,7 +29,9 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
-    _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::GuidedMissileSystem>());
+    _gameLoop.addSystem(
+        std::make_unique<engine::CollisionSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::LifetimeSystem>());
@@ -248,6 +250,7 @@ void GameServer::processNetworkUpdates()
 {
     const auto targetFrameTime = std::chrono::milliseconds(16);
     std::vector<engine::EntityStateUpdate> entityUpdates;
+    std::vector<engine::ShieldStatusUpdate> shieldUpdates;
 
     while (_networkServer.isRunning() && _gameLoop.isRunning() &&
            _gameStarted) {
@@ -274,6 +277,22 @@ void GameServer::processNetworkUpdates()
                 } catch (const std::exception& e) {
                     Logger::getInstance().log(
                         "Error processing entity update: " +
+                            std::string(e.what()),
+                        LogLevel::ERROR_L, "GameServer");
+                }
+            }
+
+            // Traiter les mises à jour de shield
+            shieldUpdates.clear();
+            _gameLoop.popShieldUpdates(shieldUpdates);
+
+            for (const auto& shieldUpdate : shieldUpdates) {
+                try {
+                    _networkServer.sendShieldStatus(0, shieldUpdate.playerId,
+                                                    shieldUpdate.hasShield);
+                } catch (const std::exception& e) {
+                    Logger::getInstance().log(
+                        "Error processing shield update: " +
                             std::string(e.what()),
                         LogLevel::ERROR_L, "GameServer");
                 }
