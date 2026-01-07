@@ -126,6 +126,17 @@ class INetworkServer : public INetworkBase {
     virtual bool sendScoreUpdate(uint32_t clientId, uint32_t score) = 0;
 
     /**
+     * @brief Send shield status update to specific client.
+     *
+     * @param clientId Target client ID.
+     * @param playerId Player entity ID.
+     * @param hasShield True if player has shield, false if destroyed.
+     * @return true If sent successfully.
+     */
+    virtual bool sendShieldStatus(uint32_t clientId, uint32_t playerId,
+                                  bool hasShield) = 0;
+
+    /**
      * @brief Broadcast data to all connected clients.
      *
      * @param data Pointer to packet data.
