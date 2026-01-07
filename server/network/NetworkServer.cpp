@@ -473,6 +473,25 @@ bool NetworkServer::sendScoreUpdate(uint32_t clientId, uint32_t score)
     return true;
 }
 
+bool NetworkServer::sendHealthUpdate(uint32_t clientId, uint32_t entityId,
+                                     float currentHealth, float maxHealth)
+{
+    HealthUpdatePacket packet;
+    packet.header.opCode = OpCode::S2C_HEALTH_UPDATE;
+    packet.header.packetSize = sizeof(HealthUpdatePacket);
+    packet.header.sequenceId = 0;
+    packet.entityId = entityId;
+    packet.currentHealth = currentHealth;
+    packet.maxHealth = maxHealth;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0, false);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
 size_t NetworkServer::broadcast(const void* data, size_t size,
                                 uint32_t excludeClient, bool reliable)
 {

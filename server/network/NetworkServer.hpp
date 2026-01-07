@@ -227,6 +227,20 @@ class NetworkServer : public INetworkServer {
     bool sendScoreUpdate(uint32_t clientId, uint32_t score) override;
 
     /**
+     * @brief Send health update to a client
+     *
+     * Sends an S2C_HEALTH_UPDATE packet.
+     *
+     * @param clientId Target client (0 to broadcast)
+     * @param entityId Entity whose health changed
+     * @param currentHealth Current health value
+     * @param maxHealth Maximum health value
+     * @return true if sent successfully
+     */
+    bool sendHealthUpdate(uint32_t clientId, uint32_t entityId,
+                          float currentHealth, float maxHealth);
+
+    /**
      * @brief Broadcast raw data to all connected clients
      *
      * Sends arbitrary binary data to all authenticated clients, optionally

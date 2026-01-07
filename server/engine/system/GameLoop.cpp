@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "BossSystem.hpp"
 #include "GameSystems.hpp"
 
 namespace engine {
@@ -83,6 +84,8 @@ void GameLoop::gameThreadLoop()
 
         processInputCommands(deltaTime);
 
+        processDeathTimers(deltaTime);
+
         processSpawnEvents();
 
         for (auto& system : _systems) {
@@ -101,8 +104,17 @@ void GameLoop::gameThreadLoop()
                     processDestroyedEntities(
                         dynamic_cast<EnemyCleanupSystem*>(system.get()));
                     break;
+                case SystemType::LIFETIME_CLEANUP:
+                    processDestroyedEntities(
+                        dynamic_cast<LifetimeSystem*>(system.get()));
+                    break;
                 default:
                     break;
+            }
+
+            if (system->getName() == "BossSystem") {
+                processDestroyedEntities(
+                    dynamic_cast<BossSystem*>(system.get()));
             }
         }
 
@@ -133,8 +145,13 @@ void GameLoop::processInputCommands(float deltaTime)
 
         auto* pos = _entityManager.getComponent<Position>(*entity);
         auto* player = _entityManager.getComponent<Player>(*entity);
+        auto* health = _entityManager.getComponent<Health>(*entity);
 
-        if (!pos || !player) {
+        if (!pos || !player || !health) {
+            continue;
+        }
+
+        if (health->deathTimer >= 0.0f) {
             continue;
         }
 
@@ -179,6 +196,51 @@ void GameLoop::processInputCommands(float deltaTime)
     }
 }
 
+void GameLoop::processDeathTimers(float deltaTime)
+{
+    auto players =
+        _entityManager.getEntitiesWith<Player, Health, NetworkEntity>();
+
+    for (auto& entity : players) {
+        auto* health = _entityManager.getComponent<Health>(entity);
+
+        if (health && health->deathTimer >= 0.0f) {
+            health->deathTimer -= deltaTime;
+
+            if (health->deathTimer <= 0.0f) {
+                std::cout << "[GAMELOOP] Player " << entity.getId()
+                          << " deathTimer expired, destroying entity"
+                          << std::endl;
+
+                auto* netEntity =
+                    _entityManager.getComponent<NetworkEntity>(entity);
+                if (netEntity) {
+                    EntityStateUpdate update;
+                    update.entityId = netEntity->entityId;
+                    update.entityType = netEntity->entityType;
+                    update.x = 0.0f;
+                    update.y = 0.0f;
+                    update.spawned = false;
+                    update.destroyed = true;
+                    _outputQueue.push(update);
+
+                    if (_onPlayerDeathCallback) {
+                        for (const auto& pair : _clientToEntity) {
+                            if (pair.second == entity.getId()) {
+                                _onPlayerDeathCallback(pair.first);
+                                _clientToEntity.erase(pair.first);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                _entityManager.destroyEntity(entity.getId());
+            }
+        }
+    }
+}
+
 void GameLoop::generateNetworkUpdates()
 {
     auto entities = _entityManager.getEntitiesWith<Position, NetworkEntity>();
@@ -187,7 +249,11 @@ void GameLoop::generateNetworkUpdates()
         auto* pos = _entityManager.getComponent<Position>(entity);
         auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
 
-        if (netEntity->needsSync) {
+        bool alwaysSync =
+            (netEntity->entityType == 2 || netEntity->entityType == 4 ||
+             netEntity->entityType == 5 || netEntity->entityType == 6);
+
+        if (netEntity->needsSync || alwaysSync) {
             EntityStateUpdate update;
             update.entityId = netEntity->entityId;
             update.entityType = netEntity->entityType;
@@ -211,6 +277,35 @@ void GameLoop::queueInput(const NetworkInputCommand& command)
 size_t GameLoop::popEntityUpdates(std::vector<EntityStateUpdate>& updates)
 {
     return _outputQueue.popAll(updates);
+}
+
+void GameLoop::getAllHealthUpdates(
+    std::vector<std::tuple<uint32_t, float, float>>& healthUpdates)
+{
+    healthUpdates.clear();
+
+    auto players =
+        _entityManager.getEntitiesWith<Player, Health, NetworkEntity>();
+    for (const auto& playerEntity : players) {
+        auto* health = _entityManager.getComponent<Health>(playerEntity);
+        auto* netEntity =
+            _entityManager.getComponent<NetworkEntity>(playerEntity);
+        if (health && netEntity) {
+            healthUpdates.push_back(std::make_tuple(
+                netEntity->entityId, health->current, health->max));
+        }
+    }
+
+    auto bosses = _entityManager.getEntitiesWith<Boss, Health, NetworkEntity>();
+    for (const auto& bossEntity : bosses) {
+        auto* health = _entityManager.getComponent<Health>(bossEntity);
+        auto* netEntity =
+            _entityManager.getComponent<NetworkEntity>(bossEntity);
+        if (health && netEntity) {
+            healthUpdates.push_back(std::make_tuple(
+                netEntity->entityId, health->current, health->max));
+        }
+    }
 }
 
 void GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
@@ -335,7 +430,41 @@ void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
 
 void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
 {
-    _entityFactory.createEnemyBullet(event.ownerId, event.position);
+    bool isExplosion = (event.vx == 0.0f && event.vy == 0.0f);
+
+    Entity bullet = _entityManager.createEntity();
+
+    uint32_t bulletId = _entityFactory.getNextBulletId();
+
+    if (isExplosion) {
+        int explosionType = event.ownerId;
+        std::cout << "[GAMELOOP] Creating explosion effect type "
+                  << explosionType << " ID=" << bulletId << " at (" << event.x
+                  << "," << event.y << ")" << std::endl;
+
+        _entityManager.addComponent(bullet, Position(event.x, event.y));
+        _entityManager.addComponent(
+            bullet, Velocity(-static_cast<float>(explosionType), 0.0f));
+        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 7));
+        _entityManager.addComponent(bullet, Lifetime(0.5f));
+    } else {
+        std::cout << "[GAMELOOP] Creating enemy bullet ID=" << bulletId
+                  << " at (" << event.x << "," << event.y << ")" << std::endl;
+
+        _entityManager.addComponent(bullet, Position(event.x, event.y));
+        _entityManager.addComponent(bullet, Velocity(event.vx, event.vy));
+        _entityManager.addComponent(bullet,
+                                    Bullet(event.ownerId, false, 20.0f));
+        _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
+        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 4));
+        _entityManager.addComponent(bullet, Lifetime(15.0f));
+    }
+}
+
+void GameLoop::processSpawnEvent(const SpawnBossEvent& event)
+{
+    _entityFactory.createBoss(event.bossType, event.x, event.y,
+                              event.playerCount);
 }
 
 }  // namespace engine

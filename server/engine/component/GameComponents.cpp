@@ -20,11 +20,6 @@ Player::Player(uint32_t clientId_, uint32_t playerId_)
 
 Enemy::Enemy(Type type_) : type(type_), shootCooldown(0.0f) {}
 
-Bullet::Bullet(uint32_t ownerId_, bool fromPlayer_, float damage_)
-    : ownerId(ownerId_), fromPlayer(fromPlayer_), damage(damage_)
-{
-}
-
 Health::Health(float max_) : current(max_), max(max_) {}
 
 bool Health::isAlive() const { return current > 0.0f; }

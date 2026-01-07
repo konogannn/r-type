@@ -29,7 +29,6 @@ bool SpriteSFML::loadTexture(const std::string& filepath)
         return false;
     }
     _sprite->setTexture(*_texture);
-    // Don't reset scale - let caller set it
     return true;
 }
 
@@ -41,6 +40,8 @@ void SpriteSFML::setScale(float scaleX, float scaleY)
 }
 
 void SpriteSFML::setRotation(float angle) { _sprite->setRotation(angle); }
+
+void SpriteSFML::setOrigin(float x, float y) { _sprite->setOrigin(x, y); }
 
 void SpriteSFML::move(float offsetX, float offsetY)
 {

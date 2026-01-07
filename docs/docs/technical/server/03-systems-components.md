@@ -776,8 +776,198 @@ Entity createPlayer(EntityManager& em, uint32_t clientId, float x, float y) {
 
 ---
 
+## Boss System
+
+### Boss Components
+
+#### Boss Component
+Main boss entity with phase-based AI:
+```cpp
+struct Boss : public ComponentBase<Boss> {
+    enum class Phase { ENTRY, PHASE_1, PHASE_2, ENRAGED, DEATH };
+
+    Phase currentPhase;
+    float phaseTimer;
+    float maxHealth;               // Base HP (e.g., 1000)
+    float scaledMaxHealth;         // Scaled: base * (1 + 0.5 * (playerCount - 1))
+    uint32_t playerCount;
+    float attackTimer;
+    float attackInterval;
+    int attackPatternIndex;
+    float damageFlashTimer;
+    bool isFlashing;
+    std::vector<uint32_t> partEntityIds;  // IDs of boss parts (turrets, etc.)
+    float phase2Threshold = 0.6f;   // 60% HP
+    float enragedThreshold = 0.3f;  // 30% HP
+    float deathTimer = -1.0f;
+    bool destructionStarted = false;
+    float explosionTimer = 0.0f;
+    int explosionCount = 0;
+};
+```
+
+**HP Scaling**: Boss health adapts to player count for balanced difficulty:
+- 1 player: 1000 HP
+- 2 players: 1500 HP
+- 3 players: 2000 HP
+- 4 players: 2500 HP
+
+#### BossPart Component
+For multi-part bosses (turrets, armor plates):
+```cpp
+struct BossPart : public ComponentBase<BossPart> {
+    enum class PartType { MAIN_BODY, TURRET, TENTACLE, WEAK_POINT, ARMOR_PLATE };
+
+    uint32_t bossEntityId;         // Parent boss entity
+    PartType partType;
+    float relativeX, relativeY;    // Position relative to boss
+    float rotationSpeed;
+    float currentRotation;
+    bool canTakeDamage;            // Armor plates are invulnerable
+};
+```
+
+#### Animation Component
+Multi-frame sprite animations:
+```cpp
+struct Animation : public ComponentBase<Animation> {
+    uint8_t animationId;
+    uint8_t currentFrame;
+    uint8_t frameCount;            // e.g., 4 frames
+    float frameTime;               // Time since last frame change
+    float frameDuration = 0.15f;   // 150ms per frame
+    bool loop;
+    bool finished;
+};
+```
+
+### Boss Systems
+
+#### BossSystem (Priority: 15)
+**Purpose**: Boss AI with state machine and attack patterns
+
+**Components**: `Boss`, `Health`, `Position`
+
+**State Machine**:
+1. **ENTRY** (Phase 0): Boss enters from right, moves to x=1400
+2. **PHASE_1**: Vertical sine wave + spread shots (3 bullets)
+3. **PHASE_2**: Circular movement + circular bursts (6 bullets) - at 60% HP
+4. **ENRAGED**: Aggressive movement + spiral patterns (8 bullets) - at 30% HP
+5. **DEATH**: Explosion animation (15 explosions over 2.5s), then destruction
+
+**Attack Patterns**:
+- **Spread**: 3 bullets in cone formation
+- **Circular**: 6 bullets in all directions
+- **Spiral**: Rotating 8-bullet pattern
+- **Turret Fire**: Parts shoot independently
+
+**Key Methods**:
+```cpp
+void handleEntryPhase(float dt, Position* pos);
+void handlePhase1(float dt, Boss* boss, Position* pos);
+void handlePhase2(float dt, Boss* boss, Position* pos);
+void handleEnragedPhase(float dt, Boss* boss, Position* pos);
+void handleDeathPhase(float dt, Entity& entity, Boss* boss,
+                     Health* health, Position* pos);
+
+void shootSpreadPattern(Position* pos, float angleOffset);
+void shootCircularPattern(Position* pos);
+void shootSpiralPattern(Position* pos, float rotation);
+void shootTurretShots(Position* bossPos);
+```
+
+**Phase Transitions**: Automatic based on HP percentage thresholds.
+
+#### BossPartSystem (Priority: 14)
+**Purpose**: Synchronizes boss part positions with main body
+
+**Components**: `BossPart`, `Position`
+
+**Behavior**: Updates each part's position based on parent boss position + relative offsets.
+
+```cpp
+void update(float dt, EntityManager& em) {
+    auto parts = em.getEntitiesWith<BossPart, Position>();
+
+    for (auto& partEntity : parts) {
+        auto* part = em.getComponent<BossPart>(partEntity);
+        auto* partPos = em.getComponent<Position>(partEntity);
+
+        // Get parent boss position
+        Entity* boss = em.getEntity(part->bossEntityId);
+        auto* bossPos = em.getComponent<Position>(*boss);
+
+        // Update part position
+        partPos->x = bossPos->x + part->relativeX;
+        partPos->y = bossPos->y + part->relativeY;
+    }
+}
+```
+
+#### AnimationSystem (Priority: 5)
+**Purpose**: Updates sprite frame animations
+
+**Components**: `Animation`
+
+**Behavior**: Cycles through frames at specified duration, loops if enabled.
+
+### Creating a Boss
+
+```cpp
+// Server-side (GameEntityFactory)
+Entity createBoss(uint8_t bossType, float x, float y, uint32_t playerCount) {
+    Entity boss = _entityManager.createEntity();
+
+    // Scale HP based on player count
+    float baseHealth = 1000.0f;
+    float scaledHealth = baseHealth * (1.0f + 0.5f * (playerCount - 1));
+
+    _entityManager.addComponent(boss, Position(x, y));
+    _entityManager.addComponent(boss, Velocity(0.0f, 0.0f));
+    _entityManager.addComponent(boss, Boss(playerCount));
+    _entityManager.addComponent(boss, Health(scaledHealth));
+    _entityManager.addComponent(boss, BoundingBox(260.0f, 100.0f));
+    _entityManager.addComponent(boss, NetworkEntity(_nextEnemyId++, 5));  // Type 5
+    _entityManager.addComponent(boss, Animation(0, 4, 0.15f, true));
+
+    // Create turret parts
+    Entity turret1 = createBossPart(boss.getId(), BossPart::TURRET, 
+                                   -80.0f, -60.0f, true);
+    Entity turret2 = createBossPart(boss.getId(), BossPart::TURRET,
+                                   -80.0f, 60.0f, true);
+
+    return boss;
+}
+```
+
+### Boss Death Animation
+
+When boss HP reaches 0:
+1. Phase changes to `DEATH`
+2. `destructionStarted = true`, `deathTimer = 2.5s`
+3. Spawns 15 explosions (type 7 entities) at random offsets around boss
+4. Each explosion has 0.5s lifetime, uses sprite sheets (6 or 8 frames)
+5. Client detects explosions → triggers screen shake
+6. After 2.5s, boss and all parts are destroyed
+7. Destruction notifications sent to clients → entities removed
+
+**Explosion Spawning**:
+```cpp
+// In BossSystem::handleDeathPhase()
+for (int i = 0; i < 15; i++) {
+    SpawnEnemyBulletEvent explosion;
+    explosion.ownerId = (rand() % 2) + 1;  // Type 1 or 2
+    explosion.x = pos->x + randomOffset();
+    explosion.y = pos->y + randomOffset();
+    explosion.vx = 0.0f;  // Marker: vx=vy=0 means explosion
+    explosion.vy = 0.0f;
+    _spawnQueue.push_back(explosion);
+}
+```
+
+---
+
 ## Next Steps
 
 - **[Networking Documentation](./04-networking.md)**: Learn how ECS integrates with network synchronization
 - **[Tutorials](./06-tutorials.md)**: Step-by-step guide to adding new entity types
-

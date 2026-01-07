@@ -73,13 +73,45 @@ class GameEntityFactory {
      * @brief Get the next available bullet ID
      * @return Next bullet ID
      */
-    uint32_t getNextBulletId() const { return _nextBulletId; }
+    uint32_t getNextBulletId() { return _nextBulletId++; }
 
     /**
-     * @brief Get the next available enemy ID
+     * @brief Allocate and return the next available enemy ID
      * @return Next enemy ID
      */
-    uint32_t getNextEnemyId() const { return _nextEnemyId; }
+    uint32_t getNextEnemyId() { return _nextEnemyId++; }
+
+    /**
+     * @brief Create a boss entity with multiple parts
+     * @param bossType Boss variant/type
+     * @param x Starting X position
+     * @param y Starting Y position
+     * @param playerCount Number of active players (for HP scaling)
+     * @return Created boss entity
+     */
+    Entity createBoss(uint8_t bossType, float x, float y,
+                      uint32_t playerCount = 1);
+
+    /**
+     * @brief Create a boss part entity
+     * @param bossEntityId ID of the main boss entity
+     * @param partType Type of part (TURRET, TENTACLE, etc.)
+     * @param relativeX Relative X position from boss center
+     * @param relativeY Relative Y position from boss center
+     * @param vulnerable Whether this part can take damage
+     * @return Created boss part entity
+     */
+    Entity createBossPart(uint32_t bossEntityId, BossPart::PartType partType,
+                          float relativeX, float relativeY,
+                          bool vulnerable = true);
+
+    /**
+     * @brief Create an explosion visual effect
+     * @param ownerId Entity ID that spawned the explosion
+     * @param pos Position of the explosion
+     * @return Created explosion entity
+     */
+    Entity createExplosion(EntityId ownerId, const Position& pos);
 };
 
 }  // namespace engine
