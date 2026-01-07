@@ -32,13 +32,12 @@ struct ClientEntity {
     float health = 100.0f;
     float maxHealth = 100.0f;
     std::unique_ptr<SpriteSFML> sprite;
-    std::unique_ptr<SpriteSFML> spriteUp;
-    std::unique_ptr<SpriteSFML> spriteDown;
-    SpriteSFML* currentSprite = nullptr;
     float spriteScale = 1.0f;
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
 
+    enum class AnimationState { IDLE, MOVING_DOWN, MOVING_UP };
+    AnimationState animState = AnimationState::IDLE;
     int animFrameCount = 0;
     int animCurrentFrame = 0;
     float animFrameTime = 0.0f;
