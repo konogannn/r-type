@@ -75,12 +75,7 @@ class ConnectionDialog {
     /**
      * @brief Get the server address entered by the user
      */
-    std::string getServerAddress() const
-    {
-        return _inputFields[static_cast<size_t>(
-                                ConnectionInputField::ServerAddress)]
-            .getValue();
-    }
+    std::string getServerAddress() const;
 
     /**
      * @brief Get the server port entered by the user
@@ -90,24 +85,17 @@ class ConnectionDialog {
     /**
      * @brief Check if the dialog action was cancelled
      */
-    bool wasCancelled() const { return _cancelled; }
+    bool wasCancelled() const;
 
     /**
      * @brief Reset the dialog state
      */
-    void reset()
-    {
-        _cancelled = false;
-        _confirmed = false;
-    }
+    void reset();
 
     /**
      * @brief Set the error message to display
      */
-    void setErrorMessage(const std::string& message)
-    {
-        _errorMessage = message;
-    }
+    void setErrorMessage(const std::string& message);
 
    private:
     GraphicsSFML& _graphics;

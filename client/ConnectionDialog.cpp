@@ -114,6 +114,13 @@ bool ConnectionDialog::isAnyInputFieldActive() const
     return false;
 }
 
+std::string ConnectionDialog::getServerAddress() const
+{
+    return _inputFields[static_cast<size_t>(
+                            ConnectionInputField::ServerAddress)]
+        .getValue();
+}
+
 int ConnectionDialog::getServerPort() const
 {
     const std::string portStr =
@@ -134,6 +141,22 @@ int ConnectionDialog::getServerPort() const
                   << std::endl;
     }
     return port;
+}
+
+bool ConnectionDialog::wasCancelled() const
+{
+    return _cancelled;
+}
+
+void ConnectionDialog::reset()
+{
+    _cancelled = false;
+    _confirmed = false;
+}
+
+void ConnectionDialog::setErrorMessage(const std::string& message)
+{
+    _errorMessage = message;
 }
 
 void ConnectionDialog::render(float scale, const std::string& fontPath)
