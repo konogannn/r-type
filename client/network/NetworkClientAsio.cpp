@@ -206,6 +206,12 @@ void NetworkClientAsio::setOnScoreUpdateCallback(OnScoreUpdateCallback callback)
     _onScoreUpdate = callback;
 }
 
+void NetworkClientAsio::setOnShieldStatusCallback(
+    OnShieldStatusCallback callback)
+{
+    _onShieldStatus = callback;
+}
+
 void NetworkClientAsio::setOnErrorCallback(
     std::function<void(const std::string&)> callback)
 {
@@ -275,6 +281,9 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
             break;
         case ::OpCode::S2C_SCORE_UPDATE:
             processScoreUpdate(data, size);
+            break;
+        case ::OpCode::S2C_SHIELD_STATUS:
+            processShieldStatus(data, size);
             break;
         default:
             break;
@@ -408,6 +417,20 @@ void NetworkClientAsio::processScoreUpdate(const uint8_t* data, size_t size)
 
     if (_onScoreUpdate) {
         _onScoreUpdate(*score);
+    }
+}
+
+void NetworkClientAsio::processShieldStatus(const uint8_t* data, size_t size)
+{
+    if (size < sizeof(ShieldStatusPacket)) {
+        return;
+    }
+
+    const ShieldStatusPacket* packet =
+        reinterpret_cast<const ShieldStatusPacket*>(data);
+
+    if (_onShieldStatus) {
+        _onShieldStatus(packet->playerId, packet->hasShield != 0);
     }
 }
 
