@@ -98,11 +98,14 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
             return false;
         }
 
-        std::string resolvedPath =
-            utils::PathHelper::getAssetPath("assets/shaders/colorblind.frag");
-        if (!_shader->loadFromFile(resolvedPath, IShader::Fragment)) {
-            std::cerr << "ColorBlindFilter: Failed to load shader from "
-                      << resolvedPath << std::endl;
+        static const unsigned char kFragBytes[] = {
+#embed "assets/shaders/colorblind.frag"
+        };
+        std::string fragSource(reinterpret_cast<const char*>(kFragBytes),
+                               sizeof(kFragBytes));
+
+        if (!_shader->loadFromMemory(fragSource, IShader::Fragment)) {
+            std::cerr << "ColorBlindFilter: Failed to load embedded shader\n";
             return false;
         }
 
