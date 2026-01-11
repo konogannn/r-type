@@ -11,7 +11,7 @@ target_include_directories(utils
 )
 
 set_target_properties(utils PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
 )
 

@@ -2,14 +2,21 @@ cmake_minimum_required(VERSION 3.16)
 
 project(r-type VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow")
-else()
+if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow")
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c23-extensions")
+endif()
+
+if(WIN32)
     add_compile_definitions(_WIN32_WINNT=0x0601)
 endif()
 
@@ -83,7 +90,7 @@ if(ENABLE_COVERAGE)
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
             COMMAND ${LCOV_PATH} --capture --directory . --output-file coverage.info
                     --rc geninfo_unexecuted_blocks=0 --ignore-errors mismatch,gcov,source
-            COMMAND ${LCOV_PATH} --extract coverage.info '${CMAKE_SOURCE_DIR}/server/*' 
+            COMMAND ${LCOV_PATH} --extract coverage.info '${CMAKE_SOURCE_DIR}/server/*'
                     --output-file coverage_filtered.info --ignore-errors unused
             COMMAND ${LCOV_PATH} --remove coverage_filtered.info '*/tests/*'
                     --output-file coverage_final.info --ignore-errors unused

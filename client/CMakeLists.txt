@@ -57,6 +57,6 @@ target_link_libraries(r-type_client
         fmt::fmt
 )
 
-if (UNIX AND NOT MSVC)
+if (UNIX)
     target_link_options(r-type_client PRIVATE "-Wl,--copy-dt-needed-entries")
 endif()
