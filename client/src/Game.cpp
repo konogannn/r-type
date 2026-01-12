@@ -8,6 +8,7 @@
 #include "Game.hpp"
 
 #include <algorithm>
+#include <ctime>
 #include <iostream>
 #include <unordered_map>
 
@@ -80,6 +81,7 @@ Game::~Game()
 {
     if (_gameState && _gameState->isConnected()) {
         std::cout << "[Game] Disconnecting from server..." << std::endl;
+        _gameState->stopRecording();
         _gameState->disconnect();
     }
 }
@@ -91,6 +93,13 @@ bool Game::tryConnect(const std::string& address, uint16_t port)
     if (_gameState->connectToServer(address, port)) {
         std::cout << "[Game] Connection initiated" << std::endl;
         _gameState->sendLogin("Player1");
+
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        char buffer[80];
+        strftime(buffer, sizeof(buffer), "replay_%Y%m%d_%H%M%S.rtr", timeinfo);
+        _gameState->startRecording(buffer);
+
         return true;
     } else {
         std::cout << "[Game] Failed to connect to server" << std::endl;
@@ -145,6 +154,9 @@ void Game::handleEvents()
 
         if (eventType == rtype::EventType::KeyPressed) {
             if (_input.isKeyPressed(rtype::Key::Escape)) {
+                if (_gameState) {
+                    _gameState->stopRecording();  // Stop recording when exiting
+                }
                 _running = false;
                 _returnToMenu = true;
             }
@@ -163,6 +175,10 @@ void Game::update(float deltaTime)
         if (_connectionDialog->update(mouseX, mouseY, isMousePressed,
                                       deltaTime)) {
             if (_connectionDialog->wasCancelled()) {
+                if (_gameState) {
+                    _gameState
+                        ->stopRecording();  // Stop recording when cancelling
+                }
                 _running = false;
                 _returnToMenu = true;
                 _showConnectionDialog = false;
