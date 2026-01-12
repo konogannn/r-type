@@ -123,8 +123,11 @@ jobs:
       - name: Install Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-14-dev \
+          sudo apt-get install -y build-essential libstdc++-14-dev libc++-19-dev libc++abi-19-dev \
               libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
               libgl1-mesa-dev \
               libglu1-mesa-dev \
@@ -206,8 +209,11 @@ jobs:
       - name: Install Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-14-dev \
+          sudo apt-get install -y build-essential libstdc++-14-dev libc++-19-dev libc++abi-19-dev \
               libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
               libgl1-mesa-dev \
               libglu1-mesa-dev \
