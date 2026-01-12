@@ -161,9 +161,9 @@ void BulletCleanupSystem::update(float /* deltaTime */,
             pos->y > MAX_Y) {
             auto* netEntity = entityManager.getComponent<NetworkEntity>(entity);
             if (netEntity) {
-                _entitiesToDestroy.push_back({entity.getId(),
-                                              netEntity->entityId,
-                                              netEntity->entityType});
+                _entitiesToDestroy.push_back(
+                    {entity.getId(), netEntity->entityId, netEntity->entityType,
+                     pos->x, pos->y});
             }
         }
     }
@@ -207,9 +207,9 @@ void EnemyCleanupSystem::update([[maybe_unused]] float deltaTime,
         if (pos->x < MIN_X) {
             auto* netEntity = entityManager.getComponent<NetworkEntity>(entity);
             if (netEntity) {
-                _entitiesToDestroy.push_back({entity.getId(),
-                                              netEntity->entityId,
-                                              netEntity->entityType});
+                _entitiesToDestroy.push_back(
+                    {entity.getId(), netEntity->entityId, netEntity->entityType,
+                     pos->x, pos->y});
             }
         }
     }
@@ -258,10 +258,10 @@ bool CollisionSystem::isMarkedForDestruction(EntityId id) const
 }
 
 void CollisionSystem::markForDestruction(EntityId entityId, uint32_t networkId,
-                                         uint8_t type)
+                                         uint8_t type, float x, float y)
 {
     _markedForDestruction.insert(entityId);
-    _entitiesToDestroy.push_back({entityId, networkId, type});
+    _entitiesToDestroy.push_back({entityId, networkId, type, x, y});
 }
 
 void CollisionSystem::handlePlayerBulletVsEnemy(
@@ -302,9 +302,9 @@ void CollisionSystem::handlePlayerBulletVsEnemy(
                     auto* enemyNet =
                         entityManager.getComponent<NetworkEntity>(enemyEntity);
                     if (enemyNet) {
-                        markForDestruction(enemyEntity.getId(),
-                                           enemyNet->entityId,
-                                           enemyNet->entityType);
+                        markForDestruction(
+                            enemyEntity.getId(), enemyNet->entityId,
+                            enemyNet->entityType, enemyPos->x, enemyPos->y);
                     }
                 }
 
@@ -339,18 +339,42 @@ void CollisionSystem::handlePlayerBulletVsBoss(
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
                 bossHealth->takeDamage(bullet->damage);
 
+                // Incrémenter le compteur de hits et spawner un power-up tous
+                // les 15 hits
+                auto* boss = entityManager.getComponent<Boss>(bossEntity);
+                if (boss) {
+                    boss->hitCounter++;
+                    if (boss->hitCounter >= 15) {
+                        boss->hitCounter = 0;
+
+                        // Trouver un joueur pour spawner l'item près de lui
+                        auto players = entityManager.getEntitiesWith<Position, Player>();
+                        float spawnX = bossPos->x;
+                        float spawnY = bossPos->y;
+                        if (!players.empty()) {
+                            auto* playerPos = entityManager.getComponent<Position>(players[0]);
+                            if (playerPos) {
+                                spawnX = playerPos->x + 100.0f; // Spawner devant le joueur
+                                spawnY = playerPos->y;
+                            }
+                        }
+
+                        // Alterner entre shield et missile guidé
+                        static bool spawnShield = true;
+                        _spawnQueue.push_back(SpawnItemEvent{
+                            spawnShield ? Item::Type::SHIELD
+                                        : Item::Type::GUIDED_MISSILE,
+                            spawnX, spawnY});
+                        spawnShield = !spawnShield;
+                    }
+                }
+
                 auto* bulletNet =
                     entityManager.getComponent<NetworkEntity>(bulletEntity);
                 if (bulletNet) {
                     markForDestruction(bulletEntity.getId(),
                                        bulletNet->entityId,
                                        bulletNet->entityType);
-                }
-
-                if (!bossHealth->isAlive()) {
-                    std::cout << "[COLLISION] Boss health depleted, entering "
-                                 "death phase"
-                              << std::endl;
                 }
 
                 break;
@@ -375,13 +399,38 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                         entityManager.getComponent<Health>(*bossEntity);
                     auto* bossPos =
                         entityManager.getComponent<Position>(*bossEntity);
+                    auto* boss = entityManager.getComponent<Boss>(*bossEntity);
                     if (bossHealth && bossPos) {
                         bossHealth->takeDamage(bullet->damage);
 
-                        if (!bossHealth->isAlive()) {
-                            std::cout << "[COLLISION] Boss health depleted via "
-                                         "part damage"
-                                      << std::endl;
+                        // Incrémenter le compteur de hits et spawner un
+                        // power-up tous les 15 hits
+                        if (boss) {
+                            boss->hitCounter++;
+                            if (boss->hitCounter >= 15) {
+                                boss->hitCounter = 0;
+
+                                // Trouver un joueur pour spawner l'item près de lui
+                                auto players = entityManager.getEntitiesWith<Position, Player>();
+                                float spawnX = partPos->x;
+                                float spawnY = partPos->y;
+                                if (!players.empty()) {
+                                    auto* playerPos = entityManager.getComponent<Position>(players[0]);
+                                    if (playerPos) {
+                                        spawnX = playerPos->x + 100.0f; // Spawner devant le joueur
+                                        spawnY = playerPos->y;
+                                    }
+                                }
+
+                                // Alterner entre shield et missile guidé
+                                static bool spawnShieldPart = true;
+                                _spawnQueue.push_back(SpawnItemEvent{
+                                    spawnShieldPart
+                                        ? Item::Type::SHIELD
+                                        : Item::Type::GUIDED_MISSILE,
+                                    spawnX, spawnY});
+                                spawnShieldPart = !spawnShieldPart;
+                            }
                         }
                     }
                 }
@@ -421,21 +470,31 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
             if (!enemyPos || !enemyBox) continue;
 
             if (checkCollision(*playerPos, *playerBox, *enemyPos, *enemyBox)) {
-                playerHealth->takeDamage(20.0f);
+                // Check if player has shield
+                auto* shield = entityManager.getComponent<Shield>(playerEntity);
+                if (shield && shield->active) {
+                    // Shield absorbs the hit
+                    Entity* mutablePlayer =
+                        entityManager.getEntity(playerEntity.getId());
+                    if (mutablePlayer) {
+                        entityManager.removeComponent<Shield>(*mutablePlayer);
+                    }
+                } else {
+                    // No shield, take damage
+                    playerHealth->takeDamage(20.0f);
+
+                    if (!playerHealth->isAlive() &&
+                        playerHealth->deathTimer < 0.0f) {
+                        playerHealth->deathTimer = 0.5f;
+                    }
+                }
 
                 auto* enemyNet =
                     entityManager.getComponent<NetworkEntity>(enemyEntity);
                 if (enemyNet) {
                     markForDestruction(enemyEntity.getId(), enemyNet->entityId,
-                                       enemyNet->entityType);
-                }
-
-                if (!playerHealth->isAlive() &&
-                    playerHealth->deathTimer < 0.0f) {
-                    std::cout << "[COLLISION] Player " << playerEntity.getId()
-                              << " set deathTimer (enemy collision)"
-                              << std::endl;
-                    playerHealth->deathTimer = 0.5f;
+                                       enemyNet->entityType, enemyPos->x,
+                                       enemyPos->y);
                 }
 
                 break;
@@ -471,7 +530,24 @@ void CollisionSystem::handleEnemyBulletVsPlayer(
 
             if (checkCollision(*bulletPos, *bulletBox, *playerPos,
                                *playerBox)) {
-                playerHealth->takeDamage(bullet->damage);
+                // Vérifier si le joueur a un shield
+                auto* shield = entityManager.getComponent<Shield>(playerEntity);
+                if (shield && shield->active) {
+                    // Shield absorbe le coup
+                    Entity* mutablePlayer =
+                        entityManager.getEntity(playerEntity.getId());
+                    if (mutablePlayer) {
+                        entityManager.removeComponent<Shield>(*mutablePlayer);
+                    }
+                } else {
+                    // Pas de shield, prendre des dégâts
+                    playerHealth->takeDamage(bullet->damage);
+
+                    if (!playerHealth->isAlive() &&
+                        playerHealth->deathTimer < 0.0f) {
+                        playerHealth->deathTimer = 0.5f;
+                    }
+                }
 
                 auto* bulletNet =
                     entityManager.getComponent<NetworkEntity>(bulletEntity);
@@ -479,11 +555,6 @@ void CollisionSystem::handleEnemyBulletVsPlayer(
                     markForDestruction(bulletEntity.getId(),
                                        bulletNet->entityId,
                                        bulletNet->entityType);
-                }
-
-                if (!playerHealth->isAlive() &&
-                    playerHealth->deathTimer < 0.0f) {
-                    playerHealth->deathTimer = 0.5f;
                 }
 
                 break;
@@ -554,10 +625,13 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
 
     auto bullets =
         entityManager.getEntitiesWith<Position, Bullet, BoundingBox>();
+    auto missiles =
+        entityManager.getEntitiesWith<Position, GuidedMissile, BoundingBox>();
     auto enemies =
         entityManager.getEntitiesWith<Position, Enemy, Health, BoundingBox>();
     auto players =
         entityManager.getEntitiesWith<Position, Player, Health, BoundingBox>();
+    auto items = entityManager.getEntitiesWith<Position, Item, BoundingBox>();
     auto bosses =
         entityManager.getEntitiesWith<Position, Boss, Health, BoundingBox>();
     auto bossParts =
@@ -567,6 +641,12 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     handleBulletVsBullet(entityManager, bullets);
     handlePlayerBulletVsEnemy(entityManager, bullets, enemies);
     handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
+    handleGuidedMissileVsEnemy(entityManager, missiles, enemies);
+
+    // Handle item pickup BEFORE damage checks so shield works immediately
+    handlePlayerVsItem(entityManager, players, items);
+
+    // Now check damage (shield will already be active if just picked up)
     handlePlayerVsEnemy(entityManager, players, enemies);
     handleEnemyBulletVsPlayer(entityManager, bullets, players);
 
@@ -628,6 +708,235 @@ void EnemyShootingSystem::processEntity(float deltaTime,
 
     _spawnQueue.push_back(event);
     enemy->shootCooldown = SHOOT_INTERVAL;
+}
+
+void CollisionSystem::handleGuidedMissileVsEnemy(
+    EntityManager& entityManager, const std::vector<Entity>& missiles,
+    const std::vector<Entity>& enemies)
+{
+    for (auto& missileEntity : missiles) {
+        if (isMarkedForDestruction(missileEntity.getId())) continue;
+
+        auto* missile =
+            entityManager.getComponent<GuidedMissile>(missileEntity);
+        if (!missile) continue;
+
+        auto* missilePos = entityManager.getComponent<Position>(missileEntity);
+        auto* missileBox =
+            entityManager.getComponent<BoundingBox>(missileEntity);
+        if (!missilePos || !missileBox) continue;
+
+        for (auto& enemyEntity : enemies) {
+            if (isMarkedForDestruction(enemyEntity.getId())) continue;
+
+            auto* enemyPos = entityManager.getComponent<Position>(enemyEntity);
+            auto* enemyHealth = entityManager.getComponent<Health>(enemyEntity);
+            auto* enemyBox =
+                entityManager.getComponent<BoundingBox>(enemyEntity);
+            if (!enemyPos || !enemyHealth || !enemyBox) continue;
+
+            if (checkCollision(*missilePos, *missileBox, *enemyPos,
+                               *enemyBox)) {
+                enemyHealth->takeDamage(missile->damage);
+
+                // Marquer l'ennemi pour sync réseau
+                auto* enemyNet =
+                    entityManager.getComponent<NetworkEntity>(enemyEntity);
+                if (enemyNet) {
+                    enemyNet->needsSync = true;
+                }
+
+                auto* missileNet =
+                    entityManager.getComponent<NetworkEntity>(missileEntity);
+                if (missileNet) {
+                    markForDestruction(missileEntity.getId(),
+                                       missileNet->entityId,
+                                       missileNet->entityType);
+                }
+
+                if (!enemyHealth->isAlive()) {
+                    if (enemyNet) {
+                        markForDestruction(
+                            enemyEntity.getId(), enemyNet->entityId,
+                            enemyNet->entityType, enemyPos->x, enemyPos->y);
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
+                                         const std::vector<Entity>& players,
+                                         const std::vector<Entity>& items)
+{
+    for (auto& playerEntity : players) {
+        if (isMarkedForDestruction(playerEntity.getId())) continue;
+
+        auto* playerPos = entityManager.getComponent<Position>(playerEntity);
+        auto* playerBox = entityManager.getComponent<BoundingBox>(playerEntity);
+        if (!playerPos || !playerBox) continue;
+
+        for (auto& itemEntity : items) {
+            if (isMarkedForDestruction(itemEntity.getId())) continue;
+
+            auto* itemPos = entityManager.getComponent<Position>(itemEntity);
+            auto* item = entityManager.getComponent<Item>(itemEntity);
+            auto* itemBox = entityManager.getComponent<BoundingBox>(itemEntity);
+            if (!itemPos || !item || !itemBox) continue;
+
+            if (checkCollision(*playerPos, *playerBox, *itemPos, *itemBox)) {
+                // Appliquer l'effet selon le type d'item
+                if (item->type == Item::Type::SHIELD) {
+                    // Activer le shield sur le joueur
+                    if (!entityManager.hasComponent<Shield>(playerEntity)) {
+                        Entity* mutablePlayer =
+                            entityManager.getEntity(playerEntity.getId());
+                        if (mutablePlayer) {
+                            entityManager.addComponent(*mutablePlayer,
+                                                       Shield(true));
+                        }
+                    }
+                } else if (item->type == Item::Type::GUIDED_MISSILE) {
+                    // Lancer un missile téléguidé
+                    _spawnQueue.push_back(SpawnGuidedMissileEvent{
+                        playerEntity.getId(), *playerPos});
+                }
+
+                // Détruire l'item
+                auto* itemNet =
+                    entityManager.getComponent<NetworkEntity>(itemEntity);
+                if (itemNet) {
+                    markForDestruction(itemEntity.getId(), itemNet->entityId,
+                                       itemNet->entityType);
+                }
+                break;
+            }
+        }
+    }
+}
+
+std::string GuidedMissileSystem::getName() const
+{
+    return "GuidedMissileSystem";
+}
+
+SystemType GuidedMissileSystem::getType() const
+{
+    return SystemType::GUIDED_MISSILE;
+}
+
+int GuidedMissileSystem::getPriority() const { return 45; }
+
+Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
+                                              const Position& missilePos)
+{
+    auto enemies = entityManager.getEntitiesWith<Position, Enemy, Health>();
+
+    Entity* nearestEnemy = nullptr;
+    float nearestDistance = std::numeric_limits<float>::max();
+
+    for (auto& enemy : enemies) {
+        auto* enemyPos = entityManager.getComponent<Position>(enemy);
+        if (!enemyPos) continue;
+
+        float dx = enemyPos->x - missilePos.x;
+        float dy = enemyPos->y - missilePos.y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestEnemy = const_cast<Entity*>(&enemy);
+        }
+    }
+
+    return nearestEnemy;
+}
+
+void GuidedMissileSystem::update(float deltaTime, EntityManager& entityManager)
+{
+    auto missiles =
+        entityManager.getEntitiesWith<Position, Velocity, GuidedMissile>();
+
+    for (auto& missile : missiles) {
+        auto* missilePos = entityManager.getComponent<Position>(missile);
+        auto* missileVel = entityManager.getComponent<Velocity>(missile);
+        auto* guidedMissile =
+            entityManager.getComponent<GuidedMissile>(missile);
+
+        if (!missilePos || !missileVel || !guidedMissile) continue;
+
+        // Trouver l'ennemi le plus proche
+        Entity* target = findNearestEnemy(entityManager, *missilePos);
+
+        if (target) {
+            auto* targetPos = entityManager.getComponent<Position>(*target);
+            if (targetPos) {
+                // Calculer la direction vers la cible
+                float dx = targetPos->x - missilePos->x;
+                float dy = targetPos->y - missilePos->y;
+                float distance = std::sqrt(dx * dx + dy * dy);
+
+                if (distance > 0.0f) {
+                    // Normaliser et appliquer la vitesse
+                    float targetVx = (dx / distance) * guidedMissile->speed;
+                    float targetVy = (dy / distance) * guidedMissile->speed;
+
+                    // Interpoler vers la nouvelle direction (turn rate)
+                    float turnSpeed =
+                        std::min(1.0f, guidedMissile->turnRate * deltaTime);
+                    missileVel->vx = missileVel->vx +
+                                     (targetVx - missileVel->vx) * turnSpeed;
+                    missileVel->vy = missileVel->vy +
+                                     (targetVy - missileVel->vy) * turnSpeed;
+
+                    // Limiter la vitesse
+                    float currentSpeed =
+                        std::sqrt(missileVel->vx * missileVel->vx +
+                                  missileVel->vy * missileVel->vy);
+                    if (currentSpeed > guidedMissile->speed) {
+                        missileVel->vx = (missileVel->vx / currentSpeed) *
+                                         guidedMissile->speed;
+                        missileVel->vy = (missileVel->vy / currentSpeed) *
+                                         guidedMissile->speed;
+                    }
+                }
+            }
+        } else {
+            // Pas d'ennemi, aller tout droit vers la droite
+            missileVel->vx = guidedMissile->speed;
+            missileVel->vy = 0.0f;
+        }
+    }
+}
+
+std::string ItemSpawnerSystem::getName() const { return "ItemSpawnerSystem"; }
+
+int ItemSpawnerSystem::getPriority() const { return 6; }
+
+void ItemSpawnerSystem::update(float deltaTime,
+                               [[maybe_unused]] EntityManager& entityManager)
+{
+    _spawnTimer += deltaTime;
+
+    if (_spawnTimer >= _spawnInterval) {
+        _spawnTimer = 0.0f;
+        spawnItem();
+    }
+}
+
+void ItemSpawnerSystem::spawnItem()
+{
+    float x = _xDist(_rng);
+    float y = _yDist(_rng);
+
+    int typeRoll = _typeDist(_rng);
+    Item::Type type =
+        (typeRoll == 0) ? Item::Type::SHIELD : Item::Type::GUIDED_MISSILE;
+
+    _spawnQueue.push_back(SpawnItemEvent{type, x, y});
 }
 
 }  // namespace engine
