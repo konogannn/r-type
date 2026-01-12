@@ -102,6 +102,10 @@ static const unsigned char boss_3_data[] = {
 #embed "../../../assets/sprites/boss_3.png"
 };
 
+static const unsigned char boss_4_data[] = {
+#embed "../../../assets/sprites/boss_4.png"
+};
+
 static const unsigned char turret_data[] = {
 #embed "../../../assets/sprites/turret.png"
 };

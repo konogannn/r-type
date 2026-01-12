@@ -62,22 +62,21 @@ void TextureManager::loadAll()
     loadSprite("player_up", ASSET_SPAN(rtype::embedded::player_3_data), false);
     loadSprite("projectile",
                ASSET_SPAN(rtype::embedded::projectile_player_1_data), false);
+    loadSprite("projectile_enemy",
+               ASSET_SPAN(rtype::embedded::projectile_enemy_1_data), false);
     loadSprite("boss", ASSET_SPAN(rtype::embedded::boss_1_data), false);
-    loadSprite("projectile_enemy", "assets/sprites/projectile_enemy_1.png",
+    loadSprite("boss_2", ASSET_SPAN(rtype::embedded::boss_2_data), false);
+    loadSprite("boss_3", ASSET_SPAN(rtype::embedded::boss_3_data), false);
+    loadSprite("boss_4", ASSET_SPAN(rtype::embedded::boss_4_data), false);
+    loadSprite("enemy_basic", ASSET_SPAN(rtype::embedded::enemy_basic_data),
                false);
-    loadSprite("projectile_enemy_basic",
-               "assets/sprites/projectile_enemy_basic.png", false);
-    loadSprite("projectile_enemy_tank",
-               "assets/sprites/projectile_enemy_tank.png", false);
-    loadSprite("projectile_enemy_fast",
-               "assets/sprites/projectile_enemy_fast.png", false);
-    loadSprite("boss", "assets/sprites/boss_1.png", false);
-    loadSprite("boss_2", "assets/sprites/boss_2.png", false);
-    loadSprite("boss_3", "assets/sprites/boss_3.png", false);
-    loadSprite("enemy_basic", "assets/sprites/enemy_basic.png", false);
-    loadSprite("enemy_tank", "assets/sprites/enemy_tank.png", false);
-    loadSprite("enemy_fast", "assets/sprites/enemy_fast.png", false);
-    loadSprite("turret", "assets/sprites/turret.png", false);
-    loadSprite("explosion_1", "assets/sprites/blowup_1.png", false);
-    loadSprite("explosion_2", "assets/sprites/blowup_2.png", false);
+    loadSprite("enemy_tank", ASSET_SPAN(rtype::embedded::enemy_tank_data),
+               false);
+    loadSprite("enemy_fast", ASSET_SPAN(rtype::embedded::enemy_fast_data),
+               false);
+    loadSprite("turret", ASSET_SPAN(rtype::embedded::turret_data), false);
+    loadSprite("explosion_1", ASSET_SPAN(rtype::embedded::blowup_1_data),
+               false);
+    loadSprite("explosion_2", ASSET_SPAN(rtype::embedded::blowup_2_data),
+               false);
 }
