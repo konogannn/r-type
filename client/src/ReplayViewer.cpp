@@ -36,7 +36,8 @@ ReplayViewer::ReplayViewer(rtype::WindowSFML& window,
 
     _replayPlayer = std::make_unique<rtype::ReplayPlayer>(replayPath);
     if (!_replayPlayer->load()) {
-        std::cerr << "Failed to load replay: " << replayPath << std::endl;
+        std::cerr << "[ReplayViewer] Failed to load replay: " << replayPath
+                  << std::endl;
         _returnToMenu = true;
         return;
     }
@@ -51,8 +52,8 @@ ReplayViewer::ReplayViewer(rtype::WindowSFML& window,
     _replayControls = std::make_unique<rtype::ReplayControls>(
         window, graphics, input, *_replayPlayer);
 
-    std::cout << "Loaded replay: " << _replayPlayer->getReplayName()
-              << std::endl;
+    std::cout << "[ReplayViewer] Loaded replay: "
+              << _replayPlayer->getReplayName() << std::endl;
 }
 
 ReplayViewer::~ReplayViewer() {}
