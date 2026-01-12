@@ -17,7 +17,6 @@ namespace rtype {
 ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
                                    float windowWidth, float windowHeight)
     : _graphics(graphics),
-      _input(input),
       _windowWidth(windowWidth),
       _windowHeight(windowHeight),
       _dialogWidth(600.0f),
@@ -34,7 +33,7 @@ ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
                     "CANCEL"),
       _cancelled(false),
       _confirmed(false),
-      _fontPath("assets/fonts/Retro_Gaming.ttf")
+      _fontPath("assets/fonts/default.ttf")
 {
     Config& config = Config::getInstance();
     std::string serverAddress = config.getString("serverAddress", "127.0.0.1");
