@@ -23,7 +23,11 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
       _gameLoop(targetFPS),
       _gameStarted(false),
       _playerCount(0),
-      _nextPlayerId(1)
+      _nextPlayerId(1),
+      _bossWaveActive(false),
+      _bossWaveEnemiesAlive(0),
+      _bossSpawned(false),
+      _pendingBossType(0)
 {
     _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
@@ -250,6 +254,13 @@ void GameServer::waitForPlayers()
     }
 }
 
+bool GameServer::isEnemy(uint8_t entityType) const
+{
+    return entityType == static_cast<uint8_t>(EntityType::BASIC) ||
+           entityType == static_cast<uint8_t>(EntityType::FAST) ||
+           entityType == static_cast<uint8_t>(EntityType::TANK);
+}
+
 void GameServer::processNetworkUpdates()
 {
     const auto targetFrameTime = std::chrono::milliseconds(16);
@@ -274,6 +285,16 @@ void GameServer::processNetworkUpdates()
                                                        update.x, update.y);
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);
+
+                        // Check if this was a boss wave enemy
+                        if (_bossWaveActive && isEnemy(update.entityType)) {
+                            _bossWaveEnemiesAlive--;
+                            Logger::getInstance().log(
+                                "Boss wave enemy destroyed. Remaining: " +
+                                    std::to_string(
+                                        _bossWaveEnemiesAlive.load()),
+                                LogLevel::DEBUG_L, "Game");
+                        }
                     } else {
                         _networkServer.sendEntityPosition(0, update.entityId,
                                                           update.x, update.y);
@@ -290,6 +311,8 @@ void GameServer::processNetworkUpdates()
             if (frameCounter % 10 == 0) {
                 sendHealthUpdates();
             }
+
+            checkBossWaveCompletion();
         } catch (const std::exception& e) {
             Logger::getInstance().log(
                 "Error in network update loop: " + std::string(e.what()),
@@ -322,6 +345,10 @@ void GameServer::resetGameState()
     _playersReady.clear();
     _playerCount = 0;
     _gameStarted = false;
+    _bossWaveActive = false;
+    _bossWaveEnemiesAlive = 0;
+    _bossSpawned = false;
+    _pendingBossType = 0;
 
     Logger::getInstance().log("Ready for new players", LogLevel::INFO_L,
                               "Lobby");
@@ -387,6 +414,14 @@ bool GameServer::isRunning() const
 
 void GameServer::spawnBoss(uint8_t bossType)
 {
+    if (!_bossWaveActive) {
+        Logger::getInstance().log("Initiating boss wave before boss spawn",
+                                  LogLevel::INFO_L, "Game");
+        _pendingBossType = bossType;
+        spawnBossWave(bossType);
+        return;
+    }
+
     Logger::getInstance().log(
         "Spawning boss of type " + std::to_string(bossType), LogLevel::INFO_L,
         "Game");
@@ -401,6 +436,62 @@ void GameServer::spawnBoss(uint8_t bossType)
 
     Logger::getInstance().log("Boss spawned successfully", LogLevel::INFO_L,
                               "Game");
+    _bossSpawned = true;
+}
+
+void GameServer::spawnBossWave(uint8_t bossType)
+{
+    _bossWaveActive = true;
+    _bossWaveEnemiesAlive = 0;
+    _bossSpawned = false;
+
+    Logger::getInstance().log("Spawning boss wave with multiple enemies",
+                              LogLevel::INFO_L, "Game");
+
+    const int WAVE_SIZE = 10;
+    const float START_X = 1800.0f;
+    const float MIN_Y = 150.0f;
+    const float MAX_Y = 950.0f;
+    const float Y_SPACING = (MAX_Y - MIN_Y) / (WAVE_SIZE - 1);
+
+    for (int i = 0; i < WAVE_SIZE; ++i) {
+        float y = MIN_Y + (i * Y_SPACING);
+        float x =
+            START_X + (i % 2 == 0 ? 0.0f : 100.0f);
+
+        engine::Enemy::Type type;
+        if (i % 3 == 0) {
+            type = engine::Enemy::Type::TANK;
+        } else if (i % 3 == 1) {
+            type = engine::Enemy::Type::FAST;
+        } else {
+            type = engine::Enemy::Type::BASIC;
+        }
+
+        SpawnEnemyEvent enemyEvent;
+        enemyEvent.type = type;
+        enemyEvent.x = x;
+        enemyEvent.y = y;
+        _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(enemyEvent));
+        _bossWaveEnemiesAlive++;
+    }
+
+    Logger::getInstance().log(
+        "Boss wave spawned: " + std::to_string(WAVE_SIZE) + " enemies",
+        LogLevel::INFO_L, "Game");
+}
+
+void GameServer::checkBossWaveCompletion()
+{
+    if (_bossWaveActive && !_bossSpawned) {
+        if (_bossWaveEnemiesAlive <= 0) {
+            Logger::getInstance().log("Boss wave cleared! Spawning boss...",
+                                      LogLevel::INFO_L, "Game");
+            _bossWaveActive = true;
+            spawnBoss(_pendingBossType);
+            _bossWaveActive = false;
+        }
+    }
 }
 
 }  // namespace rtype
