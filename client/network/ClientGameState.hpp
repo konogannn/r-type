@@ -16,6 +16,7 @@
 #include "../src/Explosion.hpp"
 #include "../wrapper/graphics/GraphicsSFML.hpp"
 #include "../wrapper/graphics/SpriteSFML.hpp"
+#include "../wrapper/resources/EmbeddedResources.hpp"
 #include "NetworkClientAsio.hpp"
 #include "common/replay/ReplayRecorder.hpp"
 

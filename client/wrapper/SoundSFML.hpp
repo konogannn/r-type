@@ -22,7 +22,7 @@ class SoundBufferSFML : public ISoundBuffer {
     SoundBufferSFML() = default;
     ~SoundBufferSFML() override = default;
 
-    bool loadFromFile(const std::string& filename) override;
+    bool loadFromMemory(const void* data, std::size_t size) override;
 
     const sf::SoundBuffer& getBuffer() const { return _buffer; }
 

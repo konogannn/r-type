@@ -14,6 +14,7 @@
 
 #include "../Config.hpp"
 #include "../KeyBinding.hpp"
+#include "../wrapper/resources/EmbeddedResources.hpp"
 #include "Background.hpp"
 #include "SoundManager.hpp"
 #include "TextureManager.hpp"
@@ -61,9 +62,10 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
     if (!_background) {
         _background = std::make_shared<Background>(
-            "assets/background/bg-back.png", "assets/background/bg-stars.png",
-            "assets/background/bg-planet.png", static_cast<float>(actualWidth),
-            static_cast<float>(actualHeight));
+            ASSET_SPAN(rtype::embedded::background_base_data),
+            ASSET_SPAN(rtype::embedded::background_stars_data),
+            ASSET_SPAN(rtype::embedded::background_planet_data),
+            static_cast<float>(actualWidth), static_cast<float>(actualHeight));
     }
 
     _gameState = std::make_unique<rtype::ClientGameState>();

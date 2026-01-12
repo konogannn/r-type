@@ -27,8 +27,10 @@ class AudioSFML : public IAudio {
 
     ~AudioSFML() override = default;
 
-    bool playSound(const std::string& filepath, bool loop = false) override;
-    bool playMusic(const std::string& filepath, bool loop = true) override;
+    bool playSound(std::span<const std::byte> soundData,
+                   bool loop = false) override;
+    bool playMusic(std::span<const std::byte> musicData,
+                   bool loop = true) override;
     void stopAllSounds() override;
     void stopMusic() override;
     void setSoundVolume(float volume) override;
