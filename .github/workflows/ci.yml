@@ -133,6 +133,8 @@ jobs:
               libglu1-mesa-dev \
               libflac-dev libogg-dev libvorbis-dev libopenal-dev \
               libfreetype6-dev
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
 
       - name: Restore vcpkg cache
         uses: actions/cache@v4
@@ -219,6 +221,8 @@ jobs:
               libglu1-mesa-dev \
               libflac-dev libogg-dev libvorbis-dev libopenal-dev \
               libfreetype6-dev
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
 
       - name: Restore vcpkg cache
         uses: actions/cache@v4
