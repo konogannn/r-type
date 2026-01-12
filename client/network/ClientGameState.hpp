@@ -8,6 +8,7 @@
 #pragma once
 
 #include <memory>
+#include <resources/EmbeddedResources.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

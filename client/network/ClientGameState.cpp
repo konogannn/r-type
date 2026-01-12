@@ -30,9 +30,8 @@ ClientGameState::ClientGameState()
         });
     _networkClient->setOnEntityDeadCallback(
         [this](uint32_t entityId) { onEntityDead(entityId); });
-    _networkClient->setOnScoreUpdateCallback([this](uint32_t score) {
-        _score = score;
-    });
+    _networkClient->setOnScoreUpdateCallback(
+        [this](uint32_t score) { _score = score; });
     _networkClient->setOnHealthUpdateCallback(
         [this](const HealthUpdatePacket& packet) {
             onHealthUpdate(packet.entityId, packet.currentHealth,
@@ -333,9 +332,10 @@ void ClientGameState::onHealthUpdate(uint32_t entityId, float currentHealth,
         float oldHealth = entity->health;
         entity->health = currentHealth;
         entity->maxHealth = maxHealth;
-        
+
         // If health decreased and player had shield, remove it
-        if (entity->type == 1 && entity->hasShield && currentHealth < oldHealth) {
+        if (entity->type == 1 && entity->hasShield &&
+            currentHealth < oldHealth) {
             entity->hasShield = false;
         }
     }
@@ -349,10 +349,7 @@ void ClientGameState::onShieldStatus(uint32_t playerId, bool hasShield)
     }
 }
 
-void ClientGameState::onError(const std::string& error)
-{
-    _lastError = error;
-}
+void ClientGameState::onError(const std::string& error) { _lastError = error; }
 
 void ClientGameState::createEntitySprite(ClientEntity& entity)
 {
@@ -396,7 +393,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.spriteScale = scale;
             entity.shieldSprite = std::make_unique<SpriteSFML>();
             if (entity.shieldSprite->loadTexture(
-                    "assets/sprites/player_shield.png")) {
+                    ASSET_SPAN(embedded::shield_data))) {
                 float shieldScale = 0.3f;
                 entity.shieldSprite->setScale(shieldScale, shieldScale);
             }
@@ -478,12 +475,11 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 8: {
             // Shield Item power-up
-            texturePath = "assets/sprites/shield_item.png";
             scale = 0.8f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/boss_3.png";
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::shield_item_data))) {
                 scale = 0.5f;
-                entity.sprite->loadTexture(texturePath);
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -492,12 +488,12 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 9: {
             // Guided Missile Item power-up
-            texturePath = "assets/sprites/search_missile_item.png";
             scale = 0.8f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/projectile_player_1.png";
-                scale = 3.0f;
-                entity.sprite->loadTexture(texturePath);
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::search_missile_item_data))) {
+                scale = 0.5f;
+                entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -561,12 +557,12 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 16: {
             // Guided Missile projectile
-            texturePath = "assets/sprites/search_missile.png";
             scale = 4.0f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/projectile_player_1.png";
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::search_missile_data))) {
                 scale = 5.0f;
-                entity.sprite->loadTexture(texturePath);
+                entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
