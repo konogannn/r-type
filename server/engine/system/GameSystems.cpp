@@ -348,13 +348,17 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                         boss->hitCounter = 0;
 
                         // Trouver un joueur pour spawner l'item près de lui
-                        auto players = entityManager.getEntitiesWith<Position, Player>();
+                        auto players =
+                            entityManager.getEntitiesWith<Position, Player>();
                         float spawnX = bossPos->x;
                         float spawnY = bossPos->y;
                         if (!players.empty()) {
-                            auto* playerPos = entityManager.getComponent<Position>(players[0]);
+                            auto* playerPos =
+                                entityManager.getComponent<Position>(
+                                    players[0]);
                             if (playerPos) {
-                                spawnX = playerPos->x + 100.0f; // Spawner devant le joueur
+                                spawnX = playerPos->x +
+                                         100.0f;  // Spawner devant le joueur
                                 spawnY = playerPos->y;
                             }
                         }
@@ -410,14 +414,21 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                             if (boss->hitCounter >= 15) {
                                 boss->hitCounter = 0;
 
-                                // Trouver un joueur pour spawner l'item près de lui
-                                auto players = entityManager.getEntitiesWith<Position, Player>();
+                                // Trouver un joueur pour spawner l'item près de
+                                // lui
+                                auto players =
+                                    entityManager
+                                        .getEntitiesWith<Position, Player>();
                                 float spawnX = partPos->x;
                                 float spawnY = partPos->y;
                                 if (!players.empty()) {
-                                    auto* playerPos = entityManager.getComponent<Position>(players[0]);
+                                    auto* playerPos =
+                                        entityManager.getComponent<Position>(
+                                            players[0]);
                                     if (playerPos) {
-                                        spawnX = playerPos->x + 100.0f; // Spawner devant le joueur
+                                        spawnX =
+                                            playerPos->x +
+                                            100.0f;  // Spawner devant le joueur
                                         spawnY = playerPos->y;
                                     }
                                 }
