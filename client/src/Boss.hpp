@@ -41,7 +41,6 @@ class Boss {
     void updateFlashEffect(float deltaTime);
 
     uint32_t _entityId;
-    uint8_t _bossType;
     uint8_t _currentPhase;
 
     sf::Sprite _sprite;
