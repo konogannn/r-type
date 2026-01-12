@@ -44,7 +44,6 @@ class ReplayViewer {
 
    private:
     rtype::WindowSFML& _window;
-    rtype::InputSFML& _input;
     rtype::GraphicsSFML& _graphics;
     bool _running;
     bool _returnToMenu;
