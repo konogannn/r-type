@@ -179,7 +179,6 @@ struct GuidedMissile : public ComponentBase<GuidedMissile> {
     }
 };
 
-
 /**
  * @brief BossPart component - Represents a part of a multi-part boss
  *
