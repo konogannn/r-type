@@ -17,7 +17,6 @@ ReplayViewer::ReplayViewer(rtype::WindowSFML& window,
                            rtype::InputSFML& input,
                            const std::string& replayPath)
     : _window(window),
-      _input(input),
       _graphics(graphics),
       _running(false),
       _returnToMenu(false),
@@ -28,8 +27,10 @@ ReplayViewer::ReplayViewer(rtype::WindowSFML& window,
     _scale = std::min(windowWidth / 1920.0f, windowHeight / 1080.0f);
 
     _background = std::make_shared<Background>(
-        "assets/background/bg-back.png", "assets/background/bg-stars.png",
-        "assets/background/bg-planet.png", windowWidth, windowHeight);
+        ASSET_SPAN(rtype::embedded::background_base_data),
+        ASSET_SPAN(rtype::embedded::background_stars_data),
+        ASSET_SPAN(rtype::embedded::background_planet_data), windowWidth,
+        windowHeight);
 
     _gameState = std::make_unique<rtype::ClientGameState>();
 
@@ -42,8 +43,7 @@ ReplayViewer::ReplayViewer(rtype::WindowSFML& window,
 
     _replayPlayer->setResetCallback([this]() {
         if (_gameState) {
-            _gameState->setSeekingMode(
-                true);
+            _gameState->setSeekingMode(true);
             _gameState->resetForReplay();
         }
     });
@@ -167,8 +167,7 @@ void ReplayViewer::render()
         const auto& entities = _gameState->getAllEntities();
 
         for (const auto& [id, entity] : entities) {
-            if (!entity || entity->type == 7)
-                continue;
+            if (!entity || entity->type == 7) continue;
 
             rtype::ISprite* spriteToRender = entity->sprite.get();
             if (!spriteToRender) continue;
