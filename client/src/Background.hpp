@@ -16,7 +16,7 @@
  */
 class BackgroundLayer {
    public:
-    BackgroundLayer(const std::string& texturePath, float scrollSpeed,
+    BackgroundLayer(std::span<const std::byte> textureData, float scrollSpeed,
                     float windowWidth, float windowHeight);
 
     void update(float deltaTime);
@@ -38,8 +38,9 @@ class BackgroundLayer {
  */
 class Background {
    public:
-    Background(const std::string& backPath, const std::string& starsPath,
-               const std::string& planetPath, float windowWidth,
+    Background(std::span<const std::byte> backData,
+               std::span<const std::byte> starsData,
+               std::span<const std::byte> planetData, float windowWidth,
                float windowHeight);
     ~Background();
 

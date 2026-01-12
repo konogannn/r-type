@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include "../wrapper/resources/EmbeddedResources.hpp"
+
 TextureManager& TextureManager::getInstance()
 {
     static TextureManager instance;
@@ -16,15 +18,17 @@ TextureManager& TextureManager::getInstance()
 }
 
 bool TextureManager::loadSprite(const std::string& id,
-                                const std::string& filepath, bool smooth)
+                                std::span<const std::byte> textureData,
+                                bool smooth)
 {
     if (_sprites.find(id) != _sprites.end()) {
         return true;
     }
 
     auto sprite = std::make_unique<rtype::SpriteSFML>();
-    if (!sprite->loadTexture(filepath)) {
-        std::cerr << "Failed to load: " << filepath << std::endl;
+    if (!sprite->loadTexture(textureData)) {
+        std::cerr << "Failed to load texture from memory for id: " << id
+                  << std::endl;
         return false;
     }
 
@@ -45,12 +49,18 @@ rtype::ISprite* TextureManager::getSprite(const std::string& id)
 
 void TextureManager::loadAll()
 {
-    loadSprite("bg_back", "assets/background/bg-back.png", false);
-    loadSprite("bg_stars", "assets/background/bg-stars.png", false);
-    loadSprite("bg_planet", "assets/background/bg-planet.png", false);
-    loadSprite("player_static", "assets/sprites/player1.png", false);
-    loadSprite("player_down", "assets/sprites/player2.png", false);
-    loadSprite("player_up", "assets/sprites/player3.png", false);
-    loadSprite("projectile", "assets/sprites/projectile_player_1.png", false);
-    loadSprite("boss", "assets/sprites/boss_1.png", false);
+    loadSprite("bg_back", ASSET_SPAN(rtype::embedded::background_base_data),
+               false);
+    loadSprite("bg_stars", ASSET_SPAN(rtype::embedded::background_stars_data),
+               false);
+    loadSprite("bg_planet", ASSET_SPAN(rtype::embedded::background_planet_data),
+               false);
+    loadSprite("player_static", ASSET_SPAN(rtype::embedded::player_1_data),
+               false);
+    loadSprite("player_down", ASSET_SPAN(rtype::embedded::player_2_data),
+               false);
+    loadSprite("player_up", ASSET_SPAN(rtype::embedded::player_3_data), false);
+    loadSprite("projectile",
+               ASSET_SPAN(rtype::embedded::projectile_player_1_data), false);
+    loadSprite("boss", ASSET_SPAN(rtype::embedded::boss_1_data), false);
 }

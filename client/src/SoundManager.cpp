@@ -17,31 +17,29 @@ SoundManager& SoundManager::getInstance()
 
 void SoundManager::loadAll()
 {
-    loadSound("shot", "assets/sound/shot_1.wav");
-    loadSound("hit", "assets/sound/hit.wav");
-    loadSound("explosion", "assets/sound/explosion.wav");
-    loadSound("click", "assets/sound/clique_sound.wav");
+    loadSound("shot", ASSET_SPAN(rtype::embedded::shot_sound_data));
+    loadSound("hit", ASSET_SPAN(rtype::embedded::hit_sound_data));
+    loadSound("explosion", ASSET_SPAN(rtype::embedded::explosion_sound_data));
+    loadSound("click", ASSET_SPAN(rtype::embedded::click_sound_data));
 
-    if (!_music) {
-        _music = std::make_unique<rtype::MusicSFML>();
-        if (_music->openFromFile("assets/sound/menu_sound.wav")) {
+    if (_music) {
+        if (_music->openFromMemory(rtype::embedded::music_data,
+                                   sizeof(rtype::embedded::music_data))) {
             _music->setLoop(true);
             _music->setVolume(_musicVolume);
-            std::cout << "  Loaded: music -> assets/sound/menu_sound.wav"
-                      << std::endl;
+            std::cout << "  Loaded: embedded music" << std::endl;
         } else {
-            std::cerr << "  Failed to load music: assets/sound/menu_sound.wav"
-                      << std::endl;
+            std::cerr << "  Failed to load embedded music" << std::endl;
         }
     }
 }
 
 void SoundManager::loadSound(const std::string& name,
-                             const std::string& filename)
+                             std::span<const std::byte> data)
 {
     auto buffer = std::make_unique<rtype::SoundBufferSFML>();
 
-    if (buffer->loadFromFile(filename)) {
+    if (buffer->loadFromMemory(data.data(), data.size())) {
         auto sound = std::make_unique<rtype::SoundSFML>();
         sound->setBuffer(*buffer);
         sound->setVolume(_volume);
@@ -49,9 +47,9 @@ void SoundManager::loadSound(const std::string& name,
         _buffers[name] = std::move(buffer);
         _sounds[name] = std::move(sound);
 
-        std::cout << "  Loaded: " << name << " -> " << filename << std::endl;
+        std::cout << "  Loaded (embedded): " << name << std::endl;
     } else {
-        std::cerr << "  Failed to load: " << filename << std::endl;
+        std::cerr << "  Failed to load embedded sound: " << name << std::endl;
     }
 }
 

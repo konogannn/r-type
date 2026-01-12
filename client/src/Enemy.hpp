@@ -16,7 +16,8 @@
  */
 class Enemy {
    public:
-    Enemy(const std::string& texturePath, float x, float y, float scale = 1.0f);
+    Enemy(std::span<const std::byte> textureData, float x, float y,
+          float scale = 1.0f);
 
     void update(float deltaTime);
     void draw(rtype::IGraphics& graphics);
