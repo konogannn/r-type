@@ -20,24 +20,51 @@ ClientGameState::ClientGameState()
     _networkClient->setOnDisconnectedCallback([this]() { onDisconnected(); });
     _networkClient->setOnLoginResponseCallback(
         [this](const LoginResponsePacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onLoginResponse(packet.playerId, packet.mapWidth, packet.mapHeight);
         });
     _networkClient->setOnEntitySpawnCallback(
         [this](const EntitySpawnPacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onEntitySpawn(packet.entityId, packet.type, packet.x, packet.y);
         });
     _networkClient->setOnEntityPositionCallback(
         [this](const EntityPositionPacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onEntityPosition(packet.entityId, packet.x, packet.y);
         });
-    _networkClient->setOnEntityDeadCallback(
-        [this](uint32_t entityId) { onEntityDead(entityId); });
+    _networkClient->setOnEntityDeadCallback([this](uint32_t entityId) {
+        if (_recorder) {
+            EntityDeadPacket packet;
+            packet.header.opCode = static_cast<uint8_t>(S2C_ENTITY_DEAD);
+            packet.header.sequenceId = 0;
+            packet.entityId = entityId;
+            _recorder->recordPacket(&packet, sizeof(packet));
+        }
+        onEntityDead(entityId);
+    });
     _networkClient->setOnScoreUpdateCallback([this](uint32_t score) {
+        if (_recorder) {
+            ScoreUpdatePacket packet;
+            packet.header.opCode = static_cast<uint8_t>(S2C_SCORE_UPDATE);
+            packet.header.sequenceId = 0;
+            packet.score = score;
+            _recorder->recordPacket(&packet, sizeof(packet));
+        }
         _score = score;
         std::cout << "[INFO] Score updated: " << score << std::endl;
     });
     _networkClient->setOnHealthUpdateCallback(
         [this](const HealthUpdatePacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onHealthUpdate(packet.entityId, packet.currentHealth,
                            packet.maxHealth);
         });
@@ -322,31 +349,31 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
 
 void ClientGameState::onEntityDead(uint32_t entityId)
 {
-    std::cout << "[INFO] Entity died: ID=" << entityId << std::endl;
-
     auto* entity = getEntity(entityId);
     if (entity) {
-        switch (entity->type) {
-            case 4:
-                _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_1.png"),
-                    entity->x - 16, entity->y, 1.0f, 32, 32, 6));
-                break;
-            case 2:
-                _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_1.png"),
-                    entity->x + 16, entity->y, 1.0f, 32, 32, 6));
-                break;
-            default:
-                if (entity->type >= 10 || entity->type == 5) {
+        if (!_isSeeking) {
+            switch (entity->type) {
+                case 4:
                     _explosions.push_back(std::make_unique<Explosion>(
                         utils::PathHelper::getAssetPath(
-                            "assets/sprites/blowup_2.png"),
-                        entity->x, entity->y, 2.0f, 64, 64, 8));
-                }
-                break;
+                            "assets/sprites/blowup_1.png"),
+                        entity->x - 16, entity->y, 1.0f, 32, 32, 6));
+                    break;
+                case 2:
+                    _explosions.push_back(std::make_unique<Explosion>(
+                        utils::PathHelper::getAssetPath(
+                            "assets/sprites/blowup_1.png"),
+                        entity->x + 16, entity->y, 1.0f, 32, 32, 6));
+                    break;
+                default:
+                    if (entity->type >= 10 || entity->type == 5) {
+                        _explosions.push_back(std::make_unique<Explosion>(
+                            utils::PathHelper::getAssetPath(
+                                "assets/sprites/blowup_2.png"),
+                            entity->x, entity->y, 2.0f, 64, 64, 8));
+                    }
+                    break;
+            }
         }
     }
 
@@ -604,6 +631,18 @@ float ClientGameState::getPlayerMaxHealth() const
     return 100.0f;
 }
 
+uint32_t ClientGameState::getPlayerId() const { return _playerId; }
+
+uint16_t ClientGameState::getMapWidth() const { return _mapWidth; }
+
+uint16_t ClientGameState::getMapHeight() const { return _mapHeight; }
+
+uint32_t ClientGameState::getScore() const { return _score; }
+
+const std::string& ClientGameState::getLastError() const { return _lastError; }
+
+size_t ClientGameState::getEntityCount() const { return _entities.size(); }
+
 float ClientGameState::getBossHealth() const
 {
     for (const auto& [id, entity] : _entities) {
@@ -622,6 +661,84 @@ float ClientGameState::getBossMaxHealth() const
         }
     }
     return 0.0f;
+}
+
+void ClientGameState::startRecording(const std::string& filename)
+{
+    if (_recorder) {
+        std::cout << "[WARN] Already recording, stopping previous recording"
+                  << std::endl;
+        stopRecording();
+    }
+
+    std::string replayPath = "replays/" + filename;
+    _recorder = std::make_unique<rtype::ReplayRecorder>(replayPath);
+
+    if (_recorder->startRecording()) {
+        std::cout << "[INFO] Started recording replay to: " << replayPath
+                  << std::endl;
+    } else {
+        std::cerr << "[ERROR] Failed to start recording" << std::endl;
+        _recorder.reset();
+    }
+}
+
+void ClientGameState::stopRecording()
+{
+    if (_recorder) {
+        _recorder->stopRecording();
+        std::cout << "[INFO] Stopped recording replay" << std::endl;
+        _recorder.reset();
+    }
+}
+
+void ClientGameState::resetForReplay()
+{
+    _entities.clear();
+    _explosions.clear();
+    _score = 0;
+}
+
+const std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>>&
+ClientGameState::getAllEntities() const
+{
+    return _entities;
+}
+
+bool ClientGameState::isRecording() const { return _recorder != nullptr; }
+
+void ClientGameState::setSeekingMode(bool seeking) { _isSeeking = seeking; }
+
+void ClientGameState::clearExplosions() { _explosions.clear(); }
+
+void ClientGameState::setIsSeeking(bool seeking) { _isSeeking = seeking; }
+
+void ClientGameState::processLoginResponse(uint32_t playerId, uint16_t mapWidth,
+                                           uint16_t mapHeight)
+{
+    onLoginResponse(playerId, mapWidth, mapHeight);
+}
+
+void ClientGameState::processEntitySpawn(uint32_t entityId, uint8_t type,
+                                         float x, float y)
+{
+    onEntitySpawn(entityId, type, x, y);
+}
+
+void ClientGameState::processEntityPosition(uint32_t entityId, float x, float y)
+{
+    onEntityPosition(entityId, x, y);
+}
+
+void ClientGameState::processEntityDead(uint32_t entityId)
+{
+    onEntityDead(entityId);
+}
+
+void ClientGameState::processHealthUpdate(uint32_t entityId,
+                                          float currentHealth, float maxHealth)
+{
+    onHealthUpdate(entityId, currentHealth, maxHealth);
 }
 
 }  // namespace rtype
