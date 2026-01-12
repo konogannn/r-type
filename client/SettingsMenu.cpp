@@ -28,7 +28,7 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
                            {"None", "Protanopia", "Deuteranopia", "Tritanopia",
                             "Protanomaly", "Deuteranomaly", "Tritanomaly"},
                            0),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
+      _fontPath("assets/fonts/default.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
@@ -427,7 +427,6 @@ void SettingsMenu::render()
                        _fontPath);
 
     unsigned int sectionTitleSize = static_cast<unsigned int>(24 * scale);
-    float sliderWidth = _layout.sliderWidth;
     float leftColX = _layout.leftColX;
     float centerColX = _layout.centerColX;
     float resButtonWidth = _layout.resButtonWidth;
