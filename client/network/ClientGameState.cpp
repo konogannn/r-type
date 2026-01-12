@@ -455,7 +455,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             if (!entity.sprite->loadTexture(
                     explosionType == 1 ? ASSET_SPAN(embedded::blowup_1_data)
                                        : ASSET_SPAN(embedded::blowup_2_data))) {
-                // Fallback not embedded; keep unchanged behavior minimal
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -480,77 +479,56 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 10: {
-            texturePath = "assets/sprites/enemy_basic.png";
             scale = 2.0f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/boss_3.png";
-                entity.sprite->loadTexture(texturePath);
-                std::cout << "[WARN] Using fallback sprite for BASIC enemy"
-                          << std::endl;
-            }
+            // TODO load basic enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             entity.animFrameCount = 0;
             break;
         }
         case 11: {
-            texturePath = "assets/sprites/projectile_enemy_basic.png";
             scale = 4.0f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/projectile_enemy_1.png";
-                entity.sprite->loadTexture(texturePath);
-            }
+            // TODO load basic enemy projectile instead of reusing existing
+            // asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
         }
         case 12: {
-            texturePath = "assets/sprites/enemy_tank.png";
             scale = 1.5f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/boss_3.png";
-                entity.sprite->loadTexture(texturePath);
-                std::cout << "[WARN] Using fallback sprite for TANK enemy"
-                          << std::endl;
-            }
+            // TODO load tank enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             entity.animFrameCount = 0;
             break;
         }
         case 13: {
-            texturePath = "assets/sprites/projectile_enemy_tank.png";
             scale = 3.0f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/projectile_enemy_1.png";
-                entity.sprite->loadTexture(texturePath);
-            }
+            // TODO load tank enemy projectile instead of reusing existing asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
         }
         case 14: {
-            texturePath = "assets/sprites/enemy_fast.png";
-            scale = 2.5f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/boss_3.png";
-                scale = 0.8f;
-                entity.sprite->loadTexture(texturePath);
-                std::cout << "[WARN] Using fallback sprite for FAST enemy"
-                          << std::endl;
-            }
+            // scale = 2.5f;
+            // TODO load fast enemy sprite instead of reusing existing asset
+            scale = 0.8f;
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             entity.animFrameCount = 0;
             break;
         }
         case 15: {
-            texturePath = "assets/sprites/projectile_enemy_fast.png";
             scale = 5.0f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/projectile_enemy_1.png";
-                entity.sprite->loadTexture(texturePath);
-            }
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
