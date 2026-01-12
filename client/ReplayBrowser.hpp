@@ -79,6 +79,11 @@ class ReplayBrowser {
     bool wantsBack() const;
 
     /**
+     * @brief Reset browser state (clear flags)
+     */
+    void reset();
+
+    /**
      * @brief Update layout when window resizes
      */
     void updateLayout();
