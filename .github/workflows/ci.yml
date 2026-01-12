@@ -109,7 +109,7 @@ jobs:
             compiler: "/usr/bin/clang++-19"
           - os: windows-latest
             triplet: x64-windows
-            bin_path: "Release/r-type_server.exe"
+            bin_path: "r-type_server.exe"
             generator: "Ninja"
             compiler: "clang++"
     runs-on: ${{ matrix.os }}
@@ -198,7 +198,7 @@ jobs:
             compiler: "/usr/bin/clang++-19"
           - os: windows-latest
             triplet: x64-windows
-            bin_path: "Release/r-type_client.exe"
+            bin_path: "r-type_client.exe"
             generator: "Ninja"
             compiler: "clang++"
     runs-on: ${{ matrix.os }}
