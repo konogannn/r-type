@@ -93,6 +93,7 @@ int main()
                     break;
                 case MenuAction::Replays:
                     state = GameState::ReplayBrowser;
+                    replayBrowser->reset();
                     replayBrowser->refreshReplayList();
                     break;
                 case MenuAction::Quit:
@@ -184,6 +185,7 @@ int main()
             if (replayBrowser->wantsBack()) {
                 state = GameState::Menu;
                 menu->updateLayout();
+                replayBrowser->reset();
             } else if (replayBrowser->hasSelection()) {
                 selectedReplayPath = replayBrowser->getSelectedReplay();
                 std::cout << "Selected replay: " << selectedReplayPath
