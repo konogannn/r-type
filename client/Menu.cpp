@@ -19,7 +19,7 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
+      _fontPath("assets/fonts/default.ttf"),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
       _isFadingOut(false),
       _uiAlpha(1.0f)
