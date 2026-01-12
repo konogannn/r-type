@@ -35,8 +35,6 @@ add_executable(r-type_client
     ${CLIENT_NETWORK_SOURCES}
 )
 
-target_compile_options(r-type_client PRIVATE -I${CMAKE_SOURCE_DIR})
-
 target_include_directories(r-type_client
     PRIVATE
         ${CMAKE_SOURCE_DIR}
