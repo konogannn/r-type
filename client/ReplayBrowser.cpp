@@ -14,6 +14,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "wrapper/resources/EmbeddedResources.hpp"
+
 namespace rtype {
 
 ReplayBrowser::ReplayBrowser(WindowSFML& window, GraphicsSFML& graphics,
@@ -33,6 +35,15 @@ ReplayBrowser::ReplayBrowser(WindowSFML& window, GraphicsSFML& graphics,
       _cancelButton(0, 0, 150, 40, "Cancel"),
       _keyWasPressed(static_cast<int>(Key::F12) + 1, false)
 {
+    float windowWidth = static_cast<float>(_window.getWidth());
+    float windowHeight = static_cast<float>(_window.getHeight());
+
+    _background = std::make_shared<Background>(
+        ASSET_SPAN(rtype::embedded::background_base_data),
+        ASSET_SPAN(rtype::embedded::background_stars_data),
+        ASSET_SPAN(rtype::embedded::background_planet_data), windowWidth,
+        windowHeight);
+
     refreshReplayList();
     updateLayout();
 }
@@ -45,8 +56,12 @@ void ReplayBrowser::refreshReplayList()
     setupButtons();
 }
 
-void ReplayBrowser::update(float)
+void ReplayBrowser::update(float deltaTime)
 {
+    if (_background) {
+        _background->update(deltaTime);
+    }
+
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
@@ -150,7 +165,9 @@ void ReplayBrowser::render()
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
 
-    _graphics.drawRectangle(0, 0, windowWidth, windowHeight, 20, 20, 30, 255);
+    if (_background) {
+        _background->draw(_graphics);
+    }
 
     std::string title = "REPLAY BROWSER";
     float titleX = (windowWidth - 300.0f) / 2.0f;
@@ -172,19 +189,28 @@ void ReplayBrowser::render()
         unsigned char g = isHovered ? 200 : 30;
         unsigned char b = isHovered ? 255 : 100;
 
-        _graphics.drawRectangle(_replayButtons[i].getX(),
-                                _replayButtons[i].getY(),
-                                _replayButtons[i].getWidth(),
-                                _replayButtons[i].getHeight(), r, g, b, 255);
+        float buttonX = _replayButtons[i].getX();
+        float buttonY = _replayButtons[i].getY();
+        float buttonW = _replayButtons[i].getWidth();
+        float buttonH = _replayButtons[i].getHeight();
+
+        _graphics.drawRectangle(buttonX, buttonY, buttonW, buttonH, r, g, b,
+                                255);
+
+        float borderThickness = 3.0f;
+        _graphics.drawRectangle(buttonX, buttonY, buttonW, borderThickness, 100,
+                                150, 255, 255);
+        _graphics.drawRectangle(buttonX, buttonY + buttonH - borderThickness,
+                                buttonW, borderThickness, 100, 150, 255, 255);
+        _graphics.drawRectangle(buttonX, buttonY, borderThickness, buttonH, 100,
+                                150, 255, 255);
+        _graphics.drawRectangle(buttonX + buttonW - borderThickness, buttonY,
+                                borderThickness, buttonH, 100, 150, 255, 255);
 
         float textWidth = _graphics.getTextWidth(_replayButtons[i].getText(),
                                                  FONT_SIZE, _fontPath);
-        float textX = _replayButtons[i].getX() +
-                      (_replayButtons[i].getWidth() / 2.0f) -
-                      (textWidth / 2.0f);
-        float textY = _replayButtons[i].getY() +
-                      (_replayButtons[i].getHeight() / 2.0f) -
-                      (FONT_SIZE / 2.0f);
+        float textX = buttonX + (buttonW / 2.0f) - (textWidth / 2.0f);
+        float textY = buttonY + (buttonH / 2.0f) - (FONT_SIZE / 2.0f);
 
         _graphics.drawText(_replayButtons[i].getText(), textX, textY, FONT_SIZE,
                            255, 255, 255, _fontPath);
@@ -194,18 +220,27 @@ void ReplayBrowser::render()
         g = renameHovered ? 200 : 100;
         b = renameHovered ? 0 : 50;
 
-        _graphics.drawRectangle(_renameButtons[i].getX(),
-                                _renameButtons[i].getY(),
-                                _renameButtons[i].getWidth(),
-                                _renameButtons[i].getHeight(), r, g, b, 255);
+        float renameX = _renameButtons[i].getX();
+        float renameY = _renameButtons[i].getY();
+        float renameW = _renameButtons[i].getWidth();
+        float renameH = _renameButtons[i].getHeight();
 
-        textWidth = _graphics.getTextWidth("R", FONT_SIZE - 4, _fontPath);
-        textX = _renameButtons[i].getX() +
-                (_renameButtons[i].getWidth() / 2.0f) - (textWidth / 2.0f);
-        textY = _renameButtons[i].getY() +
-                (_renameButtons[i].getHeight() / 2.0f) -
-                ((FONT_SIZE - 4) / 2.0f);
-        _graphics.drawText("R", textX, textY, FONT_SIZE - 4, 255, 255, 255,
+        _graphics.drawRectangle(renameX, renameY, renameW, renameH, r, g, b,
+                                255);
+
+        _graphics.drawRectangle(renameX, renameY, renameW, borderThickness, 100,
+                                150, 255, 255);
+        _graphics.drawRectangle(renameX, renameY + renameH - borderThickness,
+                                renameW, borderThickness, 100, 150, 255, 255);
+        _graphics.drawRectangle(renameX, renameY, borderThickness, renameH, 100,
+                                150, 255, 255);
+        _graphics.drawRectangle(renameX + renameW - borderThickness, renameY,
+                                borderThickness, renameH, 100, 150, 255, 255);
+
+        textWidth = _graphics.getTextWidth("rename", FONT_SIZE - 4, _fontPath);
+        textX = renameX + (renameW / 2.0f) - (textWidth / 2.0f);
+        textY = renameY + (renameH / 2.0f) - ((FONT_SIZE - 4) / 2.0f);
+        _graphics.drawText("rename", textX, textY, FONT_SIZE - 4, 255, 255, 255,
                            _fontPath);
 
         bool deleteHovered = _deleteButtons[i].isHovered(mouseX, mouseY);
@@ -213,18 +248,27 @@ void ReplayBrowser::render()
         g = deleteHovered ? 50 : 30;
         b = deleteHovered ? 50 : 30;
 
-        _graphics.drawRectangle(_deleteButtons[i].getX(),
-                                _deleteButtons[i].getY(),
-                                _deleteButtons[i].getWidth(),
-                                _deleteButtons[i].getHeight(), r, g, b, 255);
+        float deleteX = _deleteButtons[i].getX();
+        float deleteY = _deleteButtons[i].getY();
+        float deleteW = _deleteButtons[i].getWidth();
+        float deleteH = _deleteButtons[i].getHeight();
 
-        textWidth = _graphics.getTextWidth("X", FONT_SIZE - 4, _fontPath);
-        textX = _deleteButtons[i].getX() +
-                (_deleteButtons[i].getWidth() / 2.0f) - (textWidth / 2.0f);
-        textY = _deleteButtons[i].getY() +
-                (_deleteButtons[i].getHeight() / 2.0f) -
-                ((FONT_SIZE - 4) / 2.0f);
-        _graphics.drawText("X", textX, textY, FONT_SIZE - 4, 255, 255, 255,
+        _graphics.drawRectangle(deleteX, deleteY, deleteW, deleteH, r, g, b,
+                                255);
+
+        _graphics.drawRectangle(deleteX, deleteY, deleteW, borderThickness, 100,
+                                150, 255, 255);
+        _graphics.drawRectangle(deleteX, deleteY + deleteH - borderThickness,
+                                deleteW, borderThickness, 100, 150, 255, 255);
+        _graphics.drawRectangle(deleteX, deleteY, borderThickness, deleteH, 100,
+                                150, 255, 255);
+        _graphics.drawRectangle(deleteX + deleteW - borderThickness, deleteY,
+                                borderThickness, deleteH, 100, 150, 255, 255);
+
+        textWidth = _graphics.getTextWidth("delete", FONT_SIZE - 4, _fontPath);
+        textX = deleteX + (deleteW / 2.0f) - (textWidth / 2.0f);
+        textY = deleteY + (deleteH / 2.0f) - ((FONT_SIZE - 4) / 2.0f);
+        _graphics.drawText("delete", textX, textY, FONT_SIZE - 4, 255, 255, 255,
                            _fontPath);
     }
 
@@ -240,16 +284,27 @@ void ReplayBrowser::render()
     unsigned char g = isHovered ? 200 : 30;
     unsigned char b = isHovered ? 255 : 100;
 
-    _graphics.drawRectangle(_backButton.getX(), _backButton.getY(),
-                            _backButton.getWidth(), _backButton.getHeight(), r,
-                            g, b, 255);
+    float borderThickness = 3.0f;
+    float backX = _backButton.getX();
+    float backY = _backButton.getY();
+    float backW = _backButton.getWidth();
+    float backH = _backButton.getHeight();
+
+    _graphics.drawRectangle(backX, backY, backW, backH, r, g, b, 255);
+
+    _graphics.drawRectangle(backX, backY, backW, borderThickness, 100, 150, 255,
+                            255);
+    _graphics.drawRectangle(backX, backY + backH - borderThickness, backW,
+                            borderThickness, 100, 150, 255, 255);
+    _graphics.drawRectangle(backX, backY, borderThickness, backH, 100, 150, 255,
+                            255);
+    _graphics.drawRectangle(backX + backW - borderThickness, backY,
+                            borderThickness, backH, 100, 150, 255, 255);
 
     float textWidth =
         _graphics.getTextWidth(_backButton.getText(), FONT_SIZE, _fontPath);
-    float textX = _backButton.getX() + (_backButton.getWidth() / 2.0f) -
-                  (textWidth / 2.0f);
-    float textY = _backButton.getY() + (_backButton.getHeight() / 2.0f) -
-                  (FONT_SIZE / 2.0f);
+    float textX = backX + (backW / 2.0f) - (textWidth / 2.0f);
+    float textY = backY + (backH / 2.0f) - (FONT_SIZE / 2.0f);
 
     _graphics.drawText(_backButton.getText(), textX, textY, FONT_SIZE, 255, 255,
                        255, _fontPath);
