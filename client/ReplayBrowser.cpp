@@ -279,12 +279,12 @@ void ReplayBrowser::render()
         _graphics.drawText(msg, msgX, msgY, 20, 150, 150, 150, _fontPath);
     }
 
+    float borderThickness = 3.0f;
     bool isHovered = _backButton.isHovered(mouseX, mouseY);
     unsigned char r = isHovered ? 0 : 30;
     unsigned char g = isHovered ? 200 : 30;
     unsigned char b = isHovered ? 255 : 100;
 
-    float borderThickness = 3.0f;
     float backX = _backButton.getX();
     float backY = _backButton.getY();
     float backW = _backButton.getWidth();
