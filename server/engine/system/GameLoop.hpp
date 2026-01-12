@@ -26,8 +26,9 @@
 namespace engine {
 
 // Unified spawn event type - can hold any entity spawn request
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent, SpawnBossEvent>;
+using SpawnEvent =
+    std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent,
+                 SpawnBossEvent, SpawnGuidedMissileEvent, SpawnItemEvent>;
 
 /**
  * @brief Network input command from clients
@@ -123,6 +124,8 @@ class GameLoop {
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
     void processSpawnEvent(const SpawnBossEvent& event);
+    void processSpawnEvent(const SpawnGuidedMissileEvent& event);
+    void processSpawnEvent(const SpawnItemEvent& event);
 
    public:
     /**
@@ -182,6 +185,12 @@ class GameLoop {
      */
     void getAllHealthUpdates(
         std::vector<std::tuple<uint32_t, float, float>>& healthUpdates);
+
+    /**
+     * @brief Get access to the entity manager
+     * @return Reference to the entity manager
+     */
+    EntityManager& getEntityManager() { return _entityManager; }
 
     /**
      * @brief Spawn a player entity for a client
