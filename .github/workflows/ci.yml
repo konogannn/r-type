@@ -157,10 +157,7 @@ jobs:
           }
 
       - name: Configure CMake
-        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
-              -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
-              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Server
         run: cmake --build build --config ${{ matrix.build_type }} --target r-type_server --parallel 4
@@ -243,10 +240,7 @@ jobs:
           }
 
       - name: Configure CMake
-        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
-              -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
-              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Client
         run: cmake --build build --config ${{ matrix.build_type }} --target r-type_client --parallel 4
