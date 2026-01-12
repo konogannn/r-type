@@ -9,11 +9,11 @@
 
 namespace rtype {
 
-bool ShaderSFML::loadFromFile(const std::string& filename, Type type)
+bool ShaderSFML::loadFromMemory(const std::string& source, Type type)
 {
     sf::Shader::Type sfmlType =
         (type == Vertex) ? sf::Shader::Vertex : sf::Shader::Fragment;
-    return _shader.loadFromFile(filename, sfmlType);
+    return _shader.loadFromMemory(source, sfmlType);
 }
 
 void ShaderSFML::setUniformInt(const std::string& name, int value)

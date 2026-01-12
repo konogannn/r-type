@@ -18,7 +18,7 @@ class MusicSFML : public IMusic {
     MusicSFML() = default;
     ~MusicSFML() override = default;
 
-    bool openFromFile(const std::string& filename) override;
+    bool openFromMemory(const void* data, std::size_t size) override;
 
     void play() override;
 

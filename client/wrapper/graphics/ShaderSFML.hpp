@@ -10,7 +10,7 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 
-#include "Shader.hpp"
+#include "IShader.hpp"
 
 namespace rtype {
 
@@ -22,7 +22,7 @@ class ShaderSFML : public IShader {
     ShaderSFML() = default;
     ~ShaderSFML() override = default;
 
-    bool loadFromFile(const std::string& filename, Type type) override;
+    bool loadFromMemory(const std::string& source, Type type) override;
 
     void setUniformInt(const std::string& name, int value) override;
 

@@ -10,8 +10,8 @@
 #include <memory>
 #include <string>
 
+#include "wrapper/graphics/IShader.hpp"
 #include "wrapper/graphics/RenderTarget.hpp"
-#include "wrapper/graphics/Shader.hpp"
 #include "wrapper/graphics/Sprite.hpp"
 #include "wrapper/window/WindowSFML.hpp"
 

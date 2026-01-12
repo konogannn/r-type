@@ -9,9 +9,9 @@
 
 namespace rtype {
 
-bool MusicSFML::openFromFile(const std::string& filename)
+bool MusicSFML::openFromMemory(const void* data, std::size_t size)
 {
-    return _music.openFromFile(filename);
+    return _music.openFromMemory(data, size);
 }
 
 void MusicSFML::play() { _music.play(); }

@@ -19,11 +19,12 @@ class ISoundBuffer {
     virtual ~ISoundBuffer() = default;
 
     /**
-     * @brief Loads a sound from a file
-     * @param filename Path to the audio file
+     * @brief Loads a sound from memory
+     * @param data Pointer to the audio data in memory
+     * @param size Size of the audio data in bytes
      * @return true if loading succeeded
      */
-    virtual bool loadFromFile(const std::string& filename) = 0;
+    virtual bool loadFromMemory(const void* data, std::size_t size) = 0;
 };
 
 /**
