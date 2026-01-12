@@ -13,6 +13,7 @@
 
 #include "Button.hpp"
 #include "InputField.hpp"
+#include "src/Background.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
 #include "wrapper/input/InputSFML.hpp"
 #include "wrapper/window/WindowSFML.hpp"
@@ -93,6 +94,7 @@ class ReplayBrowser {
     GraphicsSFML& _graphics;
     InputSFML& _input;
 
+    std::shared_ptr<Background> _background;
     std::vector<ReplayInfo> _replays;
     std::vector<Button> _replayButtons;
     std::vector<Button> _renameButtons;
@@ -115,7 +117,7 @@ class ReplayBrowser {
     static constexpr float BUTTON_WIDTH = 450.0f;
     static constexpr float BUTTON_HEIGHT = 50.0f;
     static constexpr float BUTTON_SPACING = 10.0f;
-    static constexpr float ACTION_BUTTON_WIDTH = 70.0f;
+    static constexpr float ACTION_BUTTON_WIDTH = 90.0f;
     static constexpr float LIST_START_Y = 150.0f;
     static constexpr float BACK_BUTTON_WIDTH = 200.0f;
     static constexpr unsigned int FONT_SIZE = 20;
