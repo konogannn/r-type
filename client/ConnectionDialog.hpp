@@ -99,7 +99,6 @@ class ConnectionDialog {
 
    private:
     GraphicsSFML& _graphics;
-    InputSFML& _input;
 
     float _windowWidth;
     float _windowHeight;
