@@ -75,7 +75,6 @@ class GameLoop {
     std::vector<SpawnEvent> _spawnEvents;
 
     // Timing
-    float _targetFPS;
     std::chrono::milliseconds _targetFrameTime;
 
     // Player tracking
