@@ -68,12 +68,6 @@ void TextureManager::loadAll()
     loadSprite("boss_2", ASSET_SPAN(rtype::embedded::boss_2_data), false);
     loadSprite("boss_3", ASSET_SPAN(rtype::embedded::boss_3_data), false);
     loadSprite("boss_4", ASSET_SPAN(rtype::embedded::boss_4_data), false);
-    loadSprite("enemy_basic", ASSET_SPAN(rtype::embedded::enemy_basic_data),
-               false);
-    loadSprite("enemy_tank", ASSET_SPAN(rtype::embedded::enemy_tank_data),
-               false);
-    loadSprite("enemy_fast", ASSET_SPAN(rtype::embedded::enemy_fast_data),
-               false);
     loadSprite("turret", ASSET_SPAN(rtype::embedded::turret_data), false);
     loadSprite("explosion_1", ASSET_SPAN(rtype::embedded::blowup_1_data),
                false);
