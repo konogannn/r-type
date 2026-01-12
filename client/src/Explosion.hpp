@@ -18,7 +18,7 @@ namespace rtype {
  */
 class Explosion {
    public:
-    Explosion(const std::string& texturePath, float x, float y,
+    Explosion(std::span<const std::byte> textureData, float x, float y,
               float scale = 1.0f, int frameWidth = 64, int frameHeight = 64,
               int totalFrames = 8);
 

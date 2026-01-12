@@ -11,7 +11,7 @@
 
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
-BackgroundLayer::BackgroundLayer(const std::string& texturePath,
+BackgroundLayer::BackgroundLayer(std::span<const std::byte> textureData,
                                  float scrollSpeed, float windowWidth,
                                  float windowHeight)
     : _scrollSpeed(scrollSpeed),
@@ -24,8 +24,8 @@ BackgroundLayer::BackgroundLayer(const std::string& texturePath,
     _sprite1 = std::make_unique<rtype::SpriteSFML>();
     _sprite2 = std::make_unique<rtype::SpriteSFML>();
 
-    if (_sprite1->loadTexture(texturePath) &&
-        _sprite2->loadTexture(texturePath)) {
+    if (_sprite1->loadTexture(textureData) &&
+        _sprite2->loadTexture(textureData)) {
         _sprite1->setSmooth(false);
         _sprite2->setSmooth(false);
         _textureWidth = _sprite1->getTextureWidth();
@@ -64,16 +64,16 @@ void BackgroundLayer::draw(rtype::IGraphics& graphics)
     graphics.drawSprite(*_sprite2);
 }
 
-Background::Background(const std::string& backPath,
-                       const std::string& starsPath,
-                       const std::string& planetPath, float windowWidth,
+Background::Background(std::span<const std::byte> backData,
+                       std::span<const std::byte> starsData,
+                       std::span<const std::byte> planetData, float windowWidth,
                        float windowHeight)
 {
-    _backLayer = std::make_unique<BackgroundLayer>(backPath, 10.0f, windowWidth,
+    _backLayer = std::make_unique<BackgroundLayer>(backData, 10.0f, windowWidth,
                                                    windowHeight);
-    _starsLayer = std::make_unique<BackgroundLayer>(starsPath, 20.0f,
+    _starsLayer = std::make_unique<BackgroundLayer>(starsData, 20.0f,
                                                     windowWidth, windowHeight);
-    _planetLayer = std::make_unique<BackgroundLayer>(planetPath, 30.0f,
+    _planetLayer = std::make_unique<BackgroundLayer>(planetData, 30.0f,
                                                      windowWidth, windowHeight);
 }
 

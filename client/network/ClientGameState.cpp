@@ -9,8 +9,6 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
-
 namespace rtype {
 
 ClientGameState::ClientGameState()
@@ -255,20 +253,16 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (!entity) {
         return;
     }
-
-    // Update animation state based on vertical movement for players
     if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
-        if (deltaY < -0.5f) {  // Moving up
+        if (deltaY < -0.5f) {
             entity->animState = ClientEntity::AnimationState::MOVING_UP;
-        } else if (deltaY > 0.5f) {  // Moving down
+        } else if (deltaY > 0.5f) {
             entity->animState = ClientEntity::AnimationState::MOVING_DOWN;
-        } else {  // Idle or horizontal movement
+        } else {
             entity->animState = ClientEntity::AnimationState::IDLE;
         }
         entity->lastY = y;
-
-        // Update texture rect immediately to reflect new state
         int row = static_cast<int>(entity->animState);
         int frameX = entity->animCurrentFrame * entity->animFrameWidth;
         int frameY = row * entity->animFrameHeight;
@@ -311,24 +305,18 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     auto* entity = getEntity(entityId);
     if (entity) {
         switch (entity->type) {
-            case 4:  // Enemy Projectile
-                _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_1.png"),
-                    entity->x - 16, entity->y, 1.0f, 32, 32, 6));
-                break;
+            case 4:
             case 2:
                 _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_1.png"),
-                    entity->x + 16, entity->y, 1.0f, 32, 32, 6));
+                    ASSET_SPAN(embedded::blowup_1_data),
+                    (entity->type == 4) ? entity->x - 16 : entity->x + 16,
+                    entity->y, 1.0f, 32, 32, 6));
                 break;
             default:
                 if (entity->type >= 10 || entity->type == 5) {
                     _explosions.push_back(std::make_unique<Explosion>(
-                        utils::PathHelper::getAssetPath(
-                            "assets/sprites/blowup_2.png"),
-                        entity->x, entity->y, 2.0f, 64, 64, 8));
+                        ASSET_SPAN(embedded::blowup_2_data), entity->x,
+                        entity->y, 2.0f, 64, 64, 8));
                 }
                 break;
         }
@@ -372,16 +360,28 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         return;
     }
 
-    std::string texturePath;
     float scale = 1.0f;
 
     switch (entity.type) {
         case 1: {
             int playerIdx = (entity.id % 4) + 1;
             scale = 4.0f;
-            texturePath = "assets/sprites/players/player" +
-                          std::to_string(playerIdx) + ".png";
-            if (entity.sprite->loadTexture(texturePath)) {
+            std::span<const std::byte> playerData;
+            switch (playerIdx) {
+                case 1:
+                    playerData = ASSET_SPAN(embedded::player_1_data);
+                    break;
+                case 2:
+                    playerData = ASSET_SPAN(embedded::player_2_data);
+                    break;
+                case 3:
+                    playerData = ASSET_SPAN(embedded::player_3_data);
+                    break;
+                default:
+                    playerData = ASSET_SPAN(embedded::player_4_data);
+                    break;
+            }
+            if (entity.sprite->loadTexture(playerData)) {
                 entity.sprite->setScale(scale, scale);
 
                 entity.animFrameCount = 3;
@@ -403,43 +403,44 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 2: {
-            texturePath = utils::PathHelper::getAssetPath(
-                "assets/sprites/projectile_player_1.png");
             scale = 6.0f;
-            if (entity.sprite->loadTexture(texturePath)) {
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data))) {
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
             break;
         }
         case 4: {
-            texturePath = utils::PathHelper::getAssetPath(
-                "assets/sprites/projectile_enemy_1.png");
             scale = 6.0f;
-            if (entity.sprite->loadTexture(texturePath)) {
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_enemy_1_data))) {
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
             break;
         }
         case 5: {
-            texturePath = "assets/sprites/boss_2.png";
             scale = 2.0f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/boss_3.png";
-                entity.sprite->loadTexture(texturePath);
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::boss_2_data))) {
+                if (!entity.sprite->loadTexture(
+                        ASSET_SPAN(embedded::boss_3_data))) {
+                    std::cout
+                        << "[WARN] Could not load boss sprites, using fallback"
+                        << std::endl;
+                }
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
         }
         case 6: {
-            texturePath = "assets/sprites/turret.png";
             scale = 1.5f;
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/boss_3.png";
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::turret_data))) {
                 scale = 0.8f;
-                entity.sprite->loadTexture(texturePath);
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -447,16 +448,11 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 7: {
             int explosionType = static_cast<int>(-entity.velocityX);
-            if (explosionType == 1) {
-                texturePath = "assets/sprites/blowup_1.png";
-            } else {
-                texturePath = "assets/sprites/blowup_2.png";
-            }
             scale = 2.0f;
 
-            if (!entity.sprite->loadTexture(texturePath)) {
-                texturePath = "assets/sprites/bullet1.png";
-                entity.sprite->loadTexture(texturePath);
+            if (!entity.sprite->loadTexture(
+                    explosionType == 1 ? ASSET_SPAN(embedded::blowup_1_data)
+                                       : ASSET_SPAN(embedded::blowup_2_data))) {
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -508,6 +504,61 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.animFrameCount = 0;
             break;
         }
+        case 10: {
+            scale = 2.0f;
+            // TODO load basic enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 11: {
+            scale = 4.0f;
+            // TODO load basic enemy projectile instead of reusing existing
+            // asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 12: {
+            scale = 1.5f;
+            // TODO load tank enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 13: {
+            scale = 3.0f;
+            // TODO load tank enemy projectile instead of reusing existing asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 14: {
+            // scale = 2.5f;
+            // TODO load fast enemy sprite instead of reusing existing asset
+            scale = 0.8f;
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 15: {
+            scale = 5.0f;
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
         case 16: {
             // Guided Missile projectile
             texturePath = "assets/sprites/search_missile.png";
@@ -523,15 +574,13 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         default:
             if (entity.type >= 10) {
-                texturePath = "assets/sprites/boss_3.png";
                 scale = 1.0f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             } else {
-                texturePath = "assets/sprites/players/player1.png";
                 scale = 2.0f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::player_1_data));
             }
-            if (entity.sprite->loadTexture(texturePath)) {
-                entity.sprite->setScale(scale, scale);
-            }
+            entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
     }

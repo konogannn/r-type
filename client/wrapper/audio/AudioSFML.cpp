@@ -9,8 +9,6 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
-
 namespace rtype {
 
 AudioSFML::AudioSFML()
@@ -20,15 +18,14 @@ AudioSFML::AudioSFML()
 {
 }
 
-bool AudioSFML::playSound(const std::string& filepath, bool loop)
+bool AudioSFML::playSound(std::span<const std::byte> pSoundData, bool loop)
 {
     SoundData soundData;
     soundData.buffer = std::make_unique<sf::SoundBuffer>();
 
-    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
-    if (!soundData.buffer->loadFromFile(resolvedPath)) {
-        std::cerr << "Error: Failed to load sound from " << resolvedPath
-                  << std::endl;
+    if (!soundData.buffer->loadFromMemory(pSoundData.data(),
+                                          pSoundData.size())) {
+        std::cerr << "Error: Failed to load sound from memory" << std::endl;
         return false;
     }
 
@@ -42,12 +39,10 @@ bool AudioSFML::playSound(const std::string& filepath, bool loop)
     return true;
 }
 
-bool AudioSFML::playMusic(const std::string& filepath, bool loop)
+bool AudioSFML::playMusic(std::span<const std::byte> musicData, bool loop)
 {
-    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
-    if (!_music->openFromFile(resolvedPath)) {
-        std::cerr << "Error: Failed to load music from " << resolvedPath
-                  << std::endl;
+    if (!_music->openFromMemory(musicData.data(), musicData.size())) {
+        std::cerr << "Error: Failed to load music from memory" << std::endl;
         return false;
     }
 

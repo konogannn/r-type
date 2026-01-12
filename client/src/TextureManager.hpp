@@ -22,7 +22,8 @@ class TextureManager {
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 
-    bool loadSprite(const std::string& id, const std::string& filepath,
+    bool loadSprite(const std::string& id,
+                    std::span<const std::byte> textureData,
                     bool smooth = false);
     rtype::ISprite* getSprite(const std::string& id);
     void loadAll();

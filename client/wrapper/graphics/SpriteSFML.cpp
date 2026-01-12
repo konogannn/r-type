@@ -9,8 +9,6 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
-
 namespace rtype {
 
 SpriteSFML::SpriteSFML()
@@ -19,13 +17,10 @@ SpriteSFML::SpriteSFML()
 {
 }
 
-bool SpriteSFML::loadTexture(const std::string& filepath)
+bool SpriteSFML::loadTexture(std::span<const std::byte> binaryData)
 {
-    std::string resolvedPath = utils::PathHelper::getAssetPath(filepath);
-
-    if (!_texture->loadFromFile(resolvedPath)) {
-        std::cerr << "Error: Failed to load texture from " << resolvedPath
-                  << std::endl;
+    if (!_texture->loadFromMemory(binaryData.data(), binaryData.size())) {
+        std::cerr << "Error: Failed to load texture from memory" << std::endl;
         return false;
     }
     _sprite->setTexture(*_texture);

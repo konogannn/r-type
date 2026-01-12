@@ -1,15 +1,13 @@
 # R-Type
 > A game engine that roars!
 
-[![Build Status](https://github.com/konogannn/r-type/actions/workflows/build-test.yml/badge.svg)](https://github.com/konogannn/r-type/actions/workflows/build-test.yml)
-[![Epitech Sync Status](https://github.com/konogannn/r-type/actions/workflows/sync-epitech.yml/badge.svg)](https://github.com/konogannn/r-type/actions/workflows/sync-epitech.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
-**R-Type** is a modern, multi-threaded game engine and game clone of the classic 90s shoot-'em-up. Built using **C++17**, it features a robust Client/Server architecture designed for performance and extensibility.
+**R-Type** is a modern, multi-threaded game engine and game clone of the classic 90s shoot-'em-up. Built using **C++23**, it features a robust Client/Server architecture designed for performance and extensibility.
 
 ## 🚀 Features & Tech Stack
 
-  * **Core Language:** C++17
+  * **Core Language:** C++23
   * **Architecture:** Client/Server (Authoritative Server)
   * **Networking:** [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)
   * **Graphics:** [SFML](https://www.sfml-dev.org/) (Client-side rendering)
@@ -28,8 +26,8 @@ Detailed documentation regarding the architecture, network protocol, and API ref
 Before you begin, ensure you have the following installed:
 
   * **Git**
-  * **CMake** (3.20 or higher)
-  * **C++ Compiler** (GCC/Clang for Linux, MSVC for Windows) supporting C++17.
+  * **CMake** (3.31 or higher)
+  * **C++ Compiler** (GCC15+ / Clang19+) supporting C++23.
 
 ### 1\. Clone the Repository
 

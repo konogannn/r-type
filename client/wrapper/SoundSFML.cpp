@@ -9,18 +9,11 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
-
 namespace rtype {
 
-bool SoundBufferSFML::loadFromFile(const std::string& filename)
+bool SoundBufferSFML::loadFromMemory(const void* data, std::size_t size)
 {
-    std::string resolvedPath = utils::PathHelper::getAssetPath(filename);
-    if (!_buffer.loadFromFile(resolvedPath)) {
-        std::cerr << "Failed to load sound: " << resolvedPath << std::endl;
-        return false;
-    }
-    return true;
+    return _buffer.loadFromMemory(data, size);
 }
 
 void SoundSFML::setBuffer(const ISoundBuffer& buffer)
