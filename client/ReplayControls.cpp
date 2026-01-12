@@ -18,7 +18,7 @@ ReplayControls::ReplayControls(WindowSFML& window, GraphicsSFML& graphics,
       _graphics(graphics),
       _input(input),
       _player(player),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
+      _fontPath("assets/fonts/default.ttf"),
       _wantsExit(false)
 {
     setupButtons();
@@ -105,10 +105,7 @@ void ReplayControls::render()
     }
 }
 
-bool ReplayControls::wantsExit() const
-{
-    return _wantsExit;
-}
+bool ReplayControls::wantsExit() const { return _wantsExit; }
 
 void ReplayControls::updateLayout()
 {
@@ -118,19 +115,15 @@ void ReplayControls::updateLayout()
     float panelY = windowHeight - panelHeight;
 
     float totalWidth =
-        (BUTTON_WIDTH * BUTTON_COUNT) + (BUTTON_SPACING * (BUTTON_COUNT - 1));
+        (BUTTON_WIDTH * static_cast<float>(BUTTON_COUNT)) +
+        (BUTTON_SPACING * (static_cast<float>(BUTTON_COUNT) - 1.0f));
     float startX = (windowWidth - totalWidth) / 2.0f;
     float buttonY = panelY + 60.0f;
 
     _buttons.clear();
 
-    std::vector<std::string> labels = {
-        _player.isPaused() ? ">" : "||",
-        "<<",
-        ">>",
-        getSpeedLabel(),
-        "Exit"
-    };
+    std::vector<std::string> labels = {_player.isPaused() ? ">" : "||", "<<",
+                                       ">>", getSpeedLabel(), "Exit"};
 
     for (size_t i = 0; i < BUTTON_COUNT; ++i) {
         float x = startX + i * (BUTTON_WIDTH + BUTTON_SPACING);
@@ -147,7 +140,8 @@ void ReplayControls::setupButtons()
     float panelY = windowHeight - panelHeight;
 
     float totalWidth =
-        (BUTTON_WIDTH * BUTTON_COUNT) + (BUTTON_SPACING * (BUTTON_COUNT - 1));
+        (BUTTON_WIDTH * static_cast<float>(BUTTON_COUNT)) +
+        (BUTTON_SPACING * (static_cast<float>(BUTTON_COUNT) - 1.0f));
     float startX = (windowWidth - totalWidth) / 2.0f;
     float buttonY = panelY + 60.0f;
 
