@@ -52,5 +52,17 @@ void TextureManager::loadAll()
     loadSprite("player_down", "assets/sprites/player2.png", false);
     loadSprite("player_up", "assets/sprites/player3.png", false);
     loadSprite("projectile", "assets/sprites/projectile_player_1.png", false);
+    loadSprite("projectile_enemy", "assets/sprites/projectile_enemy_1.png", false);
+    loadSprite("projectile_enemy_basic", "assets/sprites/projectile_enemy_basic.png", false);
+    loadSprite("projectile_enemy_tank", "assets/sprites/projectile_enemy_tank.png", false);
+    loadSprite("projectile_enemy_fast", "assets/sprites/projectile_enemy_fast.png", false);
     loadSprite("boss", "assets/sprites/boss_1.png", false);
+    loadSprite("boss_2", "assets/sprites/boss_2.png", false);
+    loadSprite("boss_3", "assets/sprites/boss_3.png", false);
+    loadSprite("enemy_basic", "assets/sprites/enemy_basic.png", false);
+    loadSprite("enemy_tank", "assets/sprites/enemy_tank.png", false);
+    loadSprite("enemy_fast", "assets/sprites/enemy_fast.png", false);
+    loadSprite("turret", "assets/sprites/turret.png", false);
+    loadSprite("explosion_1", "assets/sprites/blowup_1.png", false);
+    loadSprite("explosion_2", "assets/sprites/blowup_2.png", false);
 }
