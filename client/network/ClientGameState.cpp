@@ -273,20 +273,16 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (!entity) {
         return;
     }
-
-    // Update animation state based on vertical movement for players
     if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
-        if (deltaY < -0.5f) {  // Moving up
+        if (deltaY < -0.5f) {
             entity->animState = ClientEntity::AnimationState::MOVING_UP;
-        } else if (deltaY > 0.5f) {  // Moving down
+        } else if (deltaY > 0.5f) {
             entity->animState = ClientEntity::AnimationState::MOVING_DOWN;
-        } else {  // Idle or horizontal movement
+        } else {
             entity->animState = ClientEntity::AnimationState::IDLE;
         }
         entity->lastY = y;
-
-        // Update texture rect immediately to reflect new state
         int row = static_cast<int>(entity->animState);
         int frameX = entity->animCurrentFrame * entity->animFrameWidth;
         int frameY = row * entity->animFrameHeight;
@@ -331,7 +327,7 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     auto* entity = getEntity(entityId);
     if (entity) {
         switch (entity->type) {
-            case 4:  // Enemy Projectile
+            case 4:
                 _explosions.push_back(std::make_unique<Explosion>(
                     utils::PathHelper::getAssetPath(
                         "assets/sprites/blowup_1.png"),
@@ -484,6 +480,82 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                                           entity.animFrameHeight);
             entity.velocityX = 0.0f;
             entity.velocityY = 0.0f;
+            break;
+        }
+        case 10: {
+            texturePath = "assets/sprites/enemy_basic.png";
+            scale = 2.0f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/boss_3.png";
+                entity.sprite->loadTexture(texturePath);
+                std::cout << "[WARN] Using fallback sprite for BASIC enemy"
+                          << std::endl;
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 11: {
+            texturePath = "assets/sprites/projectile_enemy_basic.png";
+            scale = 4.0f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/projectile_enemy_1.png";
+                entity.sprite->loadTexture(texturePath);
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 12: {
+            texturePath = "assets/sprites/enemy_tank.png";
+            scale = 1.5f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/boss_3.png";
+                entity.sprite->loadTexture(texturePath);
+                std::cout << "[WARN] Using fallback sprite for TANK enemy"
+                          << std::endl;
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 13: {
+            texturePath = "assets/sprites/projectile_enemy_tank.png";
+            scale = 3.0f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/projectile_enemy_1.png";
+                entity.sprite->loadTexture(texturePath);
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 14: {
+            texturePath = "assets/sprites/enemy_fast.png";
+            scale = 2.5f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/boss_3.png";
+                scale = 0.8f;
+                entity.sprite->loadTexture(texturePath);
+                std::cout << "[WARN] Using fallback sprite for FAST enemy"
+                          << std::endl;
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 15: {
+            texturePath = "assets/sprites/projectile_enemy_fast.png";
+            scale = 5.0f;
+            if (!entity.sprite->loadTexture(texturePath)) {
+                texturePath = "assets/sprites/projectile_enemy_1.png";
+                entity.sprite->loadTexture(texturePath);
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
             break;
         }
         default:
