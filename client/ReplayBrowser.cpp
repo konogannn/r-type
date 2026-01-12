@@ -29,6 +29,8 @@ ReplayBrowser::ReplayBrowser(WindowSFML& window, GraphicsSFML& graphics,
       _scrollOffset(0),
       _showRenameDialog(false),
       _showDeleteDialog(false),
+      _showErrorDialog(false),
+      _errorMessage(""),
       _selectedReplayIndex(0),
       _renameInputField(0, 0, 440, 40, "", "", InputFieldType::Filename),
       _confirmButton(0, 0, 150, 40, "Confirm"),
@@ -130,6 +132,17 @@ void ReplayBrowser::update(float deltaTime)
             _showDeleteDialog = false;
             return;
         }
+        return;
+    }
+
+    if (_showErrorDialog) {
+        bool enterPressed = _input.isKeyPressed(Key::Enter);
+        if ((isMousePressed && !_keyWasPressed[0]) ||
+            (enterPressed && !_keyWasPressed[static_cast<int>(Key::Enter)])) {
+            _showErrorDialog = false;
+        }
+        _keyWasPressed[0] = isMousePressed;
+        _keyWasPressed[static_cast<int>(Key::Enter)] = enterPressed;
         return;
     }
 
@@ -314,6 +327,9 @@ void ReplayBrowser::render()
     }
     if (_showDeleteDialog) {
         renderDeleteDialog();
+    }
+    if (_showErrorDialog) {
+        renderErrorDialog();
     }
 }
 
@@ -503,6 +519,14 @@ void ReplayBrowser::handleRenameConfirm()
     std::string oldPath = _replays[_selectedReplayIndex].fullPath;
     std::string newPath = "replays/" + newFileName;
 
+    if (std::filesystem::exists(newPath)) {
+        _errorMessage = "A replay with this name already exists";
+        _showErrorDialog = true;
+        _showRenameDialog = false;
+        _renameInputField.setValue("");
+        return;
+    }
+
     try {
         std::filesystem::rename(oldPath, newPath);
         refreshReplayList();
@@ -683,6 +707,39 @@ void ReplayBrowser::renderDeleteDialog()
                        _fontPath);
 }
 
+void ReplayBrowser::renderErrorDialog()
+{
+    float windowWidth = static_cast<float>(_window.getWidth());
+    float windowHeight = static_cast<float>(_window.getHeight());
+
+    _graphics.drawRectangle(0, 0, windowWidth, windowHeight, 0, 0, 0, 180);
+
+    float dialogWidth = 550.0f;
+    float dialogHeight = 220.0f;
+    float dialogX = (windowWidth - dialogWidth) / 2.0f;
+    float dialogY = (windowHeight - dialogHeight) / 2.0f;
+
+    _graphics.drawRectangle(dialogX, dialogY, dialogWidth, dialogHeight, 40, 40,
+                            50, 255);
+
+    std::string title = "Error";
+    float titleWidth = _graphics.getTextWidth(title, 28, _fontPath);
+    float titleX = dialogX + (dialogWidth - titleWidth) / 2.0f;
+    _graphics.drawText(title, titleX, dialogY + 30.0f, 28, 255, 100, 100,
+                       _fontPath);
+
+    float msgWidth = _graphics.getTextWidth(_errorMessage, 20, _fontPath);
+    float msgX = dialogX + (dialogWidth - msgWidth) / 2.0f;
+    _graphics.drawText(_errorMessage, msgX, dialogY + 90.0f, 20, 255, 255, 255,
+                       _fontPath);
+
+    std::string hint = "Click anywhere or press Enter to close";
+    float hintWidth = _graphics.getTextWidth(hint, 16, _fontPath);
+    float hintX = dialogX + (dialogWidth - hintWidth) / 2.0f;
+    _graphics.drawText(hint, hintX, dialogY + 160.0f, 16, 150, 150, 150,
+                       _fontPath);
+}
+
 bool ReplayBrowser::hasSelection() const { return !_selectedReplay.empty(); }
 
 std::string ReplayBrowser::getSelectedReplay() const { return _selectedReplay; }
@@ -697,6 +754,7 @@ void ReplayBrowser::reset()
     _selectedReplay.clear();
     _showRenameDialog = false;
     _showDeleteDialog = false;
+    _showErrorDialog = false;
 }
 
 }  // namespace rtype
