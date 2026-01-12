@@ -370,6 +370,9 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                         : Item::Type::GUIDED_MISSILE,
                             spawnX, spawnY});
                         spawnShield = !spawnShield;
+                        std::cout
+                            << "[BOSS ITEM SPAWN] Item queued successfully"
+                            << std::endl;
                     }
                 }
 
