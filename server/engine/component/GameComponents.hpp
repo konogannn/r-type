@@ -8,8 +8,10 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 #include "Component.hpp"
+#include "EntityType.hpp"
 
 namespace engine {
 
@@ -37,10 +39,10 @@ struct Velocity : public ComponentBase<Velocity> {
  * @brief Player component - Tags an entity as a player
  */
 struct Player : public ComponentBase<Player> {
-    uint32_t clientId;
-    uint32_t playerId;
-    float shootCooldown;
-    const float shootDelay = 0.2f;
+    uint32_t clientId;               // Network client ID
+    uint32_t playerId;               // Game player ID
+    float shootCooldown;             // Time until next shot
+    const float shootDelay = 0.25f;  // Minimum time between shots
 
     Player(uint32_t clientId_ = 0, uint32_t playerId_ = 0);
 };
@@ -49,7 +51,12 @@ struct Player : public ComponentBase<Player> {
  * @brief Enemy component - Tags an entity as an enemy
  */
 struct Enemy : public ComponentBase<Enemy> {
-    enum class Type { BASIC, KAMIKAZE, TANK, BOSS };
+    enum class Type {
+        BASIC = EntityType::BASIC,
+        FAST = EntityType::FAST,
+        TANK = EntityType::TANK,
+        BOSS
+    };
 
     Type type;
     float shootCooldown;
@@ -64,9 +71,18 @@ struct Bullet : public ComponentBase<Bullet> {
     uint32_t ownerId;
     bool fromPlayer;
     float damage;
+    bool isExplosion;  // true if this is an explosion effect, not a real bullet
+    uint8_t explosionType;  // Type of explosion (1 or 2) if isExplosion is true
 
     Bullet(uint32_t ownerId_ = 0, bool fromPlayer_ = true,
-           float damage_ = 10.0f);
+           float damage_ = 10.0f)
+        : ownerId(ownerId_),
+          fromPlayer(fromPlayer_),
+          damage(damage_),
+          isExplosion(false),
+          explosionType(0)
+    {
+    }
 };
 
 /**
@@ -75,6 +91,7 @@ struct Bullet : public ComponentBase<Bullet> {
 struct Health : public ComponentBase<Health> {
     float current;
     float max;
+    float deathTimer = -1.0f;
 
     Health(float max_ = 100.0f);
 
@@ -87,14 +104,12 @@ struct Health : public ComponentBase<Health> {
  * @brief NetworkEntity component - Sync with network
  */
 struct NetworkEntity : public ComponentBase<NetworkEntity> {
-    uint32_t entityId;
-    uint8_t entityType;
-    uint8_t subtype;
-    bool needsSync;
-    bool isFirstSync;
+    uint32_t entityId;   // Network entity ID
+    uint8_t entityType;  // Type for clients (see EntityType.hpp)
+    bool needsSync;      // Flag for position sync
+    bool isFirstSync;    // True for spawn, false for position updates
 
-    NetworkEntity(uint32_t entityId_ = 0, uint8_t entityType_ = 0,
-                  uint8_t subtype_ = 0);
+    NetworkEntity(uint32_t entityId_ = 0, uint8_t entityType_ = 0);
 };
 
 /**
@@ -124,6 +139,110 @@ struct Lifetime : public ComponentBase<Lifetime> {
  */
 struct MarkedForDestruction : public ComponentBase<MarkedForDestruction> {
     MarkedForDestruction() = default;
+};
+
+/**
+ * @brief BossPart component - Represents a part of a multi-part boss
+ *
+ * Used for bosses with multiple sprites that can move independently
+ * (turrets, tentacles, etc.)
+ */
+struct BossPart : public ComponentBase<BossPart> {
+    uint32_t bossEntityId;
+    enum PartType { MAIN_BODY, TURRET, TENTACLE, ARMOR_PLATE, WEAK_POINT };
+    PartType partType;
+    float relativeX;
+    float relativeY;
+    float rotationSpeed;
+    float currentRotation;
+    bool canTakeDamage;
+
+    BossPart(uint32_t bossId = 0, PartType type = MAIN_BODY, float relX = 0.0f,
+             float relY = 0.0f, bool vulnerable = true)
+        : bossEntityId(bossId),
+          partType(type),
+          relativeX(relX),
+          relativeY(relY),
+          rotationSpeed(0.0f),
+          currentRotation(0.0f),
+          canTakeDamage(vulnerable)
+    {
+    }
+};
+
+/**
+ * @brief Boss component - Main boss entity with phases and complex behavior
+ */
+struct Boss : public ComponentBase<Boss> {
+    enum Phase { ENTRY, PHASE_1, PHASE_2, ENRAGED, DEATH };
+
+    Phase currentPhase;
+    float phaseTimer;
+    float maxHealth;
+    float scaledMaxHealth;
+    uint32_t playerCount;
+
+    float attackTimer;
+    float attackInterval;
+    int attackPatternIndex;
+
+    float damageFlashTimer;
+    bool isFlashing;
+
+    float explosionTimer;
+    int explosionCount;
+    float deathTimer;
+    bool destructionStarted;
+
+    std::vector<uint32_t> partEntityIds;
+
+    float phase2Threshold;
+    float enragedThreshold;
+
+    Boss(uint32_t players = 1)
+        : currentPhase(ENTRY),
+          phaseTimer(0.0f),
+          maxHealth(1000.0f),
+          playerCount(players),
+          attackTimer(0.0f),
+          attackInterval(2.0f),
+          attackPatternIndex(0),
+          damageFlashTimer(0.0f),
+          isFlashing(false),
+          explosionTimer(0.0f),
+          explosionCount(0),
+          deathTimer(-1.0f),
+          destructionStarted(false),
+          phase2Threshold(0.6f),
+          enragedThreshold(0.3f)
+    {
+        scaledMaxHealth = maxHealth * (1.0f + 0.5f * (playerCount - 1));
+    }
+};
+
+/**
+ * @brief Animation component - For complex multi-frame animations
+ */
+struct Animation : public ComponentBase<Animation> {
+    uint8_t animationId;
+    uint8_t currentFrame;
+    uint8_t frameCount;
+    float frameTime;
+    float frameTimer;
+    bool loop;
+    bool finished;
+
+    Animation(uint8_t animId = 0, uint8_t frames = 1, float frameT = 0.1f,
+              bool shouldLoop = true)
+        : animationId(animId),
+          currentFrame(0),
+          frameCount(frames),
+          frameTime(frameT),
+          frameTimer(0.0f),
+          loop(shouldLoop),
+          finished(false)
+    {
+    }
 };
 
 /**

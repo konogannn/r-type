@@ -7,6 +7,22 @@ if(SFML_FOUND)
     message(STATUS "SFML include dirs: ${SFML_INCLUDE_DIR}")
 endif()
 
+include(CheckCXXSourceCompiles)
+
+check_cxx_source_compiles("
+    int main() {
+        const unsigned char data[] = {
+            #embed \"CMakeLists.txt\"
+        };
+        return 0;
+    }
+" HAS_EMBED_SUPPORT)
+
+if(NOT HAS_EMBED_SUPPORT)
+    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER_ID} does not support #embed.
+    Please install Clang 19+, GCC 15+ or use a more recent version.")
+endif()
+
 add_subdirectory(src)
 add_subdirectory(wrapper)
 add_subdirectory(network)
@@ -23,6 +39,8 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ResolutionButton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SelectionButton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ColorBlindFilter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/InputField.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ConnectionDialog.cpp
 )
 
 add_executable(r-type_client
@@ -55,6 +73,6 @@ target_link_libraries(r-type_client
         fmt::fmt
 )
 
-if (UNIX AND NOT MSVC)
+if (UNIX)
     target_link_options(r-type_client PRIVATE "-Wl,--copy-dt-needed-entries")
 endif()

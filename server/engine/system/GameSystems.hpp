@@ -19,9 +19,9 @@
 
 namespace engine {
 
-    // Import SpawnEvent type from events
-    using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent>;
+// Import SpawnEvent type from events
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
+                                SpawnEnemyBulletEvent, SpawnBossEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -44,7 +44,13 @@ class MovementSystem : public ISystem {
  */
 class LifetimeSystem : public System<Lifetime> {
    private:
-    std::vector<EntityId> _entitiesToDestroy;
+    struct DestroyInfo {
+        EntityId entityId;
+        uint32_t networkEntityId;
+        uint8_t entityType;
+    };
+    std::vector<DestroyInfo> _entitiesToDestroy;
+    std::vector<EntityId> _expiredEntities;
 
    protected:
     void processEntity(float deltaTime, Entity& entity,
@@ -53,6 +59,10 @@ class LifetimeSystem : public System<Lifetime> {
    public:
     std::string getName() const override;
     int getPriority() const override;
+    SystemType getType() const override;
+
+    const std::vector<DestroyInfo>& getDestroyedEntities() const;
+    void clearDestroyedEntities();
 
     void update(float deltaTime, EntityManager& entityManager) override;
 };
@@ -164,6 +174,11 @@ class CollisionSystem : public ISystem {
     void handlePlayerBulletVsEnemy(EntityManager& entityManager,
                                    const std::vector<Entity>& bullets,
                                    const std::vector<Entity>& enemies);
+
+    void handlePlayerBulletVsBoss(EntityManager& entityManager,
+                                  const std::vector<Entity>& bullets,
+                                  const std::vector<Entity>& bosses,
+                                  const std::vector<Entity>& bossParts);
 
     void handlePlayerVsEnemy(EntityManager& entityManager,
                              const std::vector<Entity>& players,

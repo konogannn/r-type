@@ -2,18 +2,20 @@
 ** EPITECH PROJECT, 2025
 ** R-type
 ** File description:
-** SoundManager - Gestionnaire de sons du jeu
+** SoundManager
 */
 
 #pragma once
 
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "../wrapper/MusicSFML.hpp"
 #include "../wrapper/SoundSFML.hpp"
+#include "../wrapper/resources/EmbeddedResources.hpp"
 
 /**
  * @brief Singleton to manage game sounds and music
@@ -71,7 +73,7 @@ class SoundManager {
     SoundManager(const SoundManager&) = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 
-    void loadSound(const std::string& name, const std::string& filename);
+    void loadSound(const std::string& name, std::span<const std::byte> data);
     void cleanupFinishedSounds();
 
     std::unordered_map<std::string, std::unique_ptr<rtype::SoundBufferSFML>>

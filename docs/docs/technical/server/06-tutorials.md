@@ -436,7 +436,7 @@ protected:
         }
         
         // Only certain enemy types shoot
-        if (enemy->type == Enemy::Type::KAMIKAZE) {
+        if (enemy->type == Enemy::Type::FAST) {
             return;
         }
         

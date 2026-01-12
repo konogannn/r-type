@@ -12,7 +12,7 @@
 #include "../graphics/RenderStatesSFML.hpp"
 #include "../graphics/SpriteSFML.hpp"
 #include "../input/Input.hpp"
-#include "common/utils/PathHelper.hpp"
+#include "../resources/EmbeddedResources.hpp"
 
 namespace rtype {
 
@@ -29,7 +29,8 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _isFullscreen(false),
       _title(title)
 {
-    _icon.loadFromFile(utils::PathHelper::getAssetPath("assets/icon/logo.png"));
+    _icon.loadFromMemory(rtype::embedded::logo_data,
+                         sizeof(rtype::embedded::logo_data));
     if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
         _window->setIcon(_icon.getSize().x, _icon.getSize().y,
                          _icon.getPixelsPtr());
@@ -64,6 +65,8 @@ EventType WindowSFML::getEventType() const
             return EventType::MouseButtonReleased;
         case sf::Event::MouseMoved:
             return EventType::MouseMoved;
+        case sf::Event::TextEntered:
+            return EventType::TextEntered;
         default:
             return EventType::None;
     }
@@ -187,8 +190,10 @@ Key WindowSFML::getEventKey() const
             return Key::Space;
         case sf::Keyboard::Enter:
             return Key::Enter;
-        case sf::Keyboard::Backspace:
+        case sf::Keyboard::BackSpace:
             return Key::Backspace;
+        case sf::Keyboard::Tab:
+            return Key::Tab;
         case sf::Keyboard::Left:
             return Key::Left;
         case sf::Keyboard::Right:
@@ -212,6 +217,16 @@ Key WindowSFML::getEventKey() const
         default:
             return Key::Unknown;
     }
+}
+
+char WindowSFML::getEventText() const
+{
+    if (_lastEvent.type == sf::Event::TextEntered) {
+        if (_lastEvent.text.unicode < 128) {
+            return static_cast<char>(_lastEvent.text.unicode);
+        }
+    }
+    return '\0';
 }
 
 void WindowSFML::clear(unsigned char r, unsigned char g, unsigned char b)

@@ -64,6 +64,18 @@ class Button {
     const std::string& getText() const { return _text; }
     bool getIsHovered() const { return _isHovered; }
 
+    /**
+     * @brief Update hover animation
+     * @param deltaTime Time elapsed since last update
+     */
+    void updateAnimation(float deltaTime);
+
+    /**
+     * @brief Get current scale for animation
+     * @return Scale value (1.0 = normal, >1.0 = enlarged)
+     */
+    float getScale() const { return _currentScale; }
+
    private:
     float _x;
     float _y;
@@ -73,6 +85,13 @@ class Button {
     std::function<void()> _callback;
     bool _isHovered;
     bool _wasPressed;
+    bool _wasHovered;
+    float _currentScale;
+    float _targetScale;
+    static constexpr float HOVER_SCALE = 1.05f;
+    static constexpr float NORMAL_SCALE = 1.0f;
+    static constexpr float ANIMATION_SPEED = 8.0f;
+    static constexpr float HOVER_SOUND_VOLUME = 30.0f;
 };
 
 }  // namespace rtype

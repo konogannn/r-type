@@ -72,7 +72,6 @@ namespace rtype {
 
 ::EntitySpawnPacket NetworkMessage::createEntitySpawnPacket(uint32_t entityId,
                                                             uint8_t type,
-                                                            uint8_t subtype,
                                                             float x, float y,
                                                             uint32_t sequenceId)
 {
@@ -82,7 +81,6 @@ namespace rtype {
     packet.header.sequenceId = sequenceId;
     packet.entityId = entityId;
     packet.type = type;
-    packet.subtype = subtype;
     packet.x = x;
     packet.y = y;
     return packet;
@@ -219,10 +217,20 @@ std::string NetworkMessage::entityTypeToString(uint8_t entityType)
     switch (entityType) {
         case EntityType::PLAYER:
             return "PLAYER";
-        case EntityType::BYDOS:
-            return "BYDOS";
-        case EntityType::MISSILE:
-            return "MISSILE";
+        case EntityType::PLAYER_MISSILE:
+            return "PLAYER_MISSILE";
+        case EntityType::BASIC:
+            return "BASIC";
+        case EntityType::BASIC_MISSILE:
+            return "BASIC_MISSILE";
+        case EntityType::TANK:
+            return "TANK";
+        case EntityType::TANK_MISSILE:
+            return "TANK_MISSILE";
+        case EntityType::FAST:
+            return "FAST";
+        case EntityType::FAST_MISSILE:
+            return "FAST_MISSILE";
         default:
             return "UNKNOWN";
     }

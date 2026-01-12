@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <span>
 #include <string>
 
 namespace rtype {
@@ -20,11 +21,11 @@ class ISprite {
     virtual ~ISprite() = default;
 
     /**
-     * @brief Load texture from file
-     * @param filepath Path to the texture file
+     * @brief Load texture from memory
+     * @param binaryData Binary data of the texture
      * @return true if loaded successfully
      */
-    virtual bool loadTexture(const std::string& filepath) = 0;
+    virtual bool loadTexture(std::span<const std::byte> binaryData) = 0;
 
     /**
      * @brief Set the position of the sprite
@@ -45,6 +46,13 @@ class ISprite {
      * @param angle Rotation angle in degrees
      */
     virtual void setRotation(float angle) = 0;
+
+    /**
+     * @brief Set the origin point for transformations
+     * @param x X coordinate of the origin
+     * @param y Y coordinate of the origin
+     */
+    virtual void setOrigin(float x, float y) = 0;
 
     /**
      * @brief Move the sprite

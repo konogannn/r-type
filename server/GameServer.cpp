@@ -12,6 +12,8 @@
 #include <thread>
 
 #include "../common/utils/Logger.hpp"
+#include "engine/events/SpawnEvents.hpp"
+#include "engine/system/BossSystem.hpp"
 #include "engine/system/GameSystems.hpp"
 
 namespace rtype {
@@ -23,9 +25,12 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
       _playerCount(0),
       _nextPlayerId(1)
 {
-    _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
-        _gameLoop.getSpawnEvents(), 5.0f));
+    _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::BossPartSystem>());
+    _gameLoop.addSystem(
+        std::make_unique<engine::BossSystem>(_gameLoop.getSpawnEvents()));
+    _gameLoop.addSystem(std::make_unique<engine::BossDamageSystem>());
     _gameLoop.addSystem(std::make_unique<engine::FollowingSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
@@ -152,7 +157,6 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
         for (const auto& playerUpdate : existingPlayers) {
             _networkServer.sendEntitySpawn(clientId, playerUpdate.entityId,
                                            playerUpdate.entityType,
-                                           playerUpdate.subtype,
                                            playerUpdate.x, playerUpdate.y);
 
             Logger::getInstance().log(
@@ -250,6 +254,7 @@ void GameServer::processNetworkUpdates()
 {
     const auto targetFrameTime = std::chrono::milliseconds(16);
     std::vector<engine::EntityStateUpdate> entityUpdates;
+    uint32_t frameCounter = 0;
 
     while (_networkServer.isRunning() && _gameLoop.isRunning() &&
            _gameStarted) {
@@ -266,7 +271,6 @@ void GameServer::processNetworkUpdates()
                     if (update.spawned) {
                         _networkServer.sendEntitySpawn(0, update.entityId,
                                                        update.entityType,
-                                                       update.subtype,
                                                        update.x, update.y);
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);
@@ -281,6 +285,11 @@ void GameServer::processNetworkUpdates()
                         LogLevel::ERROR_L, "GameServer");
                 }
             }
+
+            frameCounter++;
+            if (frameCounter % 10 == 0) {
+                sendHealthUpdates();
+            }
         } catch (const std::exception& e) {
             Logger::getInstance().log(
                 "Error in network update loop: " + std::string(e.what()),
@@ -291,6 +300,16 @@ void GameServer::processNetworkUpdates()
         if (frameTime < targetFrameTime) {
             std::this_thread::sleep_for(targetFrameTime - frameTime);
         }
+    }
+}
+
+void GameServer::sendHealthUpdates()
+{
+    std::vector<std::tuple<uint32_t, float, float>> healthUpdates;
+    _gameLoop.getAllHealthUpdates(healthUpdates);
+
+    for (const auto& [entityId, currentHP, maxHP] : healthUpdates) {
+        _networkServer.sendHealthUpdate(0, entityId, currentHP, maxHP);
     }
 }
 
@@ -327,6 +346,11 @@ void GameServer::run()
                                           " player(s)",
                                       LogLevel::INFO_L, "Game");
 
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            spawnBoss(0);
+            Logger::getInstance().log("Boss battle mode activated!",
+                                      LogLevel::INFO_L, "Game");
+
             processNetworkUpdates();
 
             Logger::getInstance().log("Shutting down game loop...",
@@ -359,6 +383,24 @@ void GameServer::stop()
 bool GameServer::isRunning() const
 {
     return _networkServer.isRunning() && _gameLoop.isRunning();
+}
+
+void GameServer::spawnBoss(uint8_t bossType)
+{
+    Logger::getInstance().log(
+        "Spawning boss of type " + std::to_string(bossType), LogLevel::INFO_L,
+        "Game");
+
+    SpawnBossEvent bossEvent;
+    bossEvent.bossType = bossType;
+    bossEvent.x = 1600.0f;
+    bossEvent.y = 400.0f;
+    bossEvent.playerCount = _playerCount.load();
+
+    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bossEvent));
+
+    Logger::getInstance().log("Boss spawned successfully", LogLevel::INFO_L,
+                              "Game");
 }
 
 }  // namespace rtype

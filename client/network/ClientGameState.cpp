@@ -9,8 +9,6 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
-
 namespace rtype {
 
 ClientGameState::ClientGameState()
@@ -24,7 +22,7 @@ ClientGameState::ClientGameState()
         });
     _networkClient->setOnEntitySpawnCallback(
         [this](const EntitySpawnPacket& packet) {
-            onEntitySpawn(packet.entityId, packet.type, packet.subtype,
+            onEntitySpawn(packet.entityId, packet.type,
                          packet.x, packet.y);
         });
     _networkClient->setOnEntityPositionCallback(
@@ -37,6 +35,11 @@ ClientGameState::ClientGameState()
         _score = score;
         std::cout << "[INFO] Score updated: " << score << std::endl;
     });
+    _networkClient->setOnHealthUpdateCallback(
+        [this](const HealthUpdatePacket& packet) {
+            onHealthUpdate(packet.entityId, packet.currentHealth,
+                           packet.maxHealth);
+        });
     _networkClient->setOnErrorCallback(
         [this](const std::string& error) { onError(error); });
 }
@@ -121,10 +124,39 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
-        entity->verticalIdleTime += deltaTime;
-        if (entity->verticalIdleTime > 0.15f) {
-            if (entity->type == 1 && entity->currentSprite && entity->sprite) {
-                entity->currentSprite = entity->sprite.get();
+
+        // Player spritesheet animation
+        if (entity->type == 1 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;  // Loop animation
+                }
+
+                // Calculate texture rect based on animation state and frame
+                int row = static_cast<int>(entity->animState);
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                int frameY = row * entity->animFrameHeight;
+                entity->sprite->setTextureRect(frameX, frameY,
+                                               entity->animFrameWidth,
+                                               entity->animFrameHeight);
+            }
+        }
+
+        // Explosion animation (type 7)
+        if (entity->type == 7 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = entity->animFrameCount - 1;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
     }
@@ -156,7 +188,7 @@ void ClientGameState::render(IGraphics& graphics, float windowScale,
 
 void ClientGameState::sendInput(uint8_t inputMask)
 {
-    if (!_gameStarted || !isConnected()) {
+    if (!_gameStarted || !isConnected() || inputMask == 0) {
         return;
     }
 
@@ -189,6 +221,7 @@ void ClientGameState::onConnected()
 void ClientGameState::onDisconnected()
 {
     std::cout << "[INFO] Disconnected from server" << std::endl;
+    _playerId = 0;
     _gameStarted = false;
     _entities.clear();
 }
@@ -203,10 +236,21 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
 
     std::cout << "[INFO] Login successful! Player ID: " << _playerId
               << ", Map size: " << _mapWidth << "x" << _mapHeight << std::endl;
+
+    for (auto& [id, entity] : _entities) {
+        if (entity) {
+            bool wasLocalPlayer = entity->isLocalPlayer;
+            entity->isLocalPlayer = (id == _playerId);
+            if (entity->isLocalPlayer && !wasLocalPlayer) {
+                std::cout << "[INFO] Marked entity " << id << " as local player"
+                          << std::endl;
+            }
+        }
+    }
 }
 
 void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type,
-                                    uint8_t subtype, float x, float y)
+                                    float x, float y)
 {
     if (_entities.find(entityId) != _entities.end()) {
         return;
@@ -214,10 +258,10 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type,
 
     std::cout << "[INFO] Entity spawned: ID=" << entityId
               << ", Type=" << static_cast<int>(type)
-              << ", Subtype=" << static_cast<int>(subtype) << ", Position=("
+              << ", Position=("
               << x << "," << y << ")" << std::endl;
 
-    auto entity = std::make_unique<ClientEntity>(entityId, type, subtype, x, y);
+    auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
     entity->isLocalPlayer = (entityId == _playerId);
     createEntitySprite(*entity);
     _entities[entityId] = std::move(entity);
@@ -229,18 +273,21 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (!entity) {
         return;
     }
-
-    if (entity->type == 1 && entity->spriteUp && entity->spriteDown) {
+    if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
-        if (deltaY < -0.5f) {  // Moving up
-            entity->currentSprite = entity->spriteUp.get();
-            entity->verticalIdleTime = 0.0f;
-        } else if (deltaY > 0.5f) {  // Moving down
-            entity->currentSprite = entity->spriteDown.get();
-            entity->verticalIdleTime = 0.0f;
+        if (deltaY < -0.5f) {
+            entity->animState = ClientEntity::AnimationState::MOVING_UP;
+        } else if (deltaY > 0.5f) {
+            entity->animState = ClientEntity::AnimationState::MOVING_DOWN;
         } else {
+            entity->animState = ClientEntity::AnimationState::IDLE;
         }
         entity->lastY = y;
+        int row = static_cast<int>(entity->animState);
+        int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+        int frameY = row * entity->animFrameHeight;
+        entity->sprite->setTextureRect(frameX, frameY, entity->animFrameWidth,
+                                       entity->animFrameHeight);
     }
 
     float clampedX = x;
@@ -250,8 +297,12 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
         if (clampedY < 0.0f) clampedY = 0.0f;
         float spriteHeight = 0.0f;
         if (entity->sprite) {
-            spriteHeight =
-                entity->sprite->getTextureHeight() * entity->spriteScale;
+            if (entity->type == 1 && entity->animFrameHeight > 0) {
+                spriteHeight = entity->animFrameHeight * entity->spriteScale;
+            } else {
+                spriteHeight =
+                    entity->sprite->getTextureHeight() * entity->spriteScale;
+            }
         } else {
             spriteHeight = 0.0f;
         }
@@ -276,28 +327,34 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     auto* entity = getEntity(entityId);
     if (entity) {
         switch (entity->type) {
-            case 4:  // Enemy Projectile
+            case 4:
+            case 2:
                 _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_1.png"),
-                    entity->x - 16, entity->y, 1.0f, 32, 32, 6));
+                    ASSET_SPAN(embedded::blowup_1_data),
+                    (entity->type == 4) ? entity->x - 16 : entity->x + 16,
+                    entity->y, 1.0f, 32, 32, 6));
                 break;
-            case 3:  // Player Projectile
-                _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_1.png"),
-                    entity->x + 16, entity->y, 1.0f, 32, 32, 6));
-                break;
-            case 2:  // Enemy/Boss
-                _explosions.push_back(std::make_unique<Explosion>(
-                    utils::PathHelper::getAssetPath(
-                        "assets/sprites/blowup_2.png"),
-                    entity->x, entity->y, 2.0f, 64, 64, 8));
+            default:
+                if (entity->type >= 10 || entity->type == 5) {
+                    _explosions.push_back(std::make_unique<Explosion>(
+                        ASSET_SPAN(embedded::blowup_2_data), entity->x,
+                        entity->y, 2.0f, 64, 64, 8));
+                }
                 break;
         }
     }
 
     removeEntity(entityId);
+}
+
+void ClientGameState::onHealthUpdate(uint32_t entityId, float currentHealth,
+                                     float maxHealth)
+{
+    auto* entity = getEntity(entityId);
+    if (entity) {
+        entity->health = currentHealth;
+        entity->maxHealth = maxHealth;
+    }
 }
 
 void ClientGameState::onError(const std::string& error)
@@ -313,80 +370,180 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         return;
     }
 
-    std::string texturePath;
     float scale = 1.0f;
 
     switch (entity.type) {
         case 1: {
             int playerIdx = (entity.id % 4) + 1;
             scale = 4.0f;
-            texturePath = "assets/sprites/players/player" +
-                          std::to_string(playerIdx) + "-1.png";
-            entity.spriteUp = std::make_unique<SpriteSFML>();
-            std::string upPath = "assets/sprites/players/player" +
-                                 std::to_string(playerIdx) + "-3.png";
-            entity.spriteUp->loadTexture(upPath);
-            entity.spriteUp->setScale(scale, scale);
-            entity.spriteDown = std::make_unique<SpriteSFML>();
-            std::string downPath = "assets/sprites/players/player" +
-                                   std::to_string(playerIdx) + "-2.png";
-            entity.spriteDown->loadTexture(downPath);
-            entity.spriteDown->setScale(scale, scale);
-            if (entity.sprite->loadTexture(texturePath)) {
+            std::span<const std::byte> playerData;
+            switch (playerIdx) {
+                case 1:
+                    playerData = ASSET_SPAN(embedded::player_1_data);
+                    break;
+                case 2:
+                    playerData = ASSET_SPAN(embedded::player_2_data);
+                    break;
+                case 3:
+                    playerData = ASSET_SPAN(embedded::player_3_data);
+                    break;
+                default:
+                    playerData = ASSET_SPAN(embedded::player_4_data);
+                    break;
+            }
+            if (entity.sprite->loadTexture(playerData)) {
                 entity.sprite->setScale(scale, scale);
+
+                entity.animFrameCount = 3;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 35;
+                entity.animFrameHeight = 21;
+                entity.animState = ClientEntity::AnimationState::IDLE;
+                entity.sprite->setTextureRect(0, 0, 35, 21);
             }
             entity.spriteScale = scale;
-            entity.currentSprite = entity.sprite.get();
             break;
         }
         case 2: {
-            scale = 1.0f;
-            switch (entity.subtype) {
-                case 0:
-                    texturePath = "assets/sprites/boss_3.png";
-                    break;
-                case 1:
-                    texturePath = "assets/sprites/boss_1.png";
-                    break;
-                case 2:
-                    texturePath = "assets/sprites/boss_2.png";
-                    break;
-                default:
-                    texturePath = "assets/sprites/boss_3.png";
-                    break;
-            }
-            if (entity.sprite->loadTexture(texturePath)) {
-                entity.sprite->setScale(scale, scale);
-            }
-            entity.spriteScale = scale;
-            break;
-        }
-        case 3: {
-            texturePath = utils::PathHelper::getAssetPath(
-                "assets/sprites/projectile_player_1.png");
             scale = 6.0f;
-            if (entity.sprite->loadTexture(texturePath)) {
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data))) {
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
             break;
         }
         case 4: {
-            texturePath = utils::PathHelper::getAssetPath(
-                "assets/sprites/projectile_enemy_1.png");
             scale = 6.0f;
-            if (entity.sprite->loadTexture(texturePath)) {
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_enemy_1_data))) {
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
             break;
         }
-        default:
-            texturePath = "assets/sprites/players/player1-1.png";
+        case 5: {
             scale = 2.0f;
-            if (entity.sprite->loadTexture(texturePath)) {
-                entity.sprite->setScale(scale, scale);
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::boss_2_data))) {
+                if (!entity.sprite->loadTexture(
+                        ASSET_SPAN(embedded::boss_3_data))) {
+                    std::cout
+                        << "[WARN] Could not load boss sprites, using fallback"
+                        << std::endl;
+                }
             }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 6: {
+            scale = 1.5f;
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::turret_data))) {
+                scale = 0.8f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 7: {
+            int explosionType = static_cast<int>(-entity.velocityX);
+            scale = 2.0f;
+
+            if (!entity.sprite->loadTexture(
+                    explosionType == 1 ? ASSET_SPAN(embedded::blowup_1_data)
+                                       : ASSET_SPAN(embedded::blowup_2_data))) {
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+
+            if (explosionType == 1) {
+                entity.animFrameCount = 6;
+                entity.animFrameWidth = 32;
+                entity.animFrameHeight = 32;
+                entity.animFrameDuration = 0.08f;
+            } else {
+                entity.animFrameCount = 8;
+                entity.animFrameWidth = 64;
+                entity.animFrameHeight = 64;
+                entity.animFrameDuration = 0.06f;
+            }
+            entity.animCurrentFrame = 0;
+            entity.animFrameTime = 0.0f;
+            entity.sprite->setTextureRect(0, 0, entity.animFrameWidth,
+                                          entity.animFrameHeight);
+            entity.velocityX = 0.0f;
+            entity.velocityY = 0.0f;
+            break;
+        }
+        case 10: {
+            scale = 2.0f;
+            // TODO load basic enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 11: {
+            scale = 4.0f;
+            // TODO load basic enemy projectile instead of reusing existing
+            // asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 12: {
+            scale = 1.5f;
+            // TODO load tank enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 13: {
+            scale = 3.0f;
+            // TODO load tank enemy projectile instead of reusing existing asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 14: {
+            // scale = 2.5f;
+            // TODO load fast enemy sprite instead of reusing existing asset
+            scale = 0.8f;
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 15: {
+            scale = 5.0f;
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        default:
+            if (entity.type >= 10) {
+                scale = 1.0f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            } else {
+                scale = 2.0f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::player_1_data));
+            }
+            entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
     }
@@ -398,6 +555,48 @@ void ClientGameState::removeEntity(uint32_t entityId)
     if (it != _entities.end()) {
         _entities.erase(it);
     }
+}
+
+bool ClientGameState::isGameStarted() const { return _gameStarted; }
+
+float ClientGameState::getPlayerHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->isLocalPlayer && entity->type == 1) {
+            return entity->health;
+        }
+    }
+    return 0.0f;
+}
+
+float ClientGameState::getPlayerMaxHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->isLocalPlayer && entity->type == 1) {
+            return entity->maxHealth;
+        }
+    }
+    return 100.0f;
+}
+
+float ClientGameState::getBossHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->type == 5) {
+            return entity->health;
+        }
+    }
+    return 0.0f;
+}
+
+float ClientGameState::getBossMaxHealth() const
+{
+    for (const auto& [id, entity] : _entities) {
+        if (entity->type == 5) {
+            return entity->maxHealth;
+        }
+    }
+    return 0.0f;
 }
 
 }  // namespace rtype

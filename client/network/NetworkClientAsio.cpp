@@ -48,20 +48,19 @@ bool NetworkClientAsio::connect(const std::string& serverAddress, uint16_t port)
 
         setState(NetworkState::Connected);
 
+        if (_onConnected) {
+            try {
+                _onConnected();
+            } catch (const std::exception& e) {
+                std::cerr << "Error in _onConnected callback: " << e.what()
+                          << std::endl;
+            }
+        }
         return true;
     } catch (const std::exception& e) {
         setState(NetworkState::Error);
         callErrorCallback("Connection failed: " + std::string(e.what()));
         return false;
-    }
-
-    if (_onConnected) {
-        try {
-            _onConnected();
-        } catch (const std::exception& e) {
-            std::cerr << "Error in _onConnected callback: " << e.what()
-                      << std::endl;
-        }
     }
 }
 
@@ -101,8 +100,13 @@ bool NetworkClientAsio::sendLogin(const std::string& username)
     packet.header.packetSize = sizeof(::LoginPacket);
     packet.header.sequenceId = getNextSequenceId();
 
+#ifdef _WIN32
+    strncpy_s(packet.username, sizeof(packet.username), username.c_str(),
+              _TRUNCATE);
+#else
     std::strncpy(packet.username, username.c_str(),
                  sizeof(packet.username) - 1);
+#endif
     packet.username[sizeof(packet.username) - 1] = '\0';
 
     return sendPacket(packet);
@@ -206,6 +210,12 @@ void NetworkClientAsio::setOnScoreUpdateCallback(OnScoreUpdateCallback callback)
     _onScoreUpdate = callback;
 }
 
+void NetworkClientAsio::setOnHealthUpdateCallback(
+    std::function<void(const HealthUpdatePacket&)> callback)
+{
+    _onHealthUpdate = callback;
+}
+
 void NetworkClientAsio::setOnErrorCallback(
     std::function<void(const std::string&)> callback)
 {
@@ -275,6 +285,9 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
             break;
         case ::OpCode::S2C_SCORE_UPDATE:
             processScoreUpdate(data, size);
+            break;
+        case ::OpCode::S2C_HEALTH_UPDATE:
+            processHealthUpdate(data, size);
             break;
         default:
             break;
@@ -408,6 +421,20 @@ void NetworkClientAsio::processScoreUpdate(const uint8_t* data, size_t size)
 
     if (_onScoreUpdate) {
         _onScoreUpdate(*score);
+    }
+}
+
+void NetworkClientAsio::processHealthUpdate(const uint8_t* data, size_t size)
+{
+    if (size < sizeof(::HealthUpdatePacket)) {
+        return;
+    }
+
+    const ::HealthUpdatePacket* packet =
+        reinterpret_cast<const ::HealthUpdatePacket*>(data);
+
+    if (_onHealthUpdate) {
+        _onHealthUpdate(*packet);
     }
 }
 

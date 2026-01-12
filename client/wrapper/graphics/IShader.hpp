@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** Shader
+** IShader
 */
 
 #pragma once
@@ -25,12 +25,12 @@ class IShader {
     virtual ~IShader() = default;
 
     /**
-     * @brief Load shader from file
-     * @param filename Path to shader file
+     * @brief Load shader from memory
+     * @param source Shader source code
      * @param type Shader type (fragment, vertex, etc.)
      * @return true if loading succeeded
      */
-    virtual bool loadFromFile(const std::string& filename, Type type) = 0;
+    virtual bool loadFromMemory(const std::string& source, Type type) = 0;
 
     /**
      * @brief Set a uniform integer parameter

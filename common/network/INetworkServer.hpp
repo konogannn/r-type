@@ -88,13 +88,12 @@ class INetworkServer : public INetworkBase {
      * @param clientId Target client ID.
      * @param entityId Entity unique ID.
      * @param type Entity type identifier.
-     * @param subtype Entity subtype identifier.
      * @param x Initial X position.
      * @param y Initial Y position.
      * @return true If sent successfully.
      */
     virtual bool sendEntitySpawn(uint32_t clientId, uint32_t entityId,
-                                 uint8_t type, uint8_t subtype, float x, float y) = 0;
+                                 uint8_t type, float x, float y) = 0;
 
     /**
      * @brief Send entity position update to specific client.

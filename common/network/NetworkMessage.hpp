@@ -11,30 +11,11 @@
 #include <string>
 #include <vector>
 
+#include "EntityType.hpp"
+#include "InputMask.hpp"
 #include "Protocol.hpp"
 
 namespace rtype {
-
-/**
- * @brief Input mask constants for easier input handling
- */
-namespace InputMask {
-constexpr uint8_t UP = 1;
-constexpr uint8_t DOWN = 2;
-constexpr uint8_t LEFT = 4;
-constexpr uint8_t RIGHT = 8;
-constexpr uint8_t SHOOT = 16;
-}  // namespace InputMask
-
-/**
- * @brief Entity type constants
- */
-namespace EntityType {
-constexpr uint8_t PLAYER = 1;
-constexpr uint8_t BYDOS = 2;
-constexpr uint8_t MISSILE = 3;
-}  // namespace EntityType
-
 /**
  * @brief Utility class for network message operations
  * Shared between client and server
@@ -90,15 +71,13 @@ class NetworkMessage {
      * @brief Create entity spawn packet
      * @param entityId Entity unique ID
      * @param type Entity type (player, enemy, missile...)
-     * @param subtype Entity subtype
      * @param x Initial X position
      * @param y Initial Y position
      * @param sequenceId Sequence ID for the packet
      * @return EntitySpawnPacket ready to send
      */
     static ::EntitySpawnPacket createEntitySpawnPacket(uint32_t entityId,
-                                                       uint8_t type,
-                                                       uint8_t subtype, float x,
+                                                       uint8_t type, float x,
                                                        float y,
                                                        uint32_t sequenceId);
 
