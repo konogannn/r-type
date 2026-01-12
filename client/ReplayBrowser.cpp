@@ -636,4 +636,12 @@ void ReplayBrowser::clearSelection() { _selectedReplay.clear(); }
 
 bool ReplayBrowser::wantsBack() const { return _wantsBack; }
 
+void ReplayBrowser::reset()
+{
+    _wantsBack = false;
+    _selectedReplay.clear();
+    _showRenameDialog = false;
+    _showDeleteDialog = false;
+}
+
 }  // namespace rtype
