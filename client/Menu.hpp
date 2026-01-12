@@ -20,7 +20,14 @@
 
 namespace rtype {
 
-enum class MenuAction { None, StartGame, Settings, ConnectServer, Quit };
+enum class MenuAction {
+    None,
+    StartGame,
+    Settings,
+    ConnectServer,
+    Replays,
+    Quit
+};
 
 /**
  * @brief Main menu system for R-Type
