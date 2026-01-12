@@ -452,25 +452,25 @@ void Game::render()
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
     _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale,
                        static_cast<unsigned int>(20 * _scale), 0, 255, 0,
-                       "assets/fonts/Retro_Gaming.ttf");
+                       "assets/fonts/default.ttf");
 
     if (_gameState) {
         std::string scoreStr =
             "Score: " + std::to_string(_gameState->getScore());
         _graphics.drawText(scoreStr, 10 * _scale, 40 * _scale,
                            static_cast<unsigned int>(20 * _scale), 255, 255, 0,
-                           "assets/fonts/Retro_Gaming.ttf");
+                           "assets/fonts/default.ttf");
 
         if (_gameState->isConnected()) {
             std::string entityCount =
                 "Entities: " + std::to_string(_gameState->getEntityCount());
             _graphics.drawText(entityCount, 10 * _scale, 70 * _scale,
                                static_cast<unsigned int>(16 * _scale), 255, 255,
-                               255, "assets/fonts/Retro_Gaming.ttf");
+                               255, "assets/fonts/default.ttf");
         } else {
             _graphics.drawText("Disconnected", 10 * _scale, 70 * _scale,
                                static_cast<unsigned int>(20 * _scale), 255, 0,
-                               0, "assets/fonts/Retro_Gaming.ttf");
+                               0, "assets/fonts/default.ttf");
         }
     }
 
@@ -480,7 +480,7 @@ void Game::render()
         _colorBlindFilter.endCaptureAndApply(_window);
     }
     if (_showConnectionDialog && _connectionDialog) {
-        _connectionDialog->render(_scale, "assets/fonts/Retro_Gaming.ttf");
+        _connectionDialog->render(_scale, "assets/fonts/default.ttf");
     }
 
     _window.display();
