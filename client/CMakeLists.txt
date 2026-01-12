@@ -7,6 +7,22 @@ if(SFML_FOUND)
     message(STATUS "SFML include dirs: ${SFML_INCLUDE_DIR}")
 endif()
 
+include(CheckCXXSourceCompiles)
+
+check_cxx_source_compiles("
+    int main() {
+        const unsigned char data[] = {
+            #embed \"CMakeLists.txt\"
+        };
+        return 0;
+    }
+" HAS_EMBED_SUPPORT)
+
+if(NOT HAS_EMBED_SUPPORT)
+    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER_ID} does not support #embed.
+    Please install Clang 19+, GCC 15+ or use a more recent version.")
+endif()
+
 add_subdirectory(src)
 add_subdirectory(wrapper)
 add_subdirectory(network)

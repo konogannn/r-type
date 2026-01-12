@@ -17,12 +17,12 @@ namespace embedded {
                                sizeof(data))
 
 // Logo
-constexpr const unsigned char logo_data[] = {
+static const unsigned char logo_data[] = {
 #embed "../../../assets/icon/logo.png"
 };
 
 // Font
-constexpr const unsigned char font_data[] = {
+static const unsigned char font_data[] = {
 #embed "../../../assets/fonts/default.ttf"
 };
 

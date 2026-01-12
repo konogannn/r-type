@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 4.0)
 
 project(r-type VERSION 1.0.0 LANGUAGES CXX)
 
@@ -15,7 +15,7 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c23-extensions")
     if(UNIX)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexperimental-library -std=c++23 -Wno-c++11-narrowing")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexperimental-library -std=c++26 -Wno-c++11-narrowing")
     endif()
 endif()
 

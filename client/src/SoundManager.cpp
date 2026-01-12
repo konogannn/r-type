@@ -22,7 +22,7 @@ void SoundManager::loadAll()
     loadSound("explosion", ASSET_SPAN(rtype::embedded::explosion_sound_data));
     loadSound("click", ASSET_SPAN(rtype::embedded::click_sound_data));
 
-    if (_music) {
+    if (!_music) {
         if (_music->openFromMemory(rtype::embedded::music_data,
                                    sizeof(rtype::embedded::music_data))) {
             _music->setLoop(true);
