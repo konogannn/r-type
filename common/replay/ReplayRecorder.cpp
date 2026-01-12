@@ -78,10 +78,7 @@ void ReplayRecorder::recordPacket(const void* data, size_t size)
     }
 }
 
-bool ReplayRecorder::isRecording() const
-{
-    return _isRecording;
-}
+bool ReplayRecorder::isRecording() const { return _isRecording; }
 
 uint64_t ReplayRecorder::getRecordingDuration() const
 {
