@@ -488,7 +488,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             if (!entity.sprite->loadTexture(texturePath)) {
                 texturePath = "assets/sprites/boss_3.png";
                 entity.sprite->loadTexture(texturePath);
-                std::cout << "[WARN] Using fallback sprite for BASIC enemy" << std::endl;
+                std::cout << "[WARN] Using fallback sprite for BASIC enemy"
+                          << std::endl;
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -512,7 +513,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             if (!entity.sprite->loadTexture(texturePath)) {
                 texturePath = "assets/sprites/boss_3.png";
                 entity.sprite->loadTexture(texturePath);
-                std::cout << "[WARN] Using fallback sprite for TANK enemy" << std::endl;
+                std::cout << "[WARN] Using fallback sprite for TANK enemy"
+                          << std::endl;
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -537,7 +539,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 texturePath = "assets/sprites/boss_3.png";
                 scale = 0.8f;
                 entity.sprite->loadTexture(texturePath);
-                std::cout << "[WARN] Using fallback sprite for FAST enemy" << std::endl;
+                std::cout << "[WARN] Using fallback sprite for FAST enemy"
+                          << std::endl;
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
