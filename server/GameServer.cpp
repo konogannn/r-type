@@ -32,9 +32,19 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
         std::make_unique<engine::BossSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::BossDamageSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
+    // EnemySpawnerSystem désactivé - seulement le boss est spawné
+    // _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
+    //     _gameLoop.getSpawnEvents(),
+    //     2.0f));  // Spawn un ennemi toutes les 2 secondes
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
-    _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::GuidedMissileSystem>());
+    // ItemSpawnerSystem désactivé - les items spawn uniquement sur kill
+    // d'ennemi _gameLoop.addSystem(std::make_unique<engine::ItemSpawnerSystem>(
+    //     _gameLoop.getSpawnEvents(),
+    //     5.0f));
+    _gameLoop.addSystem(
+        std::make_unique<engine::CollisionSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::LifetimeSystem>());
@@ -288,6 +298,7 @@ void GameServer::processNetworkUpdates()
             frameCounter++;
             if (frameCounter % 10 == 0) {
                 sendHealthUpdates();
+                sendShieldUpdates();
             }
         } catch (const std::exception& e) {
             Logger::getInstance().log(
@@ -309,6 +320,26 @@ void GameServer::sendHealthUpdates()
 
     for (const auto& [entityId, currentHP, maxHP] : healthUpdates) {
         _networkServer.sendHealthUpdate(0, entityId, currentHP, maxHP);
+    }
+}
+
+void GameServer::sendShieldUpdates()
+{
+    // Get all player entities and check shield status
+    auto& entityManager = _gameLoop.getEntityManager();
+    auto players =
+        entityManager.getEntitiesWith<engine::Position, engine::Player,
+                                      engine::NetworkEntity>();
+
+    for (const auto& playerEntity : players) {
+        auto* netEntity =
+            entityManager.getComponent<engine::NetworkEntity>(playerEntity);
+        auto* shield = entityManager.getComponent<engine::Shield>(playerEntity);
+
+        if (netEntity) {
+            bool hasShield = (shield != nullptr && shield->active);
+            _networkServer.sendShieldStatus(0, netEntity->entityId, hasShield);
+        }
     }
 }
 
@@ -392,7 +423,7 @@ void GameServer::spawnBoss(uint8_t bossType)
 
     SpawnBossEvent bossEvent;
     bossEvent.bossType = bossType;
-    bossEvent.x = 1600.0f;
+    bossEvent.x = 2100.0f;  // Spawn hors écran à droite
     bossEvent.y = 400.0f;
     bossEvent.playerCount = _playerCount.load();
 
