@@ -43,7 +43,8 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
         case Enemy::Type::FAST:
             speed = 250.0f;
             health = 15.0f;
-            _entityManager.addComponent(enemy, Following(Following::TargetType::PLAYER));
+            _entityManager.addComponent(
+                enemy, Following(Following::TargetType::PLAYER));
             break;
         case Enemy::Type::TANK:
             speed = -50.0f;
