@@ -106,10 +106,12 @@ jobs:
             triplet: x64-linux
             bin_path: "r-type_server"
             generator: "Unix Makefiles"
+            compiler: "/usr/bin/clang++-19"
           - os: windows-latest
             triplet: x64-windows
             bin_path: "Release/r-type_server.exe"
             generator: "Ninja"
+            compiler: "clang++"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -126,15 +128,14 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 19
+
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-14-dev libc++-19-dev libc++abi-19-dev \
+          sudo apt-get install -y build-essential libstdc++-14-dev \
+              libc++-19-dev libc++abi-19-dev \
               libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
-              libgl1-mesa-dev \
-              libglu1-mesa-dev \
+              libgl1-mesa-dev libglu1-mesa-dev \
               libflac-dev libogg-dev libvorbis-dev libopenal-dev \
               libfreetype6-dev
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
 
       - name: Restore vcpkg cache
         uses: actions/cache@v4
@@ -162,7 +163,7 @@ jobs:
           }
 
       - name: Configure CMake
-        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Server
         run: cmake --build build --config ${{ matrix.build_type }} --target r-type_server --parallel 4
@@ -194,10 +195,12 @@ jobs:
             triplet: x64-linux
             bin_path: "r-type_client"
             generator: "Unix Makefiles"
+            compiler: "/usr/bin/clang++-19"
           - os: windows-latest
             triplet: x64-windows
             bin_path: "Release/r-type_client.exe"
             generator: "Ninja"
+            compiler: "clang++"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -214,15 +217,14 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 19
+
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-14-dev libc++-19-dev libc++abi-19-dev \
+          sudo apt-get install -y build-essential libstdc++-14-dev \
+              libc++-19-dev libc++abi-19-dev \
               libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
-              libgl1-mesa-dev \
-              libglu1-mesa-dev \
+              libgl1-mesa-dev libglu1-mesa-dev \
               libflac-dev libogg-dev libvorbis-dev libopenal-dev \
               libfreetype6-dev
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
 
       - name: Restore vcpkg cache
         uses: actions/cache@v4
@@ -250,7 +252,7 @@ jobs:
           }
 
       - name: Configure CMake
-        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Client
         run: cmake --build build --config ${{ matrix.build_type }} --target r-type_client --parallel 4
