@@ -9,11 +9,11 @@
 
 #include <iostream>
 
-#include "common/utils/PathHelper.hpp"
 #include "wrapper/graphics/RenderStatesSFML.hpp"
 #include "wrapper/graphics/RenderTargetSFML.hpp"
 #include "wrapper/graphics/ShaderSFML.hpp"
 #include "wrapper/graphics/SpriteSFML.hpp"
+#include "wrapper/resources/EmbeddedResources.hpp"
 
 namespace rtype {
 
@@ -98,11 +98,9 @@ bool ColorBlindFilter::loadShader(ColorBlindMode mode)
             return false;
         }
 
-        static const unsigned char kFragBytes[] = {
-#embed "assets/shaders/colorblind.frag"
-        };
-        std::string fragSource(reinterpret_cast<const char*>(kFragBytes),
-                               sizeof(kFragBytes));
+        std::string fragSource(
+            reinterpret_cast<const char*>(embedded::color_filter_data),
+            sizeof(embedded::color_filter_data));
 
         if (!_shader->loadFromMemory(fragSource, IShader::Fragment)) {
             std::cerr << "ColorBlindFilter: Failed to load embedded shader\n";
