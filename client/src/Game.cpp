@@ -99,7 +99,7 @@ bool Game::tryConnect(const std::string& address, uint16_t port)
         time_t now = time(nullptr);
         struct tm* timeinfo = localtime(&now);
         char buffer[80];
-        strftime(buffer, sizeof(buffer), "replay_%Y%m%d_%H%M%S.rtr", timeinfo);
+        strftime(buffer, sizeof(buffer), "game_%Y%m%d_%H%M%S.rtr", timeinfo);
         _gameState->startRecording(buffer);
 
         return true;
