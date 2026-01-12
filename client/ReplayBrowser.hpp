@@ -107,6 +107,8 @@ class ReplayBrowser {
 
     bool _showRenameDialog;
     bool _showDeleteDialog;
+    bool _showErrorDialog;
+    std::string _errorMessage;
     size_t _selectedReplayIndex;
     InputField _renameInputField;
     Button _confirmButton;
@@ -135,6 +137,7 @@ class ReplayBrowser {
     void handleDeleteConfirm();
     void renderRenameDialog();
     void renderDeleteDialog();
+    void renderErrorDialog();
 };
 
 }  // namespace rtype
