@@ -3,7 +3,7 @@ name: Integration / Deployment
 on:
   push:
     branches: [ main ]
-    tags: 
+    tags:
       - 'v*.*.*'
   pull_request:
   workflow_dispatch:
@@ -105,9 +105,11 @@ jobs:
           - os: ubuntu-latest
             triplet: x64-linux
             bin_path: "r-type_server"
+            generator: "Unix Makefiles"
           - os: windows-latest
             triplet: x64-windows
             bin_path: "Release/r-type_server.exe"
+            generator: "Ninja"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -122,7 +124,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential \
+          sudo apt-get install -y build-essential libstdc++-14-dev \
               libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
               libgl1-mesa-dev \
               libglu1-mesa-dev \
@@ -155,7 +157,10 @@ jobs:
           }
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
+              -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Server
         run: cmake --build build --config ${{ matrix.build_type }} --target r-type_server --parallel 4
@@ -186,9 +191,11 @@ jobs:
           - os: ubuntu-latest
             triplet: x64-linux
             bin_path: "r-type_client"
+            generator: "Unix Makefiles"
           - os: windows-latest
             triplet: x64-windows
             bin_path: "Release/r-type_client.exe"
+            generator: "Ninja"
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -203,7 +210,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential \
+          sudo apt-get install -y build-essential libstdc++-14-dev \
               libx11-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev \
               libgl1-mesa-dev \
               libglu1-mesa-dev \
@@ -236,7 +243,10 @@ jobs:
           }
 
       - name: Configure CMake
-        run:  cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
+              -DCMAKE_CXX_STANDARD=26 -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Client
         run: cmake --build build --config ${{ matrix.build_type }} --target r-type_client --parallel 4
