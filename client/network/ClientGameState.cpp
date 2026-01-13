@@ -8,6 +8,7 @@
 #include "ClientGameState.hpp"
 
 #include <iostream>
+#include <span>
 
 namespace rtype {
 
@@ -119,17 +120,14 @@ void ClientGameState::update(float deltaTime)
             entity->x += entity->velocityX * deltaTime;
         }
 
-        // Player spritesheet animation
         if (entity->type == 1 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
                 entity->animFrameTime = 0.0f;
                 entity->animCurrentFrame++;
                 if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = 0;  // Loop animation
+                    entity->animCurrentFrame = 0;
                 }
-
-                // Calculate texture rect based on animation state and frame
                 int row = static_cast<int>(entity->animState);
                 int frameX = entity->animCurrentFrame * entity->animFrameWidth;
                 int frameY = row * entity->animFrameHeight;
@@ -139,7 +137,6 @@ void ClientGameState::update(float deltaTime)
             }
         }
 
-        // Explosion animation (type 7)
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -155,12 +152,10 @@ void ClientGameState::update(float deltaTime)
         }
     }
 
-    // Update explosions
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
     }
 
-    // Remove finished explosions
     _explosions.erase(std::remove_if(_explosions.begin(), _explosions.end(),
                                      [](const std::unique_ptr<Explosion>& exp) {
                                          return exp->isFinished();
@@ -329,15 +324,8 @@ void ClientGameState::onHealthUpdate(uint32_t entityId, float currentHealth,
 {
     auto* entity = getEntity(entityId);
     if (entity) {
-        float oldHealth = entity->health;
         entity->health = currentHealth;
         entity->maxHealth = maxHealth;
-
-        // If health decreased and player had shield, remove it
-        if (entity->type == 1 && entity->hasShield &&
-            currentHealth < oldHealth) {
-            entity->hasShield = false;
-        }
     }
 }
 
