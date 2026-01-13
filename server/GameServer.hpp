@@ -24,6 +24,7 @@ class GameServer {
     engine::GameLoop _gameLoop;
 
     std::atomic<bool> _gameStarted;
+    std::atomic<bool> _needsReset;
     std::atomic<int> _playerCount;
     std::atomic<uint32_t> _nextPlayerId;
     std::mutex _playerMutex;

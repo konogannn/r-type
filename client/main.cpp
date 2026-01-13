@@ -7,7 +7,9 @@
 
 #include <iostream>
 
+#include "../common/utils/Logger.hpp"
 #include "Config.hpp"
+#include "GameOverScreen.hpp"
 #include "Menu.hpp"
 #include "Resolution.hpp"
 #include "SettingsMenu.hpp"
@@ -22,7 +24,7 @@
 
 using namespace rtype;
 
-enum class GameState { Menu, Settings, Playing };
+enum class GameState { Menu, Settings, Playing, GameOver };
 
 int main()
 {
@@ -54,6 +56,8 @@ int main()
     auto menu = std::make_unique<Menu>(*window, *graphics, *input);
     auto settingsMenu =
         std::make_unique<SettingsMenu>(*window, *graphics, *input);
+    auto gameOverScreen =
+        std::make_unique<GameOverScreen>(*window, *graphics, *input);
 
     GameState state = GameState::Menu;
 
@@ -109,7 +113,22 @@ int main()
                           static_cast<uint16_t>(serverPort));
                 bool returnToMenu = game.run();
 
-                if (returnToMenu) {
+                Logger::getInstance().log(
+                    "Game ended. isPlayerDead: " +
+                        std::to_string(game.isPlayerDead()) +
+                        ", returnToMenu: " + std::to_string(returnToMenu),
+                    LogLevel::INFO_L, "Main");
+
+                if (game.isPlayerDead()) {
+                    Logger::getInstance().log("Switching to GameOver state",
+                                              LogLevel::INFO_L, "Main");
+                    state = GameState::GameOver;
+                    gameOverScreen->reset();
+                    SoundManager::getInstance().stopMusic();
+                    clock->restart();
+                } else {
+                    Logger::getInstance().log("Switching to Menu state",
+                                              LogLevel::INFO_L, "Main");
                     state = GameState::Menu;
                     config.load();
                     menu->updateLayout();
@@ -120,6 +139,30 @@ int main()
             } catch (const std::exception& e) {
                 std::cerr << "Error in game: " << e.what() << std::endl;
                 state = GameState::Menu;
+                menu->resetFade();
+                SoundManager::getInstance().playMusic();
+                clock->restart();
+            }
+        } else if (state == GameState::GameOver) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                    return 0;
+                }
+            }
+
+            bool returnToMenu = gameOverScreen->update(deltaTime);
+
+            window->clear(0, 0, 0);
+            gameOverScreen->render();
+            window->display();
+
+            if (returnToMenu) {
+                state = GameState::Menu;
+                config.load();
+                menu->updateLayout();
                 menu->resetFade();
                 SoundManager::getInstance().playMusic();
                 clock->restart();

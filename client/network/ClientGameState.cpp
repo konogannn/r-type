@@ -119,7 +119,6 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
-
         if (entity->type == 1 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -136,7 +135,6 @@ void ClientGameState::update(float deltaTime)
                                                entity->animFrameHeight);
             }
         }
-
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -151,11 +149,9 @@ void ClientGameState::update(float deltaTime)
             }
         }
     }
-
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
     }
-
     _explosions.erase(std::remove_if(_explosions.begin(), _explosions.end(),
                                      [](const std::unique_ptr<Explosion>& exp) {
                                          return exp->isFinished();
@@ -216,14 +212,22 @@ void ClientGameState::onDisconnected()
 void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                                       uint16_t mapHeight)
 {
+    std::cout << "[ClientGameState] onLoginResponse - Old playerId: "
+              << _playerId << ", New playerId: " << playerId
+              << ", Entities count: " << _entities.size() << std::endl;
+
     _playerId = playerId;
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
     _gameStarted = true;
 
     for (auto& [id, entity] : _entities) {
-        if (entity) {
-            entity->isLocalPlayer = (id == _playerId);
+        if (entity && entity->type == 1) {
+            bool wasLocalPlayer = entity->isLocalPlayer;
+            if (entity->isLocalPlayer && !wasLocalPlayer) {
+                std::cout << "[INFO] Marked entity " << id << " as local player"
+                          << std::endl;
+            }
         }
     }
 }
@@ -236,7 +240,18 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     }
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
-    entity->isLocalPlayer = (entityId == _playerId);
+
+    if (type == 1) {
+        entity->isLocalPlayer = (entityId == _playerId);
+        if (entity->isLocalPlayer) {
+            std::cout << "[INFO] Marked entity " << entityId
+                      << " as LOCAL PLAYER (matches playerId " << _playerId
+                      << ")" << std::endl;
+        }
+    } else {
+        entity->isLocalPlayer = false;
+    }
+
     createEntitySprite(*entity);
     _entities[entityId] = std::move(entity);
 }
