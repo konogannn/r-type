@@ -191,7 +191,8 @@ class GameLoop {
      * @param y Initial Y position
      * @return The entity ID of the spawned player (0 if already exists)
      */
-    uint32_t spawnPlayer(uint32_t clientId, uint32_t playerId, float x, float y);
+    uint32_t spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
+                         float y);
 
     /**
      * @brief Remove a player entity when client disconnects
