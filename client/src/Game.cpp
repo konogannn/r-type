@@ -349,6 +349,8 @@ void Game::render()
                     }
                 }
             } catch (const std::exception& e) {
+                std::cerr << "Exception while rendering entity with id " << id
+                          << ": " << e.what() << std::endl;
             }
         }
 
@@ -369,6 +371,8 @@ void Game::render()
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
             } catch (const std::exception& e) {
+                std::cerr << "Exception while rendering entity with id " << id
+                          << ": " << e.what() << std::endl;
             }
         }
 
