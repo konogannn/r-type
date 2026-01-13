@@ -118,6 +118,10 @@ static const unsigned char small_green_bullet_data[] = {
 #embed "../../../assets/sprites/small_green_bullet.png"
 };
 
+static const unsigned char small_pink_bullet_data[] = {
+#embed "../../../assets/sprites/small_pink_bullet.png"
+};
+
 static const unsigned char blowup_1_data[] = {
 #embed "../../../assets/sprites/blowup_1.png"
 };

@@ -566,7 +566,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         case 17: {
             scale = 3.0f;
             if (entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::small_green_bullet_data))) {
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
                 entity.animFrameCount = 4;
                 entity.animCurrentFrame = 0;
                 entity.animFrameTime = 0.0f;
