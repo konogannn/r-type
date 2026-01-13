@@ -169,6 +169,7 @@ class CollisionSystem : public ISystem {
     std::vector<DestroyInfo> _entitiesToDestroy;
     std::unordered_set<EntityId> _markedForDestruction;
     std::vector<SpawnEvent>& _spawnQueue;
+    bool _nextPowerUpIsShield = true;
 
     // Helper methods for collision checking
     bool checkCollision(const Position& pos1, const BoundingBox& box1,
