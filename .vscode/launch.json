@@ -3,27 +3,37 @@
     "configurations": [
         {
             "name": "Debug: Server",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/r-type_server${leaderOSExtension}",
+            "program": "${workspaceFolder}/r-type_server",
+            "args": [],
             "cwd": "${workspaceFolder}",
-            "MIMode": "gdb",
-            "windows": {
-                "program": "${workspaceFolder}/r-type_server.exe",
-                "miDebuggerPath": "gdb.exe"
-            },
-            "linux": {
-                "program": "${workspaceFolder}/r-type_server",
-                "miDebuggerPath": "/usr/bin/gdb"
-            },
             "preLaunchTask": "Build: Server",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
+            "windows": {
+                "program": "${workspaceFolder}/r-type_server.exe"
+            }
+        },
+        {
+            "name": "Debug: Client",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/r-type_client",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build: Client",
+            "windows": {
+                "program": "${workspaceFolder}/r-type_client.exe"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server + Client",
+            "configurations": [
+                "Debug: Server",
+                "Debug: Client"
+            ],
+            "stopAll": true
         }
     ]
 }
