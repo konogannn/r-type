@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include "../common/utils/Logger.hpp"
 #include "Config.hpp"
 #include "GameOverScreen.hpp"
 #include "Menu.hpp"
@@ -112,19 +113,22 @@ int main()
                           static_cast<uint16_t>(serverPort));
                 bool returnToMenu = game.run();
 
-                std::cout << "[Main] Game ended. isPlayerDead: "
-                          << game.isPlayerDead()
-                          << ", returnToMenu: " << returnToMenu << std::endl;
+                Logger::getInstance().log(
+                    "Game ended. isPlayerDead: " +
+                        std::to_string(game.isPlayerDead()) +
+                        ", returnToMenu: " + std::to_string(returnToMenu),
+                    LogLevel::INFO_L, "Main");
 
                 if (game.isPlayerDead()) {
-                    std::cout << "[Main] Switching to GameOver state"
-                              << std::endl;
+                    Logger::getInstance().log("Switching to GameOver state",
+                                              LogLevel::INFO_L, "Main");
                     state = GameState::GameOver;
                     gameOverScreen->reset();
                     SoundManager::getInstance().stopMusic();
                     clock->restart();
                 } else {
-                    std::cout << "[Main] Switching to Menu state" << std::endl;
+                    Logger::getInstance().log("Switching to Menu state",
+                                              LogLevel::INFO_L, "Main");
                     state = GameState::Menu;
                     config.load();
                     menu->updateLayout();
