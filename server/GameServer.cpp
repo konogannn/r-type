@@ -318,13 +318,12 @@ void GameServer::processNetworkUpdates()
             }
 
             if (_needsReset.load()) {
-                Logger::getInstance().log(
-                    "Performing deferred game reset...", LogLevel::INFO_L,
-                    "Game");
+                Logger::getInstance().log("Performing deferred game reset...",
+                                          LogLevel::INFO_L, "Game");
                 _gameLoop.clearAllEntities();
                 _needsReset = false;
-                Logger::getInstance().log(
-                    "Game reset complete", LogLevel::INFO_L, "Game");
+                Logger::getInstance().log("Game reset complete",
+                                          LogLevel::INFO_L, "Game");
             }
         } catch (const std::exception& e) {
             Logger::getInstance().log(

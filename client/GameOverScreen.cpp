@@ -92,8 +92,7 @@ void GameOverScreen::render()
         int blinkAlpha =
             static_cast<int>(128 + 127 * std::sin(_pulseTime * 3.0f));
         _graphics.drawText(instructionText, instructionX, instructionY,
-                           smallFontSize, 255, 255, 255, blinkAlpha,
-                           fontPath);
+                           smallFontSize, 255, 255, 255, blinkAlpha, fontPath);
     }
 }
 

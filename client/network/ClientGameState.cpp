@@ -244,9 +244,9 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     if (type == 1) {
         entity->isLocalPlayer = (entityId == _playerId);
         if (entity->isLocalPlayer) {
-            std::cout << "[INFO] Marked entity " << entityId 
-                      << " as LOCAL PLAYER (matches playerId " << _playerId << ")" 
-                      << std::endl;
+            std::cout << "[INFO] Marked entity " << entityId
+                      << " as LOCAL PLAYER (matches playerId " << _playerId
+                      << ")" << std::endl;
         }
     } else {
         entity->isLocalPlayer = false;
