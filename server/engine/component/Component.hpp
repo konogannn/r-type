@@ -45,7 +45,7 @@ class ComponentBase : public Component {
 
     std::unique_ptr<Component> clone() const override
     {
-        return std::make_unique<T>(static_cast<const T &>(*this));
+        return std::make_unique<T>(static_cast<const T&>(*this));
     }
 
     /**

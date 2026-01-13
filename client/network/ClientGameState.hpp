@@ -132,8 +132,7 @@ class ClientGameState {
     void onDisconnected();
     void onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                          uint16_t mapHeight);
-    void onEntitySpawn(uint32_t entityId, uint8_t type,
-                       float x, float y);
+    void onEntitySpawn(uint32_t entityId, uint8_t type, float x, float y);
     void onEntityPosition(uint32_t entityId, float x, float y);
     void onEntityDead(uint32_t entityId);
     void onHealthUpdate(uint32_t entityId, float currentHealth,
