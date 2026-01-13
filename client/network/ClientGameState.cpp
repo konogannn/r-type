@@ -218,9 +218,10 @@ void ClientGameState::onDisconnected()
 void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                                       uint16_t mapHeight)
 {
-    std::cout << "[ClientGameState] onLoginResponse - Old playerId: " << _playerId 
-              << ", New playerId: " << playerId << ", Entities count: " << _entities.size() << std::endl;
-    
+    std::cout << "[ClientGameState] onLoginResponse - Old playerId: "
+              << _playerId << ", New playerId: " << playerId
+              << ", Entities count: " << _entities.size() << std::endl;
+
     _playerId = playerId;
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
@@ -257,11 +258,12 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     if (_waitingForLocalPlayer && type == 1) {
         entity->isLocalPlayer = true;
         _waitingForLocalPlayer = false;
-        std::cout << "[INFO] Marked entity " << entityId << " as LOCAL PLAYER" << std::endl;
+        std::cout << "[INFO] Marked entity " << entityId << " as LOCAL PLAYER"
+                  << std::endl;
     } else {
         entity->isLocalPlayer = false;
     }
-    
+
     createEntitySprite(*entity);
     _entities[entityId] = std::move(entity);
 }
