@@ -418,7 +418,7 @@ uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
     Entity player = _entityFactory.createPlayer(clientId, playerId, x, y);
     uint32_t entityId = player.getId();
     _clientToEntity[clientId] = entityId;
-    return entityId;
+    return playerId;
 }
 
 void GameLoop::removePlayer(uint32_t clientId)
@@ -500,6 +500,7 @@ void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 
 void GameLoop::clearAllEntities()
 {
+    std::lock_guard<std::mutex> lock(_stateMutex);
     _entityManager.clear();
     _clientToEntity.clear();
     _spawnEvents.clear();
