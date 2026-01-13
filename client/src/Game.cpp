@@ -37,8 +37,10 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _lastShootTime(std::chrono::steady_clock::now()),
       _lastInputTime(std::chrono::steady_clock::now()),
       _screenShakeIntensity(0.0f),
-      _screenShakeTimer(0.0f)
+      _screenShakeTimer(0.0f),
+      _playerDead(false)
 {
+    std::cout << "[Game] Constructor called, _playerDead initialized to: " << _playerDead << std::endl;
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
@@ -225,6 +227,18 @@ void Game::update(float deltaTime)
                 _lastInputTime = currentTime;
             }
         }
+
+        auto* localPlayer = _gameState->getLocalPlayer();
+        if (localPlayer) {
+            float health = _gameState->getPlayerHealth();
+            if (health <= 0.0f && !_playerDead) {
+                std::cout << "[Game] Player died! Health: " << health << ", EntityID: " << localPlayer->id << std::endl;
+                _playerDead = true;
+                _running = false;
+            }
+        } else if (_gameState->isGameStarted()) {
+            std::cout << "[Game] WARNING: Game started but no local player found!" << std::endl;
+        }
     }
 
     if (_background) {
@@ -293,7 +307,6 @@ void Game::render()
         for (const auto& [id, entity] : entities) {
             if (!entity || entity->type == 7) continue;
 
-            // Always use the main sprite (no more currentSprite for players)
             rtype::ISprite* spriteToRender = entity->sprite.get();
 
             if (!spriteToRender) continue;
