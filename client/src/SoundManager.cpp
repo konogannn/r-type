@@ -8,6 +8,7 @@
 #include "SoundManager.hpp"
 
 #include <iostream>
+#include <span>
 
 SoundManager& SoundManager::getInstance()
 {
@@ -23,19 +24,12 @@ void SoundManager::loadAll()
     loadSound("click", ASSET_SPAN(rtype::embedded::click_sound_data));
 
     if (!_music) {
-        std::cout << "  Creating music object..." << std::endl;
         _music = std::make_unique<rtype::MusicSFML>();
-        std::cout << "  Music object created, address: " << _music.get()
-                  << std::endl;
     }
     if (_music->openFromMemory(rtype::embedded::music_data,
                                sizeof(rtype::embedded::music_data))) {
-        std::cout << "  Music loaded from memory successfully" << std::endl;
         _music->setLoop(true);
         _music->setVolume(_musicVolume);
-        std::cout << "  Loaded: embedded music" << std::endl;
-    } else {
-        std::cerr << "  Failed to load embedded music" << std::endl;
     }
 }
 
@@ -51,10 +45,6 @@ void SoundManager::loadSound(const std::string& name,
 
         _buffers[name] = std::move(buffer);
         _sounds[name] = std::move(sound);
-
-        std::cout << "  Loaded (embedded): " << name << std::endl;
-    } else {
-        std::cerr << "  Failed to load embedded sound: " << name << std::endl;
     }
 }
 
