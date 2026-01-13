@@ -57,8 +57,6 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         return;
     }
 
-    static bool spawnShield = true;  // Alternate between shield and missile
-
     const auto& destroyed = cleanupSystem->getDestroyedEntities();
     for (const auto& info : destroyed) {
         EntityStateUpdate update;
@@ -70,23 +68,20 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         update.destroyed = true;
         _outputQueue.push(update);
 
-        // Spawn a power-up if it's an enemy KILLED BY BULLET (types 10, 12, 14)
-        // with 50% chance. Type 10 = BASIC, 12 = TANK, 14 = FAST
         bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
                         info.entityType == 14);
 
         if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
-            // 50% chance to spawn a power-up
             if (rand() % 2 == 0) {
                 Entity powerUpItem;
-                if (spawnShield) {
+                if (_nextEnemyDropIsShield) {
                     powerUpItem =
                         _entityFactory.createShieldItem(info.x, info.y);
                 } else {
                     powerUpItem =
                         _entityFactory.createGuidedMissileItem(info.x, info.y);
                 }
-                spawnShield = !spawnShield;  // Alternate for next spawn
+                _nextEnemyDropIsShield = !_nextEnemyDropIsShield;
 
                 // Network sync for power-up
                 auto* powerUpPos =
@@ -481,8 +476,6 @@ void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 
 void GameLoop::processSpawnEvents()
 {
-    // Use compile-time dispatch via overload resolution
-    // This is more efficient than runtime type checking
     for (const auto& event : _spawnEvents) {
         std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
     }
@@ -493,7 +486,6 @@ void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
 {
     Entity enemy = _entityFactory.createEnemy(event.type, event.x, event.y);
 
-    // Mark enemy for network synchronization
     auto* netEntity = _entityManager.getComponent<NetworkEntity>(enemy);
     if (netEntity) {
         netEntity->needsSync = true;
