@@ -43,8 +43,8 @@ bool GameOverScreen::update(float deltaTime)
         }
     }
     _pulseTime += deltaTime * 2.0f;
-    if (_input.isKeyPressed(Key::Escape) ||
-        _input.isKeyPressed(Key::Space) || _input.isKeyPressed(Key::Enter)) {
+    if (_input.isKeyPressed(Key::Escape) || _input.isKeyPressed(Key::Space) ||
+        _input.isKeyPressed(Key::Enter)) {
         return true;
     }
 
@@ -55,17 +55,17 @@ void GameOverScreen::render()
 {
     int width = _window.getWidth();
     int height = _window.getHeight();
-    
+
     int overlayAlpha = static_cast<int>(_fadeAlpha * 0.4f);
     if (overlayAlpha > 0) {
         _graphics.drawRectangle(0, 0, static_cast<float>(width),
-                                static_cast<float>(height), 0, 0, 0, 
+                                static_cast<float>(height), 0, 0, 0,
                                 overlayAlpha);
     }
     float pulse = 1.0f + std::sin(_pulseTime) * 0.1f;
     float centerX = width / 2.0f;
     float centerY = height / 2.0f;
-    
+
     unsigned int fontSize = static_cast<unsigned int>(80 * _scale * pulse);
     std::string gameOverText = "GAME OVER";
     std::string fontPath = "assets/fonts/Retro_Gaming.ttf";
@@ -80,16 +80,19 @@ void GameOverScreen::render()
 
     if (_fadeAlpha >= 255.0f) {
         unsigned int smallFontSize = static_cast<unsigned int>(24 * _scale);
-        std::string instructionText = "Press ESC, SPACE or ENTER to return to menu";
-        
-        float instructionWidth = _graphics.getTextWidth(instructionText, smallFontSize, fontPath);
+        std::string instructionText =
+            "Press ESC, SPACE or ENTER to return to menu";
+
+        float instructionWidth =
+            _graphics.getTextWidth(instructionText, smallFontSize, fontPath);
         float instructionX = centerX - instructionWidth / 2.0f;
         float instructionY = centerY + fontSize + 40 * _scale;
 
-        int blinkAlpha = static_cast<int>(128 + 127 * std::sin(_pulseTime * 3.0f));
+        int blinkAlpha =
+            static_cast<int>(128 + 127 * std::sin(_pulseTime * 3.0f));
         _graphics.drawText(instructionText, instructionX, instructionY,
-                          smallFontSize, 255, 255, 255,
-                          blinkAlpha, "assets/fonts/Retro_Gaming.ttf");
+                           smallFontSize, 255, 255, 255, blinkAlpha,
+                           "assets/fonts/Retro_Gaming.ttf");
     }
 }
 
