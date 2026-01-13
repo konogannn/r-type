@@ -73,4 +73,12 @@ void TextureManager::loadAll()
                false);
     loadSprite("explosion_2", ASSET_SPAN(rtype::embedded::blowup_2_data),
                false);
+    loadSprite("player_shield", ASSET_SPAN(rtype::embedded::shield_data),
+               false);
+    loadSprite("search_missile",
+               ASSET_SPAN(rtype::embedded::search_missile_data), false);
+    loadSprite("shield_item", ASSET_SPAN(rtype::embedded::shield_item_data),
+               false);
+    loadSprite("search_missile_item",
+               ASSET_SPAN(rtype::embedded::search_missile_item_data), false);
 }

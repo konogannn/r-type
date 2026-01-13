@@ -8,6 +8,7 @@
 #include "ClientGameState.hpp"
 
 #include <iostream>
+#include <span>
 
 namespace rtype {
 
@@ -30,14 +31,16 @@ ClientGameState::ClientGameState()
         });
     _networkClient->setOnEntityDeadCallback(
         [this](uint32_t entityId) { onEntityDead(entityId); });
-    _networkClient->setOnScoreUpdateCallback([this](uint32_t score) {
-        _score = score;
-        std::cout << "[INFO] Score updated: " << score << std::endl;
-    });
+    _networkClient->setOnScoreUpdateCallback(
+        [this](uint32_t score) { _score = score; });
     _networkClient->setOnHealthUpdateCallback(
         [this](const HealthUpdatePacket& packet) {
             onHealthUpdate(packet.entityId, packet.currentHealth,
                            packet.maxHealth);
+        });
+    _networkClient->setOnShieldStatusCallback(
+        [this](const ShieldStatusPacket& packet) {
+            onShieldStatus(packet.playerId, packet.hasShield != 0);
         });
     _networkClient->setOnErrorCallback(
         [this](const std::string& error) { onError(error); });
@@ -48,9 +51,6 @@ bool ClientGameState::connectToServer(const std::string& address, uint16_t port)
     if (_connectionAttempting) {
         return false;
     }
-
-    std::cout << "[INFO] Attempting to connect to server: " << address << ":"
-              << port << std::endl;
 
     if (_networkClient->connect(address, port)) {
         _connectionAttempting = true;
@@ -75,8 +75,6 @@ bool ClientGameState::sendLogin(const std::string& username)
         return false;
     }
 
-    std::cout << "[INFO] Sending login request for user: " << username
-              << std::endl;
     bool result = _networkClient->sendLogin(username);
 
     if (!result) {
@@ -88,7 +86,6 @@ bool ClientGameState::sendLogin(const std::string& username)
 
 void ClientGameState::disconnect()
 {
-    std::cout << "[INFO] Disconnecting from server" << std::endl;
     _networkClient->disconnect();
 
     _playerId = 0;
@@ -111,7 +108,6 @@ void ClientGameState::update(float deltaTime)
         if (_connectionTimeout > MAX_CONNECTION_TIMEOUT) {
             _connectionAttempting = false;
             _lastError = "Connection timed out";
-            std::cout << "[ERROR] Connection attempt timed out" << std::endl;
         }
     }
 
@@ -202,14 +198,12 @@ ClientEntity* ClientGameState::getLocalPlayer()
 
 void ClientGameState::onConnected()
 {
-    std::cout << "[INFO] Connected to server successfully" << std::endl;
     _connectionAttempting = false;
     _connectionTimeout = 0.0f;
 }
 
 void ClientGameState::onDisconnected()
 {
-    std::cout << "[INFO] Disconnected from server" << std::endl;
     _playerId = 0;
     _gameStarted = false;
     _entities.clear();
@@ -228,9 +222,6 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
     _gameStarted = true;
     _waitingForLocalPlayer = true;
 
-    std::cout << "[INFO] Login successful! Player ID: " << _playerId
-              << ", Map size: " << _mapWidth << "x" << _mapHeight << std::endl;
-
     for (auto& [id, entity] : _entities) {
         if (entity && entity->type == 1) {
             bool wasLocalPlayer = entity->isLocalPlayer;
@@ -248,10 +239,6 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     if (_entities.find(entityId) != _entities.end()) {
         return;
     }
-
-    std::cout << "[INFO] Entity spawned: ID=" << entityId
-              << ", Type=" << static_cast<int>(type) << ", Position=(" << x
-              << "," << y << ")" << std::endl;
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
 
@@ -323,8 +310,6 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
 
 void ClientGameState::onEntityDead(uint32_t entityId)
 {
-    std::cout << "[INFO] Entity died: ID=" << entityId << std::endl;
-
     auto* entity = getEntity(entityId);
     if (entity) {
         switch (entity->type) {
@@ -358,16 +343,19 @@ void ClientGameState::onHealthUpdate(uint32_t entityId, float currentHealth,
     }
 }
 
-void ClientGameState::onError(const std::string& error)
+void ClientGameState::onShieldStatus(uint32_t playerId, bool hasShield)
 {
-    _lastError = error;
-    std::cout << "[ERROR] Network error: " << error << std::endl;
+    auto* entity = getEntity(playerId);
+    if (entity && entity->type == 1) {
+        entity->hasShield = hasShield;
+    }
 }
+
+void ClientGameState::onError(const std::string& error) { _lastError = error; }
 
 void ClientGameState::createEntitySprite(ClientEntity& entity)
 {
     if (!entity.sprite) {
-        std::cout << "[ERROR] Entity sprite pointer is null!" << std::endl;
         return;
     }
 
@@ -405,6 +393,12 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 entity.sprite->setTextureRect(0, 0, 35, 21);
             }
             entity.spriteScale = scale;
+            entity.shieldSprite = std::make_unique<SpriteSFML>();
+            if (entity.shieldSprite->loadTexture(
+                    ASSET_SPAN(embedded::shield_data))) {
+                float shieldScale = 0.3f;
+                entity.shieldSprite->setScale(shieldScale, shieldScale);
+            }
             break;
         }
         case 2: {
@@ -481,6 +475,33 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.velocityY = 0.0f;
             break;
         }
+        case 8: {
+            // Shield Item power-up
+            scale = 0.8f;
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::shield_item_data))) {
+                scale = 0.5f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 9: {
+            // Guided Missile Item power-up
+            scale = 0.8f;
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::search_missile_item_data))) {
+                scale = 0.5f;
+                entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data));
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
         case 10: {
             scale = 2.0f;
             // TODO load basic enemy sprite instead of reusing existing asset
@@ -532,6 +553,19 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             scale = 5.0f;
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 16: {
+            // Guided Missile projectile
+            scale = 4.0f;
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::search_missile_data))) {
+                scale = 5.0f;
+                entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data));
+            }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;

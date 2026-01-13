@@ -159,12 +159,6 @@ void NetworkClientAsio::update()
 {
     std::lock_guard<std::mutex> lock(_messageQueueMutex);
 
-    static int updateCount = 0;
-    if (_pendingMessages.size() > 0 && ++updateCount % 60 == 0) {
-        std::cout << "[NETWORK] Processing " << _pendingMessages.size()
-                  << " pending messages" << std::endl;
-    }
-
     while (!_pendingMessages.empty()) {
         const auto& message = _pendingMessages.front();
         processReceivedData(message.data.data(), message.data.size());
@@ -214,6 +208,12 @@ void NetworkClientAsio::setOnHealthUpdateCallback(
     std::function<void(const HealthUpdatePacket&)> callback)
 {
     _onHealthUpdate = callback;
+}
+
+void NetworkClientAsio::setOnShieldStatusCallback(
+    std::function<void(const ShieldStatusPacket&)> callback)
+{
+    _onShieldStatus = callback;
 }
 
 void NetworkClientAsio::setOnErrorCallback(
@@ -288,6 +288,9 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
             break;
         case ::OpCode::S2C_HEALTH_UPDATE:
             processHealthUpdate(data, size);
+            break;
+        case ::OpCode::S2C_SHIELD_STATUS:
+            processShieldStatus(data, size);
             break;
         default:
             break;
@@ -435,6 +438,20 @@ void NetworkClientAsio::processHealthUpdate(const uint8_t* data, size_t size)
 
     if (_onHealthUpdate) {
         _onHealthUpdate(*packet);
+    }
+}
+
+void NetworkClientAsio::processShieldStatus(const uint8_t* data, size_t size)
+{
+    if (size < sizeof(::ShieldStatusPacket)) {
+        return;
+    }
+
+    const ::ShieldStatusPacket* packet =
+        reinterpret_cast<const ::ShieldStatusPacket*>(data);
+
+    if (_onShieldStatus) {
+        _onShieldStatus(*packet);
     }
 }
 
