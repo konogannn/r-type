@@ -288,7 +288,6 @@ void Game::render()
         for (const auto& [id, entity] : entities) {
             if (!entity || entity->type == 7) continue;
 
-            // Always use the main sprite (no more currentSprite for players)
             rtype::ISprite* spriteToRender = entity->sprite.get();
 
             if (!spriteToRender) continue;
@@ -304,10 +303,9 @@ void Game::render()
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
 
-                // Draw shield overlay if player has shield
                 if (entity->type == 1 && entity->hasShield &&
                     entity->shieldSprite) {
-                    float shieldBaseScale = 0.2f;  // Same as in ClientGameState
+                    float shieldBaseScale = 0.2f;
                     entity->shieldSprite->setScale(
                         shieldBaseScale * windowScale,
                         shieldBaseScale * windowScale);
@@ -320,8 +318,8 @@ void Game::render()
                     float offsetShieldY =
                         sy - (shieldSize - playerHeight) / 2.0f;
 
-                    entity->shieldSprite->setPosition(offsetShieldX - 90.0f,
-                                                      offsetShieldY - 100.0f);
+                    entity->shieldSprite->setPosition(offsetShieldX - 90.0f * windowScale,
+                                                      offsetShieldY - 100.0f * windowScale);
                     _graphics.drawSprite(*entity->shieldSprite);
                 }
 
@@ -350,7 +348,6 @@ void Game::render()
                     }
                 }
             } catch (const std::exception& e) {
-                // Silently skip entity on error
             }
         }
 
@@ -371,7 +368,6 @@ void Game::render()
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
             } catch (const std::exception& e) {
-                // Silently skip explosion on error
             }
         }
 
