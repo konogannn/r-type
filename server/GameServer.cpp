@@ -39,6 +39,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
+    _gameLoop.addSystem(std::make_unique<engine::TurretShootingSystem>(
+        _gameLoop.getSpawnEvents(), _gameLoop.getEntityManager()));
     _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
@@ -258,7 +260,8 @@ bool GameServer::isEnemy(uint8_t entityType) const
 {
     return entityType == static_cast<uint8_t>(EntityType::BASIC) ||
            entityType == static_cast<uint8_t>(EntityType::FAST) ||
-           entityType == static_cast<uint8_t>(EntityType::TANK);
+           entityType == static_cast<uint8_t>(EntityType::TANK) ||
+           entityType == static_cast<uint8_t>(EntityType::TURRET);
 }
 
 void GameServer::processNetworkUpdates()
@@ -456,8 +459,7 @@ void GameServer::spawnBossWave(uint8_t bossType)
 
     for (int i = 0; i < WAVE_SIZE; ++i) {
         float y = MIN_Y + (i * Y_SPACING);
-        float x =
-            START_X + (i % 2 == 0 ? 0.0f : 100.0f);
+        float x = START_X + (i % 2 == 0 ? 0.0f : 100.0f);
 
         engine::Enemy::Type type;
         if (i % 3 == 0) {
@@ -476,8 +478,23 @@ void GameServer::spawnBossWave(uint8_t bossType)
         _bossWaveEnemiesAlive++;
     }
 
+    SpawnTurretEvent topTurret;
+    topTurret.x = 1200.0f;
+    topTurret.y = 30.0f;
+    topTurret.isTopTurret = true;
+    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topTurret));
+    _bossWaveEnemiesAlive++;
+
+    SpawnTurretEvent bottomTurret;
+    bottomTurret.x = 1200.0f;
+    bottomTurret.y = 1000.0f;
+    bottomTurret.isTopTurret = false;
+    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomTurret));
+    _bossWaveEnemiesAlive++;
+
     Logger::getInstance().log(
-        "Boss wave spawned: " + std::to_string(WAVE_SIZE) + " enemies",
+        "Boss wave spawned: " + std::to_string(WAVE_SIZE + 2) +
+            " enemies (including 2 turrets)",
         LogLevel::INFO_L, "Game");
 }
 

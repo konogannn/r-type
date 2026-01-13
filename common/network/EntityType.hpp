@@ -22,4 +22,6 @@ constexpr uint8_t TANK = 12;  // tank
 constexpr uint8_t TANK_MISSILE = 13;
 constexpr uint8_t FAST = 14;  // fast
 constexpr uint8_t FAST_MISSILE = 15;
+constexpr uint8_t TURRET = 16;  // turret
+constexpr uint8_t TURRET_MISSILE = 17;
 }  // namespace EntityType
