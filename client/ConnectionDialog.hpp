@@ -31,11 +31,10 @@ class ConnectionDialog {
     /**
      * @brief Construct a new ConnectionDialog
      * @param graphics Graphics renderer reference
-     * @param input Input handler reference
      * @param windowWidth Width of the window
      * @param windowHeight Height of the window
      */
-    ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
+    ConnectionDialog(GraphicsSFML& graphics,
                      float windowWidth, float windowHeight);
 
     /**
@@ -99,7 +98,6 @@ class ConnectionDialog {
 
    private:
     GraphicsSFML& _graphics;
-    InputSFML& _input;
 
     float _windowWidth;
     float _windowHeight;

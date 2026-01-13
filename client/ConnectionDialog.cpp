@@ -14,10 +14,9 @@
 
 namespace rtype {
 
-ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
+ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics,
                                    float windowWidth, float windowHeight)
     : _graphics(graphics),
-      _input(input),
       _windowWidth(windowWidth),
       _windowHeight(windowHeight),
       _dialogWidth(600.0f),

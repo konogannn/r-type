@@ -12,9 +12,8 @@
 
 namespace rtype {
 
-Boss::Boss(uint32_t entityId, float x, float y, uint8_t bossType)
+Boss::Boss(uint32_t entityId, float x, float y)
     : _entityId(entityId),
-      _bossType(bossType),
       _currentPhase(0),
       _currentHP(1000.0f),
       _maxHP(1000.0f),
