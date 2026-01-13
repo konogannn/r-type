@@ -171,21 +171,13 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
                                   Health* health, Position* pos)
 {
     (void)health;
-    std::cout << "[BOSS] handleDeathPhase: destructionStarted="
-              << boss->destructionStarted << " deathTimer=" << boss->deathTimer
-              << " explosionCount=" << boss->explosionCount << std::endl;
-
     if (boss->destructionStarted) {
-        std::cout << "[BOSS] Destruction already started, skipping"
-                  << std::endl;
         return;
     }
 
     if (boss->deathTimer < 0.0f) {
         boss->deathTimer = 2.5f;
         boss->explosionTimer = 0.0f;
-        std::cout << "[BOSS] Entering death phase, starting "
-                  << boss->deathTimer << "s death animation" << std::endl;
     }
 
     boss->damageFlashTimer = 0.1f;
@@ -229,13 +221,9 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
     boss->deathTimer -= deltaTime;
 
     if (boss->deathTimer <= 0.0f || boss->explosionCount == 15) {
-        std::cout << "[BOSS] Death animation complete (" << boss->explosionCount
-                  << " explosions), destroying boss and parts" << std::endl;
-
         boss->destructionStarted = true;
 
         if (!_entityManager) {
-            std::cout << "[ERROR] EntityManager not available" << std::endl;
             return;
         }
 
@@ -245,8 +233,6 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
                 auto* netEntity =
                     _entityManager->getComponent<NetworkEntity>(*partEntity);
                 if (netEntity) {
-                    std::cout << "[BOSS] Marking part entity " << partEntityId
-                              << " for destruction" << std::endl;
                     markForDestruction(partEntityId, netEntity->entityId,
                                        netEntity->entityType);
                 }
@@ -256,8 +242,6 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
 
         auto* bossNet = _entityManager->getComponent<NetworkEntity>(entity);
         if (bossNet) {
-            std::cout << "[BOSS] Marking boss entity " << entity.getId()
-                      << " for destruction" << std::endl;
             markForDestruction(entity.getId(), bossNet->entityId,
                                bossNet->entityType);
         }

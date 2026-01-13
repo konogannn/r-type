@@ -84,21 +84,16 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 Game::~Game()
 {
     if (_gameState && _gameState->isConnected()) {
-        std::cout << "[Game] Disconnecting from server..." << std::endl;
         _gameState->disconnect();
     }
 }
 
 bool Game::tryConnect(const std::string& address, uint16_t port)
 {
-    std::cout << "[Game] Attempting to connect to server " << address << ":"
-              << port << "..." << std::endl;
     if (_gameState->connectToServer(address, port)) {
-        std::cout << "[Game] Connection initiated" << std::endl;
         _gameState->sendLogin("Player1");
         return true;
     } else {
-        std::cout << "[Game] Failed to connect to server" << std::endl;
         return false;
     }
 }
@@ -326,6 +321,27 @@ void Game::render()
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
 
+                if (entity->type == 1 && entity->hasShield &&
+                    entity->shieldSprite) {
+                    float shieldBaseScale = 0.2f;
+                    entity->shieldSprite->setScale(
+                        shieldBaseScale * windowScale,
+                        shieldBaseScale * windowScale);
+
+                    float shieldSize = 1026.0f * shieldBaseScale * windowScale;
+                    float playerWidth = 80.0f * baseScale * windowScale;
+                    float playerHeight = 68.0f * baseScale * windowScale;
+                    float offsetShieldX =
+                        sx - (shieldSize - playerWidth) / 2.0f;
+                    float offsetShieldY =
+                        sy - (shieldSize - playerHeight) / 2.0f;
+
+                    entity->shieldSprite->setPosition(
+                        offsetShieldX - 90.0f * windowScale,
+                        offsetShieldY - 100.0f * windowScale);
+                    _graphics.drawSprite(*entity->shieldSprite);
+                }
+
                 if (_showHitboxes) {
                     static const std::unordered_map<uint8_t,
                                                     std::pair<float, float>>
@@ -351,7 +367,7 @@ void Game::render()
                     }
                 }
             } catch (const std::exception& e) {
-                std::cout << "[ERROR] Exception while drawing entity ID " << id
+                std::cerr << "Exception while rendering entity with id " << id
                           << ": " << e.what() << std::endl;
             }
         }
@@ -373,8 +389,8 @@ void Game::render()
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
             } catch (const std::exception& e) {
-                std::cout << "[ERROR] Exception while drawing explosion ID "
-                          << id << ": " << e.what() << std::endl;
+                std::cerr << "Exception while rendering entity with id " << id
+                          << ": " << e.what() << std::endl;
             }
         }
 

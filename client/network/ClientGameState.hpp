@@ -8,6 +8,7 @@
 #pragma once
 
 #include <memory>
+#include <resources/EmbeddedResources.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -33,9 +34,11 @@ struct ClientEntity {
     float health = 100.0f;
     float maxHealth = 100.0f;
     std::unique_ptr<SpriteSFML> sprite;
+    std::unique_ptr<SpriteSFML> shieldSprite;  // Shield overlay sprite
     float spriteScale = 1.0f;
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
+    bool hasShield = false;  // True if player has active shield
 
     enum class AnimationState { IDLE, MOVING_DOWN, MOVING_UP };
     AnimationState animState = AnimationState::IDLE;
@@ -138,6 +141,7 @@ class ClientGameState {
     void onEntityDead(uint32_t entityId);
     void onHealthUpdate(uint32_t entityId, float currentHealth,
                         float maxHealth);
+    void onShieldStatus(uint32_t playerId, bool hasShield);
     void onError(const std::string& error);
 
     // Entity helpers
