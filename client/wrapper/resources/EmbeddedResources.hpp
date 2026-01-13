@@ -110,6 +110,14 @@ static const unsigned char turret_data[] = {
 #embed "../../../assets/sprites/turret.png"
 };
 
+static const unsigned char enemy_turret_data[] = {
+#embed "../../../assets/sprites/enemy_turret.png"
+};
+
+static const unsigned char small_green_bullet_data[] = {
+#embed "../../../assets/sprites/small_green_bullet.png"
+};
+
 static const unsigned char blowup_1_data[] = {
 #embed "../../../assets/sprites/blowup_1.png"
 };

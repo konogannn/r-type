@@ -22,8 +22,7 @@ ClientGameState::ClientGameState()
         });
     _networkClient->setOnEntitySpawnCallback(
         [this](const EntitySpawnPacket& packet) {
-            onEntitySpawn(packet.entityId, packet.type,
-                         packet.x, packet.y);
+            onEntitySpawn(packet.entityId, packet.type, packet.x, packet.y);
         });
     _networkClient->setOnEntityPositionCallback(
         [this](const EntityPositionPacket& packet) {
@@ -159,6 +158,20 @@ void ClientGameState::update(float deltaTime)
                     frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
+
+        if (entity->type == 17 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+            }
+        }
     }
 
     // Update explosions
@@ -249,17 +262,16 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
     }
 }
 
-void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type,
-                                    float x, float y)
+void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
+                                    float y)
 {
     if (_entities.find(entityId) != _entities.end()) {
         return;
     }
 
     std::cout << "[INFO] Entity spawned: ID=" << entityId
-              << ", Type=" << static_cast<int>(type)
-              << ", Position=("
-              << x << "," << y << ")" << std::endl;
+              << ", Type=" << static_cast<int>(type) << ", Position=(" << x
+              << "," << y << ")" << std::endl;
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
     entity->isLocalPlayer = (entityId == _playerId);
@@ -327,8 +339,12 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     auto* entity = getEntity(entityId);
     if (entity) {
         switch (entity->type) {
-            case 4:
             case 2:
+            case 4:
+            case 11:
+            case 13:
+            case 15:
+            case 17:
                 _explosions.push_back(std::make_unique<Explosion>(
                     ASSET_SPAN(embedded::blowup_1_data),
                     (entity->type == 4) ? entity->x - 16 : entity->x + 16,
@@ -490,7 +506,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 11: {
-            scale = 4.0f;
+            scale = 5.0f;
             // TODO load basic enemy projectile instead of reusing existing
             // asset
             entity.sprite->loadTexture(
@@ -532,6 +548,34 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
             entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 16: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::enemy_turret_data))) {
+                bool isTopTurret = entity.y < 540.0f;
+                int offsetX = isTopTurret ? 16 : 0;
+                entity.sprite->setTextureRect(offsetX, 0, 16, 27);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 17: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_green_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
             entity.spriteScale = scale;
             break;
         }
