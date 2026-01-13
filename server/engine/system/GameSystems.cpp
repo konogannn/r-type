@@ -364,12 +364,11 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                         }
 
                         // Alternate between shield and guided missile
-                        static bool spawnShield = true;
                         _spawnQueue.push_back(SpawnItemEvent{
-                            spawnShield ? Item::Type::SHIELD
-                                        : Item::Type::GUIDED_MISSILE,
+                            _nextPowerUpIsShield ? Item::Type::SHIELD
+                                                 : Item::Type::GUIDED_MISSILE,
                             spawnX, spawnY});
-                        spawnShield = !spawnShield;
+                        _nextPowerUpIsShield = !_nextPowerUpIsShield;
                     }
                 }
 
@@ -434,13 +433,12 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                 }
 
                                 // Alternate between shield and guided missile
-                                static bool spawnShieldPart = true;
                                 _spawnQueue.push_back(SpawnItemEvent{
-                                    spawnShieldPart
+                                    _nextPowerUpIsShield
                                         ? Item::Type::SHIELD
                                         : Item::Type::GUIDED_MISSILE,
                                     spawnX, spawnY});
-                                spawnShieldPart = !spawnShieldPart;
+                                _nextPowerUpIsShield = !_nextPowerUpIsShield;
                             }
                         }
                     }
