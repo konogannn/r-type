@@ -104,8 +104,9 @@ void GameServer::onClientDisconnected(uint32_t clientId)
                                   LogLevel::INFO_L, "Game");
 
         if (_playerCount.load() == 0 && _gameStarted) {
-            Logger::getInstance().log("No players remaining, resetting game state...",
-                                      LogLevel::INFO_L, "Game");
+            Logger::getInstance().log(
+                "No players remaining, resetting game state...",
+                LogLevel::INFO_L, "Game");
             _gameStarted = false;
             _gameLoop.clearAllEntities();
         } else {
@@ -154,17 +155,18 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
         float startX = 100.0f;
         float startY = 200.0f + (newPlayerId - 1) * 200.0f;
 
-        uint32_t playerEntityId = _gameLoop.spawnPlayer(clientId, newPlayerId, startX, startY);
-        
+        uint32_t playerEntityId =
+            _gameLoop.spawnPlayer(clientId, newPlayerId, startX, startY);
+
         if (playerEntityId > 0) {
             _networkServer.sendEntitySpawn(clientId, playerEntityId,
-                                          EntityType::PLAYER, startX, startY);
+                                           EntityType::PLAYER, startX, startY);
 
-            Logger::getInstance().log("Player " + std::to_string(newPlayerId) +
-                                          " spawned at (" + std::to_string(startX) +
-                                          ", " + std::to_string(startY) + ") with entityId " +
-                                          std::to_string(playerEntityId),
-                                      LogLevel::INFO_L, "Game");
+            Logger::getInstance().log(
+                "Player " + std::to_string(newPlayerId) + " spawned at (" +
+                    std::to_string(startX) + ", " + std::to_string(startY) +
+                    ") with entityId " + std::to_string(playerEntityId),
+                LogLevel::INFO_L, "Game");
         }
         std::vector<engine::EntityStateUpdate> existingEntities;
         _gameLoop.getAllEntities(existingEntities);
@@ -173,7 +175,7 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
             if (entityUpdate.entityId == playerEntityId) {
                 continue;
             }
-            
+
             _networkServer.sendEntitySpawn(clientId, entityUpdate.entityId,
                                            entityUpdate.entityType,
                                            entityUpdate.x, entityUpdate.y);
@@ -181,8 +183,8 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
             Logger::getInstance().log(
                 "Sending existing entity " +
                     std::to_string(entityUpdate.entityId) + " (type " +
-                    std::to_string(entityUpdate.entityType) + ") to new client " +
-                    std::to_string(clientId),
+                    std::to_string(entityUpdate.entityType) +
+                    ") to new client " + std::to_string(clientId),
                 LogLevel::INFO_L, "Game");
         }
     }
@@ -211,8 +213,9 @@ void GameServer::onPlayerDeath(uint32_t clientId)
             LogLevel::INFO_L, "Game");
 
         if (_playerCount.load() == 0 && _gameStarted) {
-            Logger::getInstance().log("All players died, resetting game state...",
-                                      LogLevel::INFO_L, "Game");
+            Logger::getInstance().log(
+                "All players died, resetting game state...", LogLevel::INFO_L,
+                "Game");
             _gameStarted = false;
             _gameLoop.clearAllEntities();
         }
