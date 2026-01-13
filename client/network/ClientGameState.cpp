@@ -220,7 +220,6 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
     _gameStarted = true;
-    _waitingForLocalPlayer = true;
 
     for (auto& [id, entity] : _entities) {
         if (entity && entity->type == 1) {
@@ -242,11 +241,13 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
 
-    if (_waitingForLocalPlayer && type == 1) {
-        entity->isLocalPlayer = true;
-        _waitingForLocalPlayer = false;
-        std::cout << "[INFO] Marked entity " << entityId << " as LOCAL PLAYER"
-                  << std::endl;
+    if (type == 1) {
+        entity->isLocalPlayer = (entityId == _playerId);
+        if (entity->isLocalPlayer) {
+            std::cout << "[INFO] Marked entity " << entityId 
+                      << " as LOCAL PLAYER (matches playerId " << _playerId << ")" 
+                      << std::endl;
+        }
     } else {
         entity->isLocalPlayer = false;
     }
