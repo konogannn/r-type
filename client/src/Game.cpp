@@ -234,9 +234,13 @@ void Game::update(float deltaTime)
                 _running = false;
             }
         } else if (_gameState->isGameStarted()) {
-            std::cout
-                << "[Game] WARNING: Game started but no local player found!"
-                << std::endl;
+            static bool s_noLocalPlayerWarningPrinted = false;
+            if (!s_noLocalPlayerWarningPrinted) {
+                std::cout
+                    << "[Game] WARNING: Game started but no local player found!"
+                    << std::endl;
+                s_noLocalPlayerWarningPrinted = true;
+            }
         }
     }
 
