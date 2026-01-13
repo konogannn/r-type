@@ -23,6 +23,7 @@ void SoundManager::loadAll()
     loadSound("click", ASSET_SPAN(rtype::embedded::click_sound_data));
 
     if (!_music) {
+        _music = std::make_unique<rtype::MusicSFML>();
         if (_music->openFromMemory(rtype::embedded::music_data,
                                    sizeof(rtype::embedded::music_data))) {
             _music->setLoop(true);
