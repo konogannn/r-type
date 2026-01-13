@@ -170,7 +170,7 @@ struct Item : public ComponentBase<Item> {
 struct GuidedMissile : public ComponentBase<GuidedMissile> {
     float damage;
     float speed;
-    float turnRate;  // Vitesse de rotation vers la cible
+    float turnRate;  // Turn rate towards target
 
     GuidedMissile(float damage_ = 50.0f, float speed_ = 500.0f,
                   float turnRate_ = 20.0f)
@@ -237,7 +237,7 @@ struct Boss : public ComponentBase<Boss> {
     float phase2Threshold;
     float enragedThreshold;
 
-    int hitCounter;  // Compteur de hits pour spawner des power-ups
+    int hitCounter;  // Hit counter for spawning power-ups
 
     Boss(uint32_t players = 1)
         : currentPhase(ENTRY),
