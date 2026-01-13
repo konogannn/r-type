@@ -29,7 +29,6 @@ int main()
     Config& config = Config::getInstance();
     config.load();
     SoundManager::getInstance().loadAll();
-    std::cout << "Debug: Loaded configuration and sound assets" << std::endl;
     float sfxVolume = config.getFloat("sfxVolume", 100.0f);
     float musicVolume = config.getFloat("musicVolume", 100.0f);
     SoundManager::getInstance().setVolume(sfxVolume);
