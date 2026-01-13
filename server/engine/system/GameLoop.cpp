@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../../../common/utils/Logger.hpp"
 #include "BossSystem.hpp"
 #include "GameSystems.hpp"
 
@@ -308,16 +309,18 @@ void GameLoop::getAllHealthUpdates(
     }
 }
 
-void GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
+uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
                            float y)
 {
     auto it = _clientToEntity.find(clientId);
     if (it != _clientToEntity.end()) {
-        return;
+        return 0;  // Player already exists
     }
 
     Entity player = _entityFactory.createPlayer(clientId, playerId, x, y);
-    _clientToEntity[clientId] = player.getId();
+    uint32_t entityId = player.getId();
+    _clientToEntity[clientId] = entityId;
+    return entityId;
 }
 
 void GameLoop::removePlayer(uint32_t clientId)
@@ -403,15 +406,44 @@ void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
     }
 }
 
+void GameLoop::getAllEntities(std::vector<EntityStateUpdate>& updates)
+{
+    auto entities = _entityManager.getEntitiesWith<Position, NetworkEntity>();
+
+    for (auto& entity : entities) {
+        auto* pos = _entityManager.getComponent<Position>(entity);
+        auto* netEntity = _entityManager.getComponent<NetworkEntity>(entity);
+
+        if (pos && netEntity) {
+            EntityStateUpdate update;
+            update.entityId = netEntity->entityId;
+            update.entityType = netEntity->entityType;
+            update.x = pos->x;
+            update.y = pos->y;
+            update.spawned = true;
+            update.destroyed = false;
+            updates.push_back(update);
+        }
+    }
+}
+
 void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 {
     _onPlayerDeathCallback = std::move(callback);
 }
 
+void GameLoop::clearAllEntities()
+{
+    _entityManager.clear();
+    _clientToEntity.clear();
+    _spawnEvents.clear();
+    
+    Logger::getInstance().log("All entities cleared from game state",
+                              LogLevel::INFO_L, "GameLoop");
+}
+
 void GameLoop::processSpawnEvents()
 {
-    // Use compile-time dispatch via overload resolution
-    // This is more efficient than runtime type checking
     for (const auto& event : _spawnEvents) {
         std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
     }
