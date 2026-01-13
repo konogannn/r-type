@@ -29,6 +29,7 @@ enum class SystemType {
     PLAYER_SHOOTING,
     ENEMY_SHOOTING,
     TURRET_SHOOTING,
+    ORBITER,
     LIFETIME,
     OTHER
 };

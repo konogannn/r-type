@@ -251,7 +251,8 @@ void GameLoop::generateNetworkUpdates()
 
         bool alwaysSync =
             (netEntity->entityType == 2 || netEntity->entityType == 4 ||
-             netEntity->entityType == 5 || netEntity->entityType == 6);
+             netEntity->entityType == 5 || netEntity->entityType == 6 ||
+             netEntity->entityType == 18);
 
         if (netEntity->needsSync || alwaysSync) {
             EntityStateUpdate update;
@@ -478,6 +479,12 @@ void GameLoop::processSpawnEvent(const SpawnBossEvent& event)
 {
     _entityFactory.createBoss(event.bossType, event.x, event.y,
                               event.playerCount);
+}
+
+void GameLoop::processSpawnEvent(const SpawnOrbitersEvent& event)
+{
+    _entityFactory.spawnOrbiters(event.centerX, event.centerY, event.radius,
+                                 event.count);
 }
 
 }  // namespace engine

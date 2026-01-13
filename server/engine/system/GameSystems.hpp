@@ -22,7 +22,8 @@ namespace engine {
 // Import SpawnEvent type from events
 using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnTurretEvent,
                                 SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent, SpawnBossEvent>;
+                                SpawnEnemyBulletEvent, SpawnBossEvent,
+                                SpawnOrbitersEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -287,4 +288,23 @@ class TurretShootingSystem : public System<Enemy, Position> {
     SystemType getType() const override;
     int getPriority() const override;
 };
+
+class OrbiterSystem : public System<Orbiter, Position, Enemy> {
+   private:
+    std::vector<SpawnEvent>& _spawnQueue;
+    const float SHOOT_INTERVAL = 3.0f;
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, Orbiter* orbiter,
+                       Position* pos, Enemy* enemy) override;
+
+   public:
+    OrbiterSystem(std::vector<SpawnEvent>& spawnQueue)
+        : _spawnQueue(spawnQueue) {}
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+};
+
 }  // namespace engine

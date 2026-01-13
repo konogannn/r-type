@@ -231,6 +231,14 @@ std::string NetworkMessage::entityTypeToString(uint8_t entityType)
             return "FAST";
         case EntityType::FAST_MISSILE:
             return "FAST_MISSILE";
+        case EntityType::TURRET:
+            return "TURRET";
+        case EntityType::TURRET_MISSILE:
+            return "TURRET_MISSILE";
+        case EntityType::ORBITER:
+            return "ORBITER";
+        case EntityType::ORBITER_MISSILE:
+            return "ORBITER_MISSILE";
         default:
             return "UNKNOWN";
     }

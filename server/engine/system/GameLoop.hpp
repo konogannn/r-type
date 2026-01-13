@@ -28,7 +28,8 @@ namespace engine {
 // Unified spawn event type - can hold any entity spawn request
 using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnTurretEvent,
                                 SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent, SpawnBossEvent>;
+                                SpawnEnemyBulletEvent, SpawnBossEvent,
+                                SpawnOrbitersEvent>;
 
 /**
  * @brief Network input command from clients
@@ -125,6 +126,7 @@ class GameLoop {
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
     void processSpawnEvent(const SpawnBossEvent& event);
+    void processSpawnEvent(const SpawnOrbitersEvent& event);
 
    public:
     /**

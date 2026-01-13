@@ -110,23 +110,25 @@ void EnemySpawnerSystem::update(float deltaTime,
 
 void EnemySpawnerSystem::spawnEnemy()
 {
-    // 20% chance to spawn turret instead
-    int spawnType = _typeDist(_rng) % 5;  // 0-4
+    int spawnType = _typeDist(_rng) % 6;
 
     if (spawnType == 4) {
-        // Spawn turret - either at top or bottom edge
         bool isTopTurret = (_typeDist(_rng) % 2) == 0;
 
-        // Random X position across the game width (200 to 1700)
         std::uniform_real_distribution<float> xDist(200.0f, 1700.0f);
         float x = xDist(_rng);
-        float y = isTopTurret ? 30.0f : 1050.0f;  // Top or bottom edge
+        float y = isTopTurret ? 30.0f : 1050.0f;
 
         std::cout << "[SPAWNER] Spawning turret at (" << x << "," << y
                   << "), isTop=" << isTopTurret << std::endl;
         _spawnQueue.push_back(SpawnTurretEvent{x, y, isTopTurret});
+    } else if (spawnType == 5) {
+        float centerY = _yDist(_rng);
+        float centerX = 1600.0f;
+        float radius = 120.0f;
+
+        _spawnQueue.push_back(SpawnOrbitersEvent{centerX, centerY, radius, 4});
     } else {
-        // Spawn regular enemy
         float y = _yDist(_rng);
         float x = 1900.0f;
 
@@ -804,6 +806,42 @@ void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
     event.vy = vy;
     event.bulletType = EntityType::TURRET_MISSILE;
 
+    _spawnQueue.push_back(event);
+    enemy->shootCooldown = SHOOT_INTERVAL;
+}
+
+std::string OrbiterSystem::getName() const { return "OrbiterSystem"; }
+
+SystemType OrbiterSystem::getType() const { return SystemType::ORBITER; }
+
+int OrbiterSystem::getPriority() const { return 15; }
+
+void OrbiterSystem::processEntity(float deltaTime,
+                                  Entity& entity,
+                                  Orbiter* orbiter, Position* pos, Enemy* enemy)
+{
+    orbiter->angle += orbiter->angularVelocity * deltaTime;
+    
+    if (orbiter->angle > 6.28318530717958647692f) {
+        orbiter->angle -= 6.28318530717958647692f;
+    }
+    
+    pos->x = orbiter->centerX + orbiter->radius * std::cos(orbiter->angle);
+    pos->y = orbiter->centerY + orbiter->radius * std::sin(orbiter->angle);
+    
+    if (enemy->shootCooldown > 0.0f) {
+        enemy->shootCooldown -= deltaTime;
+        return;
+    }
+    
+    SpawnEnemyBulletEvent event;
+    event.ownerId = entity.getId();
+    event.x = pos->x;
+    event.y = pos->y;
+    event.vx = -250.0f;
+    event.vy = 0.0f;
+    event.bulletType = EntityType::ORBITER_MISSILE;
+    
     _spawnQueue.push_back(event);
     enemy->shootCooldown = SHOOT_INTERVAL;
 }
