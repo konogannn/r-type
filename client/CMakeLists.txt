@@ -41,6 +41,7 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ColorBlindFilter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/InputField.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ConnectionDialog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameOverScreen.cpp
 )
 
 add_executable(r-type_client
