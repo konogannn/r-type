@@ -9,12 +9,12 @@
 
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
-Projectile::Projectile(const std::string& texturePath, float x, float y,
+Projectile::Projectile(std::span<const std::byte> textureData, float x, float y,
                        float scale)
     : _x(x), _y(y), _speed(400.0f * scale), _scale(scale), _alive(true)
 {
     _sprite = std::make_unique<rtype::SpriteSFML>();
-    if (_sprite->loadTexture(texturePath)) {
+    if (_sprite->loadTexture(textureData)) {
         _sprite->setSmooth(false);
         _sprite->setScale(2.0f * scale, 2.0f * scale);
         _sprite->setPosition(_x, _y);

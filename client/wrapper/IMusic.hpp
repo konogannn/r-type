@@ -19,11 +19,12 @@ class IMusic {
     virtual ~IMusic() = default;
 
     /**
-     * @brief Opens a music file from disk
-     * @param filename Path to the music file
+     * @brief Opens a music file from memory
+     * @param data Pointer to the music data in memory
+     * @param size Size of the music data in bytes
      * @return true if loading succeeded
      */
-    virtual bool openFromFile(const std::string& filename) = 0;
+    virtual bool openFromMemory(const void* data, std::size_t size) = 0;
 
     /**
      * @brief Plays the music

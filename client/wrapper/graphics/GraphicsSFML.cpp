@@ -9,9 +9,9 @@
 
 #include <iostream>
 
+#include "../resources/EmbeddedResources.hpp"
 #include "../window/WindowSFML.hpp"
 #include "RenderTargetSFML.hpp"
-#include "common/utils/PathHelper.hpp"
 
 namespace rtype {
 
@@ -107,10 +107,10 @@ sf::Font* GraphicsSFML::loadFont(const std::string& fontPath)
 {
     if (_fontCache.find(fontPath) == _fontCache.end()) {
         sf::Font font;
-        std::string resolvedPath = utils::PathHelper::getAssetPath(fontPath);
-        if (!font.loadFromFile(resolvedPath)) {
-            std::cerr << "Error: Failed to load font: " << resolvedPath
-                      << std::endl;
+        // Try loading from embedded data first
+        if (!font.loadFromMemory(rtype::embedded::font_data,
+                                 sizeof(rtype::embedded::font_data))) {
+            std::cerr << "Error: Failed to load embedded font" << std::endl;
             return nullptr;
         }
         _fontCache[fontPath] = font;

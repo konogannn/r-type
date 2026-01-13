@@ -9,8 +9,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "IShader.hpp"
 #include "RenderStates.hpp"
-#include "Shader.hpp"
 
 namespace rtype {
 

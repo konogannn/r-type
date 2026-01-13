@@ -11,7 +11,7 @@
 
 namespace rtype {
 
-Explosion::Explosion(const std::string& texturePath, float x, float y,
+Explosion::Explosion(std::span<const std::byte> textureData, float x, float y,
                      float scale, int frameWidth, int frameHeight,
                      int totalFrames)
     : _x(x),
@@ -26,7 +26,7 @@ Explosion::Explosion(const std::string& texturePath, float x, float y,
       _finished(false)
 {
     _sprite = std::make_unique<SpriteSFML>();
-    if (_sprite->loadTexture(texturePath)) {
+    if (_sprite->loadTexture(textureData)) {
         _sprite->setSmooth(false);
         _sprite->setTextureRect(0, 0, _frameWidth, _frameHeight);
         _sprite->setScale(2.0f * scale, 2.0f * scale);

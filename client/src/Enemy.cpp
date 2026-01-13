@@ -11,7 +11,8 @@
 
 #include "../wrapper/graphics/SpriteSFML.hpp"
 
-Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
+Enemy::Enemy(std::span<const std::byte> textureData, float x, float y,
+             float scale)
     : _x(x),
       _y(y),
       _scale(scale),
@@ -23,7 +24,7 @@ Enemy::Enemy(const std::string& texturePath, float x, float y, float scale)
       _slideSpeed(300.0f * scale)
 {
     _sprite = std::make_unique<rtype::SpriteSFML>();
-    if (_sprite->loadTexture(texturePath)) {
+    if (_sprite->loadTexture(textureData)) {
         _sprite->setSmooth(false);
         _sprite->setTextureRect(0, 0, 48, 48);
         _sprite->setScale(2.0f * scale, 2.0f * scale);

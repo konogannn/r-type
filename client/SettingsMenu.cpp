@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "src/SoundManager.hpp"
+#include "wrapper/resources/EmbeddedResources.hpp"
 
 namespace rtype {
 
@@ -74,8 +75,10 @@ void SettingsMenu::setupBackground()
     float windowHeight = static_cast<float>(_window.getHeight());
 
     _background = std::make_shared<Background>(
-        "assets/background/bg-back.png", "assets/background/bg-stars.png",
-        "assets/background/bg-planet.png", windowWidth, windowHeight);
+        ASSET_SPAN(embedded::background_base_data),
+        ASSET_SPAN(embedded::background_stars_data),
+        ASSET_SPAN(embedded::background_planet_data), windowWidth,
+        windowHeight);
 }
 
 void SettingsMenu::setupSliders()
@@ -129,8 +132,10 @@ void SettingsMenu::updateLayout()
 
     if (_background) {
         _background = std::make_shared<Background>(
-            "assets/background/bg-back.png", "assets/background/bg-stars.png",
-            "assets/background/bg-planet.png", windowWidth, windowHeight);
+            ASSET_SPAN(embedded::background_base_data),
+            ASSET_SPAN(embedded::background_stars_data),
+            ASSET_SPAN(embedded::background_planet_data), windowWidth,
+            windowHeight);
     }
 
     float scaleW = windowWidth / 1920.0f;

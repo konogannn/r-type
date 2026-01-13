@@ -12,7 +12,7 @@
 #include "../graphics/RenderStatesSFML.hpp"
 #include "../graphics/SpriteSFML.hpp"
 #include "../input/Input.hpp"
-#include "common/utils/PathHelper.hpp"
+#include "../resources/EmbeddedResources.hpp"
 
 namespace rtype {
 
@@ -29,7 +29,8 @@ WindowSFML::WindowSFML(unsigned int width, unsigned int height,
       _isFullscreen(false),
       _title(title)
 {
-    _icon.loadFromFile(utils::PathHelper::getAssetPath("assets/icon/logo.png"));
+    _icon.loadFromMemory(rtype::embedded::logo_data,
+                         sizeof(rtype::embedded::logo_data));
     if (_icon.getSize().x > 0 && _icon.getSize().y > 0)
         _window->setIcon(_icon.getSize().x, _icon.getSize().y,
                          _icon.getPixelsPtr());
