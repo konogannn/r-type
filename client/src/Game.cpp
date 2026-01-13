@@ -318,8 +318,9 @@ void Game::render()
                     float offsetShieldY =
                         sy - (shieldSize - playerHeight) / 2.0f;
 
-                    entity->shieldSprite->setPosition(offsetShieldX - 90.0f * windowScale,
-                                                      offsetShieldY - 100.0f * windowScale);
+                    entity->shieldSprite->setPosition(
+                        offsetShieldX - 90.0f * windowScale,
+                        offsetShieldY - 100.0f * windowScale);
                     _graphics.drawSprite(*entity->shieldSprite);
                 }
 
