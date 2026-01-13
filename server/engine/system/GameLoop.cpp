@@ -15,7 +15,7 @@
 
 namespace engine {
 
-// Template générique pour processDestroyedEntities
+// Generic template for processDestroyedEntities
 template <typename T>
 void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
 {
@@ -48,7 +48,7 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
     cleanupSystem->clearDestroyedEntities();
 }
 
-// Spécialisation pour CollisionSystem - spawne des power-ups
+// CollisionSystem specialization - spawns power-ups
 template <>
 void GameLoop::processDestroyedEntities<CollisionSystem>(
     CollisionSystem* cleanupSystem, bool checkPlayerDeath)
@@ -57,7 +57,7 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         return;
     }
 
-    static bool spawnShield = true;  // Alterner entre shield et missile
+    static bool spawnShield = true;  // Alternate between shield and missile
 
     const auto& destroyed = cleanupSystem->getDestroyedEntities();
     for (const auto& info : destroyed) {
@@ -70,13 +70,13 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         update.destroyed = true;
         _outputQueue.push(update);
 
-        // Spawner un power-up si c'est un ennemi TUÉ PAR BALLE (types 10, 12,
-        // 14) et 50% de chance Type 10 = BASIC, 12 = TANK, 14 = FAST
+        // Spawn a power-up if it's an enemy KILLED BY BULLET (types 10, 12, 14)
+        // with 50% chance. Type 10 = BASIC, 12 = TANK, 14 = FAST
         bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
                         info.entityType == 14);
 
         if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
-            // 50% de chance de spawner un power-up
+            // 50% chance to spawn a power-up
             if (rand() % 2 == 0) {
                 Entity powerUpItem;
                 if (spawnShield) {
@@ -86,9 +86,9 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
                     powerUpItem =
                         _entityFactory.createGuidedMissileItem(info.x, info.y);
                 }
-                spawnShield = !spawnShield;  // Alterner pour le prochain
+                spawnShield = !spawnShield;  // Alternate for next spawn
 
-                // Sync réseau du power-up
+                // Network sync for power-up
                 auto* powerUpPos =
                     _entityManager.getComponent<Position>(powerUpItem);
                 auto* powerUpNet =
@@ -493,7 +493,7 @@ void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
 {
     Entity enemy = _entityFactory.createEnemy(event.type, event.x, event.y);
 
-    // Marquer l'ennemi pour synchronisation réseau
+    // Mark enemy for network synchronization
     auto* netEntity = _entityManager.getComponent<NetworkEntity>(enemy);
     if (netEntity) {
         netEntity->needsSync = true;
