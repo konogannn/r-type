@@ -112,10 +112,13 @@ int main()
                           static_cast<uint16_t>(serverPort));
                 bool returnToMenu = game.run();
 
-                std::cout << "[Main] Game ended. isPlayerDead: " << game.isPlayerDead() << ", returnToMenu: " << returnToMenu << std::endl;
+                std::cout << "[Main] Game ended. isPlayerDead: "
+                          << game.isPlayerDead()
+                          << ", returnToMenu: " << returnToMenu << std::endl;
 
                 if (game.isPlayerDead()) {
-                    std::cout << "[Main] Switching to GameOver state" << std::endl;
+                    std::cout << "[Main] Switching to GameOver state"
+                              << std::endl;
                     state = GameState::GameOver;
                     gameOverScreen->reset();
                     SoundManager::getInstance().stopMusic();
