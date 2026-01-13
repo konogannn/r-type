@@ -7,8 +7,8 @@
 
 #include "GameSystems.hpp"
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <unordered_set>
 
@@ -110,19 +110,37 @@ void EnemySpawnerSystem::update(float deltaTime,
 
 void EnemySpawnerSystem::spawnEnemy()
 {
-    float y = _yDist(_rng);
-    float x = 1900.0f;
+    // 20% chance to spawn turret instead
+    int spawnType = _typeDist(_rng) % 5;  // 0-4
 
-    int typeRoll = _typeDist(_rng);
-    Enemy::Type type = Enemy::Type::BASIC;
+    if (spawnType == 4) {
+        // Spawn turret - either at top or bottom edge
+        bool isTopTurret = (_typeDist(_rng) % 2) == 0;
 
-    if (typeRoll == 1) {
-        type = Enemy::Type::FAST;
-    } else if (typeRoll == 2) {
-        type = Enemy::Type::TANK;
+        // Random X position across the game width (200 to 1700)
+        std::uniform_real_distribution<float> xDist(200.0f, 1700.0f);
+        float x = xDist(_rng);
+        float y = isTopTurret ? 30.0f : 1050.0f;  // Top or bottom edge
+
+        std::cout << "[SPAWNER] Spawning turret at (" << x << "," << y
+                  << "), isTop=" << isTopTurret << std::endl;
+        _spawnQueue.push_back(SpawnTurretEvent{x, y, isTopTurret});
+    } else {
+        // Spawn regular enemy
+        float y = _yDist(_rng);
+        float x = 1900.0f;
+
+        int typeRoll = spawnType;
+        Enemy::Type type = Enemy::Type::BASIC;
+
+        if (typeRoll == 1) {
+            type = Enemy::Type::FAST;
+        } else if (typeRoll == 2) {
+            type = Enemy::Type::TANK;
+        }
+
+        _spawnQueue.push_back(SpawnEnemyEvent{type, x, y});
     }
-
-    _spawnQueue.push_back(SpawnEnemyEvent{type, x, y});
 }
 
 std::string BulletCleanupSystem::getName() const
@@ -637,7 +655,7 @@ std::string FollowingSystem::getName() const { return "FollowingSystem"; }
 int FollowingSystem::getPriority() const { return 12; }
 
 float FollowingSystem::calculateDistance(const Position& pos1,
-                                          const Position& pos2)
+                                         const Position& pos2)
 {
     float dx = pos2.x - pos1.x;
     float dy = pos2.y - pos1.y;
@@ -666,9 +684,10 @@ const Position* FollowingSystem::findNearestPlayer(
 }
 
 void FollowingSystem::update(float /* deltaTime */,
-                              EntityManager& entityManager)
+                             EntityManager& entityManager)
 {
-    auto entities = entityManager.getEntitiesWith<Position, Velocity, Following>();
+    auto entities =
+        entityManager.getEntitiesWith<Position, Velocity, Following>();
     auto players = entityManager.getEntitiesWith<Position, Player>();
 
     if (players.empty()) {
@@ -677,7 +696,9 @@ void FollowingSystem::update(float /* deltaTime */,
 
     for (auto& entity : entities) {
         auto* following = entityManager.getComponent<Following>(entity);
-        if (!following || following->targetType != Following::TargetType::PLAYER) continue;
+        if (!following ||
+            following->targetType != Following::TargetType::PLAYER)
+            continue;
 
         auto* pos = entityManager.getComponent<Position>(entity);
         auto* vel = entityManager.getComponent<Velocity>(entity);
@@ -697,6 +718,94 @@ void FollowingSystem::update(float /* deltaTime */,
             vel->vy = (dy / distance) * speed;
         }
     }
+}
+
+// TurretShootingSystem implementation
+std::string TurretShootingSystem::getName() const
+{
+    return "TurretShootingSystem";
+}
+
+SystemType TurretShootingSystem::getType() const
+{
+    return SystemType::TURRET_SHOOTING;
+}
+
+int TurretShootingSystem::getPriority() const { return 21; }
+
+const Position* TurretShootingSystem::findNearestPlayer(
+    const Position& turretPos, const std::vector<Entity>& entities)
+{
+    const Position* nearestPos = nullptr;
+    float minDistance = std::numeric_limits<float>::max();
+
+    for (const auto& entity : entities) {
+        auto* player = _entityManager.getComponent<Player>(entity);
+        if (!player) continue;
+
+        auto* pos = _entityManager.getComponent<Position>(entity);
+        if (!pos) continue;
+
+        float dx = pos->x - turretPos.x;
+        float dy = pos->y - turretPos.y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearestPos = pos;
+        }
+    }
+
+    return nearestPos;
+}
+
+void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
+                                         Enemy* enemy, Position* pos)
+{
+    // Only process turret enemies
+    if (enemy->type != Enemy::Type::TURRET) {
+        return;
+    }
+
+    if (enemy->shootCooldown > 0.0f) {
+        enemy->shootCooldown -= deltaTime;
+        return;
+    }
+
+    // Find all entities to search for players
+    const auto& entities = _entityManager.getAllEntities();
+    const Position* targetPos = findNearestPlayer(*pos, entities);
+
+    if (!targetPos) {
+        return;  // No player found
+    }
+
+    // Calculate direction to player
+    float dx = targetPos->x - pos->x;
+    float dy = targetPos->y - pos->y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+
+    if (distance < 0.001f) return;
+
+    // Normalize and set bullet velocity
+    float bulletSpeed = 400.0f;
+    float vx = (dx / distance) * bulletSpeed;
+    float vy = (dy / distance) * bulletSpeed;
+
+    // Offset bullet spawn position slightly in front of turret
+    float offsetX = (dx / distance) * 10.0f;
+    float offsetY = (dy / distance) * 10.0f;
+
+    SpawnEnemyBulletEvent event;
+    event.ownerId = entity.getId();
+    event.x = pos->x + offsetX;
+    event.y = pos->y + offsetY;
+    event.vx = vx;
+    event.vy = vy;
+    event.bulletType = EntityType::TURRET_MISSILE;
+
+    _spawnQueue.push_back(event);
+    enemy->shootCooldown = SHOOT_INTERVAL;
 }
 
 }  // namespace engine

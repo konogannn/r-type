@@ -28,6 +28,7 @@ enum class SystemType {
     LIFETIME_CLEANUP,
     PLAYER_SHOOTING,
     ENEMY_SHOOTING,
+    TURRET_SHOOTING,
     LIFETIME,
     OTHER
 };

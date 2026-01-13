@@ -26,7 +26,8 @@
 namespace engine {
 
 // Unified spawn event type - can hold any entity spawn request
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnTurretEvent,
+                                SpawnPlayerBulletEvent,
                                 SpawnEnemyBulletEvent, SpawnBossEvent>;
 
 /**
@@ -120,6 +121,7 @@ class GameLoop {
      * @brief Overloaded spawn event handlers (compile-time dispatch)
      */
     void processSpawnEvent(const SpawnEnemyEvent& event);
+    void processSpawnEvent(const SpawnTurretEvent& event);
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
     void processSpawnEvent(const SpawnBossEvent& event);
@@ -214,5 +216,10 @@ class GameLoop {
      * @brief Get unified spawn event queue (for systems to write to)
      */
     std::vector<SpawnEvent>& getSpawnEvents() { return _spawnEvents; }
+
+    /**
+     * @brief Get entity manager (for systems that need access to entities)
+     */
+    EntityManager& getEntityManager() { return _entityManager; }
 };
 }  // namespace engine
