@@ -310,7 +310,7 @@ void GameLoop::getAllHealthUpdates(
 }
 
 uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
-                           float y)
+                               float y)
 {
     auto it = _clientToEntity.find(clientId);
     if (it != _clientToEntity.end()) {
@@ -437,7 +437,7 @@ void GameLoop::clearAllEntities()
     _entityManager.clear();
     _clientToEntity.clear();
     _spawnEvents.clear();
-    
+
     Logger::getInstance().log("All entities cleared from game state",
                               LogLevel::INFO_L, "GameLoop");
 }
