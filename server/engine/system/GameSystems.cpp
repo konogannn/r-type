@@ -339,15 +339,15 @@ void CollisionSystem::handlePlayerBulletVsBoss(
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
                 bossHealth->takeDamage(bullet->damage);
 
-                // Incrémenter le compteur de hits et spawner un power-up tous
-                // les 15 hits
+                // Increment hit counter and spawn a power-up
+                // every 15 hits
                 auto* boss = entityManager.getComponent<Boss>(bossEntity);
                 if (boss) {
                     boss->hitCounter++;
                     if (boss->hitCounter >= 15) {
                         boss->hitCounter = 0;
 
-                        // Trouver un joueur pour spawner l'item près de lui
+                        // Find a player to spawn the item near them
                         auto players =
                             entityManager.getEntitiesWith<Position, Player>();
                         float spawnX = bossPos->x;
@@ -358,21 +358,18 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                     players[0]);
                             if (playerPos) {
                                 spawnX = playerPos->x +
-                                         100.0f;  // Spawner devant le joueur
+                                         100.0f;  // Spawn in front of player
                                 spawnY = playerPos->y;
                             }
                         }
 
-                        // Alterner entre shield et missile guidé
+                        // Alternate between shield and guided missile
                         static bool spawnShield = true;
                         _spawnQueue.push_back(SpawnItemEvent{
                             spawnShield ? Item::Type::SHIELD
                                         : Item::Type::GUIDED_MISSILE,
                             spawnX, spawnY});
                         spawnShield = !spawnShield;
-                        std::cout
-                            << "[BOSS ITEM SPAWN] Item queued successfully"
-                            << std::endl;
                     }
                 }
 
@@ -410,15 +407,15 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                     if (bossHealth && bossPos) {
                         bossHealth->takeDamage(bullet->damage);
 
-                        // Incrémenter le compteur de hits et spawner un
-                        // power-up tous les 15 hits
+                        // Increment hit counter and spawn a
+                        // power-up every 15 hits
                         if (boss) {
                             boss->hitCounter++;
                             if (boss->hitCounter >= 15) {
                                 boss->hitCounter = 0;
 
-                                // Trouver un joueur pour spawner l'item près de
-                                // lui
+                                // Find a player to spawn the item near
+                                // them
                                 auto players =
                                     entityManager
                                         .getEntitiesWith<Position, Player>();
@@ -431,12 +428,12 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                     if (playerPos) {
                                         spawnX =
                                             playerPos->x +
-                                            100.0f;  // Spawner devant le joueur
+                                            100.0f;  // Spawn in front of player
                                         spawnY = playerPos->y;
                                     }
                                 }
 
-                                // Alterner entre shield et missile guidé
+                                // Alternate between shield and guided missile
                                 static bool spawnShieldPart = true;
                                 _spawnQueue.push_back(SpawnItemEvent{
                                     spawnShieldPart
@@ -544,17 +541,14 @@ void CollisionSystem::handleEnemyBulletVsPlayer(
 
             if (checkCollision(*bulletPos, *bulletBox, *playerPos,
                                *playerBox)) {
-                // Vérifier si le joueur a un shield
                 auto* shield = entityManager.getComponent<Shield>(playerEntity);
                 if (shield && shield->active) {
-                    // Shield absorbe le coup
                     Entity* mutablePlayer =
                         entityManager.getEntity(playerEntity.getId());
                     if (mutablePlayer) {
                         entityManager.removeComponent<Shield>(*mutablePlayer);
                     }
                 } else {
-                    // Pas de shield, prendre des dégâts
                     playerHealth->takeDamage(bullet->damage);
 
                     if (!playerHealth->isAlive() &&
@@ -753,7 +747,7 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
                                *enemyBox)) {
                 enemyHealth->takeDamage(missile->damage);
 
-                // Marquer l'ennemi pour sync réseau
+                // Mark enemy for network sync
                 auto* enemyNet =
                     entityManager.getComponent<NetworkEntity>(enemyEntity);
                 if (enemyNet) {
@@ -802,9 +796,7 @@ void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
             if (!itemPos || !item || !itemBox) continue;
 
             if (checkCollision(*playerPos, *playerBox, *itemPos, *itemBox)) {
-                // Appliquer l'effet selon le type d'item
                 if (item->type == Item::Type::SHIELD) {
-                    // Activer le shield sur le joueur
                     if (!entityManager.hasComponent<Shield>(playerEntity)) {
                         Entity* mutablePlayer =
                             entityManager.getEntity(playerEntity.getId());
@@ -814,12 +806,10 @@ void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
                         }
                     }
                 } else if (item->type == Item::Type::GUIDED_MISSILE) {
-                    // Lancer un missile téléguidé
                     _spawnQueue.push_back(SpawnGuidedMissileEvent{
                         playerEntity.getId(), *playerPos});
                 }
 
-                // Détruire l'item
                 auto* itemNet =
                     entityManager.getComponent<NetworkEntity>(itemEntity);
                 if (itemNet) {
@@ -882,23 +872,19 @@ void GuidedMissileSystem::update(float deltaTime, EntityManager& entityManager)
 
         if (!missilePos || !missileVel || !guidedMissile) continue;
 
-        // Trouver l'ennemi le plus proche
         Entity* target = findNearestEnemy(entityManager, *missilePos);
 
         if (target) {
             auto* targetPos = entityManager.getComponent<Position>(*target);
             if (targetPos) {
-                // Calculer la direction vers la cible
                 float dx = targetPos->x - missilePos->x;
                 float dy = targetPos->y - missilePos->y;
                 float distance = std::sqrt(dx * dx + dy * dy);
 
                 if (distance > 0.0f) {
-                    // Normaliser et appliquer la vitesse
                     float targetVx = (dx / distance) * guidedMissile->speed;
                     float targetVy = (dy / distance) * guidedMissile->speed;
 
-                    // Interpoler vers la nouvelle direction (turn rate)
                     float turnSpeed =
                         std::min(1.0f, guidedMissile->turnRate * deltaTime);
                     missileVel->vx = missileVel->vx +
@@ -906,7 +892,6 @@ void GuidedMissileSystem::update(float deltaTime, EntityManager& entityManager)
                     missileVel->vy = missileVel->vy +
                                      (targetVy - missileVel->vy) * turnSpeed;
 
-                    // Limiter la vitesse
                     float currentSpeed =
                         std::sqrt(missileVel->vx * missileVel->vx +
                                   missileVel->vy * missileVel->vy);
@@ -919,7 +904,6 @@ void GuidedMissileSystem::update(float deltaTime, EntityManager& entityManager)
                 }
             }
         } else {
-            // Pas d'ennemi, aller tout droit vers la droite
             missileVel->vx = guidedMissile->speed;
             missileVel->vy = 0.0f;
         }
