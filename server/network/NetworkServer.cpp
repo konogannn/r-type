@@ -492,6 +492,24 @@ bool NetworkServer::sendHealthUpdate(uint32_t clientId, uint32_t entityId,
     return true;
 }
 
+bool NetworkServer::sendShieldStatus(uint32_t clientId, uint32_t playerId,
+                                     bool hasShield)
+{
+    ShieldStatusPacket packet;
+    packet.header.opCode = OpCode::S2C_SHIELD_STATUS;
+    packet.header.packetSize = sizeof(ShieldStatusPacket);
+    packet.header.sequenceId = 0;
+    packet.playerId = playerId;
+    packet.hasShield = hasShield ? 1 : 0;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0, false);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
 size_t NetworkServer::broadcast(const void* data, size_t size,
                                 uint32_t excludeClient, bool reliable)
 {
