@@ -1,90 +1,30 @@
 {
   "version": 6,
-
   "configurePresets": [
     {
-      "name": "default",
-      "displayName": "Default (Debug)",
-      "description": "Local debug build",
-      "binaryDir": "${sourceDir}/build/default",
-      "architecture": {
-        "value": "x64"
-      },
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_STANDARD": "26",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
-
     {
-      "name": "release",
-      "displayName": "Release",
-      "inherits": "default",
-      "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      }
-    },
-
-    {
-      "name": "with-vcpkg",
-      "displayName": "Use vcpkg toolchain",
-      "binaryDir": "${sourceDir}/build/vcpkg",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      }
-    },
-
-    {
-      "name": "ci-debug",
-      "displayName": "CI Debug",
-      "binaryDir": "${sourceDir}/build/ci-debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      }
-    },
-
-    {
-      "name": "ci-release",
-      "displayName": "CI Release",
-      "binaryDir": "${sourceDir}/build/ci-release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      }
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
     }
   ],
-
   "buildPresets": [
     {
-      "name": "default-build",
-      "configurePreset": "default"
-    },
-    {
-      "name": "release-build",
-      "configurePreset": "release"
-    },
-    {
-      "name": "vcpkg-build",
-      "configurePreset": "with-vcpkg"
-    },
-    {
-      "name": "ci-debug-build",
-      "configurePreset": "ci-debug"
-    },
-    {
-      "name": "ci-release-build",
-      "configurePreset": "ci-release"
-    }
-  ],
-
-  "testPresets": [
-    {
-      "name": "ci-tests",
-      "configurePreset": "ci-debug"
+      "name": "build-debug",
+      "configurePreset": "debug",
+      "jobs": 8
     }
   ]
 }

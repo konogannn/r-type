@@ -71,7 +71,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
     if (!tryConnect(serverAddress, serverPort)) {
         _connectionDialog = std::make_unique<rtype::ConnectionDialog>(
-            _graphics, _input, static_cast<float>(actualWidth),
+            _graphics, static_cast<float>(actualWidth),
             static_cast<float>(actualHeight));
         _connectionDialog->setErrorMessage("Could not connect to server");
         _showConnectionDialog = true;

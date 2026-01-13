@@ -120,7 +120,6 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
 GameLoop::GameLoop(float targetFPS)
     : _entityFactory(_entityManager),
       _running(false),
-      _targetFPS(targetFPS),
       _targetFrameTime(static_cast<int>(1000.0f / targetFPS))
 {
 }

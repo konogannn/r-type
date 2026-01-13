@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "name": "CMake",
+            "includePath": ["${workspaceFolder}/**"],
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "cStandard": "c23",
+            "cppStandard": "c++26"
+        }
+    ],
+    "version": 4
+}

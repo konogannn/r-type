@@ -4,10 +4,12 @@
   "editor.formatOnType": true,
   "C_Cpp.clang_format_style": "file",
   "C_Cpp.clang_format_fallbackStyle": "Google",
-  "C_Cpp.default.compilerPath": "/usr/bin/g++",
   "clang-format.style": "file",
   "clang-format.fallbackStyle": "Google",
-  "cmake.configureOnOpen": false,
+  "cmake.options.advanced": {
+    "askUnsupportedPresets": false
+  },
+  "cmake.useCMakePresets": "always",
   "logViewer.watch": [
     {
         "title": "Log server",
