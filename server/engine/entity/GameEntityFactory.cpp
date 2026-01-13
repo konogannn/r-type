@@ -244,7 +244,7 @@ Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
     _entityManager.addComponent(
         missile,
         NetworkEntity(_nextBulletId++,
-                      16));  // Type 16 = Guided Missile (après FAST_MISSILE=15)
+                      16));  // Type 16 = Guided Missile (after FAST_MISSILE=15)
     _entityManager.addComponent(missile, Lifetime(10.0f));
 
     return missile;
