@@ -20,7 +20,8 @@
 namespace engine {
 
 // Import SpawnEvent type from events
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
+using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnTurretEvent,
+                                SpawnPlayerBulletEvent,
                                 SpawnEnemyBulletEvent, SpawnBossEvent>;
 
 /**
@@ -254,5 +255,36 @@ class FollowingSystem : public ISystem {
     int getPriority() const override;
 
     void update(float deltaTime, EntityManager& entityManager) override;
+};
+
+/**
+ * @brief Turret shooting system - Makes turrets shoot at nearest player
+ */
+class TurretShootingSystem : public System<Enemy, Position> {
+   private:
+    std::vector<SpawnEvent>& _spawnQueue;
+    EntityManager& _entityManager;
+    const float SHOOT_INTERVAL = 1.5f;  // Turrets shoot every 1.5 seconds
+
+    /**
+     * @brief Find nearest player to turret
+     */
+    const Position* findNearestPlayer(const Position& turretPos,
+                                      const std::vector<Entity>& entities);
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, Enemy* enemy,
+                       Position* pos) override;
+
+   public:
+    TurretShootingSystem(std::vector<SpawnEvent>& spawnQueue,
+                         EntityManager& entityManager)
+        : _spawnQueue(spawnQueue), _entityManager(entityManager)
+    {
+    }
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
 };
 }  // namespace engine

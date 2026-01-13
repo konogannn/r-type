@@ -423,6 +423,11 @@ void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
     _entityFactory.createEnemy(event.type, event.x, event.y);
 }
 
+void GameLoop::processSpawnEvent(const SpawnTurretEvent& event)
+{
+    _entityFactory.createTurret(event.x, event.y, event.isTopTurret);
+}
+
 void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
 {
     _entityFactory.createPlayerBullet(event.ownerId, event.position);
@@ -449,14 +454,22 @@ void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
         _entityManager.addComponent(bullet, Lifetime(0.5f));
     } else {
         std::cout << "[GAMELOOP] Creating enemy bullet ID=" << bulletId
+                  << " type=" << static_cast<int>(event.bulletType)
                   << " at (" << event.x << "," << event.y << ")" << std::endl;
 
         _entityManager.addComponent(bullet, Position(event.x, event.y));
         _entityManager.addComponent(bullet, Velocity(event.vx, event.vy));
         _entityManager.addComponent(bullet,
                                     Bullet(event.ownerId, false, 20.0f));
-        _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
-        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 4));
+        
+        // Adjust bounding box based on bullet type
+        if (event.bulletType == EntityType::TURRET_MISSILE) {
+            _entityManager.addComponent(bullet, BoundingBox(14.0f, 10.0f));
+        } else {
+            _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
+        }
+        
+        _entityManager.addComponent(bullet, NetworkEntity(bulletId, event.bulletType));
         _entityManager.addComponent(bullet, Lifetime(15.0f));
     }
 }
