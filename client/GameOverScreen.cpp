@@ -19,6 +19,7 @@ GameOverScreen::GameOverScreen(IWindow& window, IGraphics& graphics,
       _graphics(graphics),
       _input(input),
       _fadeAlpha(0.0f),
+      _scale(1.0f),
       _pulseTime(0.0f)
 {
     int actualWidth = _window.getWidth();
@@ -76,7 +77,7 @@ void GameOverScreen::render()
 
     int textAlpha = static_cast<int>(_fadeAlpha);
     _graphics.drawText(gameOverText, textX, textY, fontSize, 255, 0, 0,
-                       textAlpha, "assets/fonts/Retro_Gaming.ttf");
+                       textAlpha, fontPath);
 
     if (_fadeAlpha >= 255.0f) {
         unsigned int smallFontSize = static_cast<unsigned int>(24 * _scale);
@@ -92,7 +93,7 @@ void GameOverScreen::render()
             static_cast<int>(128 + 127 * std::sin(_pulseTime * 3.0f));
         _graphics.drawText(instructionText, instructionX, instructionY,
                            smallFontSize, 255, 255, 255, blinkAlpha,
-                           "assets/fonts/Retro_Gaming.ttf");
+                           fontPath);
     }
 }
 
