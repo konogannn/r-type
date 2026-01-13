@@ -28,10 +28,10 @@ if [ ! -d "$VCPKG_DIR" ]; then
     print_info "Vcpkg submodule not found. Adding it now..."
     git submodule add -f https://github.com/Microsoft/vcpkg.git vcpkg
 fi
- 
+
 git submodule update --init --recursive
 print_ok "Vcpkg submodule updated/initialized."
- 
+
 # 2. Bootstrap Vcpkg (builds the vcpkg executable)
 if [ ! -f "$VCPKG_DIR/vcpkg" ]; then
     print_info "Starting Vcpkg bootstrap. This may take a moment."
