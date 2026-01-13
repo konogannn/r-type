@@ -10,6 +10,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 #include <variant>
@@ -67,6 +68,7 @@ class GameLoop {
     // Threading
     std::thread _gameThread;
     std::atomic<bool> _running;
+    std::mutex _stateMutex;  // Protects _entityManager, _clientToEntity, _spawnEvents
 
     // Input/Output queues for inter-thread communication
     ThreadSafeQueue<NetworkInputCommand> _inputQueue;
