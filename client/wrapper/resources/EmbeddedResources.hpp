@@ -130,5 +130,9 @@ static const unsigned char blowup_2_data[] = {
 #embed "../../../assets/sprites/blowup_2.png"
 };
 
+static const unsigned char orbiter_data[] = {
+#embed "../../../assets/sprites/orbiter.png"
+};
+
 }  // namespace embedded
 }  // namespace rtype

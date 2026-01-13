@@ -172,6 +172,34 @@ void ClientGameState::update(float deltaTime)
                     frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
+
+        if (entity->type == 18 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+            }
+        }
+
+        if (entity->type == 19 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+            }
+        }
     }
 
     // Update explosions
@@ -345,6 +373,7 @@ void ClientGameState::onEntityDead(uint32_t entityId)
             case 13:
             case 15:
             case 17:
+            case 19:
                 _explosions.push_back(std::make_unique<Explosion>(
                     ASSET_SPAN(embedded::blowup_1_data),
                     (entity->type == 4) ? entity->x - 16 : entity->x + 16,
@@ -565,6 +594,38 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 17: {
             scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 18: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::orbiter_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 24;
+                entity.animFrameHeight = 26;
+                entity.sprite->setTextureRect(0, 0, 24, 26);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 19: {
+            scale = 2.5f;
             if (entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::small_pink_bullet_data))) {
                 entity.animFrameCount = 4;
