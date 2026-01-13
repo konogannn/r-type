@@ -7,6 +7,7 @@
 
 #include "GameEntityFactory.hpp"
 
+#include <cmath>
 #include <iostream>
 
 #include "EntityType.hpp"
@@ -218,6 +219,37 @@ Entity GameEntityFactory::createExplosion(EntityId ownerId, const Position& pos)
     }
 
     return explosion;
+}
+
+void GameEntityFactory::spawnOrbiters(float centerX, float centerY,
+                                      float radius, int count)
+{
+    float angleStep = 2.0f * 3.14159265f / count;
+
+    for (int i = 0; i < count; ++i) {
+        float angle = i * angleStep;
+        float x = centerX + radius * std::cos(angle);
+        float y = centerY + radius * std::sin(angle);
+
+        Entity orbiter = _entityManager.createEntity();
+
+        _entityManager.addComponent(orbiter, Position(x, y));
+        _entityManager.addComponent(orbiter, Velocity(0.0f, 0.0f));
+        _entityManager.addComponent(orbiter, Enemy(Enemy::Type::ORBITER));
+        _entityManager.addComponent(orbiter, Health(20.0f));
+        _entityManager.addComponent(orbiter,
+                                    BoundingBox(48.0f, 26.0f, 0.0f, 0.0f));
+        _entityManager.addComponent(
+            orbiter, Orbiter(centerX, centerY, radius, angle, 2.5f));
+        _entityManager.addComponent(
+            orbiter, NetworkEntity(_nextEnemyId++, EntityType::ORBITER));
+
+        auto* netEntity = _entityManager.getComponent<NetworkEntity>(orbiter);
+        if (netEntity) {
+            netEntity->needsSync = true;
+            netEntity->isFirstSync = true;
+        }
+    }
 }
 
 }  // namespace engine

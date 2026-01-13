@@ -121,6 +121,15 @@ class GameEntityFactory {
      * @return Created explosion entity
      */
     Entity createExplosion(EntityId ownerId, const Position& pos);
+
+    /**
+     * @brief Spawn multiple orbiter enemies in a circular formation
+     * @param centerX X coordinate of the circle center
+     * @param centerY Y coordinate of the circle center
+     * @param radius Radius of the circle
+     * @param count Number of orbiters to spawn
+     */
+    void spawnOrbiters(float centerX, float centerY, float radius, int count);
 };
 
 }  // namespace engine

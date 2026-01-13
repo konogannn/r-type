@@ -56,6 +56,7 @@ struct Enemy : public ComponentBase<Enemy> {
         FAST = EntityType::FAST,
         TANK = EntityType::TANK,
         TURRET = EntityType::TURRET,
+        ORBITER = EntityType::ORBITER,
         BOSS
     };
 
@@ -256,6 +257,20 @@ struct Following : public ComponentBase<Following> {
     TargetType targetType;
 
     Following(TargetType targetType_ = TargetType::PLAYER);
+};
+
+struct Orbiter : public ComponentBase<Orbiter> {
+    float centerX;
+    float centerY;
+    float radius;
+    float angle;
+    float angularVelocity;
+
+    Orbiter(float cx = 0.0f, float cy = 0.0f, float r = 100.0f, float a = 0.0f,
+            float av = 1.0f)
+        : centerX(cx), centerY(cy), radius(r), angle(a), angularVelocity(av)
+    {
+    }
 };
 
 }  // namespace engine
