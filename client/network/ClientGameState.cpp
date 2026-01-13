@@ -123,18 +123,14 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
-
-        // Player spritesheet animation
         if (entity->type == 1 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
                 entity->animFrameTime = 0.0f;
                 entity->animCurrentFrame++;
                 if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = 0;  // Loop animation
+                    entity->animCurrentFrame = 0;
                 }
-
-                // Calculate texture rect based on animation state and frame
                 int row = static_cast<int>(entity->animState);
                 int frameX = entity->animCurrentFrame * entity->animFrameWidth;
                 int frameY = row * entity->animFrameHeight;
@@ -143,8 +139,6 @@ void ClientGameState::update(float deltaTime)
                                                entity->animFrameHeight);
             }
         }
-
-        // Explosion animation (type 7)
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -159,13 +153,9 @@ void ClientGameState::update(float deltaTime)
             }
         }
     }
-
-    // Update explosions
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
     }
-
-    // Remove finished explosions
     _explosions.erase(std::remove_if(_explosions.begin(), _explosions.end(),
                                      [](const std::unique_ptr<Explosion>& exp) {
                                          return exp->isFinished();
@@ -228,18 +218,21 @@ void ClientGameState::onDisconnected()
 void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                                       uint16_t mapHeight)
 {
+    std::cout << "[ClientGameState] onLoginResponse - Old playerId: " << _playerId 
+              << ", New playerId: " << playerId << ", Entities count: " << _entities.size() << std::endl;
+    
     _playerId = playerId;
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
     _gameStarted = true;
+    _waitingForLocalPlayer = true;
 
     std::cout << "[INFO] Login successful! Player ID: " << _playerId
               << ", Map size: " << _mapWidth << "x" << _mapHeight << std::endl;
 
     for (auto& [id, entity] : _entities) {
-        if (entity) {
+        if (entity && entity->type == 1) {
             bool wasLocalPlayer = entity->isLocalPlayer;
-            entity->isLocalPlayer = (id == _playerId);
             if (entity->isLocalPlayer && !wasLocalPlayer) {
                 std::cout << "[INFO] Marked entity " << id << " as local player"
                           << std::endl;
@@ -260,7 +253,15 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
               << "," << y << ")" << std::endl;
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
-    entity->isLocalPlayer = (entityId == _playerId);
+
+    if (_waitingForLocalPlayer && type == 1) {
+        entity->isLocalPlayer = true;
+        _waitingForLocalPlayer = false;
+        std::cout << "[INFO] Marked entity " << entityId << " as LOCAL PLAYER" << std::endl;
+    } else {
+        entity->isLocalPlayer = false;
+    }
+    
     createEntitySprite(*entity);
     _entities[entityId] = std::move(entity);
 }

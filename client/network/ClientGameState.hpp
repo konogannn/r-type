@@ -74,6 +74,7 @@ class ClientGameState {
     bool _gameStarted = false;
     bool _connectionAttempting = false;
     uint32_t _score = 0;
+    bool _waitingForLocalPlayer = false;
 
     // Entities
     std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>> _entities;
