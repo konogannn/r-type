@@ -235,8 +235,7 @@ Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
 
     _entityManager.addComponent(missile,
                                 Position(ownerPos.x + 50.0f, ownerPos.y));
-    _entityManager.addComponent(
-        missile, Velocity(400.0f, 0.0f));  // Démarrage immédiat vers la droite
+    _entityManager.addComponent(missile, Velocity(400.0f, 0.0f));
     _entityManager.addComponent(missile,
                                 BoundingBox(128.0f, 64.0f, -64.0f, -32.0f));
     _entityManager.addComponent(missile, GuidedMissile(50.0f, 500.0f, 20.0f));
