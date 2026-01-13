@@ -18,7 +18,10 @@ Player::Player(uint32_t clientId_, uint32_t playerId_)
 {
 }
 
-Enemy::Enemy(Type type_) : type(type_), shootCooldown(0.0f) {}
+Enemy::Enemy(Type type_, bool isTopTurret_)
+    : type(type_), shootCooldown(0.0f), isTopTurret(isTopTurret_)
+{
+}
 
 Health::Health(float max_) : current(max_), max(max_) {}
 

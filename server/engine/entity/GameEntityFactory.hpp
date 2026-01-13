@@ -54,6 +54,15 @@ class GameEntityFactory {
     Entity createEnemy(Enemy::Type type, float x, float y);
 
     /**
+     * @brief Create a turret enemy entity
+     * @param x Starting X position
+     * @param y Starting Y position (should be at top or bottom edge)
+     * @param isTopTurret True if turret is on top edge, false for bottom
+     * @return Created turret entity
+     */
+    Entity createTurret(float x, float y, bool isTopTurret);
+
+    /**
      * @brief Create a player bullet entity
      * @param ownerId Entity ID of the player who fired
      * @param ownerPos Position of the owner

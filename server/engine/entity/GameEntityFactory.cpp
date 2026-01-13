@@ -7,6 +7,8 @@
 
 #include "GameEntityFactory.hpp"
 
+#include <iostream>
+
 #include "EntityType.hpp"
 
 namespace engine {
@@ -66,6 +68,27 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
         enemy, NetworkEntity(_nextEnemyId++, static_cast<uint8_t>(type)));
 
     return enemy;
+}
+
+Entity GameEntityFactory::createTurret(float x, float y, bool isTopTurret)
+{
+    Entity turret = _entityManager.createEntity();
+
+    _entityManager.addComponent(turret, Position(x, y));
+    _entityManager.addComponent(turret, Velocity(0.0f, 0.0f));  // Static
+    _entityManager.addComponent(turret,
+                                Enemy(Enemy::Type::TURRET, isTopTurret));
+    _entityManager.addComponent(turret, Health(50.0f));
+    _entityManager.addComponent(turret, BoundingBox(16.0f, 27.0f, 0.0f, 0.0f));
+
+    uint32_t turretId = _nextEnemyId++;
+    _entityManager.addComponent(turret,
+                                NetworkEntity(turretId, EntityType::TURRET));
+
+    std::cout << "[FACTORY] Created turret ID=" << turretId << " at (" << x
+              << "," << y << "), isTop=" << isTopTurret << std::endl;
+
+    return turret;
 }
 
 Entity GameEntityFactory::createPlayerBullet(EntityId ownerId,

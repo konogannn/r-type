@@ -23,6 +23,12 @@ struct SpawnEnemyEvent {
     float y;
 };
 
+struct SpawnTurretEvent {
+    float x;
+    float y;
+    bool isTopTurret;
+};
+
 struct SpawnPlayerBulletEvent {
     engine::EntityId ownerId;
     engine::Position position;
@@ -34,6 +40,7 @@ struct SpawnEnemyBulletEvent {
     float y;
     float vx;
     float vy;
+    uint8_t bulletType = EntityType::BASIC_MISSILE;  // Default to basic missile
 };
 
 struct SpawnBossEvent {

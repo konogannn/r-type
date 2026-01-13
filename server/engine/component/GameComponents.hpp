@@ -55,13 +55,15 @@ struct Enemy : public ComponentBase<Enemy> {
         BASIC = EntityType::BASIC,
         FAST = EntityType::FAST,
         TANK = EntityType::TANK,
+        TURRET = EntityType::TURRET,
         BOSS
     };
 
     Type type;
     float shootCooldown;
+    bool isTopTurret;  // For turrets: true if mounted on top edge
 
-    Enemy(Type type_ = Type::BASIC);
+    Enemy(Type type_ = Type::BASIC, bool isTopTurret_ = false);
 };
 
 /**
