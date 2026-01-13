@@ -8,6 +8,7 @@
 #include "SoundManager.hpp"
 
 #include <iostream>
+#include <span>
 
 SoundManager& SoundManager::getInstance()
 {
@@ -28,9 +29,6 @@ void SoundManager::loadAll()
                                    sizeof(rtype::embedded::music_data))) {
             _music->setLoop(true);
             _music->setVolume(_musicVolume);
-            std::cout << "  Loaded: embedded music" << std::endl;
-        } else {
-            std::cerr << "  Failed to load embedded music" << std::endl;
         }
     }
 }
@@ -47,10 +45,6 @@ void SoundManager::loadSound(const std::string& name,
 
         _buffers[name] = std::move(buffer);
         _sounds[name] = std::move(sound);
-
-        std::cout << "  Loaded (embedded): " << name << std::endl;
-    } else {
-        std::cerr << "  Failed to load embedded sound: " << name << std::endl;
     }
 }
 

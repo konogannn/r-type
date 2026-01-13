@@ -241,6 +241,16 @@ class NetworkServer : public INetworkServer {
                           float currentHealth, float maxHealth);
 
     /**
+     * @brief Send shield status update to client(s)
+     *
+     * @param clientId Client to send to (0 = broadcast to all)
+     * @param playerId Player entity ID
+     * @param hasShield true if player gained shield, false if lost
+     * @return true if sent successfully
+     */
+    bool sendShieldStatus(uint32_t clientId, uint32_t playerId, bool hasShield);
+
+    /**
      * @brief Broadcast raw data to all connected clients
      *
      * Sends arbitrary binary data to all authenticated clients, optionally

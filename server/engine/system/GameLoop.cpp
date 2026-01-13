@@ -15,6 +15,108 @@
 
 namespace engine {
 
+// Generic template for processDestroyedEntities
+template <typename T>
+void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
+{
+    if (!cleanupSystem) {
+        return;
+    }
+
+    const auto& destroyed = cleanupSystem->getDestroyedEntities();
+    for (const auto& info : destroyed) {
+        EntityStateUpdate update;
+        update.entityId = info.networkEntityId;
+        update.entityType = info.entityType;
+        update.x = 0.0f;
+        update.y = 0.0f;
+        update.spawned = false;
+        update.destroyed = true;
+        _outputQueue.push(update);
+
+        if (checkPlayerDeath && info.entityType == 1 &&
+            _onPlayerDeathCallback) {
+            for (const auto& pair : _clientToEntity) {
+                if (pair.second == info.entityId) {
+                    _onPlayerDeathCallback(pair.first);
+                    _clientToEntity.erase(pair.first);
+                    break;
+                }
+            }
+        }
+    }
+    cleanupSystem->clearDestroyedEntities();
+}
+
+// CollisionSystem specialization - spawns power-ups
+template <>
+void GameLoop::processDestroyedEntities<CollisionSystem>(
+    CollisionSystem* cleanupSystem, bool checkPlayerDeath)
+{
+    if (!cleanupSystem) {
+        return;
+    }
+
+    const auto& destroyed = cleanupSystem->getDestroyedEntities();
+    for (const auto& info : destroyed) {
+        EntityStateUpdate update;
+        update.entityId = info.networkEntityId;
+        update.entityType = info.entityType;
+        update.x = 0.0f;
+        update.y = 0.0f;
+        update.spawned = false;
+        update.destroyed = true;
+        _outputQueue.push(update);
+
+        bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
+                        info.entityType == 14);
+
+        if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
+            if (rand() % 2 == 0) {
+                Entity powerUpItem;
+                if (_nextEnemyDropIsShield) {
+                    powerUpItem =
+                        _entityFactory.createShieldItem(info.x, info.y);
+                } else {
+                    powerUpItem =
+                        _entityFactory.createGuidedMissileItem(info.x, info.y);
+                }
+                _nextEnemyDropIsShield = !_nextEnemyDropIsShield;
+
+                // Network sync for power-up
+                auto* powerUpPos =
+                    _entityManager.getComponent<Position>(powerUpItem);
+                auto* powerUpNet =
+                    _entityManager.getComponent<NetworkEntity>(powerUpItem);
+                if (powerUpPos && powerUpNet) {
+                    powerUpNet->needsSync = true;
+                    powerUpNet->isFirstSync = true;
+                    EntityStateUpdate powerUpUpdate;
+                    powerUpUpdate.entityId = powerUpNet->entityId;
+                    powerUpUpdate.entityType = powerUpNet->entityType;
+                    powerUpUpdate.x = powerUpPos->x;
+                    powerUpUpdate.y = powerUpPos->y;
+                    powerUpUpdate.spawned = true;
+                    powerUpUpdate.destroyed = false;
+                    _outputQueue.push(powerUpUpdate);
+                }
+            }
+        }
+
+        if (checkPlayerDeath && info.entityType == 1 &&
+            _onPlayerDeathCallback) {
+            for (const auto& pair : _clientToEntity) {
+                if (pair.second == info.entityId) {
+                    _onPlayerDeathCallback(pair.first);
+                    _clientToEntity.erase(pair.first);
+                    break;
+                }
+            }
+        }
+    }
+    cleanupSystem->clearDestroyedEntities();
+}
+
 GameLoop::GameLoop(float targetFPS)
     : _entityFactory(_entityManager),
       _running(false),
@@ -208,10 +310,6 @@ void GameLoop::processDeathTimers(float deltaTime)
             health->deathTimer -= deltaTime;
 
             if (health->deathTimer <= 0.0f) {
-                std::cout << "[GAMELOOP] Player " << entity.getId()
-                          << " deathTimer expired, destroying entity"
-                          << std::endl;
-
                 auto* netEntity =
                     _entityManager.getComponent<NetworkEntity>(entity);
                 if (netEntity) {
@@ -349,38 +447,6 @@ void GameLoop::removePlayer(uint32_t clientId)
     _clientToEntity.erase(it);
 }
 
-template <typename T>
-void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
-{
-    if (!cleanupSystem) {
-        return;
-    }
-
-    const auto& destroyed = cleanupSystem->getDestroyedEntities();
-    for (const auto& info : destroyed) {
-        EntityStateUpdate update;
-        update.entityId = info.networkEntityId;
-        update.entityType = info.entityType;
-        update.x = 0.0f;
-        update.y = 0.0f;
-        update.spawned = false;
-        update.destroyed = true;
-        _outputQueue.push(update);
-
-        if (checkPlayerDeath && info.entityType == 1 &&
-            _onPlayerDeathCallback) {
-            for (const auto& pair : _clientToEntity) {
-                if (pair.second == info.entityId) {
-                    _onPlayerDeathCallback(pair.first);
-                    _clientToEntity.erase(pair.first);
-                    break;
-                }
-            }
-        }
-    }
-    cleanupSystem->clearDestroyedEntities();
-}
-
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
 {
     auto players =
@@ -410,8 +476,6 @@ void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 
 void GameLoop::processSpawnEvents()
 {
-    // Use compile-time dispatch via overload resolution
-    // This is more efficient than runtime type checking
     for (const auto& event : _spawnEvents) {
         std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
     }
@@ -420,7 +484,13 @@ void GameLoop::processSpawnEvents()
 
 void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
 {
-    _entityFactory.createEnemy(event.type, event.x, event.y);
+    Entity enemy = _entityFactory.createEnemy(event.type, event.x, event.y);
+
+    auto* netEntity = _entityManager.getComponent<NetworkEntity>(enemy);
+    if (netEntity) {
+        netEntity->needsSync = true;
+        netEntity->isFirstSync = true;
+    }
 }
 
 void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
@@ -438,19 +508,12 @@ void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
 
     if (isExplosion) {
         int explosionType = event.ownerId;
-        std::cout << "[GAMELOOP] Creating explosion effect type "
-                  << explosionType << " ID=" << bulletId << " at (" << event.x
-                  << "," << event.y << ")" << std::endl;
-
         _entityManager.addComponent(bullet, Position(event.x, event.y));
         _entityManager.addComponent(
             bullet, Velocity(-static_cast<float>(explosionType), 0.0f));
         _entityManager.addComponent(bullet, NetworkEntity(bulletId, 7));
         _entityManager.addComponent(bullet, Lifetime(0.5f));
     } else {
-        std::cout << "[GAMELOOP] Creating enemy bullet ID=" << bulletId
-                  << " at (" << event.x << "," << event.y << ")" << std::endl;
-
         _entityManager.addComponent(bullet, Position(event.x, event.y));
         _entityManager.addComponent(bullet, Velocity(event.vx, event.vy));
         _entityManager.addComponent(bullet,
@@ -465,6 +528,35 @@ void GameLoop::processSpawnEvent(const SpawnBossEvent& event)
 {
     _entityFactory.createBoss(event.bossType, event.x, event.y,
                               event.playerCount);
+}
+
+void GameLoop::processSpawnEvent(const SpawnGuidedMissileEvent& event)
+{
+    Entity missile =
+        _entityFactory.createGuidedMissile(event.ownerId, event.position);
+
+    auto* missilePos = _entityManager.getComponent<Position>(missile);
+    auto* missileNet = _entityManager.getComponent<NetworkEntity>(missile);
+    if (missilePos && missileNet) {
+        missileNet->needsSync = true;
+        missileNet->isFirstSync = true;
+    }
+}
+
+void GameLoop::processSpawnEvent(const SpawnItemEvent& event)
+{
+    Entity item;
+    if (event.itemType == Item::Type::SHIELD) {
+        item = _entityFactory.createShieldItem(event.x, event.y);
+    } else {
+        item = _entityFactory.createGuidedMissileItem(event.x, event.y);
+    }
+
+    auto* itemNet = _entityManager.getComponent<NetworkEntity>(item);
+    if (itemNet) {
+        itemNet->needsSync = true;
+        itemNet->isFirstSync = true;
+    }
 }
 
 }  // namespace engine

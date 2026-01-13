@@ -42,3 +42,20 @@ struct SpawnBossEvent {
     float y;
     uint32_t playerCount;
 };
+
+/**
+ * @brief Event to spawn a guided missile
+ */
+struct SpawnGuidedMissileEvent {
+    engine::EntityId ownerId;
+    engine::Position position;
+};
+
+/**
+ * @brief Event to spawn an item (power-up)
+ */
+struct SpawnItemEvent {
+    engine::Item::Type itemType;
+    float x;
+    float y;
+};
