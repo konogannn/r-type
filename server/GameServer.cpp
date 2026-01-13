@@ -32,15 +32,15 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
         std::make_unique<engine::BossSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::BossDamageSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
-    // EnemySpawnerSystem désactivé - seulement le boss est spawné
+    // EnemySpawnerSystem disabled - only boss is spawned
     // _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
     //     _gameLoop.getSpawnEvents(),
-    //     2.0f));  // Spawn un ennemi toutes les 2 secondes
+    //     2.0f));  // Spawn an enemy every 2 seconds
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::GuidedMissileSystem>());
-    // ItemSpawnerSystem désactivé - les items spawn uniquement sur kill
-    // d'ennemi _gameLoop.addSystem(std::make_unique<engine::ItemSpawnerSystem>(
+    // ItemSpawnerSystem disabled - items spawn only on enemy kill
+    // _gameLoop.addSystem(std::make_unique<engine::ItemSpawnerSystem>(
     //     _gameLoop.getSpawnEvents(),
     //     5.0f));
     _gameLoop.addSystem(
@@ -423,7 +423,7 @@ void GameServer::spawnBoss(uint8_t bossType)
 
     SpawnBossEvent bossEvent;
     bossEvent.bossType = bossType;
-    bossEvent.x = 2100.0f;  // Spawn hors écran à droite
+    bossEvent.x = 2100.0f;
     bossEvent.y = 400.0f;
     bossEvent.playerCount = _playerCount.load();
 
