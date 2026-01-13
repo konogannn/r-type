@@ -49,3 +49,10 @@ struct SpawnBossEvent {
     float y;
     uint32_t playerCount;
 };
+
+struct SpawnOrbitersEvent {
+    float centerX;
+    float centerY;
+    float radius;
+    int count;
+};

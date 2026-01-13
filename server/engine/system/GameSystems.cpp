@@ -816,24 +816,23 @@ SystemType OrbiterSystem::getType() const { return SystemType::ORBITER; }
 
 int OrbiterSystem::getPriority() const { return 15; }
 
-void OrbiterSystem::processEntity(float deltaTime,
-                                  Entity& entity,
+void OrbiterSystem::processEntity(float deltaTime, Entity& entity,
                                   Orbiter* orbiter, Position* pos, Enemy* enemy)
 {
     orbiter->angle += orbiter->angularVelocity * deltaTime;
-    
+
     if (orbiter->angle > 6.28318530717958647692f) {
         orbiter->angle -= 6.28318530717958647692f;
     }
-    
+
     pos->x = orbiter->centerX + orbiter->radius * std::cos(orbiter->angle);
     pos->y = orbiter->centerY + orbiter->radius * std::sin(orbiter->angle);
-    
+
     if (enemy->shootCooldown > 0.0f) {
         enemy->shootCooldown -= deltaTime;
         return;
     }
-    
+
     SpawnEnemyBulletEvent event;
     event.ownerId = entity.getId();
     event.x = pos->x;
@@ -841,7 +840,7 @@ void OrbiterSystem::processEntity(float deltaTime,
     event.vx = -250.0f;
     event.vy = 0.0f;
     event.bulletType = EntityType::ORBITER_MISSILE;
-    
+
     _spawnQueue.push_back(event);
     enemy->shootCooldown = SHOOT_INTERVAL;
 }

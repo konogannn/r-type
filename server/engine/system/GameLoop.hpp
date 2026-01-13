@@ -26,10 +26,9 @@
 namespace engine {
 
 // Unified spawn event type - can hold any entity spawn request
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnTurretEvent,
-                                SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent, SpawnBossEvent,
-                                SpawnOrbitersEvent>;
+using SpawnEvent =
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent>;
 
 /**
  * @brief Network input command from clients

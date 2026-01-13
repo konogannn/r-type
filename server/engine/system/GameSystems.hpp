@@ -20,10 +20,9 @@
 namespace engine {
 
 // Import SpawnEvent type from events
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnTurretEvent,
-                                SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent, SpawnBossEvent,
-                                SpawnOrbitersEvent>;
+using SpawnEvent =
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -248,8 +247,8 @@ class FollowingSystem : public ISystem {
     float calculateDistance(const Position& pos1, const Position& pos2);
 
     const Position* findNearestPlayer(const Position& entityPos,
-                                     const std::vector<Entity>& players,
-                                     EntityManager& entityManager);
+                                      const std::vector<Entity>& players,
+                                      EntityManager& entityManager);
 
    public:
     std::string getName() const override;
@@ -299,8 +298,9 @@ class OrbiterSystem : public System<Orbiter, Position, Enemy> {
                        Position* pos, Enemy* enemy) override;
 
    public:
-    OrbiterSystem(std::vector<SpawnEvent>& spawnQueue)
-        : _spawnQueue(spawnQueue) {}
+    OrbiterSystem(std::vector<SpawnEvent>& spawnQueue) : _spawnQueue(spawnQueue)
+    {
+    }
 
     std::string getName() const override;
     SystemType getType() const override;
