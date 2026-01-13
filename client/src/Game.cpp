@@ -80,8 +80,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
 Game::~Game()
 {
-    if (_gameState && _gameState->isConnected())
-    {
+    if (_gameState && _gameState->isConnected()) {
         _gameState->disconnect();
     }
 }

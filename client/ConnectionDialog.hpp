@@ -34,8 +34,8 @@ class ConnectionDialog {
      * @param windowWidth Width of the window
      * @param windowHeight Height of the window
      */
-    ConnectionDialog(GraphicsSFML& graphics,
-                     float windowWidth, float windowHeight);
+    ConnectionDialog(GraphicsSFML& graphics, float windowWidth,
+                     float windowHeight);
 
     /**
      * @brief Update the dialog state
