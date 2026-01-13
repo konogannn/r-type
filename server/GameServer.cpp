@@ -22,6 +22,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     : _networkServer(timeoutSeconds),
       _gameLoop(targetFPS),
       _gameStarted(false),
+      _needsReset(false),
       _playerCount(0),
       _nextPlayerId(1)
 {
@@ -115,10 +116,10 @@ void GameServer::onClientDisconnected(uint32_t clientId)
 
         if (_playerCount.load() == 0 && _gameStarted) {
             Logger::getInstance().log(
-                "No players remaining, resetting game state...",
+                "No players remaining, scheduling game reset...",
                 LogLevel::INFO_L, "Game");
             _gameStarted = false;
-            _gameLoop.clearAllEntities();
+            _needsReset = true;
         } else {
             Logger::getInstance().log("Server continues running.",
                                       LogLevel::INFO_L, "Game");
@@ -193,7 +194,7 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
             Logger::getInstance().log(
                 "Sending existing entity " +
                     std::to_string(entityUpdate.entityId) + " (type " +
-                    std::to_string(entityUpdate.entityType) +
+                    std::to_string(static_cast<int>(entityUpdate.entityType)) +
                     ") to new client " + std::to_string(clientId),
                 LogLevel::INFO_L, "Game");
         }
@@ -224,10 +225,10 @@ void GameServer::onPlayerDeath(uint32_t clientId)
 
         if (_playerCount.load() == 0 && _gameStarted) {
             Logger::getInstance().log(
-                "All players died, resetting game state...", LogLevel::INFO_L,
+                "All players died, scheduling game reset...", LogLevel::INFO_L,
                 "Game");
             _gameStarted = false;
-            _gameLoop.clearAllEntities();
+            _needsReset = true;
         }
     }
 }
@@ -314,6 +315,16 @@ void GameServer::processNetworkUpdates()
             if (frameCounter % 10 == 0) {
                 sendHealthUpdates();
                 sendShieldUpdates();
+            }
+
+            if (_needsReset.load()) {
+                Logger::getInstance().log(
+                    "Performing deferred game reset...", LogLevel::INFO_L,
+                    "Game");
+                _gameLoop.clearAllEntities();
+                _needsReset = false;
+                Logger::getInstance().log(
+                    "Game reset complete", LogLevel::INFO_L, "Game");
             }
         } catch (const std::exception& e) {
             Logger::getInstance().log(
