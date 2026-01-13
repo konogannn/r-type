@@ -40,7 +40,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _screenShakeTimer(0.0f),
       _playerDead(false)
 {
-    std::cout << "[Game] Constructor called, _playerDead initialized to: " << _playerDead << std::endl;
+    std::cout << "[Game] Constructor called, _playerDead initialized to: "
+              << _playerDead << std::endl;
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
@@ -232,12 +233,15 @@ void Game::update(float deltaTime)
         if (localPlayer) {
             float health = _gameState->getPlayerHealth();
             if (health <= 0.0f && !_playerDead) {
-                std::cout << "[Game] Player died! Health: " << health << ", EntityID: " << localPlayer->id << std::endl;
+                std::cout << "[Game] Player died! Health: " << health
+                          << ", EntityID: " << localPlayer->id << std::endl;
                 _playerDead = true;
                 _running = false;
             }
         } else if (_gameState->isGameStarted()) {
-            std::cout << "[Game] WARNING: Game started but no local player found!" << std::endl;
+            std::cout
+                << "[Game] WARNING: Game started but no local player found!"
+                << std::endl;
         }
     }
 
