@@ -89,6 +89,7 @@ int main()
                     break;
                 case MenuAction::Settings:
                     state = GameState::Settings;
+                    settingsMenu->reset();
                     break;
                 case MenuAction::Quit:
                     window->close();
