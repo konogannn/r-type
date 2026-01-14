@@ -1220,7 +1220,7 @@ void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
             SpawnLaserEvent laserEvent;
             laserEvent.ownerId = entity.getId();
             laserEvent.x = pos->x;
-            laserEvent.y = pos->y;
+            laserEvent.y = pos->y + 7.0f;
             laserEvent.width = pos->x;
             laserEvent.duration = laserShip->laserDuration;
             _spawnQueue.push_back(laserEvent);

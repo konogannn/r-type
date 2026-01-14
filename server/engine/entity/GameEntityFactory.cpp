@@ -391,7 +391,7 @@ Entity GameEntityFactory::createLaser(uint32_t ownerId, float x, float y,
     _entityManager.addComponent(laser, Position(x, y));
     _entityManager.addComponent(laser, Velocity(0.0f, 0.0f));
     _entityManager.addComponent(laser, Bullet(ownerId, false, 30.0f));
-    _entityManager.addComponent(laser, BoundingBox(width, 50.0f, -width, 0.0f));
+    _entityManager.addComponent(laser, BoundingBox(width, 8.0f, -width, -4.0f));
     _entityManager.addComponent(
         laser, NetworkEntity(_nextBulletId++, EntityType::LASER));
     _entityManager.addComponent(laser, Lifetime(duration));

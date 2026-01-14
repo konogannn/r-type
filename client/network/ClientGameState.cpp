@@ -760,7 +760,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 21: {
             if (entity.sprite->loadTexture(ASSET_SPAN(embedded::laser_data))) {
-                entity.sprite->setOrigin(320.0f, 4.0f);
+                entity.sprite->setOrigin(320.0f,
+                                         2.0f);
                 entity.sprite->setScale(6.0f, 6.0f);
             }
             entity.spriteScale = 6.0f;
