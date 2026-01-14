@@ -44,7 +44,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(
         std::make_unique<engine::OrbiterSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::LaserShipSystem>(
-        _gameLoop.getSpawnEvents(), _gameLoop.getEntityManager()));
+        _gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
@@ -295,7 +295,6 @@ void GameServer::processNetworkUpdates()
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);
 
-                        // Check if this was a boss wave enemy
                         if (_bossWaveActive && isEnemy(update.entityType)) {
                             _bossWaveEnemiesAlive--;
                             Logger::getInstance().log(

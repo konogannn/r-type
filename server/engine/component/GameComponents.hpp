@@ -279,7 +279,6 @@ struct LaserShip : public ComponentBase<LaserShip> {
     float laserCooldown;
     float laserActiveTime;
     bool isLaserActive;
-    uint32_t laserEntityId;
     float chargingTime;
     bool isCharging;
 
@@ -288,7 +287,6 @@ struct LaserShip : public ComponentBase<LaserShip> {
           laserCooldown(duration * 2.0f),
           laserActiveTime(0.0f),
           isLaserActive(false),
-          laserEntityId(0),
           chargingTime(0.0f),
           isCharging(false)
     {

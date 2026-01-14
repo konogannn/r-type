@@ -76,7 +76,7 @@ Entity GameEntityFactory::createTurret(float x, float y, bool isTopTurret)
     Entity turret = _entityManager.createEntity();
 
     _entityManager.addComponent(turret, Position(x, y));
-    _entityManager.addComponent(turret, Velocity(0.0f, 0.0f));  // Static
+    _entityManager.addComponent(turret, Velocity(0.0f, 0.0f));
     _entityManager.addComponent(turret,
                                 Enemy(Enemy::Type::TURRET, isTopTurret));
     _entityManager.addComponent(turret, Health(50.0f));
@@ -127,6 +127,35 @@ Entity GameEntityFactory::createEnemyBullet(EntityId ownerId,
     _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
     _entityManager.addComponent(bullet, NetworkEntity(bulletId, 4));
     _entityManager.addComponent(bullet, Lifetime(15.0f));
+
+    return bullet;
+}
+
+Entity GameEntityFactory::createEnemyBullet(EntityId ownerId, float x, float y,
+                                            float vx, float vy,
+                                            uint8_t bulletType)
+{
+    Entity bullet = _entityManager.createEntity();
+    uint32_t bulletId = _nextBulletId++;
+
+    _entityManager.addComponent(bullet, Position(x, y));
+    _entityManager.addComponent(bullet, Velocity(vx, vy));
+    _entityManager.addComponent(bullet, Bullet(ownerId, false, 20.0f));
+
+    if (bulletType == EntityType::TURRET_MISSILE) {
+        _entityManager.addComponent(bullet, BoundingBox(14.0f, 10.0f));
+    } else {
+        _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
+    }
+
+    _entityManager.addComponent(bullet, NetworkEntity(bulletId, bulletType));
+    _entityManager.addComponent(bullet, Lifetime(15.0f));
+
+    auto* netEntity = _entityManager.getComponent<NetworkEntity>(bullet);
+    if (netEntity) {
+        netEntity->needsSync = true;
+        netEntity->isFirstSync = true;
+    }
 
     return bullet;
 }
@@ -276,17 +305,18 @@ Entity GameEntityFactory::createLaserShip(float x, float y, bool isTop,
 }
 
 Entity GameEntityFactory::createLaser(uint32_t ownerId, float x, float y,
-                                      float width)
+                                      float width, float duration)
 {
     Entity laser = _entityManager.createEntity();
 
     _entityManager.addComponent(laser, Position(x, y));
     _entityManager.addComponent(laser, Velocity(0.0f, 0.0f));
     _entityManager.addComponent(laser, Bullet(ownerId, false, 30.0f));
-    _entityManager.addComponent(laser, BoundingBox(width, 8.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(laser,
+                                BoundingBox(width, 50.0f, -width, 0.0f));
     _entityManager.addComponent(
         laser, NetworkEntity(_nextBulletId++, EntityType::LASER));
-    _entityManager.addComponent(laser, Lifetime(0.1f));
+    _entityManager.addComponent(laser, Lifetime(duration));
 
     auto* netEntity = _entityManager.getComponent<NetworkEntity>(laser);
     if (netEntity) {

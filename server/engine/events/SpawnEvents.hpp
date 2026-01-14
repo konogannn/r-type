@@ -63,3 +63,11 @@ struct SpawnLaserShipEvent {
     bool isTop;
     float laserDuration;
 };
+
+struct SpawnLaserEvent {
+    engine::EntityId ownerId;
+    float x;
+    float y;
+    float width;
+    float duration;
+};

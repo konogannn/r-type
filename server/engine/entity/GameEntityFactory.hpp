@@ -77,6 +77,8 @@ class GameEntityFactory {
      * @return Created bullet entity
      */
     Entity createEnemyBullet(EntityId ownerId, const Position& ownerPos);
+    Entity createEnemyBullet(EntityId ownerId, float x, float y, float vx,
+                             float vy, uint8_t bulletType);
 
     /**
      * @brief Get the next available bullet ID
@@ -133,7 +135,8 @@ class GameEntityFactory {
 
     Entity createLaserShip(float x, float y, bool isTop, float laserDuration);
 
-    Entity createLaser(uint32_t ownerId, float x, float y, float width);
+    Entity createLaser(uint32_t ownerId, float x, float y, float width,
+                       float duration);
 };
 
 }  // namespace engine

@@ -736,7 +736,6 @@ void FollowingSystem::update(float /* deltaTime */,
     }
 }
 
-// TurretShootingSystem implementation
 std::string TurretShootingSystem::getName() const
 {
     return "TurretShootingSystem";
@@ -871,36 +870,19 @@ void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
             laserShip->isLaserActive = true;
             laserShip->laserActiveTime = 0.0f;
 
-            float width = pos->x;
-            Entity laser = _entityManager.createEntity();
-            static uint32_t laserIdCounter = 20000;
-            uint32_t laserId = laserIdCounter++;
-
-            _entityManager.addComponent(laser, Position(pos->x, pos->y));
-            _entityManager.addComponent(laser, Velocity(0.0f, 0.0f));
-            _entityManager.addComponent(laser,
-                                        Bullet(entity.getId(), false, 30.0f));
-            _entityManager.addComponent(
-                laser, BoundingBox(width, 50.0f, -width, 0.0f));
-            _entityManager.addComponent(
-                laser, NetworkEntity(laserId, EntityType::LASER));
-            _entityManager.addComponent(laser,
-                                        Lifetime(laserShip->laserDuration));
-
-            auto* netEntity = _entityManager.getComponent<NetworkEntity>(laser);
-            if (netEntity) {
-                netEntity->needsSync = true;
-                netEntity->isFirstSync = true;
-            }
-
-            laserShip->laserEntityId = laserId;
+            SpawnLaserEvent laserEvent;
+            laserEvent.ownerId = entity.getId();
+            laserEvent.x = pos->x;
+            laserEvent.y = pos->y;
+            laserEvent.width = pos->x;
+            laserEvent.duration = laserShip->laserDuration;
+            _spawnQueue.push_back(laserEvent);
         }
     } else if (laserShip->isLaserActive) {
         laserShip->laserActiveTime += deltaTime;
         if (laserShip->laserActiveTime >= laserShip->laserDuration) {
             laserShip->isLaserActive = false;
             laserShip->laserCooldown = 2.0f * laserShip->laserDuration;
-            laserShip->laserEntityId = 0;
         }
     } else {
         laserShip->laserCooldown -= deltaTime;

@@ -411,8 +411,6 @@ void GameLoop::setOnPlayerDeath(std::function<void(uint32_t)> callback)
 
 void GameLoop::processSpawnEvents()
 {
-    // Use compile-time dispatch via overload resolution
-    // This is more efficient than runtime type checking
     for (const auto& event : _spawnEvents) {
         std::visit([this](const auto& e) { processSpawnEvent(e); }, event);
     }
@@ -438,41 +436,12 @@ void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
 {
     bool isExplosion = (event.vx == 0.0f && event.vy == 0.0f);
 
-    Entity bullet = _entityManager.createEntity();
-
-    uint32_t bulletId = _entityFactory.getNextBulletId();
-
     if (isExplosion) {
-        int explosionType = event.ownerId;
-        std::cout << "[GAMELOOP] Creating explosion effect type "
-                  << explosionType << " ID=" << bulletId << " at (" << event.x
-                  << "," << event.y << ")" << std::endl;
-
-        _entityManager.addComponent(bullet, Position(event.x, event.y));
-        _entityManager.addComponent(
-            bullet, Velocity(-static_cast<float>(explosionType), 0.0f));
-        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 7));
-        _entityManager.addComponent(bullet, Lifetime(0.5f));
+        Position pos(event.x, event.y);
+        _entityFactory.createExplosion(event.ownerId, pos);
     } else {
-        std::cout << "[GAMELOOP] Creating enemy bullet ID=" << bulletId
-                  << " type=" << static_cast<int>(event.bulletType) << " at ("
-                  << event.x << "," << event.y << ")" << std::endl;
-
-        _entityManager.addComponent(bullet, Position(event.x, event.y));
-        _entityManager.addComponent(bullet, Velocity(event.vx, event.vy));
-        _entityManager.addComponent(bullet,
-                                    Bullet(event.ownerId, false, 20.0f));
-
-        // Adjust bounding box based on bullet type
-        if (event.bulletType == EntityType::TURRET_MISSILE) {
-            _entityManager.addComponent(bullet, BoundingBox(14.0f, 10.0f));
-        } else {
-            _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
-        }
-
-        _entityManager.addComponent(bullet,
-                                    NetworkEntity(bulletId, event.bulletType));
-        _entityManager.addComponent(bullet, Lifetime(15.0f));
+        _entityFactory.createEnemyBullet(event.ownerId, event.x, event.y,
+                                         event.vx, event.vy, event.bulletType);
     }
 }
 
@@ -492,6 +461,12 @@ void GameLoop::processSpawnEvent(const SpawnLaserShipEvent& event)
 {
     _entityFactory.createLaserShip(event.x, event.y, event.isTop,
                                    event.laserDuration);
+}
+
+void GameLoop::processSpawnEvent(const SpawnLaserEvent& event)
+{
+    _entityFactory.createLaser(event.ownerId, event.x, event.y, event.width,
+                               event.duration);
 }
 
 }  // namespace engine
