@@ -158,5 +158,13 @@ static const unsigned char laser_data[] = {
 #embed "../../../assets/sprites/laser.png"
 };
 
+static const unsigned char glandus_data[] = {
+#embed "../../../assets/sprites/glandus.png"
+};
+
+static const unsigned char glandus_mini_data[] = {
+#embed "../../../assets/sprites/glandus_mini.png"
+};
+
 }  // namespace embedded
 }  // namespace rtype

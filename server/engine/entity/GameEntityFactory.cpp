@@ -67,7 +67,8 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
             _entityManager.addComponent(enemy, Health(health));
             _entityManager.addComponent(
                 enemy, NetworkEntity(_nextEnemyId++, EntityType::GLANDUS));
-            return enemy;        case Enemy::Type::GLANDUS_MINI:
+            return enemy;
+        case Enemy::Type::GLANDUS_MINI:
             speed = -150.0f;
             health = 20.0f;
             _entityManager.addComponent(enemy, ZigzagMovement(100.0f, 6.0f));
@@ -79,7 +80,8 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
             _entityManager.addComponent(enemy, Health(health));
             _entityManager.addComponent(
                 enemy, NetworkEntity(_nextEnemyId++, EntityType::GLANDUS_MINI));
-            return enemy;        case Enemy::Type::BASIC:
+            return enemy;
+        case Enemy::Type::BASIC:
         default:
             speed = -100.0f;
             health = 30.0f;

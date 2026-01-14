@@ -223,6 +223,21 @@ void ClientGameState::update(float deltaTime)
             }
         }
 
+        if ((entity->type == 23 || entity->type == 24) &&
+            entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+            }
+        }
+
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -756,6 +771,38 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                     ASSET_SPAN(embedded::projectile_player_1_data));
             }
             entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 23: {
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::glandus_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 27;
+                entity.animFrameHeight = 22;
+                entity.sprite->setTextureRect(0, 0, 27, 22);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 24: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::glandus_mini_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 27;
+                entity.animFrameHeight = 22;
+                entity.sprite->setTextureRect(0, 0, 27, 22);
+                entity.sprite->setScale(scale, scale);
+            }
             entity.spriteScale = scale;
             break;
         }
