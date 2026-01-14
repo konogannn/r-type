@@ -161,13 +161,10 @@ struct Shield : public ComponentBase<Shield> {
  */
 struct SpeedBoost : public ComponentBase<SpeedBoost> {
     float duration;
-    float originalSpeed;
     float boostedSpeed;
 
-    SpeedBoost(float dur = 5.0f, float origSpeed = 300.0f)
-        : duration(dur),
-          originalSpeed(origSpeed),
-          boostedSpeed(origSpeed * 1.5f)
+    SpeedBoost(float dur = 5.0f, float speedMultiplier = 1.5f)
+        : duration(dur), boostedSpeed(300.0f * speedMultiplier)
     {
     }
 };
