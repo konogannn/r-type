@@ -32,8 +32,7 @@ ConnectionDialog::ConnectionDialog(GraphicsSFML& graphics, InputSFML& input,
       _cancelButton(_dialogX + 310.0f, _dialogY + 300.0f, 140.0f, 50.0f,
                     "CANCEL"),
       _cancelled(false),
-      _confirmed(false),
-      _fontPath("assets/fonts/default.ttf")
+      _confirmed(false)
 {
     Config& config = Config::getInstance();
     std::string serverAddress = config.getString("serverAddress", "127.0.0.1");
