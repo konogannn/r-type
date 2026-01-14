@@ -349,15 +349,6 @@ void GameServer::processNetworkUpdates()
                 checkBossWaveCompletion();
             }
 
-            if (_needsReset.load()) {
-                Logger::getInstance().log("Performing deferred game reset...",
-                                          LogLevel::INFO_L, "Game");
-                _gameLoop.clearAllEntities();
-                _needsReset = false;
-                Logger::getInstance().log("Game reset complete",
-                                          LogLevel::INFO_L, "Game");
-            }
-
         } catch (const std::exception& e) {
             Logger::getInstance().log(
                 "Error in network update loop: " + std::string(e.what()),

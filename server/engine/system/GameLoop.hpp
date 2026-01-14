@@ -85,7 +85,10 @@ class GameLoop {
     // Player tracking
     std::unordered_map<uint32_t, EntityId> _clientToEntity;
 
-    // Player death callback
+    ThreadSafeQueue<uint32_t> _pendingRemovals;
+
+    std::vector<EntityId> _pendingDestructions;
+
     std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
 
     // Power-up spawning state
@@ -106,9 +109,12 @@ class GameLoop {
      */
     void processDeathTimers(float deltaTime);
 
-    /**
-     * @brief Generate network state updates
-     */
+    void processPendingRemovals();
+
+    void processPendingDestructions();
+
+    void processDestroyedEntitiesFromSystems();
+
     void generateNetworkUpdates();
 
     /**
@@ -247,10 +253,5 @@ class GameLoop {
      * @brief Get unified spawn event queue (for systems to write to)
      */
     std::vector<SpawnEvent>& getSpawnEvents() { return _spawnEvents; }
-
-    /**
-     * @brief Get entity manager (for systems that need access to entities)
-     */
-    EntityManager& getEntityManager() { return _entityManager; }
 };
 }  // namespace engine

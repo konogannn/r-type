@@ -37,12 +37,18 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
+            uint32_t clientIdToRemove = 0;
+            bool found = false;
             for (const auto& pair : _clientToEntity) {
                 if (pair.second == info.entityId) {
-                    _onPlayerDeathCallback(pair.first);
-                    _clientToEntity.erase(pair.first);
+                    clientIdToRemove = pair.first;
+                    found = true;
                     break;
                 }
+            }
+            if (found) {
+                _onPlayerDeathCallback(clientIdToRemove);
+                _clientToEntity.erase(clientIdToRemove);
             }
         }
     }
@@ -106,12 +112,18 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
+            uint32_t clientIdToRemove = 0;
+            bool found = false;
             for (const auto& pair : _clientToEntity) {
                 if (pair.second == info.entityId) {
-                    _onPlayerDeathCallback(pair.first);
-                    _clientToEntity.erase(pair.first);
+                    clientIdToRemove = pair.first;
+                    found = true;
                     break;
                 }
+            }
+            if (found) {
+                _onPlayerDeathCallback(clientIdToRemove);
+                _clientToEntity.erase(clientIdToRemove);
             }
         }
     }
@@ -192,38 +204,48 @@ void GameLoop::gameThreadLoop()
 
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
-
-            switch (system->getType()) {
-                case SystemType::COLLISION:
-                    processDestroyedEntities(
-                        dynamic_cast<CollisionSystem*>(system.get()), true);
-                    break;
-                case SystemType::BULLET_CLEANUP:
-                    processDestroyedEntities(
-                        dynamic_cast<BulletCleanupSystem*>(system.get()));
-                    break;
-                case SystemType::ENEMY_CLEANUP:
-                    processDestroyedEntities(
-                        dynamic_cast<EnemyCleanupSystem*>(system.get()));
-                    break;
-                case SystemType::LIFETIME_CLEANUP:
-                    processDestroyedEntities(
-                        dynamic_cast<LifetimeSystem*>(system.get()));
-                    break;
-                default:
-                    break;
-            }
-
-            if (system->getName() == "BossSystem") {
-                processDestroyedEntities(
-                    dynamic_cast<BossSystem*>(system.get()));
-            }
         }
 
+        processDestroyedEntitiesFromSystems();
+
         generateNetworkUpdates();
+
+        processPendingRemovals();
+        processPendingDestructions();
+
         auto frameTime = std::chrono::steady_clock::now() - currentTime;
         if (frameTime < _targetFrameTime) {
             std::this_thread::sleep_for(_targetFrameTime - frameTime);
+        }
+    }
+}
+
+void GameLoop::processDestroyedEntitiesFromSystems()
+{
+    for (auto& system : _systems) {
+        switch (system->getType()) {
+            case SystemType::COLLISION:
+                processDestroyedEntities(
+                    dynamic_cast<CollisionSystem*>(system.get()), true);
+                break;
+            case SystemType::BULLET_CLEANUP:
+                processDestroyedEntities(
+                    dynamic_cast<BulletCleanupSystem*>(system.get()));
+                break;
+            case SystemType::ENEMY_CLEANUP:
+                processDestroyedEntities(
+                    dynamic_cast<EnemyCleanupSystem*>(system.get()));
+                break;
+            case SystemType::LIFETIME_CLEANUP:
+                processDestroyedEntities(
+                    dynamic_cast<LifetimeSystem*>(system.get()));
+                break;
+            default:
+                break;
+        }
+
+        if (system->getName() == "BossSystem") {
+            processDestroyedEntities(dynamic_cast<BossSystem*>(system.get()));
         }
     }
 }
@@ -298,6 +320,55 @@ void GameLoop::processInputCommands(float deltaTime)
     }
 }
 
+void GameLoop::processPendingRemovals()
+{
+    std::vector<uint32_t> clientsToRemove;
+    _pendingRemovals.popAll(clientsToRemove);
+
+    for (uint32_t clientId : clientsToRemove) {
+        auto it = _clientToEntity.find(clientId);
+        if (it == _clientToEntity.end()) {
+            continue;
+        }
+
+        EntityId entityId = it->second;
+
+        try {
+            Entity* entity = _entityManager.getEntity(entityId);
+            if (entity) {
+                auto* netEntity =
+                    _entityManager.getComponent<NetworkEntity>(*entity);
+                if (netEntity) {
+                    EntityStateUpdate update;
+                    update.entityId = netEntity->entityId;
+                    update.entityType = netEntity->entityType;
+                    update.x = 0.0f;
+                    update.y = 0.0f;
+                    update.spawned = false;
+                    update.destroyed = true;
+                    _outputQueue.push(update);
+                }
+
+                _entityManager.destroyEntity(entityId);
+            }
+        } catch (const std::exception& e) {
+        }
+
+        _clientToEntity.erase(it);
+    }
+}
+
+void GameLoop::processPendingDestructions()
+{
+    for (EntityId entityId : _pendingDestructions) {
+        try {
+            _entityManager.destroyEntity(entityId);
+        } catch (const std::exception& e) {
+        }
+    }
+    _pendingDestructions.clear();
+}
+
 void GameLoop::processDeathTimers(float deltaTime)
 {
     auto players =
@@ -323,17 +394,23 @@ void GameLoop::processDeathTimers(float deltaTime)
                     _outputQueue.push(update);
 
                     if (_onPlayerDeathCallback) {
+                        uint32_t clientIdToRemove = 0;
+                        bool found = false;
                         for (const auto& pair : _clientToEntity) {
                             if (pair.second == entity.getId()) {
-                                _onPlayerDeathCallback(pair.first);
-                                _clientToEntity.erase(pair.first);
+                                clientIdToRemove = pair.first;
+                                found = true;
                                 break;
                             }
+                        }
+                        if (found) {
+                            _onPlayerDeathCallback(clientIdToRemove);
+                            _clientToEntity.erase(clientIdToRemove);
                         }
                     }
                 }
 
-                _entityManager.destroyEntity(entity.getId());
+                _pendingDestructions.push_back(entity.getId());
             }
         }
     }
@@ -410,9 +487,11 @@ void GameLoop::getAllHealthUpdates(
 uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
                                float y)
 {
+    std::lock_guard<std::mutex> lock(_stateMutex);
+
     auto it = _clientToEntity.find(clientId);
     if (it != _clientToEntity.end()) {
-        return 0;  // Player already exists
+        return 0;
     }
 
     Entity player = _entityFactory.createPlayer(clientId, playerId, x, y);
@@ -423,31 +502,7 @@ uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
 
 void GameLoop::removePlayer(uint32_t clientId)
 {
-    auto it = _clientToEntity.find(clientId);
-    if (it == _clientToEntity.end()) {
-        return;
-    }
-
-    EntityId entityId = it->second;
-
-    Entity* entity = _entityManager.getEntity(entityId);
-    if (entity) {
-        auto* netEntity = _entityManager.getComponent<NetworkEntity>(*entity);
-        if (netEntity) {
-            EntityStateUpdate update;
-            update.entityId = netEntity->entityId;
-            update.entityType = netEntity->entityType;
-            update.x = 0.0f;
-            update.y = 0.0f;
-            update.spawned = false;
-            update.destroyed = true;
-            _outputQueue.push(update);
-        }
-
-        _entityManager.destroyEntity(entityId);
-    }
-
-    _clientToEntity.erase(it);
+    _pendingRemovals.push(clientId);
 }
 
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
@@ -532,7 +587,6 @@ void GameLoop::processSpawnEvent(const SpawnTurretEvent& event)
 {
     _entityFactory.createTurret(event.x, event.y, event.isTopTurret);
 }
-
 
 void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
 {

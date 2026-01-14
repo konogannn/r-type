@@ -609,47 +609,51 @@ void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
                                            const std::vector<Entity>& bullets)
 {
     for (size_t i = 0; i < bullets.size(); ++i) {
-        auto& bullet1Entity = bullets[i];
-        if (isMarkedForDestruction(bullet1Entity.getId())) continue;
+        EntityId id1 = bullets[i].getId();
+        if (isMarkedForDestruction(id1)) continue;
 
-        auto* bullet1 = entityManager.getComponent<Bullet>(bullet1Entity);
+        Entity* bullet1Entity = entityManager.getEntity(id1);
+        if (!bullet1Entity) continue;
+
+        auto* bullet1 = entityManager.getComponent<Bullet>(*bullet1Entity);
         if (!bullet1) continue;
 
-        auto* bullet1Pos = entityManager.getComponent<Position>(bullet1Entity);
+        auto* bullet1Pos = entityManager.getComponent<Position>(*bullet1Entity);
         auto* bullet1Box =
-            entityManager.getComponent<BoundingBox>(bullet1Entity);
+            entityManager.getComponent<BoundingBox>(*bullet1Entity);
         if (!bullet1Pos || !bullet1Box) continue;
 
         for (size_t j = i + 1; j < bullets.size(); ++j) {
-            auto& bullet2Entity = bullets[j];
-            if (isMarkedForDestruction(bullet2Entity.getId())) continue;
+            EntityId id2 = bullets[j].getId();
+            if (isMarkedForDestruction(id2)) continue;
 
-            auto* bullet2 = entityManager.getComponent<Bullet>(bullet2Entity);
+            Entity* bullet2Entity = entityManager.getEntity(id2);
+            if (!bullet2Entity) continue;
+
+            auto* bullet2 = entityManager.getComponent<Bullet>(*bullet2Entity);
             if (!bullet2) continue;
 
             if (bullet1->fromPlayer == bullet2->fromPlayer) continue;
 
             auto* bullet2Pos =
-                entityManager.getComponent<Position>(bullet2Entity);
+                entityManager.getComponent<Position>(*bullet2Entity);
             auto* bullet2Box =
-                entityManager.getComponent<BoundingBox>(bullet2Entity);
+                entityManager.getComponent<BoundingBox>(*bullet2Entity);
             if (!bullet2Pos || !bullet2Box) continue;
 
             if (checkCollision(*bullet1Pos, *bullet1Box, *bullet2Pos,
                                *bullet2Box)) {
                 auto* bullet1Net =
-                    entityManager.getComponent<NetworkEntity>(bullet1Entity);
+                    entityManager.getComponent<NetworkEntity>(*bullet1Entity);
                 if (bullet1Net) {
-                    markForDestruction(bullet1Entity.getId(),
-                                       bullet1Net->entityId,
+                    markForDestruction(id1, bullet1Net->entityId,
                                        bullet1Net->entityType);
                 }
 
                 auto* bullet2Net =
-                    entityManager.getComponent<NetworkEntity>(bullet2Entity);
+                    entityManager.getComponent<NetworkEntity>(*bullet2Entity);
                 if (bullet2Net) {
-                    markForDestruction(bullet2Entity.getId(),
-                                       bullet2Net->entityId,
+                    markForDestruction(id2, bullet2Net->entityId,
                                        bullet2Net->entityType);
                 }
 
@@ -1009,11 +1013,6 @@ void FollowingSystem::update(float /* deltaTime */,
 {
     auto entities =
         entityManager.getEntitiesWith<Position, Velocity, Following>();
-    auto players = entityManager.getEntitiesWith<Position, Player>();
-
-    if (players.empty()) {
-        return;
-    }
 
     for (auto& entity : entities) {
         auto* following = entityManager.getComponent<Following>(entity);
@@ -1025,12 +1024,20 @@ void FollowingSystem::update(float /* deltaTime */,
         auto* vel = entityManager.getComponent<Velocity>(entity);
         if (!pos || !vel) continue;
 
+        auto players = entityManager.getEntitiesWith<Position, Player>();
+        if (players.empty()) {
+            continue;
+        }
+
         const Position* targetPos =
             findNearestPlayer(*pos, players, entityManager);
         if (!targetPos) continue;
 
-        float dx = targetPos->x - pos->x;
-        float dy = targetPos->y - pos->y;
+        float targetX = targetPos->x;
+        float targetY = targetPos->y;
+
+        float dx = targetX - pos->x;
+        float dy = targetY - pos->y;
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance > 0.001f) {
@@ -1098,8 +1105,12 @@ void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
         return;
     }
 
-    float dx = targetPos->x - pos->x;
-    float dy = targetPos->y - pos->y;
+    // Store target position values before any potential entity destruction
+    float targetX = targetPos->x;
+    float targetY = targetPos->y;
+
+    float dx = targetX - pos->x;
+    float dy = targetY - pos->y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
     if (distance < 0.001f) return;
