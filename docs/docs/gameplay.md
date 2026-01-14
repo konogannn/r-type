@@ -62,8 +62,8 @@ Replays are **automatically recorded** during gameplay:
 2. Select a replay from the list (sorted by date)
 3. Use the playback controls:
    - **Pause/Play**: Pause or resume playback
-   - **<< Rewind**: Jump back 10 seconds
-   - **Forward >>**: Jump forward 10 seconds
+   - **`<<` Rewind**: Jump back 10 seconds
+   - **Forward `>>`**: Jump forward 10 seconds
    - **Speed**: Toggle between 0.5x, 1x, 2x playback speed
    - **Exit** or **ESC**: Return to replay browser
 
