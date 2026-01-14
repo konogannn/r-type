@@ -18,7 +18,6 @@ ReplayControls::ReplayControls(WindowSFML& window, GraphicsSFML& graphics,
       _graphics(graphics),
       _input(input),
       _player(player),
-      _fontPath("assets/fonts/default.ttf"),
       _wantsExit(false)
 {
     setupButtons();
@@ -94,14 +93,14 @@ void ReplayControls::render()
                                 button.getHeight(), r, g, b, 255);
 
         float textWidth =
-            _graphics.getTextWidth(button.getText(), FONT_SIZE, _fontPath);
+            _graphics.getTextWidth(button.getText(), FONT_SIZE, "");
         float textX =
             button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
         float textY =
             button.getY() + (button.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
 
         _graphics.drawText(button.getText(), textX, textY, FONT_SIZE, 255, 255,
-                           255, _fontPath);
+                           255, "");
     }
 }
 
@@ -213,7 +212,7 @@ void ReplayControls::renderTimeDisplay()
 
     float textY = panelY + 35.0f;
     _graphics.drawText(timeText, windowWidth / 2.0f - 50.0f, textY, 16, 255,
-                       255, 255, _fontPath);
+                       255, 255, "");
 }
 
 }  // namespace rtype
