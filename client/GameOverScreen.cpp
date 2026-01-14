@@ -80,8 +80,7 @@ void GameOverScreen::render()
 
     if (_fadeAlpha >= 255.0f) {
         unsigned int smallFontSize = static_cast<unsigned int>(24 * _scale);
-        std::string instructionText =
-            "Press ESC or ENTER to return to menu";
+        std::string instructionText = "Press ESC or ENTER to return to menu";
 
         float instructionWidth =
             _graphics.getTextWidth(instructionText, smallFontSize, fontPath);

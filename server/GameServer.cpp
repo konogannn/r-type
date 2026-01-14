@@ -354,7 +354,8 @@ void GameServer::processNetworkUpdates()
                         _networkServer.sendEntityDead(0, update.entityId);
 
                         if (isEnemy(update.entityType)) {
-                            uint32_t points = getScoreForEnemy(update.entityType);
+                            uint32_t points =
+                                getScoreForEnemy(update.entityType);
                             _score += points;
                             _networkServer.sendScoreUpdate(0, _score.load());
                         }
