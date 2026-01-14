@@ -185,6 +185,27 @@ void ReplayViewer::render()
 
                 spriteToRender->setPosition(sx, sy);
                 _graphics.drawSprite(*spriteToRender);
+
+                if (entity->type == 1 && entity->hasShield &&
+                    entity->shieldSprite) {
+                    float shieldBaseScale = 0.2f;
+                    entity->shieldSprite->setScale(
+                        shieldBaseScale * windowScale,
+                        shieldBaseScale * windowScale);
+
+                    float shieldSize = 1026.0f * shieldBaseScale * windowScale;
+                    float playerWidth = 80.0f * baseScale * windowScale;
+                    float playerHeight = 68.0f * baseScale * windowScale;
+                    float offsetShieldX =
+                        sx - (shieldSize - playerWidth) / 2.0f;
+                    float offsetShieldY =
+                        sy - (shieldSize - playerHeight) / 2.0f;
+
+                    entity->shieldSprite->setPosition(
+                        offsetShieldX - 90.0f * windowScale,
+                        offsetShieldY - 100.0f * windowScale);
+                    _graphics.drawSprite(*entity->shieldSprite);
+                }
             } catch (const std::exception& e) {
                 std::cerr << "[ERROR] Exception while drawing entity ID " << id
                           << ": " << e.what() << std::endl;
