@@ -81,6 +81,9 @@ class Menu {
     {
         _isFadingOut = false;
         _uiAlpha = 1.0f;
+        _wasUpPressed = true;
+        _wasDownPressed = true;
+        _wasEnterPressed = true;
     }
 
    private:
@@ -92,6 +95,11 @@ class Menu {
     std::unique_ptr<rtype::ISprite> _logoSprite;
     std::vector<Button> _buttons;
     ColorBlindFilter& _colorBlindFilter;
+
+    int _selectedButtonIndex;
+    bool _wasUpPressed;
+    bool _wasDownPressed;
+    bool _wasEnterPressed;
 
     bool _isFadingOut;
     float _uiAlpha;

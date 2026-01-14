@@ -65,6 +65,12 @@ class ReplayControls {
     std::vector<Button> _buttons;
     bool _wantsExit;
 
+    int _focusedButtonIndex;
+    bool _wasLeftPressed;
+    bool _wasRightPressed;
+    bool _wasEnterPressed;
+    bool _wasEscapePressed;
+
     enum ButtonIndex {
         PAUSE = 0,
         REWIND = 1,

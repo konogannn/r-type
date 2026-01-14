@@ -34,7 +34,16 @@ ReplayBrowser::ReplayBrowser(WindowSFML& window, GraphicsSFML& graphics,
       _renameInputField(0, 0, 440, 40, "", "", InputFieldType::Filename),
       _confirmButton(0, 0, 150, 40, "Confirm"),
       _cancelButton(0, 0, 150, 40, "Cancel"),
-      _keyWasPressed(static_cast<int>(Key::F12) + 1, false)
+      _dialogFocusedButton(0),
+      _keyWasPressed(static_cast<int>(Key::F12) + 1, false),
+      _focusedButtonIndex(0),
+      _focusedColumn(0),
+      _wasUpPressed(false),
+      _wasDownPressed(false),
+      _wasLeftPressed(false),
+      _wasRightPressed(false),
+      _wasEnterPressed(false),
+      _wasEscapePressed(false)
 {
     float windowWidth = static_cast<float>(_window.getWidth());
     float windowHeight = static_cast<float>(_window.getHeight());
@@ -69,6 +78,25 @@ void ReplayBrowser::update(float deltaTime)
 
     if (_showRenameDialog) {
         _renameInputField.update(mouseX, mouseY, isMousePressed);
+
+        bool isLeftPressed = _input.isKeyPressed(Key::Left);
+        bool isRightPressed = _input.isKeyPressed(Key::Right);
+        bool isEscapePressed = _input.isKeyPressed(Key::Escape);
+
+        if ((isLeftPressed && !_wasLeftPressed) ||
+            (isRightPressed && !_wasRightPressed)) {
+            _dialogFocusedButton = (_dialogFocusedButton == 0) ? 1 : 0;
+        }
+        _wasLeftPressed = isLeftPressed;
+        _wasRightPressed = isRightPressed;
+
+        if (isEscapePressed && !_wasEscapePressed) {
+            _showRenameDialog = false;
+            _renameInputField.setValue("");
+            _wasEscapePressed = isEscapePressed;
+            return;
+        }
+        _wasEscapePressed = isEscapePressed;
 
         for (int key = static_cast<int>(Key::A);
              key <= static_cast<int>(Key::Z); ++key) {
@@ -105,10 +133,23 @@ void ReplayBrowser::update(float deltaTime)
 
         bool enterPressed = _input.isKeyPressed(Key::Enter);
         if (enterPressed && !_keyWasPressed[static_cast<int>(Key::Enter)]) {
-            handleRenameConfirm();
+            if (_dialogFocusedButton == 0) {
+                handleRenameConfirm();
+            } else {
+                _showRenameDialog = false;
+                _renameInputField.setValue("");
+            }
+            _keyWasPressed[static_cast<int>(Key::Enter)] = enterPressed;
             return;
         }
         _keyWasPressed[static_cast<int>(Key::Enter)] = enterPressed;
+
+        if (_confirmButton.isHovered(mouseX, mouseY)) {
+            _dialogFocusedButton = 0;
+        }
+        if (_cancelButton.isHovered(mouseX, mouseY)) {
+            _dialogFocusedButton = 1;
+        }
 
         if (_confirmButton.isClicked(mouseX, mouseY, isMousePressed)) {
             handleRenameConfirm();
@@ -123,6 +164,43 @@ void ReplayBrowser::update(float deltaTime)
     }
 
     if (_showDeleteDialog) {
+        bool isLeftPressed = _input.isKeyPressed(Key::Left);
+        bool isRightPressed = _input.isKeyPressed(Key::Right);
+        bool isEnterPressed = _input.isKeyPressed(Key::Enter);
+        bool isEscapePressed = _input.isKeyPressed(Key::Escape);
+
+        if ((isLeftPressed && !_wasLeftPressed) ||
+            (isRightPressed && !_wasRightPressed)) {
+            _dialogFocusedButton = (_dialogFocusedButton == 0) ? 1 : 0;
+        }
+        _wasLeftPressed = isLeftPressed;
+        _wasRightPressed = isRightPressed;
+
+        if (isEscapePressed && !_wasEscapePressed) {
+            _showDeleteDialog = false;
+            _wasEscapePressed = isEscapePressed;
+            return;
+        }
+        _wasEscapePressed = isEscapePressed;
+
+        if (isEnterPressed && !_wasEnterPressed) {
+            if (_dialogFocusedButton == 0) {
+                handleDeleteConfirm();
+            } else {
+                _showDeleteDialog = false;
+            }
+            _wasEnterPressed = isEnterPressed;
+            return;
+        }
+        _wasEnterPressed = isEnterPressed;
+
+        if (_confirmButton.isHovered(mouseX, mouseY)) {
+            _dialogFocusedButton = 0;
+        }
+        if (_cancelButton.isHovered(mouseX, mouseY)) {
+            _dialogFocusedButton = 1;
+        }
+
         if (_confirmButton.isClicked(mouseX, mouseY, isMousePressed)) {
             handleDeleteConfirm();
             return;
@@ -148,6 +226,105 @@ void ReplayBrowser::update(float deltaTime)
     if (_backButton.isClicked(mouseX, mouseY, isMousePressed)) {
         _wantsBack = true;
         return;
+    }
+
+    bool isUpPressed = _input.isKeyPressed(Key::Up);
+    bool isDownPressed = _input.isKeyPressed(Key::Down);
+    bool isLeftPressed = _input.isKeyPressed(Key::Left);
+    bool isRightPressed = _input.isKeyPressed(Key::Right);
+    bool isEnterPressed = _input.isKeyPressed(Key::Enter);
+    bool isEscapePressed = _input.isKeyPressed(Key::Escape);
+
+    int totalRows = static_cast<int>(_replayButtons.size()) + 1;
+    int maxColumns = _replayButtons.empty() ? 1 : 3;
+
+    if (isUpPressed && !_wasUpPressed) {
+        _focusedButtonIndex--;
+        if (_focusedButtonIndex < 0) {
+            _focusedButtonIndex = totalRows - 1;
+        }
+        if (_focusedButtonIndex == static_cast<int>(_replayButtons.size())) {
+            _focusedColumn = 0;
+        }
+    }
+    if (isDownPressed && !_wasDownPressed) {
+        _focusedButtonIndex++;
+        if (_focusedButtonIndex >= totalRows) {
+            _focusedButtonIndex = 0;
+        }
+        if (_focusedButtonIndex == static_cast<int>(_replayButtons.size())) {
+            _focusedColumn = 0;
+        }
+    }
+    if (_focusedButtonIndex < static_cast<int>(_replayButtons.size())) {
+        if (isLeftPressed && !_wasLeftPressed) {
+            _focusedColumn--;
+            if (_focusedColumn < 0) {
+                _focusedColumn = maxColumns - 1;
+            }
+        }
+        if (isRightPressed && !_wasRightPressed) {
+            _focusedColumn++;
+            if (_focusedColumn >= maxColumns) {
+                _focusedColumn = 0;
+            }
+        }
+    }
+
+    if (isEscapePressed && !_wasEscapePressed) {
+        _wantsBack = true;
+        _wasEscapePressed = isEscapePressed;
+        return;
+    }
+
+    if (isEnterPressed && !_wasEnterPressed) {
+        if (_focusedButtonIndex < static_cast<int>(_replayButtons.size())) {
+            switch (_focusedColumn) {
+                case 0:
+                    _selectedReplay = _replays[_focusedButtonIndex].fullPath;
+                    break;
+                case 1:
+                    showRenameDialog(_focusedButtonIndex);
+                    break;
+                case 2:
+                    showDeleteDialog(_focusedButtonIndex);
+                    break;
+            }
+        } else {
+            _wantsBack = true;
+        }
+        _wasEnterPressed = isEnterPressed;
+        return;
+    }
+
+    _wasUpPressed = isUpPressed;
+    _wasDownPressed = isDownPressed;
+    _wasLeftPressed = isLeftPressed;
+    _wasRightPressed = isRightPressed;
+    _wasEnterPressed = isEnterPressed;
+    _wasEscapePressed = isEscapePressed;
+
+    for (size_t i = 0; i < _replayButtons.size(); ++i) {
+        if (_replayButtons[i].isHovered(mouseX, mouseY)) {
+            _focusedButtonIndex = static_cast<int>(i);
+            _focusedColumn = 0;
+        }
+    }
+    for (size_t i = 0; i < _renameButtons.size(); ++i) {
+        if (_renameButtons[i].isHovered(mouseX, mouseY)) {
+            _focusedButtonIndex = static_cast<int>(i);
+            _focusedColumn = 1;
+        }
+    }
+    for (size_t i = 0; i < _deleteButtons.size(); ++i) {
+        if (_deleteButtons[i].isHovered(mouseX, mouseY)) {
+            _focusedButtonIndex = static_cast<int>(i);
+            _focusedColumn = 2;
+        }
+    }
+    if (_backButton.isHovered(mouseX, mouseY)) {
+        _focusedButtonIndex = static_cast<int>(_replayButtons.size());
+        _focusedColumn = 0;
     }
 
     for (size_t i = 0; i < _replayButtons.size(); ++i) {
@@ -196,10 +373,12 @@ void ReplayBrowser::render()
 
     for (size_t i = 0; i < _replayButtons.size(); ++i) {
         bool isHovered = _replayButtons[i].isHovered(mouseX, mouseY);
+        bool isFocused =
+            (_focusedButtonIndex == static_cast<int>(i) && _focusedColumn == 0);
 
-        unsigned char r = isHovered ? 0 : 30;
-        unsigned char g = isHovered ? 200 : 30;
-        unsigned char b = isHovered ? 255 : 100;
+        unsigned char r = (isHovered || isFocused) ? 0 : 30;
+        unsigned char g = (isHovered || isFocused) ? 200 : 30;
+        unsigned char b = (isHovered || isFocused) ? 255 : 100;
 
         float buttonX = _replayButtons[i].getX();
         float buttonY = _replayButtons[i].getY();
@@ -228,9 +407,11 @@ void ReplayBrowser::render()
                            255, 255, 255, "");
 
         bool renameHovered = _renameButtons[i].isHovered(mouseX, mouseY);
-        r = renameHovered ? 255 : 50;
-        g = renameHovered ? 200 : 100;
-        b = renameHovered ? 0 : 50;
+        bool renameFocused =
+            (_focusedButtonIndex == static_cast<int>(i) && _focusedColumn == 1);
+        r = (renameHovered || renameFocused) ? 255 : 50;
+        g = (renameHovered || renameFocused) ? 200 : 100;
+        b = (renameHovered || renameFocused) ? 0 : 50;
 
         float renameX = _renameButtons[i].getX();
         float renameY = _renameButtons[i].getY();
@@ -256,9 +437,11 @@ void ReplayBrowser::render()
                            "");
 
         bool deleteHovered = _deleteButtons[i].isHovered(mouseX, mouseY);
-        r = deleteHovered ? 255 : 100;
-        g = deleteHovered ? 50 : 30;
-        b = deleteHovered ? 50 : 30;
+        bool deleteFocused =
+            (_focusedButtonIndex == static_cast<int>(i) && _focusedColumn == 2);
+        r = (deleteHovered || deleteFocused) ? 255 : 100;
+        g = (deleteHovered || deleteFocused) ? 50 : 30;
+        b = (deleteHovered || deleteFocused) ? 50 : 30;
 
         float deleteX = _deleteButtons[i].getX();
         float deleteY = _deleteButtons[i].getY();
@@ -293,9 +476,11 @@ void ReplayBrowser::render()
 
     float borderThickness = 3.0f;
     bool isHovered = _backButton.isHovered(mouseX, mouseY);
-    unsigned char r = isHovered ? 0 : 30;
-    unsigned char g = isHovered ? 200 : 30;
-    unsigned char b = isHovered ? 255 : 100;
+    bool isBackFocused =
+        (_focusedButtonIndex == static_cast<int>(_replayButtons.size()));
+    unsigned char r = (isHovered || isBackFocused) ? 0 : 30;
+    unsigned char g = (isHovered || isBackFocused) ? 200 : 30;
+    unsigned char b = (isHovered || isBackFocused) ? 255 : 100;
 
     float backX = _backButton.getX();
     float backY = _backButton.getY();
@@ -487,6 +672,7 @@ void ReplayBrowser::showRenameDialog(size_t replayIndex)
 {
     _selectedReplayIndex = replayIndex;
     _showRenameDialog = true;
+    _dialogFocusedButton = 0;
     std::string fileName = _replays[replayIndex].fileName;
     if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".rtr") {
         fileName = fileName.substr(0, fileName.size() - 4);
@@ -499,6 +685,7 @@ void ReplayBrowser::showDeleteDialog(size_t replayIndex)
 {
     _selectedReplayIndex = replayIndex;
     _showDeleteDialog = true;
+    _dialogFocusedButton = 1;
 }
 
 void ReplayBrowser::handleRenameConfirm()
@@ -598,9 +785,10 @@ void ReplayBrowser::renderRenameDialog()
     int mouseY = _input.getMouseY();
 
     bool confirmHovered = _confirmButton.isHovered(mouseX, mouseY);
-    unsigned char r = confirmHovered ? 0 : 50;
-    unsigned char g = confirmHovered ? 255 : 150;
-    unsigned char b = confirmHovered ? 0 : 50;
+    bool confirmFocused = (_dialogFocusedButton == 0);
+    unsigned char r = (confirmHovered || confirmFocused) ? 0 : 50;
+    unsigned char g = (confirmHovered || confirmFocused) ? 255 : 150;
+    unsigned char b = (confirmHovered || confirmFocused) ? 0 : 50;
 
     _graphics.drawRectangle(_confirmButton.getX(), _confirmButton.getY(),
                             _confirmButton.getWidth(),
@@ -615,9 +803,10 @@ void ReplayBrowser::renderRenameDialog()
                        255, "");
 
     bool cancelHovered = _cancelButton.isHovered(mouseX, mouseY);
-    r = cancelHovered ? 255 : 100;
-    g = cancelHovered ? 100 : 50;
-    b = cancelHovered ? 100 : 50;
+    bool cancelFocused = (_dialogFocusedButton == 1);
+    r = (cancelHovered || cancelFocused) ? 255 : 100;
+    g = (cancelHovered || cancelFocused) ? 100 : 50;
+    b = (cancelHovered || cancelFocused) ? 100 : 50;
 
     _graphics.drawRectangle(_cancelButton.getX(), _cancelButton.getY(),
                             _cancelButton.getWidth(), _cancelButton.getHeight(),
@@ -668,9 +857,10 @@ void ReplayBrowser::renderDeleteDialog()
     int mouseY = _input.getMouseY();
 
     bool confirmHovered = _confirmButton.isHovered(mouseX, mouseY);
-    unsigned char r = confirmHovered ? 255 : 150;
-    unsigned char g = confirmHovered ? 50 : 30;
-    unsigned char b = confirmHovered ? 50 : 30;
+    bool confirmFocused = (_dialogFocusedButton == 0);
+    unsigned char r = (confirmHovered || confirmFocused) ? 255 : 150;
+    unsigned char g = (confirmHovered || confirmFocused) ? 50 : 30;
+    unsigned char b = (confirmHovered || confirmFocused) ? 50 : 30;
 
     _graphics.drawRectangle(_confirmButton.getX(), _confirmButton.getY(),
                             _confirmButton.getWidth(),
@@ -685,9 +875,10 @@ void ReplayBrowser::renderDeleteDialog()
                        255, "");
 
     bool cancelHovered = _cancelButton.isHovered(mouseX, mouseY);
-    r = cancelHovered ? 100 : 50;
-    g = cancelHovered ? 150 : 100;
-    b = cancelHovered ? 100 : 50;
+    bool cancelFocused = (_dialogFocusedButton == 1);
+    r = (cancelHovered || cancelFocused) ? 100 : 50;
+    g = (cancelHovered || cancelFocused) ? 150 : 100;
+    b = (cancelHovered || cancelFocused) ? 100 : 50;
 
     _graphics.drawRectangle(_cancelButton.getX(), _cancelButton.getY(),
                             _cancelButton.getWidth(), _cancelButton.getHeight(),
@@ -747,6 +938,15 @@ void ReplayBrowser::reset()
     _showRenameDialog = false;
     _showDeleteDialog = false;
     _showErrorDialog = false;
+    _focusedButtonIndex = 0;
+    _focusedColumn = 0;
+    _wasUpPressed = false;
+    _wasDownPressed = false;
+    _wasLeftPressed = false;
+    _wasRightPressed = false;
+    _wasEnterPressed = true;
+    _wasEscapePressed = false;
+    refreshReplayList();
 }
 
 }  // namespace rtype

@@ -80,6 +80,11 @@ class SettingsMenu {
      */
     void saveSettings();
 
+    /**
+     * @brief Reset keyboard state (call when entering settings menu)
+     */
+    void reset();
+
    private:
     enum class SettingsInputField { ServerAddress = 0, ServerPort = 1 };
 
@@ -100,6 +105,17 @@ class SettingsMenu {
     KeyBinding& _keyBinding;
     ColorBlindFilter& _colorBlindFilter;
     Resolution _currentResolution;
+
+    int _focusedElementIndex;
+    int _totalFocusableElements;
+    bool _wasTabPressed;
+    bool _wasShiftPressed;
+    bool _wasEnterPressed;
+    bool _wasEscapePressed;
+    bool _wasLeftPressed;
+    bool _wasRightPressed;
+    bool _wasUpPressed;
+    bool _wasDownPressed;
 
     static constexpr float SLIDER_WIDTH = 400.0f;
     static constexpr float SLIDER_SPACING = 100.0f;
