@@ -36,6 +36,8 @@ class GameServer {
     std::atomic<bool> _bossSpawned;
     uint8_t _pendingBossType;
 
+    std::atomic<uint32_t> _score;
+
     static constexpr int MAX_PLAYERS = 4;
     static constexpr int MIN_PLAYERS_TO_START = 1;
     static constexpr uint16_t DEFAULT_PORT = 8080;
@@ -57,6 +59,7 @@ class GameServer {
     void spawnBossWave(uint8_t bossType);
     void checkBossWaveCompletion();
     bool isEnemy(uint8_t entityType) const;
+    uint32_t getScoreForEnemy(uint8_t entityType) const;
 
    public:
     GameServer(float targetFPS = 60.0f, uint32_t timeoutSeconds = 30);
