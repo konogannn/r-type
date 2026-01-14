@@ -201,7 +201,6 @@ void BulletCleanupSystem::update(float /* deltaTime */,
         auto* bullet = entityManager.getComponent<Bullet>(entity);
         if (!pos || !bullet) continue;
 
-        // Check boundaries based on bullet type
         bool shouldDestroy =
             bullet->fromPlayer
                 ? (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
@@ -309,10 +308,28 @@ bool CollisionSystem::isMarkedForDestruction(EntityId id) const
 }
 
 void CollisionSystem::markForDestruction(EntityId entityId, uint32_t networkId,
-                                         uint8_t type, float x, float y)
+                                         uint8_t type, float x, float y,
+                                         const SplitOnDeath* splitData)
 {
     _markedForDestruction.insert(entityId);
-    _entitiesToDestroy.push_back({entityId, networkId, type, x, y});
+    DestroyInfo info;
+    info.entityId = entityId;
+    info.networkEntityId = networkId;
+    info.entityType = type;
+    info.x = x;
+    info.y = y;
+    if (splitData) {
+        info.hasSplit = true;
+        info.splitType = splitData->splitType;
+        info.splitCount = splitData->splitCount;
+        info.splitOffsetY = splitData->offsetY;
+    } else {
+        info.hasSplit = false;
+        info.splitType = 0;
+        info.splitCount = 0;
+        info.splitOffsetY = 0.0f;
+    }
+    _entitiesToDestroy.push_back(info);
 }
 
 void CollisionSystem::handlePlayerBulletVsEnemy(
@@ -352,10 +369,13 @@ void CollisionSystem::handlePlayerBulletVsEnemy(
                 if (!enemyHealth->isAlive()) {
                     auto* enemyNet =
                         entityManager.getComponent<NetworkEntity>(enemyEntity);
+                    auto* splitComp =
+                        entityManager.getComponent<SplitOnDeath>(enemyEntity);
                     if (enemyNet) {
-                        markForDestruction(
-                            enemyEntity.getId(), enemyNet->entityId,
-                            enemyNet->entityType, enemyPos->x, enemyPos->y);
+                        markForDestruction(enemyEntity.getId(),
+                                           enemyNet->entityId,
+                                           enemyNet->entityType, enemyPos->x,
+                                           enemyPos->y, splitComp);
                     }
                 }
 
@@ -551,10 +571,12 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
 
                 auto* enemyNet =
                     entityManager.getComponent<NetworkEntity>(enemyEntity);
+                auto* splitComp =
+                    entityManager.getComponent<SplitOnDeath>(enemyEntity);
                 if (enemyNet) {
                     markForDestruction(enemyEntity.getId(), enemyNet->entityId,
                                        enemyNet->entityType, enemyPos->x,
-                                       enemyPos->y);
+                                       enemyPos->y, splitComp);
                 }
 
                 break;
@@ -710,19 +732,15 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     handleEnemyBulletVsPlayer(entityManager, bullets, players);
 
     for (const auto& info : _entitiesToDestroy) {
-        Entity* entity = entityManager.getEntity(info.entityId);
-        if (entity) {
-            auto* splitComp = entityManager.getComponent<SplitOnDeath>(*entity);
-            if (splitComp) {
-                for (int i = 0; i < splitComp->splitCount; ++i) {
-                    float offsetY =
-                        (i == 0) ? -splitComp->offsetY : splitComp->offsetY;
-                    SpawnEnemyEvent splitEvent;
-                    splitEvent.type = Enemy::Type::GLANDUS_MINI;
-                    splitEvent.x = info.x;
-                    splitEvent.y = info.y + offsetY;
-                    _spawnQueue.push_back(splitEvent);
-                }
+        if (info.hasSplit) {
+            for (int i = 0; i < info.splitCount; ++i) {
+                float offsetY =
+                    (i == 0) ? -info.splitOffsetY : info.splitOffsetY;
+                SpawnEnemyEvent splitEvent;
+                splitEvent.type = Enemy::Type::GLANDUS_MINI;
+                splitEvent.x = info.x;
+                splitEvent.y = info.y + offsetY;
+                _spawnQueue.push_back(splitEvent);
             }
         }
     }
@@ -832,10 +850,13 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
                 }
 
                 if (!enemyHealth->isAlive()) {
+                    auto* splitComp =
+                        entityManager.getComponent<SplitOnDeath>(enemyEntity);
                     if (enemyNet) {
-                        markForDestruction(
-                            enemyEntity.getId(), enemyNet->entityId,
-                            enemyNet->entityType, enemyPos->x, enemyPos->y);
+                        markForDestruction(enemyEntity.getId(),
+                                           enemyNet->entityId,
+                                           enemyNet->entityType, enemyPos->x,
+                                           enemyPos->y, splitComp);
                     }
                 }
 
@@ -1136,7 +1157,6 @@ void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
         return;
     }
 
-    // Store target position values before any potential entity destruction
     float targetX = targetPos->x;
     float targetY = targetPos->y;
 

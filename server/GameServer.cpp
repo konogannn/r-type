@@ -43,7 +43,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     // EnemySpawnerSystem disabled - only boss is spawned
     // _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
     //     _gameLoop.getSpawnEvents(),
-    //     2.0f));  // Spawn an enemy every 2 seconds
+    //     2.0f));
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::TurretShootingSystem>(

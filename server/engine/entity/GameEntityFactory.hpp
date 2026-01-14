@@ -15,6 +15,8 @@
 
 namespace engine {
 
+constexpr float TWO_PI = 6.28318530717958647692f;
+
 /**
  * @brief Factory for creating game-specific entities
  *

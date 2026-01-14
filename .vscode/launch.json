@@ -20,7 +20,7 @@
                 }
             ],
             "preLaunchTask": "Build: Server"
-        }
+        },
         {
             "name": "Debug: Server",
             "type": "lldb",

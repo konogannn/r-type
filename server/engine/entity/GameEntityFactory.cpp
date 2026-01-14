@@ -332,7 +332,7 @@ Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
 void GameEntityFactory::spawnOrbiters(float centerX, float centerY,
                                       float radius, int count)
 {
-    float angleStep = 2.0f * 3.14159265f / count;
+    float angleStep = TWO_PI / count;
 
     for (int i = 0; i < count; ++i) {
         float angle = i * angleStep;

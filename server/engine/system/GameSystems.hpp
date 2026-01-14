@@ -172,6 +172,11 @@ class CollisionSystem : public ISystem {
         uint8_t entityType;
         float x;
         float y;
+        // SplitOnDeath component data (if applicable)
+        bool hasSplit;
+        uint8_t splitType;
+        int splitCount;
+        float splitOffsetY;
     };
     std::vector<DestroyInfo> _entitiesToDestroy;
     std::unordered_set<EntityId> _markedForDestruction;
@@ -184,7 +189,8 @@ class CollisionSystem : public ISystem {
 
     bool isMarkedForDestruction(EntityId id) const;
     void markForDestruction(EntityId entityId, uint32_t networkId, uint8_t type,
-                            float x = 0.0f, float y = 0.0f);
+                            float x = 0.0f, float y = 0.0f,
+                            const SplitOnDeath* splitData = nullptr);
 
     // Collision handlers for different entity pairs
     void handlePlayerBulletVsEnemy(EntityManager& entityManager,
