@@ -340,11 +340,11 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                 bossHealth->takeDamage(bullet->damage);
 
                 // Increment hit counter and spawn a power-up
-                // every 15 hits
+                // every 5 hits
                 auto* boss = entityManager.getComponent<Boss>(bossEntity);
                 if (boss) {
                     boss->hitCounter++;
-                    if (boss->hitCounter >= 15) {
+                    if (boss->hitCounter >= 5) {
                         boss->hitCounter = 0;
 
                         // Find a player to spawn the item near them
@@ -363,12 +363,18 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                             }
                         }
 
-                        // Alternate between shield and guided missile
-                        _spawnQueue.push_back(SpawnItemEvent{
-                            _nextPowerUpIsShield ? Item::Type::SHIELD
-                                                 : Item::Type::GUIDED_MISSILE,
-                            spawnX, spawnY});
-                        _nextPowerUpIsShield = !_nextPowerUpIsShield;
+                        // Rotate between shield, guided missile, and speed
+                        Item::Type itemType;
+                        if (_nextPowerUpIndex == 0) {
+                            itemType = Item::Type::SHIELD;
+                        } else if (_nextPowerUpIndex == 1) {
+                            itemType = Item::Type::GUIDED_MISSILE;
+                        } else {
+                            itemType = Item::Type::SPEED;
+                        }
+                        _spawnQueue.push_back(
+                            SpawnItemEvent{itemType, spawnX, spawnY});
+                        _nextPowerUpIndex = (_nextPowerUpIndex + 1) % 3;
                     }
                 }
 
@@ -432,13 +438,19 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                     }
                                 }
 
-                                // Alternate between shield and guided missile
-                                _spawnQueue.push_back(SpawnItemEvent{
-                                    _nextPowerUpIsShield
-                                        ? Item::Type::SHIELD
-                                        : Item::Type::GUIDED_MISSILE,
-                                    spawnX, spawnY});
-                                _nextPowerUpIsShield = !_nextPowerUpIsShield;
+                                // Rotate between shield, guided missile, and
+                                // speed
+                                Item::Type itemType;
+                                if (_nextPowerUpIndex == 0) {
+                                    itemType = Item::Type::SHIELD;
+                                } else if (_nextPowerUpIndex == 1) {
+                                    itemType = Item::Type::GUIDED_MISSILE;
+                                } else {
+                                    itemType = Item::Type::SPEED;
+                                }
+                                _spawnQueue.push_back(
+                                    SpawnItemEvent{itemType, spawnX, spawnY});
+                                _nextPowerUpIndex = (_nextPowerUpIndex + 1) % 3;
                             }
                         }
                     }
@@ -623,6 +635,18 @@ void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
     }
 }
 
+void CollisionSystem::handleGuidedMissileVsBullet(
+    EntityManager& entityManager, const std::vector<Entity>& missiles,
+    const std::vector<Entity>& bullets)
+{
+    // Guided missiles should NOT be destroyed by enemy bullets
+    // They pass through them to reach their target
+    // This function intentionally does nothing to prevent collision
+    (void)entityManager;
+    (void)missiles;
+    (void)bullets;
+}
+
 void CollisionSystem::update([[maybe_unused]] float deltaTime,
                              EntityManager& entityManager)
 {
@@ -645,9 +669,11 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
             .getEntitiesWith<Position, BossPart, Health, BoundingBox>();
 
     handleBulletVsBullet(entityManager, bullets);
+    // Guided missiles ignore enemy bullets (don't call
+    // handleGuidedMissileVsBullet)
     handlePlayerBulletVsEnemy(entityManager, bullets, enemies);
     handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
-    handleGuidedMissileVsEnemy(entityManager, missiles, enemies);
+    handleGuidedMissileVsEnemy(entityManager, missiles, enemies, bosses);
 
     // Handle item pickup BEFORE damage checks so shield works immediately
     handlePlayerVsItem(entityManager, players, items);
@@ -718,7 +744,7 @@ void EnemyShootingSystem::processEntity(float deltaTime,
 
 void CollisionSystem::handleGuidedMissileVsEnemy(
     EntityManager& entityManager, const std::vector<Entity>& missiles,
-    const std::vector<Entity>& enemies)
+    const std::vector<Entity>& enemies, const std::vector<Entity>& bosses)
 {
     for (auto& missileEntity : missiles) {
         if (isMarkedForDestruction(missileEntity.getId())) continue;
@@ -732,6 +758,9 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
             entityManager.getComponent<BoundingBox>(missileEntity);
         if (!missilePos || !missileBox) continue;
 
+        bool hitSomething = false;
+
+        // Check collision with regular enemies
         for (auto& enemyEntity : enemies) {
             if (isMarkedForDestruction(enemyEntity.getId())) continue;
 
@@ -765,6 +794,48 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
                         markForDestruction(
                             enemyEntity.getId(), enemyNet->entityId,
                             enemyNet->entityType, enemyPos->x, enemyPos->y);
+                    }
+                }
+
+                hitSomething = true;
+                break;
+            }
+        }
+
+        if (hitSomething) continue;
+
+        // Check collision with bosses
+        for (auto& bossEntity : bosses) {
+            if (isMarkedForDestruction(bossEntity.getId())) continue;
+
+            auto* bossPos = entityManager.getComponent<Position>(bossEntity);
+            auto* bossHealth = entityManager.getComponent<Health>(bossEntity);
+            auto* bossBox = entityManager.getComponent<BoundingBox>(bossEntity);
+            if (!bossPos || !bossHealth || !bossBox) continue;
+
+            if (checkCollision(*missilePos, *missileBox, *bossPos, *bossBox)) {
+                bossHealth->takeDamage(missile->damage);
+
+                // Mark boss for network sync
+                auto* bossNet =
+                    entityManager.getComponent<NetworkEntity>(bossEntity);
+                if (bossNet) {
+                    bossNet->needsSync = true;
+                }
+
+                auto* missileNet =
+                    entityManager.getComponent<NetworkEntity>(missileEntity);
+                if (missileNet) {
+                    markForDestruction(missileEntity.getId(),
+                                       missileNet->entityId,
+                                       missileNet->entityType);
+                }
+
+                if (!bossHealth->isAlive()) {
+                    if (bossNet) {
+                        markForDestruction(
+                            bossEntity.getId(), bossNet->entityId,
+                            bossNet->entityType, bossPos->x, bossPos->y);
                     }
                 }
 
@@ -806,6 +877,15 @@ void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
                 } else if (item->type == Item::Type::GUIDED_MISSILE) {
                     _spawnQueue.push_back(SpawnGuidedMissileEvent{
                         playerEntity.getId(), *playerPos});
+                } else if (item->type == Item::Type::SPEED) {
+                    if (!entityManager.hasComponent<SpeedBoost>(playerEntity)) {
+                        Entity* mutablePlayer =
+                            entityManager.getEntity(playerEntity.getId());
+                        if (mutablePlayer) {
+                            entityManager.addComponent(
+                                *mutablePlayer, SpeedBoost(5.0f, 300.0f));
+                        }
+                    }
                 }
 
                 auto* itemNet =
@@ -830,16 +910,21 @@ SystemType GuidedMissileSystem::getType() const
     return SystemType::GUIDED_MISSILE;
 }
 
-int GuidedMissileSystem::getPriority() const { return 45; }
+int GuidedMissileSystem::getPriority() const
+{
+    return 8;
+}  // Before MovementSystem (10)
 
 Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
                                               const Position& missilePos)
 {
     auto enemies = entityManager.getEntitiesWith<Position, Enemy, Health>();
+    auto bosses = entityManager.getEntitiesWith<Position, Boss, Health>();
 
     Entity* nearestEnemy = nullptr;
     float nearestDistance = std::numeric_limits<float>::max();
 
+    // Check regular enemies
     for (auto& enemy : enemies) {
         auto* enemyPos = entityManager.getComponent<Position>(enemy);
         if (!enemyPos) continue;
@@ -851,6 +936,21 @@ Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
         if (distance < nearestDistance) {
             nearestDistance = distance;
             nearestEnemy = const_cast<Entity*>(&enemy);
+        }
+    }
+
+    // Check bosses
+    for (auto& boss : bosses) {
+        auto* bossPos = entityManager.getComponent<Position>(boss);
+        if (!bossPos) continue;
+
+        float dx = bossPos->x - missilePos.x;
+        float dy = bossPos->y - missilePos.y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestEnemy = const_cast<Entity*>(&boss);
         }
     }
 
@@ -929,10 +1029,38 @@ void ItemSpawnerSystem::spawnItem()
     float y = _yDist(_rng);
 
     int typeRoll = _typeDist(_rng);
-    Item::Type type =
-        (typeRoll == 0) ? Item::Type::SHIELD : Item::Type::GUIDED_MISSILE;
+    Item::Type type = Item::Type::SHIELD;
+    if (typeRoll == 1) {
+        type = Item::Type::GUIDED_MISSILE;
+    } else if (typeRoll == 2) {
+        type = Item::Type::SPEED;
+    }
 
     _spawnQueue.push_back(SpawnItemEvent{type, x, y});
+}
+
+std::string SpeedBoostSystem::getName() const { return "SpeedBoostSystem"; }
+
+int SpeedBoostSystem::getPriority() const { return 18; }
+
+void SpeedBoostSystem::update(float deltaTime, EntityManager& entityManager)
+{
+    auto players = entityManager.getEntitiesWith<Player, SpeedBoost>();
+
+    for (auto& playerEntity : players) {
+        auto* speedBoost = entityManager.getComponent<SpeedBoost>(playerEntity);
+        if (!speedBoost) continue;
+
+        speedBoost->duration -= deltaTime;
+
+        if (speedBoost->duration <= 0.0f) {
+            Entity* mutablePlayer =
+                entityManager.getEntity(playerEntity.getId());
+            if (mutablePlayer) {
+                entityManager.removeComponent<SpeedBoost>(*mutablePlayer);
+            }
+        }
+    }
 }
 
 }  // namespace engine

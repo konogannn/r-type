@@ -169,7 +169,7 @@ class CollisionSystem : public ISystem {
     std::vector<DestroyInfo> _entitiesToDestroy;
     std::unordered_set<EntityId> _markedForDestruction;
     std::vector<SpawnEvent>& _spawnQueue;
-    bool _nextPowerUpIsShield = true;
+    int _nextPowerUpIndex = 0;  // 0=Shield, 1=Missile, 2=Speed
 
     // Helper methods for collision checking
     bool checkCollision(const Position& pos1, const BoundingBox& box1,
@@ -200,9 +200,14 @@ class CollisionSystem : public ISystem {
     void handleBulletVsBullet(EntityManager& entityManager,
                               const std::vector<Entity>& bullets);
 
+    void handleGuidedMissileVsBullet(EntityManager& entityManager,
+                                     const std::vector<Entity>& missiles,
+                                     const std::vector<Entity>& bullets);
+
     void handleGuidedMissileVsEnemy(EntityManager& entityManager,
                                     const std::vector<Entity>& missiles,
-                                    const std::vector<Entity>& enemies);
+                                    const std::vector<Entity>& enemies,
+                                    const std::vector<Entity>& bosses);
 
     void handlePlayerVsItem(EntityManager& entityManager,
                             const std::vector<Entity>& players,
@@ -297,7 +302,7 @@ class ItemSpawnerSystem : public ISystem {
           _rng(std::random_device{}()),
           _xDist(200.0f, 1700.0f),
           _yDist(100.0f, 900.0f),
-          _typeDist(0, 1),
+          _typeDist(0, 2),
           _spawnQueue(spawnQueue)
     {
     }
@@ -307,6 +312,17 @@ class ItemSpawnerSystem : public ISystem {
 
     void update(float deltaTime, EntityManager& entityManager) override;
     void spawnItem();
+};
+
+/**
+ * @brief SpeedBoost system - Manages speed boost duration and effect
+ */
+class SpeedBoostSystem : public ISystem {
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+
+    void update(float deltaTime, EntityManager& entityManager) override;
 };
 
 }  // namespace engine
