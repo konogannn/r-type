@@ -167,77 +167,8 @@ void ClientGameState::update(float deltaTime)
                                                entity->animFrameHeight);
             }
         }
-        if (entity->type == 7 && entity->animFrameCount > 0) {
-            entity->animFrameTime += deltaTime;
-            if (entity->animFrameTime >= entity->animFrameDuration) {
-                entity->animFrameTime = 0.0f;
-                entity->animCurrentFrame++;
-                if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = entity->animFrameCount - 1;
-                }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
-            }
-        }
 
-        if (entity->type == 17 && entity->animFrameCount > 0) {
-            entity->animFrameTime += deltaTime;
-            if (entity->animFrameTime >= entity->animFrameDuration) {
-                entity->animFrameTime = 0.0f;
-                entity->animCurrentFrame++;
-                if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = 0;
-                }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
-            }
-        }
-
-        if (entity->type == 18 && entity->animFrameCount > 0) {
-            entity->animFrameTime += deltaTime;
-            if (entity->animFrameTime >= entity->animFrameDuration) {
-                entity->animFrameTime = 0.0f;
-                entity->animCurrentFrame++;
-                if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = 0;
-                }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
-            }
-        }
-
-        if (entity->type == 19 && entity->animFrameCount > 0) {
-            entity->animFrameTime += deltaTime;
-            if (entity->animFrameTime >= entity->animFrameDuration) {
-                entity->animFrameTime = 0.0f;
-                entity->animCurrentFrame++;
-                if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = 0;
-                }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
-            }
-        }
-
-        if ((entity->type == 23 || entity->type == 24) &&
-            entity->animFrameCount > 0) {
-            entity->animFrameTime += deltaTime;
-            if (entity->animFrameTime >= entity->animFrameDuration) {
-                entity->animFrameTime = 0.0f;
-                entity->animCurrentFrame++;
-                if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = 0;
-                }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
-            }
-        }
-
+        // Type 7: Explosion animation (plays once, then marks for removal)
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -253,6 +184,13 @@ void ClientGameState::update(float deltaTime)
                                                    entity->animFrameHeight);
                 }
             }
+        }
+
+        // Types 17, 18, 19, 23, 24: Looping animations
+        if ((entity->type == 17 || entity->type == 18 || entity->type == 19 ||
+             entity->type == 23 || entity->type == 24) &&
+            entity->animFrameCount > 0) {
+            updateSimpleAnimation(*entity, deltaTime);
         }
     }
 
@@ -968,6 +906,22 @@ void ClientGameState::processHealthUpdate(uint32_t entityId,
 void ClientGameState::processShieldStatus(uint32_t playerId, bool hasShield)
 {
     onShieldStatus(playerId, hasShield);
+}
+
+void ClientGameState::updateSimpleAnimation(ClientEntity& entity,
+                                            float deltaTime)
+{
+    entity.animFrameTime += deltaTime;
+    if (entity.animFrameTime >= entity.animFrameDuration) {
+        entity.animFrameTime = 0.0f;
+        entity.animCurrentFrame++;
+        if (entity.animCurrentFrame >= entity.animFrameCount) {
+            entity.animCurrentFrame = 0;
+        }
+        int frameX = entity.animCurrentFrame * entity.animFrameWidth;
+        entity.sprite->setTextureRect(frameX, 0, entity.animFrameWidth,
+                                      entity.animFrameHeight);
+    }
 }
 
 }  // namespace rtype

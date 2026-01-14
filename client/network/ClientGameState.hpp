@@ -175,6 +175,7 @@ class ClientGameState {
     // Entity helpers
     void createEntitySprite(ClientEntity& entity);
     void removeEntity(uint32_t entityId);
+    void updateSimpleAnimation(ClientEntity& entity, float deltaTime);
 };
 
 }  // namespace rtype
