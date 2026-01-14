@@ -137,6 +137,12 @@ class GameEntityFactory {
     Entity createGuidedMissileItem(float x, float y);
 
     /**
+     * @brief Create a speed boost item
+     * @return The created item entity
+     */
+    Entity createSpeedItem(float x, float y);
+
+    /**
      * @brief Create a guided missile that tracks enemies
      * @return The created missile entity
      */

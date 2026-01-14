@@ -8,6 +8,7 @@
 #include "Game.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <ctime>
 #include <iostream>
 #include <unordered_map>
@@ -362,6 +363,31 @@ void Game::render()
                         offsetShieldX - 90.0f * windowScale,
                         offsetShieldY - 100.0f * windowScale);
                     _graphics.drawSprite(*entity->shieldSprite);
+                }
+
+                if (entity->type == 1 && entity->hasSpeedBoost &&
+                    !entity->speedArrowSprites.empty()) {
+                    static float animationTime = 0.0f;
+                    animationTime += 3.0f;
+
+                    for (size_t i = 0; i < entity->speedArrowSprites.size();
+                         ++i) {
+                        float offsetFromCenter = (i - 1.0f) * 60.0f;
+                        float arrowX = entity->x + offsetFromCenter;
+
+                        float cycleOffset = (i * 40.0f);
+                        float verticalMovement =
+                            std::fmod(animationTime + cycleOffset, 120.0f);
+                        float arrowY = entity->y + 80.0f - verticalMovement;
+
+                        auto& arrow = entity->speedArrowSprites[i];
+                        arrow->setScale(0.3f * windowScale, 0.3f * windowScale);
+                        arrow->setAlpha(200);
+                        arrow->setPosition(offsetX + (arrowX * windowScale),
+                                           offsetY + (arrowY * windowScale));
+
+                        _graphics.drawSprite(*arrow);
+                    }
                 }
 
                 if (_showHitboxes) {

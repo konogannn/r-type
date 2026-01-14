@@ -151,6 +151,15 @@ void ClientGameState::update(float deltaTime)
         if (entity->type == 3 && entity->velocityX != 0.0f) {
             entity->x += entity->velocityX * deltaTime;
         }
+
+        if (entity->hasSpeedBoost) {
+            entity->speedBoostTimer -= deltaTime;
+            if (entity->speedBoostTimer <= 0.0f) {
+                entity->hasSpeedBoost = false;
+                entity->speedArrowSprites.clear();
+            }
+        }
+
         if (entity->type == 1 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -168,7 +177,21 @@ void ClientGameState::update(float deltaTime)
             }
         }
 
-        // Type 7: Explosion animation (plays once, then marks for removal)
+        if ((entity->type == 9 || entity->type == 25) &&
+            entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+            }
+        }
+
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -185,8 +208,6 @@ void ClientGameState::update(float deltaTime)
                 }
             }
         }
-
-        // Types 17, 18, 19, 23, 24: Looping animations
         if ((entity->type == 17 || entity->type == 18 || entity->type == 19 ||
              entity->type == 23 || entity->type == 24) &&
             entity->animFrameCount > 0) {
@@ -304,11 +325,15 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
                       << " as LOCAL PLAYER (matches playerId " << _playerId
                       << ")" << std::endl;
         }
+        entity->hasSpeedBoost = false;
+        entity->speedBoostTimer = 0.0f;
+        entity->speedArrowSprites.clear();
     } else {
         entity->isLocalPlayer = false;
     }
 
     createEntitySprite(*entity);
+
     _entities[entityId] = std::move(entity);
 }
 
@@ -375,14 +400,32 @@ void ClientGameState::onEntityDead(uint32_t entityId)
 {
     auto* entity = getEntity(entityId);
     if (entity) {
-        if (!_isSeeking) {
+        if (entity->type == 25) {
+            auto* localPlayer = getLocalPlayer();
+            if (localPlayer) {
+                localPlayer->hasSpeedBoost = true;
+                localPlayer->speedBoostTimer = 5.0f;
+
+                localPlayer->speedArrowSprites.clear();
+                for (int i = 0; i < 3; ++i) {
+                    auto arrow = std::make_unique<SpriteSFML>();
+                    if (arrow->loadTexture(
+                            ASSET_SPAN(embedded::speed_arrow_data))) {
+                        arrow->setScale(0.80f, 0.80f);
+                        localPlayer->speedArrowSprites.push_back(
+                            std::move(arrow));
+                    }
+                }
+            }
+        } else if (!_isSeeking) {
             switch (entity->type) {
-                case 2:
                 case 4:
+                case 2:
                 case 11:
                 case 13:
                 case 15:
                 case 17:
+                case 25:
                 case 19:
                     _explosions.push_back(std::make_unique<Explosion>(
                         ASSET_SPAN(embedded::blowup_1_data),
@@ -546,7 +589,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 8: {
-            // Shield Item power-up
             scale = 0.8f;
             if (!entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::shield_item_data))) {
@@ -559,7 +601,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 9: {
-            // Guided Missile Item power-up
             scale = 0.8f;
             if (!entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::search_missile_item_data))) {
@@ -574,7 +615,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 10: {
             scale = 2.0f;
-            // TODO load basic enemy sprite instead of reusing existing asset
             entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -583,8 +623,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 11: {
             scale = 5.0f;
-            // TODO load basic enemy projectile instead of reusing existing
-            // asset
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
             entity.sprite->setScale(scale, scale);
@@ -593,7 +631,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 12: {
             scale = 1.5f;
-            // TODO load tank enemy sprite instead of reusing existing asset
             entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
@@ -602,7 +639,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 13: {
             scale = 3.0f;
-            // TODO load tank enemy projectile instead of reusing existing asset
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
             entity.sprite->setScale(scale, scale);
@@ -610,8 +646,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 14: {
-            // scale = 2.5f;
-            // TODO load fast enemy sprite instead of reusing existing asset
             scale = 0.8f;
             entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
@@ -705,7 +739,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 22: {
-            // Guided Missile projectile
             scale = 4.0f;
             if (!entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::search_missile_data))) {
@@ -747,6 +780,18 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
+            break;
+        }
+        case 25: {
+            scale = 0.8f;
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::speed_item_data))) {
+                scale = 0.5f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
             break;
         }
         default:

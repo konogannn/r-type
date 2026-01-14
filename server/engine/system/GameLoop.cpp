@@ -273,7 +273,14 @@ void GameLoop::processInputCommands(float deltaTime)
             continue;
         }
 
-        const float MOVE_SPEED = 300.0f;
+        const float BASE_SPEED = 300.0f;
+        float moveSpeed = BASE_SPEED;
+
+        auto* speedBoost = _entityManager.getComponent<SpeedBoost>(*entity);
+        if (speedBoost) {
+            moveSpeed = speedBoost->boostedSpeed;
+        }
+
         const float MIN_X = 0.0f;
         const float MAX_X = 1800.0f;
         const float MIN_Y = 0.0f;
@@ -282,10 +289,10 @@ void GameLoop::processInputCommands(float deltaTime)
         float moveX = 0.0f;
         float moveY = 0.0f;
 
-        if (cmd.inputMask & 1) moveY -= MOVE_SPEED * deltaTime;  // Up
-        if (cmd.inputMask & 2) moveY += MOVE_SPEED * deltaTime;  // Down
-        if (cmd.inputMask & 4) moveX -= MOVE_SPEED * deltaTime;  // Left
-        if (cmd.inputMask & 8) moveX += MOVE_SPEED * deltaTime;  // Right
+        if (cmd.inputMask & 1) moveY -= moveSpeed * deltaTime;  // Up
+        if (cmd.inputMask & 2) moveY += moveSpeed * deltaTime;  // Down
+        if (cmd.inputMask & 4) moveX -= moveSpeed * deltaTime;  // Left
+        if (cmd.inputMask & 8) moveX += moveSpeed * deltaTime;  // Right
 
         bool positionChanged = (moveX != 0.0f || moveY != 0.0f);
 
@@ -426,7 +433,7 @@ void GameLoop::generateNetworkUpdates()
         bool alwaysSync =
             (netEntity->entityType == 2 || netEntity->entityType == 4 ||
              netEntity->entityType == 5 || netEntity->entityType == 6 ||
-             netEntity->entityType == 18);
+             netEntity->entityType == 16 || netEntity->entityType == 18);
 
         if (netEntity->needsSync || alwaysSync) {
             EntityStateUpdate update;
@@ -629,8 +636,10 @@ void GameLoop::processSpawnEvent(const SpawnItemEvent& event)
     Entity item;
     if (event.itemType == Item::Type::SHIELD) {
         item = _entityFactory.createShieldItem(event.x, event.y);
-    } else {
+    } else if (event.itemType == Item::Type::GUIDED_MISSILE) {
         item = _entityFactory.createGuidedMissileItem(event.x, event.y);
+    } else {
+        item = _entityFactory.createSpeedItem(event.x, event.y);
     }
 
     auto* itemNet = _entityManager.getComponent<NetworkEntity>(item);

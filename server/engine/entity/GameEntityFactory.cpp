@@ -310,6 +310,20 @@ Entity GameEntityFactory::createGuidedMissileItem(float x, float y)
     return item;
 }
 
+Entity GameEntityFactory::createSpeedItem(float x, float y)
+{
+    Entity item = _entityManager.createEntity();
+
+    _entityManager.addComponent(item, Position(x, y));
+    _entityManager.addComponent(item, Velocity(0.0f, 0.0f));
+    _entityManager.addComponent(item, BoundingBox(32.0f, 32.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(item, Item(Item::Type::SPEED));
+    _entityManager.addComponent(
+        item, NetworkEntity(_nextBulletId++, 25));  // Type 25 = Speed Item
+
+    return item;
+}
+
 Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
                                               const Position& ownerPos)
 {
@@ -321,7 +335,6 @@ Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
     _entityManager.addComponent(missile,
                                 BoundingBox(128.0f, 64.0f, -64.0f, -32.0f));
     _entityManager.addComponent(missile, GuidedMissile(50.0f, 500.0f, 20.0f));
-    _entityManager.addComponent(missile, Bullet(ownerId, true, 50.0f));
     _entityManager.addComponent(
         missile, NetworkEntity(_nextBulletId++, EntityType::GUIDED_MISSILE));
     _entityManager.addComponent(missile, Lifetime(10.0f));

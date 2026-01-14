@@ -41,6 +41,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::BossDamageSystem>());
     _gameLoop.addSystem(std::make_unique<engine::FollowingSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::SpeedBoostSystem>());
     // EnemySpawnerSystem disabled - only boss is spawned
     // _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
     //     _gameLoop.getSpawnEvents(),
