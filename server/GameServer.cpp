@@ -535,7 +535,7 @@ void GameServer::spawnBossWave(uint8_t bossType)
 
     SpawnTurretEvent topTurret;
     topTurret.x = 1200.0f;
-    topTurret.y = 30.0f;
+    topTurret.y = 0.0f;
     topTurret.isTopTurret = true;
     _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topTurret));
     _bossWaveEnemiesAlive++;

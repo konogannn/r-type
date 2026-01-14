@@ -48,6 +48,7 @@ struct ClientEntity {
     float animFrameDuration = 0.0f;
     int animFrameWidth = 0;
     int animFrameHeight = 0;
+    bool hasTriggeredEffect = false;  // For type 7 explosions: track if screen shake triggered
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
         : id(entityId),

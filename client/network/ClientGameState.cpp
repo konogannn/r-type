@@ -190,7 +190,34 @@ void ClientGameState::update(float deltaTime)
                     frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
+
+        if (entity->type == 7 && entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->hasTriggeredEffect = true;
+                } else {
+                    int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                    entity->sprite->setTextureRect(
+                        frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+                }
+            }
+        }
     }
+
+    std::vector<uint32_t> entitiesToRemove;
+    for (const auto& [id, entity] : _entities) {
+        if (entity && entity->type == 7 && entity->hasTriggeredEffect &&
+            entity->animCurrentFrame >= entity->animFrameCount) {
+            entitiesToRemove.push_back(id);
+        }
+    }
+    for (uint32_t id : entitiesToRemove) {
+        removeEntity(id);
+    }
+
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
     }

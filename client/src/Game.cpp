@@ -258,9 +258,10 @@ void Game::update(float deltaTime)
     if (_gameState) {
         const auto& entities = _gameState->getAllEntities();
         for (const auto& [id, entity] : entities) {
-            if (entity->type == 7) {
+            if (entity->type == 7 && !entity->hasTriggeredEffect) {
                 _screenShakeIntensity = 8.0f;
                 _screenShakeTimer = 0.1f;
+                entity->hasTriggeredEffect = true;
             }
         }
     }
@@ -378,6 +379,11 @@ void Game::render()
 
         for (const auto& [id, entity] : entities) {
             if (!entity || entity->type != 7) continue;
+            
+            if (entity->animFrameCount > 0 && 
+                entity->animCurrentFrame >= entity->animFrameCount) {
+                continue;
+            }
 
             rtype::ISprite* spriteToRender = entity->sprite.get();
             if (!spriteToRender) continue;
