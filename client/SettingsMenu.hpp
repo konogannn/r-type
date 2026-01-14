@@ -95,7 +95,6 @@ class SettingsMenu {
     Button _backButton;
     ToggleButton _fullscreenToggle;
     SelectionButton _colorBlindSelection;
-    std::string _fontPath;
 
     Config& _config;
     KeyBinding& _keyBinding;

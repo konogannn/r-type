@@ -20,7 +20,14 @@
 
 namespace rtype {
 
-enum class MenuAction { None, StartGame, Settings, ConnectServer, Quit };
+enum class MenuAction {
+    None,
+    StartGame,
+    Settings,
+    ConnectServer,
+    Replays,
+    Quit
+};
 
 /**
  * @brief Main menu system for R-Type
@@ -84,7 +91,6 @@ class Menu {
     std::shared_ptr<Background> _background;
     std::unique_ptr<rtype::ISprite> _logoSprite;
     std::vector<Button> _buttons;
-    std::string _fontPath;
     ColorBlindFilter& _colorBlindFilter;
 
     bool _isFadingOut;

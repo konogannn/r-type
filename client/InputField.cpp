@@ -85,6 +85,13 @@ void InputField::handleTextInput(char character)
             // Port number: digits only
             allow = (character >= '0' && character <= '9');
             break;
+        case InputFieldType::Filename:
+            // Filename: alphanumeric + hyphen and underscore only
+            allow = ((character >= '0' && character <= '9') ||
+                     (character >= 'a' && character <= 'z') ||
+                     (character >= 'A' && character <= 'Z') ||
+                     character == ' ' || character == '-' || character == '_');
+            break;
         case InputFieldType::Default:
         default:
             // Default: alphanumeric, dots, and colons

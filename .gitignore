@@ -51,6 +51,9 @@ CTest*
 # Log files
 *.log
 
+# Replay files
+replays/*.rtr
+
 # OS files
 .DS_Store
 Thumbs.db

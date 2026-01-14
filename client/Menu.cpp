@@ -19,7 +19,6 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
       _isFadingOut(false),
       _uiAlpha(1.0f)
@@ -60,6 +59,7 @@ void Menu::setupButtons()
 {
     _buttons.clear();
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "PLAY");
+    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "REPLAYS");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "SETTINGS");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "QUIT");
 }
@@ -79,9 +79,11 @@ void Menu::updateLayout()
     float buttonHeight = BUTTON_HEIGHT * scaleH;
 
     _buttons[0] = Button(centerX, startY, buttonWidth, buttonHeight, "PLAY");
-    _buttons[1] = Button(centerX, startY + spacing, buttonWidth, buttonHeight,
-                         "SETTINGS");
+    _buttons[1] =
+        Button(centerX, startY + spacing, buttonWidth, buttonHeight, "REPLAYS");
     _buttons[2] = Button(centerX, startY + 2 * spacing, buttonWidth,
+                         buttonHeight, "SETTINGS");
+    _buttons[3] = Button(centerX, startY + 3 * spacing, buttonWidth,
                          buttonHeight, "QUIT");
 }
 
@@ -116,8 +118,10 @@ MenuAction Menu::update(float deltaTime)
                     startFadeOut();
                     return MenuAction::None;
                 case 1:
-                    return MenuAction::Settings;
+                    return MenuAction::Replays;
                 case 2:
+                    return MenuAction::Settings;
+                case 3:
                     return MenuAction::Quit;
             }
         }
@@ -186,8 +190,8 @@ void Menu::render()
 
             unsigned int scaledFontSize =
                 static_cast<unsigned int>(FONT_SIZE * scale);
-            float textWidth = _graphics.getTextWidth(button.getText(),
-                                                     scaledFontSize, _fontPath);
+            float textWidth =
+                _graphics.getTextWidth(button.getText(), scaledFontSize, "");
             float textX = scaledX + (scaledWidth / 2.0f) - (textWidth / 2.0f);
             float textY =
                 scaledY + (scaledHeight / 2.0f) - (scaledFontSize / 2.0f);
@@ -195,7 +199,7 @@ void Menu::render()
             unsigned char textAlpha =
                 static_cast<unsigned char>(255 * _uiAlpha);
             _graphics.drawText(button.getText(), textX, textY, scaledFontSize,
-                               255, 255, 255, textAlpha, _fontPath);
+                               255, 255, 255, textAlpha, "");
         }
 
         if (_logoSprite) {
