@@ -181,7 +181,7 @@ void ClientGameState::update(float deltaTime)
 
         // Update animations for items (guided missile=9, pink bullets=17,
         // speed=25)
-        if ((entity->type == 9 || entity->type == 17 || entity->type == 25) &&
+        if ((entity->type == 9 || entity->type == 25) &&
             entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
