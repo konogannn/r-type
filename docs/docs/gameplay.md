@@ -45,6 +45,52 @@ Default controls (customizable in Settings):
 
 ---
 
+# 📹 Replay System
+
+R-Type includes a built-in replay system to record and watch your game sessions.
+
+### Recording Replays
+
+Replays are **automatically recorded** during gameplay:
+- Every game session is saved to `replays/game_YYYYMMDD_HHMMSS.rtr`
+- No manual action needed - just play!
+- Replays capture all game events with frame-perfect accuracy
+
+### Watching Replays
+
+1. From the main menu, click **REPLAYS**
+2. Select a replay from the list (sorted by date)
+3. Use the playback controls:
+   - **Pause/Play**: Pause or resume playback
+   - **`<<` Rewind**: Jump back 10 seconds
+   - **Forward `>>`**: Jump forward 10 seconds
+   - **Speed**: Toggle between 0.5x, 1x, 2x playback speed
+   - **Exit** or **ESC**: Return to replay browser
+
+### Replay Controls
+
+- **Spacebar**: Pause/Resume
+- **Left Arrow**: Rewind 10 seconds
+- **Right Arrow**: Forward 10 seconds
+- **S**: Cycle playback speed (0.5x → 1x → 2x)
+- **ESC**: Exit replay viewer
+
+### Progress Bar
+
+The progress bar shows:
+- Current playback position
+- Total replay duration
+- Time remaining (MM:SS / MM:SS format)
+
+### Tips for Replays
+
+- 📼 **Watch Your Performance**: Review your strategies and mistakes
+- ⏩ **Skip Boring Parts**: Use seek controls to jump to action
+- 🐌 **Slow Motion**: Use 0.5x speed to analyze intense moments
+- 🎬 **Share Sessions**: Send `.rtr` files to friends (same game version)
+
+---
+
 # 🔊 Audio Feedback
 
 The game provides audio cues for important events:

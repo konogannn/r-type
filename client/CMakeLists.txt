@@ -41,6 +41,8 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ColorBlindFilter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/InputField.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ConnectionDialog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ReplayBrowser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ReplayControls.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/GameOverScreen.cpp
 )
 
@@ -59,12 +61,14 @@ target_include_directories(r-type_client
         ${CMAKE_CURRENT_SOURCE_DIR}/wrapper
         ${CMAKE_CURRENT_SOURCE_DIR}/network
         ${NETWORK_INCLUDE_DIR}
+        ${REPLAY_INCLUDE_DIR}
 )
 
 target_link_libraries(r-type_client
     PRIVATE
         network
         utils
+        replay
         sfml-graphics
         sfml-audio
         sfml-window

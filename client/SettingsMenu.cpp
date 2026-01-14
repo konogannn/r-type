@@ -28,7 +28,6 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
                            {"None", "Protanopia", "Deuteranopia", "Tritanopia",
                             "Protanomaly", "Deuteranomaly", "Tritanomaly"},
                            0),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
@@ -591,11 +590,10 @@ void SettingsMenu::render()
     }
 
     unsigned int titleSize = static_cast<unsigned int>(48 * scale);
-    float titleWidth = _graphics.getTextWidth("SETTINGS", titleSize, _fontPath);
+    float titleWidth = _graphics.getTextWidth("SETTINGS", titleSize, "");
     float titleX = (windowWidth / 2.0f) - (titleWidth / 2.0f);
     float titleY = 110.0f * scale;
-    _graphics.drawText("SETTINGS", titleX, titleY, titleSize, 255, 100, 0,
-                       _fontPath);
+    _graphics.drawText("SETTINGS", titleX, titleY, titleSize, 255, 100, 0, "");
 
     unsigned int sectionTitleSize = static_cast<unsigned int>(24 * scale);
     float leftColX = _layout.leftColX;
@@ -608,12 +606,11 @@ void SettingsMenu::render()
     float rightColX = spacing + columnWidth + spacing + columnWidth + spacing;
 
     std::string resTitle = "RESOLUTION";
-    float resTitleW =
-        _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
+    float resTitleW = _graphics.getTextWidth(resTitle, sectionTitleSize, "");
     float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
     float sectionTitleY = _layout.sectionTitleY;
     _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
@@ -621,12 +618,12 @@ void SettingsMenu::render()
 
     std::string audioTitle = "AUDIO";
     float audioTitleW =
-        _graphics.getTextWidth(audioTitle, sectionTitleSize, _fontPath);
+        _graphics.getTextWidth(audioTitle, sectionTitleSize, "");
     float audioTitleX =
         centerColX + (columnWidth / 2.0f) - (audioTitleW / 2.0f);
     float audioTitleY = sectionTitleY;
     _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     for (const auto& slider : _sliders) {
         renderSlider(slider, scale);
@@ -634,40 +631,38 @@ void SettingsMenu::render()
 
     std::string serverTitle = "SERVER";
     float serverTitleW =
-        _graphics.getTextWidth(serverTitle, sectionTitleSize, _fontPath);
+        _graphics.getTextWidth(serverTitle, sectionTitleSize, "");
     float serverTitleX =
         centerColX + (columnWidth / 2.0f) - (serverTitleW / 2.0f);
     float serverTitleY = sectionTitleY + 300.0f * scale;
     _graphics.drawText(serverTitle, serverTitleX, serverTitleY,
-                       sectionTitleSize, 255, 255, 255, _fontPath);
+                       sectionTitleSize, 255, 255, 255, "");
 
     std::string dispTitle = "DISPLAY";
-    float dispTitleW =
-        _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
+    float dispTitleW = _graphics.getTextWidth(dispTitle, sectionTitleSize, "");
     float toggleYRender = _layout.toggleY;
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
     float dispTitleY = toggleYRender - 20.0f * scale;
     _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 255,
-                       255, 255, _fontPath);
+                       255, 255, "");
 
     renderToggleButton(scale);
 
     std::string colorBlindTitle = "COLOR-BLINDNESS";
     float colorBlindTitleW =
-        _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, _fontPath);
+        _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, "");
     float colorBlindTitleX =
         leftColX + (resButtonWidth / 2.0f) - (colorBlindTitleW / 2.0f);
     float colorBlindTitleY = _colorBlindSelection.getY() - 50.0f * scale;
     _graphics.drawText(colorBlindTitle, colorBlindTitleX, colorBlindTitleY,
-                       sectionTitleSize, 255, 255, 255, _fontPath);
+                       sectionTitleSize, 255, 255, 255, "");
 
     renderColorBlindSelection(scale);
     std::string ctrlTitle = "CONTROLS";
-    float ctrlTitleW =
-        _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
+    float ctrlTitleW = _graphics.getTextWidth(ctrlTitle, sectionTitleSize, "");
     float ctrlTitleX = rightColX + (columnWidth / 2.0f) - (ctrlTitleW / 2.0f);
     _graphics.drawText(ctrlTitle, ctrlTitleX, sectionTitleY, sectionTitleSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     for (const auto& button : _keyBindingButtons) {
         renderKeyBindingButton(button, scale);
@@ -726,13 +721,13 @@ void SettingsMenu::renderBackButton(float scale)
         borderG, borderB);
 
     float textWidth =
-        _graphics.getTextWidth(_backButton.getText(), fontSize, _fontPath);
+        _graphics.getTextWidth(_backButton.getText(), fontSize, "");
     float textX = _backButton.getX() + (_backButton.getWidth() / 2.0f) -
                   (textWidth / 2.0f);
     float textY = _backButton.getY() + (_backButton.getHeight() / 2.0f) -
                   (fontSize / 2.0f);
     _graphics.drawText(_backButton.getText(), textX, textY, fontSize, 255, 255,
-                       255, _fontPath);
+                       255, "");
 }
 
 void SettingsMenu::renderSlider(const Slider& slider, float)
@@ -762,7 +757,7 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
 
     _graphics.drawText(
         slider.getLabel(), slider.getX(), slider.getY() - baseUnit * 0.9f,
-        static_cast<unsigned int>(fontSize), titleR, titleG, titleB, _fontPath);
+        static_cast<unsigned int>(fontSize), titleR, titleG, titleB, "");
 
     _graphics.drawRectangle(slider.getX(), slider.getY(), slider.getWidth(),
                             trackHeight, 50, 50, 50);
@@ -801,7 +796,7 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     float valueX = slider.getX() + slider.getWidth() + baseUnit * 0.3f;
     unsigned int fontSizeUInt = static_cast<unsigned int>(fontSize);
     _graphics.drawText(valueText, valueX, slider.getY() - fontSize * 0.3f,
-                       fontSizeUInt, 255, 255, 255, _fontPath);
+                       fontSizeUInt, 255, 255, 255, "");
 }
 
 void SettingsMenu::saveSettings()
@@ -906,7 +901,7 @@ void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
     float labelX = button.getX() + 20.0f * scale;
     float labelY = button.getY() + 15.0f * scale;
     _graphics.drawText(button.getLabel(), labelX, labelY, fontSize, 255, 255,
-                       255, _fontPath);
+                       255, "");
 
     std::string keyText;
     if (button.isInEditMode()) {
@@ -915,11 +910,10 @@ void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
         keyText = "[" + button.getCurrentKey() + "]";
     }
 
-    float keyTextWidth = _graphics.getTextWidth(keyText, fontSize, _fontPath);
+    float keyTextWidth = _graphics.getTextWidth(keyText, fontSize, "");
     float keyTextX =
         button.getX() + button.getWidth() - keyTextWidth - 20.0f * scale;
-    _graphics.drawText(keyText, keyTextX, labelY, fontSize, 255, 255, 0,
-                       _fontPath);
+    _graphics.drawText(keyText, keyTextX, labelY, fontSize, 255, 255, 0, "");
 }
 
 void SettingsMenu::renderToggleButton(float scale)
@@ -966,23 +960,21 @@ void SettingsMenu::renderToggleButton(float scale)
                             _fullscreenToggle.getHeight(), borderR, borderG,
                             borderB);
 
-    _graphics.drawText(_fullscreenToggle.getLabel(),
-                       _fullscreenToggle.getX() + 20.0f * scale,
-                       _fullscreenToggle.getY() + 15.0f * scale, fontSize, 255,
-                       255, 255, _fontPath);
+    _graphics.drawText(
+        _fullscreenToggle.getLabel(), _fullscreenToggle.getX() + 20.0f * scale,
+        _fullscreenToggle.getY() + 15.0f * scale, fontSize, 255, 255, 255, "");
 
     std::string stateText = _fullscreenToggle.isOn() ? "[ON]" : "[OFF]";
     unsigned char stateR = _fullscreenToggle.isOn() ? 0 : 255;
     unsigned char stateG = _fullscreenToggle.isOn() ? 255 : 100;
     unsigned char stateB = _fullscreenToggle.isOn() ? 0 : 100;
 
-    float stateTextWidth =
-        _graphics.getTextWidth(stateText, fontSize, _fontPath);
+    float stateTextWidth = _graphics.getTextWidth(stateText, fontSize, "");
     float stateTextX = _fullscreenToggle.getX() + _fullscreenToggle.getWidth() -
                        stateTextWidth - 20.0f * scale;
     _graphics.drawText(stateText, stateTextX,
                        _fullscreenToggle.getY() + 15.0f * scale, fontSize,
-                       stateR, stateG, stateB, _fontPath);
+                       stateR, stateG, stateB, "");
 }
 
 void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
@@ -1032,13 +1024,12 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
                             button.getY(), borderThickness, button.getHeight(),
                             borderR, borderG, borderB);
 
-    float textWidth =
-        _graphics.getTextWidth(button.getLabel(), fontSize, _fontPath);
+    float textWidth = _graphics.getTextWidth(button.getLabel(), fontSize, "");
     float textX =
         button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
     float textY = button.getY() + 15.0f * scale;
     _graphics.drawText(button.getLabel(), textX, textY, fontSize, 255, 255, 255,
-                       _fontPath);
+                       "");
 }
 
 void SettingsMenu::renderColorBlindSelection(float scale)
@@ -1093,12 +1084,11 @@ void SettingsMenu::renderColorBlindSelection(float scale)
         _colorBlindSelection.getHeight(), borderR, borderG, borderB);
 
     std::string displayText = _colorBlindSelection.getSelectedOption();
-    float textWidth = _graphics.getTextWidth(displayText, fontSize, _fontPath);
+    float textWidth = _graphics.getTextWidth(displayText, fontSize, "");
     float textX = _colorBlindSelection.getX() +
                   (_colorBlindSelection.getWidth() / 2.0f) - (textWidth / 2.0f);
     float textY = _colorBlindSelection.getY() + 15.0f * scale;
-    _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255,
-                       _fontPath);
+    _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255, "");
 }
 
 void SettingsMenu::renderInputField(const InputField& field, float scale)
@@ -1157,17 +1147,15 @@ void SettingsMenu::renderInputField(const InputField& field, float scale)
     std::string label = field.getLabel() + ":";
     float labelY = field.getY() + 15.0f * scale;
     _graphics.drawText(label, field.getX() + 20.0f * scale, labelY, fontSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     std::string displayValue = field.getValue();
     if (field.isActive()) {
         displayValue += "_";
     }
-    float valueWidth =
-        _graphics.getTextWidth(displayValue, fontSize, _fontPath);
+    float valueWidth = _graphics.getTextWidth(displayValue, fontSize, "");
     float valueX = field.getX() + field.getWidth() - valueWidth - 20.0f * scale;
-    _graphics.drawText(displayValue, valueX, labelY, fontSize, 255, 255, 0,
-                       _fontPath);
+    _graphics.drawText(displayValue, valueX, labelY, fontSize, 255, 255, 0, "");
 }
 
 }  // namespace rtype

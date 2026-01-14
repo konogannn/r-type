@@ -8,5 +8,6 @@ set(GAME_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/SoundManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Boss.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Game.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ReplayViewer.cpp
     PARENT_SCOPE
 )
