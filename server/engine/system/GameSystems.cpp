@@ -712,18 +712,6 @@ void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
     }
 }
 
-void CollisionSystem::handleGuidedMissileVsBullet(
-    EntityManager& entityManager, const std::vector<Entity>& missiles,
-    const std::vector<Entity>& bullets)
-{
-    // Guided missiles should NOT be destroyed by enemy bullets
-    // They pass through them to reach their target
-    // This function intentionally does nothing to prevent collision
-    (void)entityManager;
-    (void)missiles;
-    (void)bullets;
-}
-
 void CollisionSystem::update([[maybe_unused]] float deltaTime,
                              EntityManager& entityManager)
 {
@@ -746,8 +734,7 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
             .getEntitiesWith<Position, BossPart, Health, BoundingBox>();
 
     handleBulletVsBullet(entityManager, bullets);
-    // Guided missiles ignore enemy bullets (don't call
-    // handleGuidedMissileVsBullet)
+    // Guided missiles ignore enemy bullets by design (no collision handler)
     handlePlayerBulletVsEnemy(entityManager, bullets, enemies);
     handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
     handleGuidedMissileVsEnemy(entityManager, missiles, enemies, bosses);
@@ -1012,12 +999,18 @@ void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
                     _spawnQueue.push_back(SpawnGuidedMissileEvent{
                         playerEntity.getId(), *playerPos});
                 } else if (item->type == Item::Type::SPEED) {
-                    if (!entityManager.hasComponent<SpeedBoost>(playerEntity)) {
+                    auto* speedBoost =
+                        entityManager.getComponent<SpeedBoost>(playerEntity);
+                    if (speedBoost) {
+                        // Refresh duration if already boosted
+                        speedBoost->duration = 5.0f;
+                    } else {
+                        // Add new speed boost
                         Entity* mutablePlayer =
                             entityManager.getEntity(playerEntity.getId());
                         if (mutablePlayer) {
-                            entityManager.addComponent(
-                                *mutablePlayer, SpeedBoost(5.0f, 300.0f));
+                            entityManager.addComponent(*mutablePlayer,
+                                                       SpeedBoost(5.0f));
                         }
                     }
                 }
