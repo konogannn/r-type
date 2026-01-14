@@ -19,7 +19,6 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/fonts/default.ttf"),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
       _isFadingOut(false),
       _uiAlpha(1.0f)
@@ -191,8 +190,8 @@ void Menu::render()
 
             unsigned int scaledFontSize =
                 static_cast<unsigned int>(FONT_SIZE * scale);
-            float textWidth = _graphics.getTextWidth(button.getText(),
-                                                     scaledFontSize, _fontPath);
+            float textWidth =
+                _graphics.getTextWidth(button.getText(), scaledFontSize, "");
             float textX = scaledX + (scaledWidth / 2.0f) - (textWidth / 2.0f);
             float textY =
                 scaledY + (scaledHeight / 2.0f) - (scaledFontSize / 2.0f);
@@ -200,7 +199,7 @@ void Menu::render()
             unsigned char textAlpha =
                 static_cast<unsigned char>(255 * _uiAlpha);
             _graphics.drawText(button.getText(), textX, textY, scaledFontSize,
-                               255, 255, 255, textAlpha, _fontPath);
+                               255, 255, 255, textAlpha, "");
         }
 
         if (_logoSprite) {
