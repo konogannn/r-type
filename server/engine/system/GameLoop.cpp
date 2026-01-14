@@ -37,18 +37,15 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
-            uint32_t clientIdToRemove = 0;
-            bool found = false;
-            for (const auto& pair : _clientToEntity) {
-                if (pair.second == info.entityId) {
-                    clientIdToRemove = pair.first;
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                _onPlayerDeathCallback(clientIdToRemove);
-                _clientToEntity.erase(clientIdToRemove);
+            auto it =
+                std::find_if(_clientToEntity.begin(), _clientToEntity.end(),
+                             [&info](const auto& pair) {
+                                 return pair.second == info.entityId;
+                             });
+            if (it != _clientToEntity.end()) {
+                uint32_t clientId = it->first;
+                _onPlayerDeathCallback(clientId);
+                _clientToEntity.erase(it);
             }
         }
     }
@@ -112,18 +109,15 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
-            uint32_t clientIdToRemove = 0;
-            bool found = false;
-            for (const auto& pair : _clientToEntity) {
-                if (pair.second == info.entityId) {
-                    clientIdToRemove = pair.first;
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                _onPlayerDeathCallback(clientIdToRemove);
-                _clientToEntity.erase(clientIdToRemove);
+            auto it =
+                std::find_if(_clientToEntity.begin(), _clientToEntity.end(),
+                             [&info](const auto& pair) {
+                                 return pair.second == info.entityId;
+                             });
+            if (it != _clientToEntity.end()) {
+                uint32_t clientId = it->first;
+                _onPlayerDeathCallback(clientId);
+                _clientToEntity.erase(it);
             }
         }
     }
@@ -394,18 +388,15 @@ void GameLoop::processDeathTimers(float deltaTime)
                     _outputQueue.push(update);
 
                     if (_onPlayerDeathCallback) {
-                        uint32_t clientIdToRemove = 0;
-                        bool found = false;
-                        for (const auto& pair : _clientToEntity) {
-                            if (pair.second == entity.getId()) {
-                                clientIdToRemove = pair.first;
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (found) {
-                            _onPlayerDeathCallback(clientIdToRemove);
-                            _clientToEntity.erase(clientIdToRemove);
+                        auto it = std::find_if(
+                            _clientToEntity.begin(), _clientToEntity.end(),
+                            [&entity](const auto& pair) {
+                                return pair.second == entity.getId();
+                            });
+                        if (it != _clientToEntity.end()) {
+                            uint32_t clientId = it->first;
+                            _onPlayerDeathCallback(clientId);
+                            _clientToEntity.erase(it);
                         }
                     }
                 }
