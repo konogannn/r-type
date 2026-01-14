@@ -685,8 +685,7 @@ void ReplayBrowser::showDeleteDialog(size_t replayIndex)
 {
     _selectedReplayIndex = replayIndex;
     _showDeleteDialog = true;
-    _dialogFocusedButton =
-        1;
+    _dialogFocusedButton = 1;
 }
 
 void ReplayBrowser::handleRenameConfirm()
