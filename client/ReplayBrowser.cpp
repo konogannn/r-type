@@ -24,7 +24,6 @@ ReplayBrowser::ReplayBrowser(WindowSFML& window, GraphicsSFML& graphics,
       _graphics(graphics),
       _input(input),
       _backButton(0, 0, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "Back"),
-      _fontPath("assets/fonts/default.ttf"),
       _wantsBack(false),
       _scrollOffset(0),
       _showRenameDialog(false),
@@ -185,12 +184,12 @@ void ReplayBrowser::render()
     std::string title = "REPLAY BROWSER";
     float titleX = (windowWidth - 300.0f) / 2.0f;
     _graphics.drawText(title, titleX, 50.0f, TITLE_FONT_SIZE, 255, 255, 255,
-                       _fontPath);
+                       "");
 
     std::string countText =
         std::to_string(_replays.size()) + " replay(s) found";
     float countX = (windowWidth - 200.0f) / 2.0f;
-    _graphics.drawText(countText, countX, 110.0f, 18, 200, 200, 200, _fontPath);
+    _graphics.drawText(countText, countX, 110.0f, 18, 200, 200, 200, "");
 
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
@@ -220,13 +219,13 @@ void ReplayBrowser::render()
         _graphics.drawRectangle(buttonX + buttonW - borderThickness, buttonY,
                                 borderThickness, buttonH, 100, 150, 255, 255);
 
-        float textWidth = _graphics.getTextWidth(_replayButtons[i].getText(),
-                                                 FONT_SIZE, _fontPath);
+        float textWidth =
+            _graphics.getTextWidth(_replayButtons[i].getText(), FONT_SIZE, "");
         float textX = buttonX + (buttonW / 2.0f) - (textWidth / 2.0f);
         float textY = buttonY + (buttonH / 2.0f) - (FONT_SIZE / 2.0f);
 
         _graphics.drawText(_replayButtons[i].getText(), textX, textY, FONT_SIZE,
-                           255, 255, 255, _fontPath);
+                           255, 255, 255, "");
 
         bool renameHovered = _renameButtons[i].isHovered(mouseX, mouseY);
         r = renameHovered ? 255 : 50;
@@ -250,11 +249,11 @@ void ReplayBrowser::render()
         _graphics.drawRectangle(renameX + renameW - borderThickness, renameY,
                                 borderThickness, renameH, 100, 150, 255, 255);
 
-        textWidth = _graphics.getTextWidth("rename", FONT_SIZE - 4, _fontPath);
+        textWidth = _graphics.getTextWidth("rename", FONT_SIZE - 4, "");
         textX = renameX + (renameW / 2.0f) - (textWidth / 2.0f);
         textY = renameY + (renameH / 2.0f) - ((FONT_SIZE - 4) / 2.0f);
         _graphics.drawText("rename", textX, textY, FONT_SIZE - 4, 255, 255, 255,
-                           _fontPath);
+                           "");
 
         bool deleteHovered = _deleteButtons[i].isHovered(mouseX, mouseY);
         r = deleteHovered ? 255 : 100;
@@ -278,18 +277,18 @@ void ReplayBrowser::render()
         _graphics.drawRectangle(deleteX + deleteW - borderThickness, deleteY,
                                 borderThickness, deleteH, 100, 150, 255, 255);
 
-        textWidth = _graphics.getTextWidth("delete", FONT_SIZE - 4, _fontPath);
+        textWidth = _graphics.getTextWidth("delete", FONT_SIZE - 4, "");
         textX = deleteX + (deleteW / 2.0f) - (textWidth / 2.0f);
         textY = deleteY + (deleteH / 2.0f) - ((FONT_SIZE - 4) / 2.0f);
         _graphics.drawText("delete", textX, textY, FONT_SIZE - 4, 255, 255, 255,
-                           _fontPath);
+                           "");
     }
 
     if (_replays.empty()) {
         std::string msg = "No replays found in replays/ directory";
         float msgX = (windowWidth - 400.0f) / 2.0f;
         float msgY = windowHeight / 2.0f;
-        _graphics.drawText(msg, msgX, msgY, 20, 150, 150, 150, _fontPath);
+        _graphics.drawText(msg, msgX, msgY, 20, 150, 150, 150, "");
     }
 
     float borderThickness = 3.0f;
@@ -315,12 +314,12 @@ void ReplayBrowser::render()
                             borderThickness, backH, 100, 150, 255, 255);
 
     float textWidth =
-        _graphics.getTextWidth(_backButton.getText(), FONT_SIZE, _fontPath);
+        _graphics.getTextWidth(_backButton.getText(), FONT_SIZE, "");
     float textX = backX + (backW / 2.0f) - (textWidth / 2.0f);
     float textY = backY + (backH / 2.0f) - (FONT_SIZE / 2.0f);
 
     _graphics.drawText(_backButton.getText(), textX, textY, FONT_SIZE, 255, 255,
-                       255, _fontPath);
+                       255, "");
 
     if (_showRenameDialog) {
         renderRenameDialog();
@@ -572,10 +571,9 @@ void ReplayBrowser::renderRenameDialog()
     _graphics.drawRectangle(dialogX, dialogY, dialogWidth, dialogHeight, 40, 40,
                             50, 255);
     std::string title = "Rename Replay";
-    float titleWidth = _graphics.getTextWidth(title, 24, _fontPath);
+    float titleWidth = _graphics.getTextWidth(title, 24, "");
     float titleX = dialogX + (dialogWidth - titleWidth) / 2.0f;
-    _graphics.drawText(title, titleX, dialogY + 20.0f, 24, 255, 255, 255,
-                       _fontPath);
+    _graphics.drawText(title, titleX, dialogY + 20.0f, 24, 255, 255, 255, "");
 
     float inputX = dialogX + 30.0f;
     float inputY = dialogY + 70.0f;
@@ -594,7 +592,7 @@ void ReplayBrowser::renderRenameDialog()
         displayText += "_";
     }
     _graphics.drawText(displayText, inputX + 10.0f, inputY + 10.0f, 20, 255,
-                       255, 255, _fontPath);
+                       255, 255, "");
 
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
@@ -608,14 +606,13 @@ void ReplayBrowser::renderRenameDialog()
                             _confirmButton.getWidth(),
                             _confirmButton.getHeight(), r, g, b, 255);
 
-    float textWidth =
-        _graphics.getTextWidth(_confirmButton.getText(), 20, _fontPath);
+    float textWidth = _graphics.getTextWidth(_confirmButton.getText(), 20, "");
     float textX =
         _confirmButton.getX() + (_confirmButton.getWidth() - textWidth) / 2.0f;
     float textY =
         _confirmButton.getY() + (_confirmButton.getHeight() - 20) / 2.0f;
     _graphics.drawText(_confirmButton.getText(), textX, textY, 20, 255, 255,
-                       255, _fontPath);
+                       255, "");
 
     bool cancelHovered = _cancelButton.isHovered(mouseX, mouseY);
     r = cancelHovered ? 255 : 100;
@@ -626,12 +623,12 @@ void ReplayBrowser::renderRenameDialog()
                             _cancelButton.getWidth(), _cancelButton.getHeight(),
                             r, g, b, 255);
 
-    textWidth = _graphics.getTextWidth(_cancelButton.getText(), 20, _fontPath);
+    textWidth = _graphics.getTextWidth(_cancelButton.getText(), 20, "");
     textX =
         _cancelButton.getX() + (_cancelButton.getWidth() - textWidth) / 2.0f;
     textY = _cancelButton.getY() + (_cancelButton.getHeight() - 20) / 2.0f;
     _graphics.drawText(_cancelButton.getText(), textX, textY, 20, 255, 255, 255,
-                       _fontPath);
+                       "");
 }
 
 void ReplayBrowser::renderDeleteDialog()
@@ -650,23 +647,21 @@ void ReplayBrowser::renderDeleteDialog()
                             50, 255);
 
     std::string title = "Delete Replay";
-    float titleWidth = _graphics.getTextWidth(title, 24, _fontPath);
+    float titleWidth = _graphics.getTextWidth(title, 24, "");
     float titleX = dialogX + (dialogWidth - titleWidth) / 2.0f;
-    _graphics.drawText(title, titleX, dialogY + 20.0f, 24, 255, 100, 100,
-                       _fontPath);
+    _graphics.drawText(title, titleX, dialogY + 20.0f, 24, 255, 100, 100, "");
 
     std::string msg = "Are you sure you want to delete:";
-    float msgWidth = _graphics.getTextWidth(msg, 18, _fontPath);
+    float msgWidth = _graphics.getTextWidth(msg, 18, "");
     float msgX = dialogX + (dialogWidth - msgWidth) / 2.0f;
-    _graphics.drawText(msg, msgX, dialogY + 60.0f, 18, 255, 255, 255,
-                       _fontPath);
+    _graphics.drawText(msg, msgX, dialogY + 60.0f, 18, 255, 255, 255, "");
 
     if (_selectedReplayIndex < _replays.size()) {
         std::string fileName = _replays[_selectedReplayIndex].fileName;
-        float fileWidth = _graphics.getTextWidth(fileName, 16, _fontPath);
+        float fileWidth = _graphics.getTextWidth(fileName, 16, "");
         float fileX = dialogX + (dialogWidth - fileWidth) / 2.0f;
         _graphics.drawText(fileName, fileX, dialogY + 85.0f, 16, 255, 255, 100,
-                           _fontPath);
+                           "");
     }
 
     int mouseX = _input.getMouseX();
@@ -681,14 +676,13 @@ void ReplayBrowser::renderDeleteDialog()
                             _confirmButton.getWidth(),
                             _confirmButton.getHeight(), r, g, b, 255);
 
-    float textWidth =
-        _graphics.getTextWidth(_confirmButton.getText(), 20, _fontPath);
+    float textWidth = _graphics.getTextWidth(_confirmButton.getText(), 20, "");
     float textX =
         _confirmButton.getX() + (_confirmButton.getWidth() - textWidth) / 2.0f;
     float textY =
         _confirmButton.getY() + (_confirmButton.getHeight() - 20) / 2.0f;
     _graphics.drawText(_confirmButton.getText(), textX, textY, 20, 255, 255,
-                       255, _fontPath);
+                       255, "");
 
     bool cancelHovered = _cancelButton.isHovered(mouseX, mouseY);
     r = cancelHovered ? 100 : 50;
@@ -699,12 +693,12 @@ void ReplayBrowser::renderDeleteDialog()
                             _cancelButton.getWidth(), _cancelButton.getHeight(),
                             r, g, b, 255);
 
-    textWidth = _graphics.getTextWidth(_cancelButton.getText(), 20, _fontPath);
+    textWidth = _graphics.getTextWidth(_cancelButton.getText(), 20, "");
     textX =
         _cancelButton.getX() + (_cancelButton.getWidth() - textWidth) / 2.0f;
     textY = _cancelButton.getY() + (_cancelButton.getHeight() - 20) / 2.0f;
     _graphics.drawText(_cancelButton.getText(), textX, textY, 20, 255, 255, 255,
-                       _fontPath);
+                       "");
 }
 
 void ReplayBrowser::renderErrorDialog()
@@ -723,21 +717,19 @@ void ReplayBrowser::renderErrorDialog()
                             50, 255);
 
     std::string title = "Error";
-    float titleWidth = _graphics.getTextWidth(title, 28, _fontPath);
+    float titleWidth = _graphics.getTextWidth(title, 28, "");
     float titleX = dialogX + (dialogWidth - titleWidth) / 2.0f;
-    _graphics.drawText(title, titleX, dialogY + 30.0f, 28, 255, 100, 100,
-                       _fontPath);
+    _graphics.drawText(title, titleX, dialogY + 30.0f, 28, 255, 100, 100, "");
 
-    float msgWidth = _graphics.getTextWidth(_errorMessage, 20, _fontPath);
+    float msgWidth = _graphics.getTextWidth(_errorMessage, 20, "");
     float msgX = dialogX + (dialogWidth - msgWidth) / 2.0f;
     _graphics.drawText(_errorMessage, msgX, dialogY + 90.0f, 20, 255, 255, 255,
-                       _fontPath);
+                       "");
 
     std::string hint = "Click anywhere or press Enter to close";
-    float hintWidth = _graphics.getTextWidth(hint, 16, _fontPath);
+    float hintWidth = _graphics.getTextWidth(hint, 16, "");
     float hintX = dialogX + (dialogWidth - hintWidth) / 2.0f;
-    _graphics.drawText(hint, hintX, dialogY + 160.0f, 16, 150, 150, 150,
-                       _fontPath);
+    _graphics.drawText(hint, hintX, dialogY + 160.0f, 16, 150, 150, 150, "");
 }
 
 bool ReplayBrowser::hasSelection() const { return !_selectedReplay.empty(); }
