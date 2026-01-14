@@ -365,18 +365,21 @@ void Game::render()
                 }
 
                 if (_showHitboxes) {
-                    static const std::unordered_map<uint8_t,
-                                                    std::pair<float, float>>
-                        hitboxSizes = {
-                            {1, {80.0f, 68.0f}},   {2, {56.0f, 56.0f}},
-                            {3, {114.0f, 36.0f}},  {4, {114.0f, 36.0f}},
-                            {5, {260.0f, 100.0f}}, {6, {48.0f, 34.5f}}};
+                    static const std::unordered_map<
+                        uint8_t, std::tuple<float, float, float, float>>
+                        hitboxData = {{1, {100.0f, 50.0f, 20.0f, 17.0f}},
+                                      {2, {56.0f, 56.0f, 0.0f, 0.0f}},
+                                      {3, {114.0f, 36.0f, 0.0f, 0.0f}},
+                                      {4, {114.0f, 36.0f, 0.0f, 0.0f}},
+                                      {5, {260.0f, 100.0f, 0.0f, 0.0f}},
+                                      {6, {48.0f, 34.5f, 0.0f, 0.0f}}};
 
-                    auto it = hitboxSizes.find(entity->type);
-                    if (it != hitboxSizes.end()) {
-                        const auto& [hitboxWidth, hitboxHeight] = it->second;
-                        float hbX = sx;
-                        float hbY = sy;
+                    auto it = hitboxData.find(entity->type);
+                    if (it != hitboxData.end()) {
+                        const auto& [hitboxWidth, hitboxHeight, offsetX,
+                                     offsetY] = it->second;
+                        float hbX = sx + offsetX * windowScale;
+                        float hbY = sy + offsetY * windowScale;
                         float hbW = hitboxWidth * windowScale;
                         float hbH = hitboxHeight * windowScale;
 
