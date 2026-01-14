@@ -57,6 +57,7 @@ struct Enemy : public ComponentBase<Enemy> {
         TANK = EntityType::TANK,
         TURRET = EntityType::TURRET,
         ORBITER = EntityType::ORBITER,
+        LASER_SHIP = EntityType::LASER_SHIP,
         BOSS
     };
 
@@ -269,6 +270,27 @@ struct Orbiter : public ComponentBase<Orbiter> {
     Orbiter(float cx = 0.0f, float cy = 0.0f, float r = 100.0f, float a = 0.0f,
             float av = 1.0f)
         : centerX(cx), centerY(cy), radius(r), angle(a), angularVelocity(av)
+    {
+    }
+};
+
+struct LaserShip : public ComponentBase<LaserShip> {
+    float laserDuration;
+    float laserCooldown;
+    float laserActiveTime;
+    bool isLaserActive;
+    uint32_t laserEntityId;
+    float chargingTime;
+    bool isCharging;
+
+    LaserShip(float duration = 3.0f)
+        : laserDuration(duration),
+          laserCooldown(duration * 2.0f),
+          laserActiveTime(0.0f),
+          isLaserActive(false),
+          laserEntityId(0),
+          chargingTime(0.0f),
+          isCharging(false)
     {
     }
 };

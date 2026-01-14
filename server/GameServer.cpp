@@ -43,6 +43,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
         _gameLoop.getSpawnEvents(), _gameLoop.getEntityManager()));
     _gameLoop.addSystem(
         std::make_unique<engine::OrbiterSystem>(_gameLoop.getSpawnEvents()));
+    _gameLoop.addSystem(std::make_unique<engine::LaserShipSystem>(
+        _gameLoop.getSpawnEvents(), _gameLoop.getEntityManager()));
     _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
@@ -264,7 +266,8 @@ bool GameServer::isEnemy(uint8_t entityType) const
            entityType == static_cast<uint8_t>(EntityType::FAST) ||
            entityType == static_cast<uint8_t>(EntityType::TANK) ||
            entityType == static_cast<uint8_t>(EntityType::TURRET) ||
-           entityType == static_cast<uint8_t>(EntityType::ORBITER);
+           entityType == static_cast<uint8_t>(EntityType::ORBITER) ||
+           entityType == static_cast<uint8_t>(EntityType::LASER_SHIP);
 }
 
 void GameServer::processNetworkUpdates()
@@ -503,9 +506,25 @@ void GameServer::spawnBossWave(uint8_t bossType)
     _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(orbiters));
     _bossWaveEnemiesAlive += 4;
 
+    SpawnLaserShipEvent topLaserShip;
+    topLaserShip.x = 1600.0f;
+    topLaserShip.y = 270.0f;
+    topLaserShip.isTop = true;
+    topLaserShip.laserDuration = 3.0f;
+    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topLaserShip));
+    _bossWaveEnemiesAlive++;
+
+    SpawnLaserShipEvent bottomLaserShip;
+    bottomLaserShip.x = 1600.0f;
+    bottomLaserShip.y = 810.0f;
+    bottomLaserShip.isTop = false;
+    bottomLaserShip.laserDuration = 3.0f;
+    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomLaserShip));
+    _bossWaveEnemiesAlive++;
+
     Logger::getInstance().log(
-        "Boss wave spawned: " + std::to_string(WAVE_SIZE + 6) +
-            " enemies (including 2 turrets and 4 orbiters)",
+        "Boss wave spawned: " + std::to_string(WAVE_SIZE + 8) +
+            " enemies (including 2 turrets, 4 orbiters, and 2 laser ships)",
         LogLevel::INFO_L, "Game");
 }
 

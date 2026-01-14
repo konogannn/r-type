@@ -130,6 +130,10 @@ class GameEntityFactory {
      * @param count Number of orbiters to spawn
      */
     void spawnOrbiters(float centerX, float centerY, float radius, int count);
+
+    Entity createLaserShip(float x, float y, bool isTop, float laserDuration);
+
+    Entity createLaser(uint32_t ownerId, float x, float y, float width);
 };
 
 }  // namespace engine

@@ -252,4 +252,49 @@ void GameEntityFactory::spawnOrbiters(float centerX, float centerY,
     }
 }
 
+Entity GameEntityFactory::createLaserShip(float x, float y, bool isTop,
+                                          float laserDuration)
+{
+    Entity ship = _entityManager.createEntity();
+
+    _entityManager.addComponent(ship, Position(x, y));
+    _entityManager.addComponent(ship, Velocity(0.0f, 0.0f));
+    _entityManager.addComponent(ship, Enemy(Enemy::Type::LASER_SHIP, isTop));
+    _entityManager.addComponent(ship, Health(50.0f));
+    _entityManager.addComponent(ship, BoundingBox(16.0f, 14.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(ship, LaserShip(laserDuration));
+    _entityManager.addComponent(
+        ship, NetworkEntity(_nextEnemyId++, EntityType::LASER_SHIP));
+
+    auto* netEntity = _entityManager.getComponent<NetworkEntity>(ship);
+    if (netEntity) {
+        netEntity->needsSync = true;
+        netEntity->isFirstSync = true;
+    }
+
+    return ship;
+}
+
+Entity GameEntityFactory::createLaser(uint32_t ownerId, float x, float y,
+                                      float width)
+{
+    Entity laser = _entityManager.createEntity();
+
+    _entityManager.addComponent(laser, Position(x, y));
+    _entityManager.addComponent(laser, Velocity(0.0f, 0.0f));
+    _entityManager.addComponent(laser, Bullet(ownerId, false, 30.0f));
+    _entityManager.addComponent(laser, BoundingBox(width, 8.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(
+        laser, NetworkEntity(_nextBulletId++, EntityType::LASER));
+    _entityManager.addComponent(laser, Lifetime(0.1f));
+
+    auto* netEntity = _entityManager.getComponent<NetworkEntity>(laser);
+    if (netEntity) {
+        netEntity->needsSync = true;
+        netEntity->isFirstSync = true;
+    }
+
+    return laser;
+}
+
 }  // namespace engine
