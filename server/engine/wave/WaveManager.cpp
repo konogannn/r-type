@@ -401,7 +401,8 @@ void WaveManager::triggerBoss()
         "Boss spawned! Type: " +
             std::to_string(static_cast<int>(event.bossType)),
         LogLevel::INFO_L, "WaveManager");
-    // Note: Level is NOT marked complete here - it completes when boss is destroyed
+    // Note: Level is NOT marked complete here - it completes when boss is
+    // destroyed
 }
 
 void WaveManager::update(float deltaTime, EntityManager& entityManager)
