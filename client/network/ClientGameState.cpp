@@ -120,6 +120,16 @@ void ClientGameState::update(float deltaTime)
             entity->x += entity->velocityX * deltaTime;
         }
 
+        // Update speed boost timer
+        if (entity->hasSpeedBoost) {
+            entity->speedBoostTimer -= deltaTime;
+            if (entity->speedBoostTimer <= 0.0f) {
+                entity->hasSpeedBoost = false;
+                entity->speedArrowSprites.clear();
+            }
+        }
+
+        // Update animations for player
         if (entity->type == 1 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -134,6 +144,22 @@ void ClientGameState::update(float deltaTime)
                 entity->sprite->setTextureRect(frameX, frameY,
                                                entity->animFrameWidth,
                                                entity->animFrameHeight);
+            }
+        }
+
+        // Update animations for items (guided missile, speed)
+        if ((entity->type == 9 || entity->type == 17) &&
+            entity->animFrameCount > 0) {
+            entity->animFrameTime += deltaTime;
+            if (entity->animFrameTime >= entity->animFrameDuration) {
+                entity->animFrameTime = 0.0f;
+                entity->animCurrentFrame++;
+                if (entity->animCurrentFrame >= entity->animFrameCount) {
+                    entity->animCurrentFrame = 0;
+                }
+                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
+                entity->sprite->setTextureRect(
+                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
 
@@ -238,6 +264,12 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
     entity->isLocalPlayer = (entityId == _playerId);
     createEntitySprite(*entity);
+
+    // If it's a speed item, track it
+    if (type == 17) {
+        // Speed items are handled by onEntityDead (picked up)
+    }
+
     _entities[entityId] = std::move(entity);
 }
 
@@ -298,21 +330,44 @@ void ClientGameState::onEntityDead(uint32_t entityId)
 {
     auto* entity = getEntity(entityId);
     if (entity) {
-        switch (entity->type) {
-            case 4:
-            case 2:
-                _explosions.push_back(std::make_unique<Explosion>(
-                    ASSET_SPAN(embedded::blowup_1_data),
-                    (entity->type == 4) ? entity->x - 16 : entity->x + 16,
-                    entity->y, 1.0f, 32, 32, 6));
-                break;
-            default:
-                if (entity->type >= 10 || entity->type == 5) {
-                    _explosions.push_back(std::make_unique<Explosion>(
-                        ASSET_SPAN(embedded::blowup_2_data), entity->x,
-                        entity->y, 2.0f, 64, 64, 8));
+        // Check if it's a speed item being picked up
+        if (entity->type == 17) {
+            // Activate speed boost on local player
+            auto* localPlayer = getLocalPlayer();
+            if (localPlayer) {
+                localPlayer->hasSpeedBoost = true;
+                localPlayer->speedBoostTimer = 5.0f;
+
+                // Create 3 speed arrow sprites around the player
+                localPlayer->speedArrowSprites.clear();
+                for (int i = 0; i < 3; ++i) {
+                    auto arrow = std::make_unique<SpriteSFML>();
+                    if (arrow->loadTexture(
+                            ASSET_SPAN(embedded::speed_arrow_data))) {
+                        arrow->setScale(0.80f, 0.80f);
+                        localPlayer->speedArrowSprites.push_back(
+                            std::move(arrow));
+                    }
                 }
-                break;
+            }
+        } else {
+            // Normal entity death with explosions
+            switch (entity->type) {
+                case 4:
+                case 2:
+                    _explosions.push_back(std::make_unique<Explosion>(
+                        ASSET_SPAN(embedded::blowup_1_data),
+                        (entity->type == 4) ? entity->x - 16 : entity->x + 16,
+                        entity->y, 1.0f, 32, 32, 6));
+                    break;
+                default:
+                    if (entity->type >= 10 || entity->type == 5) {
+                        _explosions.push_back(std::make_unique<Explosion>(
+                            ASSET_SPAN(embedded::blowup_2_data), entity->x,
+                            entity->y, 2.0f, 64, 64, 8));
+                    }
+                    break;
+            }
         }
     }
 
@@ -462,7 +517,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 8: {
-            // Shield Item power-up
+            // Shield Item power-up (no animation)
             scale = 0.8f;
             if (!entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::shield_item_data))) {
@@ -482,6 +537,19 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 scale = 0.5f;
                 entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::projectile_player_1_data));
+            }
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 17: {
+            // Speed Item power-up
+            scale = 0.8f;
+            if (!entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::speed_item_data))) {
+                scale = 0.5f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;

@@ -38,7 +38,11 @@ struct ClientEntity {
     float spriteScale = 1.0f;
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
-    bool hasShield = false;  // True if player has active shield
+    bool hasShield = false;        // True if player has active shield
+    bool hasSpeedBoost = false;    // True if player has speed boost
+    float speedBoostTimer = 0.0f;  // Time remaining for speed boost
+    std::vector<std::unique_ptr<SpriteSFML>>
+        speedArrowSprites;  // Speed indicators
 
     enum class AnimationState { IDLE, MOVING_DOWN, MOVING_UP };
     AnimationState animState = AnimationState::IDLE;
