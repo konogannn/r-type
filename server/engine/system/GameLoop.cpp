@@ -488,4 +488,10 @@ void GameLoop::processSpawnEvent(const SpawnOrbitersEvent& event)
                                  event.count);
 }
 
+void GameLoop::processSpawnEvent(const SpawnLaserShipEvent& event)
+{
+    _entityFactory.createLaserShip(event.x, event.y, event.isTop,
+                                   event.laserDuration);
+}
+
 }  // namespace engine

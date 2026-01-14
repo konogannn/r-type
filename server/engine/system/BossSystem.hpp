@@ -29,7 +29,8 @@ constexpr float TURRET_BULLET_SPEED = 350.0f;
 
 using SpawnEvent =
     std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
-                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent>;
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent>;
 
 /**
  * @brief Boss AI System - Manages boss behavior, phases, and attacks

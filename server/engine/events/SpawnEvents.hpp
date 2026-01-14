@@ -56,3 +56,10 @@ struct SpawnOrbitersEvent {
     float radius;
     int count;
 };
+
+struct SpawnLaserShipEvent {
+    float x;
+    float y;
+    bool isTop;
+    float laserDuration;
+};
