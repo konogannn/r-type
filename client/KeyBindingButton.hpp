@@ -60,6 +60,11 @@ class KeyBindingButton {
      */
     void setEditMode(bool edit) { _isInEditMode = edit; }
 
+    /**
+     * @brief Start edit mode (keyboard navigation)
+     */
+    void startEdit() { _isInEditMode = true; }
+
     // Getters for rendering
     float getX() const { return _x; }
     float getY() const { return _y; }
