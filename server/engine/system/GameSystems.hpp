@@ -113,10 +113,16 @@ class BulletCleanupSystem : public ISystem {
         float y;
     };
     std::vector<DestroyInfo> _entitiesToDestroy;
+    // Player bullet boundaries
     const float MIN_X = -200.0f;
     const float MAX_X = 2000.0f;
     const float MIN_Y = -200.0f;
     const float MAX_Y = 1100.0f;
+    // Enemy projectile boundaries
+    const float ENEMY_MIN_X = -1000.0f;
+    const float ENEMY_MAX_X = 3000.0f;
+    const float ENEMY_MIN_Y = -1000.0f;
+    const float ENEMY_MAX_Y = 2000.0f;
 
    public:
     std::string getName() const override;

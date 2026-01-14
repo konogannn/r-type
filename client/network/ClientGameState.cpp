@@ -398,9 +398,14 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
                                        entity->animFrameHeight);
     }
 
+    bool isEnemyProjectile =
+        (entity->type == 11 || entity->type == 13 || entity->type == 15 ||
+         entity->type == 17 || entity->type == 19);
+
     float clampedX = x;
     float clampedY = y;
-    if (_mapWidth > 0 && _mapHeight > 0) {
+
+    if (!isEnemyProjectile && _mapWidth > 0 && _mapHeight > 0) {
         if (clampedX < 0.0f) clampedX = 0.0f;
         if (clampedY < 0.0f) clampedY = 0.0f;
         float spriteHeight = 0.0f;

@@ -198,10 +198,18 @@ void BulletCleanupSystem::update(float /* deltaTime */,
 
     for (auto& entity : bullets) {
         auto* pos = entityManager.getComponent<Position>(entity);
-        if (!pos) continue;
+        auto* bullet = entityManager.getComponent<Bullet>(entity);
+        if (!pos || !bullet) continue;
 
-        if (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
-            pos->y > MAX_Y) {
+        // Check boundaries based on bullet type
+        bool shouldDestroy =
+            bullet->fromPlayer
+                ? (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
+                   pos->y > MAX_Y)
+                : (pos->x < ENEMY_MIN_X || pos->x > ENEMY_MAX_X ||
+                   pos->y < ENEMY_MIN_Y || pos->y > ENEMY_MAX_Y);
+
+        if (shouldDestroy) {
             auto* netEntity = entityManager.getComponent<NetworkEntity>(entity);
             if (netEntity) {
                 _entitiesToDestroy.push_back(
