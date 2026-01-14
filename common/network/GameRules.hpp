@@ -11,7 +11,7 @@
 
 /**
  * @brief Game rules configuration struct
- * requiredPlayers : Number of players required to start the game
+ * requiredPlayers : Number of players required to start the game (1-4)
  * maxRespawn : Maximum number of respawns per player (0 = no respawns)
  */
 struct GameRules {
