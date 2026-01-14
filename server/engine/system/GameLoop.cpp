@@ -346,6 +346,10 @@ void GameLoop::processPendingRemovals()
                 _entityManager.destroyEntity(entityId);
             }
         } catch (const std::exception& e) {
+            Logger::getInstance().log(
+                "Failed to destroy entity during removal: " +
+                    std::string(e.what()),
+                LogLevel::ERROR_L, "GameLoop");
         }
 
         _clientToEntity.erase(it);
@@ -358,6 +362,10 @@ void GameLoop::processPendingDestructions()
         try {
             _entityManager.destroyEntity(entityId);
         } catch (const std::exception& e) {
+            Logger::getInstance().log("Failed to destroy pending entity " +
+                                          std::to_string(entityId) + ": " +
+                                          std::string(e.what()),
+                                      LogLevel::ERROR_L, "GameLoop");
         }
     }
     _pendingDestructions.clear();
