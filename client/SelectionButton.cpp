@@ -58,6 +58,23 @@ void SelectionButton::setSelectedIndex(int index)
     }
 }
 
+void SelectionButton::cycleNext()
+{
+    if (!_options.empty()) {
+        _selectedIndex = (_selectedIndex + 1) % _options.size();
+    }
+}
+
+void SelectionButton::cyclePrevious()
+{
+    if (!_options.empty()) {
+        _selectedIndex--;
+        if (_selectedIndex < 0) {
+            _selectedIndex = static_cast<int>(_options.size()) - 1;
+        }
+    }
+}
+
 std::string SelectionButton::getSelectedOption() const
 {
     if (_selectedIndex >= 0 &&

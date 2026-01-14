@@ -20,6 +20,10 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
       _graphics(graphics),
       _input(input),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
+      _selectedButtonIndex(0),
+      _wasUpPressed(false),
+      _wasDownPressed(false),
+      _wasEnterPressed(false),
       _isFadingOut(false),
       _uiAlpha(1.0f)
 {
@@ -27,6 +31,10 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     setupLogo();
     setupButtons();
     updateLayout();
+
+    if (!_buttons.empty()) {
+        _buttons[_selectedButtonIndex].setFocused(true);
+    }
 
     Config& config = Config::getInstance();
     config.load();
@@ -85,6 +93,11 @@ void Menu::updateLayout()
                          buttonHeight, "SETTINGS");
     _buttons[3] = Button(centerX, startY + 3 * spacing, buttonWidth,
                          buttonHeight, "QUIT");
+
+    if (_selectedButtonIndex >= 0 &&
+        _selectedButtonIndex < static_cast<int>(_buttons.size())) {
+        _buttons[_selectedButtonIndex].setFocused(true);
+    }
 }
 
 MenuAction Menu::update(float deltaTime)
@@ -108,8 +121,62 @@ MenuAction Menu::update(float deltaTime)
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
 
+    bool isUpPressed = _input.isKeyPressed(Key::Up);
+    bool isDownPressed = _input.isKeyPressed(Key::Down);
+    bool isEnterPressed = _input.isKeyPressed(Key::Enter);
+
+    if (isUpPressed && !_wasUpPressed) {
+        _buttons[_selectedButtonIndex].setFocused(false);
+        _selectedButtonIndex--;
+        if (_selectedButtonIndex < 0) {
+            _selectedButtonIndex = static_cast<int>(_buttons.size()) - 1;
+        }
+        _buttons[_selectedButtonIndex].setFocused(true);
+        SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+    }
+    if (isDownPressed && !_wasDownPressed) {
+        _buttons[_selectedButtonIndex].setFocused(false);
+        _selectedButtonIndex++;
+        if (_selectedButtonIndex >= static_cast<int>(_buttons.size())) {
+            _selectedButtonIndex = 0;
+        }
+        _buttons[_selectedButtonIndex].setFocused(true);
+        SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+    }
+
+    _wasUpPressed = isUpPressed;
+    _wasDownPressed = isDownPressed;
+
+    if (isEnterPressed && !_wasEnterPressed) {
+        SoundManager::getInstance().playSound("click");
+        switch (_selectedButtonIndex) {
+            case 0:
+                startFadeOut();
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::None;
+            case 1:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Replays;
+            case 2:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Settings;
+            case 3:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Quit;
+        }
+    }
+    _wasEnterPressed = isEnterPressed;
+
     for (size_t i = 0; i < _buttons.size(); ++i) {
         _buttons[i].updateAnimation(deltaTime);
+
+        if (_buttons[i].isHovered(mouseX, mouseY)) {
+            if (static_cast<int>(i) != _selectedButtonIndex) {
+                _buttons[_selectedButtonIndex].setFocused(false);
+                _selectedButtonIndex = static_cast<int>(i);
+                _buttons[_selectedButtonIndex].setFocused(true);
+            }
+        }
 
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
             SoundManager::getInstance().playSound("click");
@@ -160,7 +227,7 @@ void Menu::render()
             float scaledY = button.getY() - offsetY;
 
             unsigned char r, g, b;
-            if (button.getIsHovered()) {
+            if (button.getIsHovered() || button.getIsFocused()) {
                 r = 0;
                 g = 200;
                 b = 255;

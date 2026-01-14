@@ -112,8 +112,18 @@ class ReplayBrowser {
     InputField _renameInputField;
     Button _confirmButton;
     Button _cancelButton;
+    int _dialogFocusedButton;
 
     std::vector<bool> _keyWasPressed;
+
+    int _focusedButtonIndex;
+    int _focusedColumn;
+    bool _wasUpPressed;
+    bool _wasDownPressed;
+    bool _wasLeftPressed;
+    bool _wasRightPressed;
+    bool _wasEnterPressed;
+    bool _wasEscapePressed;
 
     static constexpr float BUTTON_WIDTH = 450.0f;
     static constexpr float BUTTON_HEIGHT = 50.0f;

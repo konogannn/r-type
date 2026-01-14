@@ -103,6 +103,7 @@ int main()
                     break;
                 case MenuAction::Settings:
                     state = GameState::Settings;
+                    settingsMenu->reset();
                     break;
                 case MenuAction::Replays:
                     state = GameState::ReplayBrowser;

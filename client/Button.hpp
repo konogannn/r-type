@@ -63,6 +63,13 @@ class Button {
     float getHeight() const { return _height; }
     const std::string& getText() const { return _text; }
     bool getIsHovered() const { return _isHovered; }
+    bool getIsFocused() const { return _isFocused; }
+
+    /**
+     * @brief Set keyboard focus state
+     * @param focused True if button should be focused
+     */
+    void setFocused(bool focused) { _isFocused = focused; }
 
     /**
      * @brief Update hover animation
@@ -86,6 +93,7 @@ class Button {
     bool _isHovered;
     bool _wasPressed;
     bool _wasHovered;
+    bool _isFocused;
     float _currentScale;
     float _targetScale;
     static constexpr float HOVER_SCALE = 1.05f;
