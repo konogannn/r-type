@@ -1,0 +1,158 @@
+{
+    "levelId": 1,
+    "name": "Asteroid Field",
+    "description": "Navigate through a field of asteroids and defeat the incoming enemies",
+    "timeLimit": 0,
+    "scoreThreshold": 1000,
+    "waves": [
+        {
+            "waveNumber": 1,
+            "startDelay": 0.5,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "BASIC",
+                    "pattern": "SEQUENTIAL",
+                    "positions": [
+                        {
+                            "x": 1920,
+                            "y": 200,
+                            "delay": 0.0
+                        },
+                        {
+                            "x": 1920,
+                            "y": 400,
+                            "delay": 1.0
+                        },
+                        {
+                            "x": 1920,
+                            "y": 600,
+                            "delay": 2.0
+                        },
+                        {
+                            "x": 1920,
+                            "y": 800,
+                            "delay": 3.0
+                        }
+                    ]
+                }
+            ],
+            "specialEnemies": []
+        },
+        {
+            "waveNumber": 2,
+            "startDelay": 1.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "FAST",
+                    "pattern": "WAVE",
+                    "count": 5,
+                    "startX": 1920,
+                    "startY": 300,
+                    "spacing": 120,
+                    "delayBetweenSpawns": 0.8,
+                    "waveAmplitude": 50.0,
+                    "waveFrequency": 2.0
+                }
+            ],
+            "specialEnemies": []
+        },
+        {
+            "waveNumber": 3,
+            "startDelay": 1.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "TANK",
+                    "pattern": "SIMULTANEOUS",
+                    "count": 3,
+                    "startX": 1920,
+                    "startY": 200,
+                    "spacing": 250
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "TURRET",
+                    "x": 1000,
+                    "y": 1,
+                    "isTopTurret": true
+                },
+                {
+                    "type": "TURRET",
+                    "x": 1000,
+                    "y": 1000,
+                    "isTopTurret": false
+                }
+            ]
+        },
+        {
+            "waveNumber": 4,
+            "startDelay": 1.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "BASIC",
+                    "pattern": "RANDOM",
+                    "count": 6,
+                    "startX": 1920,
+                    "minY": 150,
+                    "maxY": 900,
+                    "delayBetweenSpawns": 1.0
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "ORBITERS",
+                    "x": 1600,
+                    "y": 540,
+                    "delay": 1.0,
+                    "radius": 80,
+                    "orbiterCount": 4
+                }
+            ]
+        },
+        {
+            "waveNumber": 5,
+            "startDelay": 1.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "FAST",
+                    "pattern": "WAVE",
+                    "count": 8,
+                    "startX": 1920,
+                    "startY": 200,
+                    "spacing": 100,
+                    "delayBetweenSpawns": 0.5,
+                    "waveAmplitude": 60.0,
+                    "waveFrequency": 1.5
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1920,
+                    "y": 200,
+                    "delay": 2.0,
+                    "isTop": true,
+                    "laserDuration": 3.0
+                },
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1920,
+                    "y": 880,
+                    "delay": 2.0,
+                    "isTop": false,
+                    "laserDuration": 3.0
+                }
+            ]
+        }
+    ],
+    "boss": {
+        "type": 0,
+        "triggerAfterWave": 5,
+        "spawnDelay": 3.0
+    }
+}
