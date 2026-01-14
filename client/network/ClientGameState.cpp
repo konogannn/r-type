@@ -313,6 +313,7 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (!entity) {
         return;
     }
+
     if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
         if (deltaY < -0.5f) {
@@ -638,6 +639,23 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 entity.sprite->setScale(scale, scale);
             }
             entity.spriteScale = scale;
+            break;
+        }
+        case 20: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::laser_shooter_data))) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 21: {
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::laser_data))) {
+                entity.sprite->setOrigin(320.0f, 4.0f);
+                entity.sprite->setScale(6.0f, 6.0f);
+            }
+            entity.spriteScale = 6.0f;
             break;
         }
         default:

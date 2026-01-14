@@ -134,5 +134,13 @@ static const unsigned char orbiter_data[] = {
 #embed "../../../assets/sprites/orbiter.png"
 };
 
+static const unsigned char laser_shooter_data[] = {
+#embed "../../../assets/sprites/laser_shooter.png"
+};
+
+static const unsigned char laser_data[] = {
+#embed "../../../assets/sprites/laser.png"
+};
+
 }  // namespace embedded
 }  // namespace rtype
