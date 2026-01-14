@@ -199,9 +199,11 @@ void ClientGameState::update(float deltaTime)
                 if (entity->animCurrentFrame >= entity->animFrameCount) {
                     entity->hasTriggeredEffect = true;
                 } else {
-                    int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                    entity->sprite->setTextureRect(
-                        frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
+                    int frameX =
+                        entity->animCurrentFrame * entity->animFrameWidth;
+                    entity->sprite->setTextureRect(frameX, 0,
+                                                   entity->animFrameWidth,
+                                                   entity->animFrameHeight);
                 }
             }
         }

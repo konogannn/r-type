@@ -379,8 +379,8 @@ void Game::render()
 
         for (const auto& [id, entity] : entities) {
             if (!entity || entity->type != 7) continue;
-            
-            if (entity->animFrameCount > 0 && 
+
+            if (entity->animFrameCount > 0 &&
                 entity->animCurrentFrame >= entity->animFrameCount) {
                 continue;
             }
