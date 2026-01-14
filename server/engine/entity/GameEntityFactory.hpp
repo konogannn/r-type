@@ -125,6 +125,24 @@ class GameEntityFactory {
     Entity createExplosion(EntityId ownerId, const Position& pos);
 
     /**
+     * @brief Create a shield power-up item
+     * @return The created item entity
+     */
+    Entity createShieldItem(float x, float y);
+
+    /**
+     * @brief Create a guided missile item
+     * @return The created item entity
+     */
+    Entity createGuidedMissileItem(float x, float y);
+
+    /**
+     * @brief Create a guided missile that tracks enemies
+     * @return The created missile entity
+     */
+    Entity createGuidedMissile(EntityId ownerId, const Position& ownerPos);
+
+    /**
      * @brief Spawn multiple orbiter enemies in a circular formation
      * @param centerX X coordinate of the circle center
      * @param centerY Y coordinate of the circle center

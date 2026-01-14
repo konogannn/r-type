@@ -24,6 +24,7 @@ class GameServer {
     engine::GameLoop _gameLoop;
 
     std::atomic<bool> _gameStarted;
+    std::atomic<bool> _needsReset;
     std::atomic<int> _playerCount;
     std::atomic<uint32_t> _nextPlayerId;
     std::mutex _playerMutex;
@@ -50,6 +51,7 @@ class GameServer {
     void waitForPlayers();
     void processNetworkUpdates();
     void sendHealthUpdates();
+    void sendShieldUpdates();
     void resetGameState();
     void spawnBoss(uint8_t bossType = 0);
     void spawnBossWave(uint8_t bossType);

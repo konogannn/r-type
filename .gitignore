@@ -30,6 +30,7 @@ config.json
 # Object files
 *.o
 *.obj
+*.dll
 
 # Coverage files
 *.gcda

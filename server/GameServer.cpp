@@ -22,6 +22,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     : _networkServer(timeoutSeconds),
       _gameLoop(targetFPS),
       _gameStarted(false),
+      _needsReset(false),
       _playerCount(0),
       _nextPlayerId(1),
       _bossWaveActive(false),
@@ -38,6 +39,10 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::BossDamageSystem>());
     _gameLoop.addSystem(std::make_unique<engine::FollowingSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
+    // EnemySpawnerSystem disabled - only boss is spawned
+    // _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
+    //     _gameLoop.getSpawnEvents(),
+    //     2.0f));  // Spawn an enemy every 2 seconds
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::TurretShootingSystem>(
@@ -46,7 +51,13 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
         std::make_unique<engine::OrbiterSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(
         std::make_unique<engine::LaserShipSystem>(_gameLoop.getSpawnEvents()));
-    _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::GuidedMissileSystem>());
+    // ItemSpawnerSystem disabled - items spawn only on enemy kill
+    // _gameLoop.addSystem(std::make_unique<engine::ItemSpawnerSystem>(
+    //     _gameLoop.getSpawnEvents(),
+    //     5.0f));
+    _gameLoop.addSystem(
+        std::make_unique<engine::CollisionSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::LifetimeSystem>());
@@ -116,9 +127,11 @@ void GameServer::onClientDisconnected(uint32_t clientId)
                                   LogLevel::INFO_L, "Game");
 
         if (_playerCount.load() == 0 && _gameStarted) {
-            Logger::getInstance().log("No players remaining, stopping game...",
-                                      LogLevel::INFO_L, "Game");
+            Logger::getInstance().log(
+                "No players remaining, scheduling game reset...",
+                LogLevel::INFO_L, "Game");
             _gameStarted = false;
+            _needsReset = true;
         } else {
             Logger::getInstance().log("Server continues running.",
                                       LogLevel::INFO_L, "Game");
@@ -162,30 +175,41 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
     uint16_t mapH = 1080;
 
     if (_networkServer.sendLoginResponse(clientId, newPlayerId, mapW, mapH)) {
-        std::vector<engine::EntityStateUpdate> existingPlayers;
-        _gameLoop.getAllPlayers(existingPlayers);
-
-        for (const auto& playerUpdate : existingPlayers) {
-            _networkServer.sendEntitySpawn(clientId, playerUpdate.entityId,
-                                           playerUpdate.entityType,
-                                           playerUpdate.x, playerUpdate.y);
-
-            Logger::getInstance().log(
-                "Sending existing player " +
-                    std::to_string(playerUpdate.entityId) + " to new client " +
-                    std::to_string(clientId),
-                LogLevel::INFO_L, "Game");
-        }
-
         float startX = 100.0f;
         float startY = 200.0f + (newPlayerId - 1) * 200.0f;
 
-        _gameLoop.spawnPlayer(clientId, newPlayerId, startX, startY);
+        uint32_t playerEntityId =
+            _gameLoop.spawnPlayer(clientId, newPlayerId, startX, startY);
 
-        Logger::getInstance().log("Player " + std::to_string(newPlayerId) +
-                                      " spawned at (" + std::to_string(startX) +
-                                      ", " + std::to_string(startY) + ")",
-                                  LogLevel::INFO_L, "Game");
+        if (playerEntityId > 0) {
+            _networkServer.sendEntitySpawn(clientId, playerEntityId,
+                                           EntityType::PLAYER, startX, startY);
+
+            Logger::getInstance().log(
+                "Player " + std::to_string(newPlayerId) + " spawned at (" +
+                    std::to_string(startX) + ", " + std::to_string(startY) +
+                    ") with entityId " + std::to_string(playerEntityId),
+                LogLevel::INFO_L, "Game");
+        }
+        std::vector<engine::EntityStateUpdate> existingEntities;
+        _gameLoop.getAllEntities(existingEntities);
+
+        for (const auto& entityUpdate : existingEntities) {
+            if (entityUpdate.entityId == playerEntityId) {
+                continue;
+            }
+
+            _networkServer.sendEntitySpawn(clientId, entityUpdate.entityId,
+                                           entityUpdate.entityType,
+                                           entityUpdate.x, entityUpdate.y);
+
+            Logger::getInstance().log(
+                "Sending existing entity " +
+                    std::to_string(entityUpdate.entityId) + " (type " +
+                    std::to_string(static_cast<int>(entityUpdate.entityType)) +
+                    ") to new client " + std::to_string(clientId),
+                LogLevel::INFO_L, "Game");
+        }
     }
 }
 
@@ -212,9 +236,11 @@ void GameServer::onPlayerDeath(uint32_t clientId)
             LogLevel::INFO_L, "Game");
 
         if (_playerCount.load() == 0 && _gameStarted) {
-            Logger::getInstance().log("All players died, stopping game...",
-                                      LogLevel::INFO_L, "Game");
+            Logger::getInstance().log(
+                "All players died, scheduling game reset...", LogLevel::INFO_L,
+                "Game");
             _gameStarted = false;
+            _needsReset = true;
         }
     }
 }
@@ -319,9 +345,19 @@ void GameServer::processNetworkUpdates()
             frameCounter++;
             if (frameCounter % 10 == 0) {
                 sendHealthUpdates();
+                sendShieldUpdates();
+                checkBossWaveCompletion();
             }
 
-            checkBossWaveCompletion();
+            if (_needsReset.load()) {
+                Logger::getInstance().log("Performing deferred game reset...",
+                                          LogLevel::INFO_L, "Game");
+                _gameLoop.clearAllEntities();
+                _needsReset = false;
+                Logger::getInstance().log("Game reset complete",
+                                          LogLevel::INFO_L, "Game");
+            }
+
         } catch (const std::exception& e) {
             Logger::getInstance().log(
                 "Error in network update loop: " + std::string(e.what()),
@@ -345,6 +381,26 @@ void GameServer::sendHealthUpdates()
     }
 }
 
+void GameServer::sendShieldUpdates()
+{
+    // Get all player entities and check shield status
+    auto& entityManager = _gameLoop.getEntityManager();
+    auto players =
+        entityManager.getEntitiesWith<engine::Position, engine::Player,
+                                      engine::NetworkEntity>();
+
+    for (const auto& playerEntity : players) {
+        auto* netEntity =
+            entityManager.getComponent<engine::NetworkEntity>(playerEntity);
+        auto* shield = entityManager.getComponent<engine::Shield>(playerEntity);
+
+        if (netEntity) {
+            bool hasShield = (shield != nullptr && shield->active);
+            _networkServer.sendShieldStatus(0, netEntity->entityId, hasShield);
+        }
+    }
+}
+
 void GameServer::resetGameState()
 {
     Logger::getInstance().log("Resetting game state...", LogLevel::INFO_L,
@@ -358,6 +414,8 @@ void GameServer::resetGameState()
     _bossWaveEnemiesAlive = 0;
     _bossSpawned = false;
     _pendingBossType = 0;
+    _nextPlayerId = 1;
+    _gameLoop.clearAllEntities();
 
     Logger::getInstance().log("Ready for new players", LogLevel::INFO_L,
                               "Lobby");
@@ -437,7 +495,7 @@ void GameServer::spawnBoss(uint8_t bossType)
 
     SpawnBossEvent bossEvent;
     bossEvent.bossType = bossType;
-    bossEvent.x = 1600.0f;
+    bossEvent.x = 2100.0f;
     bossEvent.y = 400.0f;
     bossEvent.playerCount = _playerCount.load();
 

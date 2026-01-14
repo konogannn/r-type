@@ -130,6 +130,22 @@ static const unsigned char blowup_2_data[] = {
 #embed "../../../assets/sprites/blowup_2.png"
 };
 
+static const unsigned char shield_data[] = {
+#embed "../../../assets/sprites/player_shield.png"
+};
+
+static const unsigned char shield_item_data[] = {
+#embed "../../../assets/sprites/shield_item.png"
+};
+
+static const unsigned char search_missile_data[] = {
+#embed "../../../assets/sprites/search_missile.png"
+};
+
+static const unsigned char search_missile_item_data[] = {
+#embed "../../../assets/sprites/search_missile_item.png"
+};
+
 static const unsigned char orbiter_data[] = {
 #embed "../../../assets/sprites/orbiter.png"
 };

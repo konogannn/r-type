@@ -18,7 +18,7 @@ namespace rtype {
  */
 class Boss {
    public:
-    Boss(uint32_t entityId, float x, float y, uint8_t bossType);
+    Boss(uint32_t entityId, float x, float y);
     ~Boss() = default;
 
     void update(float deltaTime);
@@ -41,7 +41,6 @@ class Boss {
     void updateFlashEffect(float deltaTime);
 
     uint32_t _entityId;
-    uint8_t _bossType;
     uint8_t _currentPhase;
 
     sf::Sprite _sprite;

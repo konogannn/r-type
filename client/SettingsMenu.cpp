@@ -427,7 +427,6 @@ void SettingsMenu::render()
                        _fontPath);
 
     unsigned int sectionTitleSize = static_cast<unsigned int>(24 * scale);
-    float sliderWidth = _layout.sliderWidth;
     float leftColX = _layout.leftColX;
     float centerColX = _layout.centerColX;
     float resButtonWidth = _layout.resButtonWidth;

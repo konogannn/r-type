@@ -29,8 +29,8 @@ Entity GameEntityFactory::createPlayer(uint32_t clientId, uint32_t playerId,
     _entityManager.addComponent(player, Player(clientId, playerId));
     _entityManager.addComponent(player, Health(100.0f));
     _entityManager.addComponent(player, BoundingBox(35.0f, 21.0f, 0.0f, 0.0f));
-    _entityManager.addComponent(
-        player, NetworkEntity(player.getId(), EntityType::PLAYER));
+    _entityManager.addComponent(player,
+                                NetworkEntity(playerId, EntityType::PLAYER));
 
     return player;
 }
@@ -67,7 +67,9 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
     _entityManager.addComponent(enemy, Health(health));
     _entityManager.addComponent(enemy, BoundingBox(56.0f, 56.0f, 0.0f, 0.0f));
     _entityManager.addComponent(
-        enemy, NetworkEntity(_nextEnemyId++, static_cast<uint8_t>(type)));
+        enemy, NetworkEntity(
+                   _nextEnemyId++,
+                   static_cast<uint8_t>(type)));  // 10=BASIC, 12=TANK, 14=FAST
 
     return enemy;
 }
@@ -249,6 +251,56 @@ Entity GameEntityFactory::createExplosion(EntityId ownerId, const Position& pos)
     }
 
     return explosion;
+}
+
+Entity GameEntityFactory::createShieldItem(float x, float y)
+{
+    Entity item = _entityManager.createEntity();
+
+    _entityManager.addComponent(item, Position(x, y));
+    _entityManager.addComponent(item, Velocity(0.0f, 0.0f));
+    _entityManager.addComponent(item, BoundingBox(32.0f, 32.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(item, Item(Item::Type::SHIELD));
+    _entityManager.addComponent(
+        item, NetworkEntity(_nextBulletId++, 8));  // Type 8 = Shield Item
+
+    return item;
+}
+
+Entity GameEntityFactory::createGuidedMissileItem(float x, float y)
+{
+    Entity item = _entityManager.createEntity();
+
+    _entityManager.addComponent(item, Position(x, y));
+    _entityManager.addComponent(item, Velocity(0.0f, 0.0f));
+    _entityManager.addComponent(item, BoundingBox(32.0f, 32.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(item, Item(Item::Type::GUIDED_MISSILE));
+    _entityManager.addComponent(
+        item,
+        NetworkEntity(_nextBulletId++, 9));  // Type 9 = Guided Missile Item
+
+    return item;
+}
+
+Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
+                                              const Position& ownerPos)
+{
+    Entity missile = _entityManager.createEntity();
+
+    _entityManager.addComponent(missile,
+                                Position(ownerPos.x + 50.0f, ownerPos.y));
+    _entityManager.addComponent(missile, Velocity(400.0f, 0.0f));
+    _entityManager.addComponent(missile,
+                                BoundingBox(128.0f, 64.0f, -64.0f, -32.0f));
+    _entityManager.addComponent(missile, GuidedMissile(50.0f, 500.0f, 20.0f));
+    _entityManager.addComponent(missile, Bullet(ownerId, true, 50.0f));
+    _entityManager.addComponent(
+        missile,
+        NetworkEntity(_nextBulletId++,
+                      16));  // Type 16 = Guided Missile (after FAST_MISSILE=15)
+    _entityManager.addComponent(missile, Lifetime(10.0f));
+
+    return missile;
 }
 
 void GameEntityFactory::spawnOrbiters(float centerX, float centerY,

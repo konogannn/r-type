@@ -32,6 +32,7 @@ enum class SystemType {
     ORBITER,
     LASER_SHIP,
     LIFETIME,
+    GUIDED_MISSILE,
     OTHER
 };
 
