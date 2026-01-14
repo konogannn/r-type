@@ -37,10 +37,18 @@ endif()
 
 # Find packages used by multiple modules
 find_package(Boost REQUIRED COMPONENTS system NO_CMAKE_SYSTEM_PATH)
+find_package(nlohmann_json QUIET)
 
 if(Boost_FOUND)
     message(STATUS "Boost found: ${Boost_VERSION}")
     message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+endif()
+
+if(nlohmann_json_FOUND)
+    message(STATUS "nlohmann_json found: ${nlohmann_json_VERSION}")
+else()
+    message(STATUS "nlohmann_json not found via find_package, using vcpkg path")
+    include_directories(${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-linux/include)
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
