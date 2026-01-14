@@ -18,7 +18,7 @@ namespace rtype {
  */
 class Boss {
    public:
-    Boss(uint32_t entityId, float x, float y, uint8_t bossType);
+    Boss(uint32_t entityId, float x, float y);
     ~Boss() = default;
 
     void update(float deltaTime);

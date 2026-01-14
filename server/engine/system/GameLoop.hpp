@@ -10,6 +10,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 #include <variant>
@@ -26,8 +27,9 @@
 namespace engine {
 
 // Unified spawn event type - can hold any entity spawn request
-using SpawnEvent = std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent,
-                                SpawnEnemyBulletEvent, SpawnBossEvent>;
+using SpawnEvent =
+    std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent,
+                 SpawnBossEvent, SpawnGuidedMissileEvent, SpawnItemEvent>;
 
 /**
  * @brief Network input command from clients
@@ -66,6 +68,8 @@ class GameLoop {
     // Threading
     std::thread _gameThread;
     std::atomic<bool> _running;
+    std::mutex
+        _stateMutex;  // Protects _entityManager, _clientToEntity, _spawnEvents
 
     // Input/Output queues for inter-thread communication
     ThreadSafeQueue<NetworkInputCommand> _inputQueue;
@@ -82,6 +86,9 @@ class GameLoop {
 
     // Player death callback
     std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
+
+    // Power-up spawning state
+    bool _nextEnemyDropIsShield = true;
 
     /**
      * @brief Main game loop (runs in separate thread)
@@ -122,6 +129,8 @@ class GameLoop {
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
     void processSpawnEvent(const SpawnBossEvent& event);
+    void processSpawnEvent(const SpawnGuidedMissileEvent& event);
+    void processSpawnEvent(const SpawnItemEvent& event);
 
    public:
     /**
@@ -183,13 +192,21 @@ class GameLoop {
         std::vector<std::tuple<uint32_t, float, float>>& healthUpdates);
 
     /**
+     * @brief Get access to the entity manager
+     * @return Reference to the entity manager
+     */
+    EntityManager& getEntityManager() { return _entityManager; }
+
+    /**
      * @brief Spawn a player entity for a client
      * @param clientId The client ID
      * @param playerId The player ID
      * @param x Initial X position
      * @param y Initial Y position
+     * @return The entity ID of the spawned player (0 if already exists)
      */
-    void spawnPlayer(uint32_t clientId, uint32_t playerId, float x, float y);
+    uint32_t spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
+                         float y);
 
     /**
      * @brief Remove a player entity when client disconnects
@@ -204,10 +221,22 @@ class GameLoop {
     void getAllPlayers(std::vector<EntityStateUpdate>& updates);
 
     /**
+     * @brief Get all existing entities (players, enemies, projectiles, etc.)
+     * @param updates Vector to receive all entity states
+     */
+    void getAllEntities(std::vector<EntityStateUpdate>& updates);
+
+    /**
      * @brief Set callback for when a player dies
      * @param callback Function to call with clientId when player dies
      */
     void setOnPlayerDeath(std::function<void(uint32_t)> callback);
+
+    /**
+     * @brief Clear all entities and reset game state
+     * Should be called between game sessions
+     */
+    void clearAllEntities();
 
     /**
      * @brief Get unified spawn event queue (for systems to write to)

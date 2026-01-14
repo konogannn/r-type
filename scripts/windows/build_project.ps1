@@ -20,7 +20,8 @@ Write-Host "=========================================="
 # 1. Configure CMake with the Vcpkg toolchain file
 # This step triggers the installation of C++ libraries via vcpkg.json.
 Write-Info "Step 1/2: Configuring CMake and installing/linking C++ dependencies (Release)"
-cmake -S . -B "$BUILD_DIR" -DCMAKE_TOOLCHAIN_FILE="$VCPKG_DIR\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release
+cmake -S . -G "Ninja" -B "$BUILD_DIR" -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_TOOLCHAIN_FILE="$VCPKG_DIR\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release
+
 if ($LASTEXITCODE -ne 0) {
     Write-Err "CMake configuration failed."
 } else {
@@ -39,6 +40,5 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-OK "R-Type project built successfully!"
-Write-Info "Executables are located in the 'Release' directory."
-Write-Info "Example Server: .\Release\r-type_server.exe"
-Write-Info "Example Client: .\Release\r-type_client.exe"
+Write-Info "Server: .\r-type_server.exe"
+Write-Info "Client: .\r-type_client.exe"

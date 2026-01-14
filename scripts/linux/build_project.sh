@@ -24,7 +24,8 @@ print_header "Build Project"
 # 1. Configure CMake with the Vcpkg toolchain file
 # Vcpkg reads the vcpkg.json and automatically installs dependencies
 print_info "Configuring CMake (may install C++ dependencies via Vcpkg)."
-cmake -S . -B "$BUILD_DIR" -DCMAKE_TOOLCHAIN_FILE="$VCPKG_DIR/scripts/buildsystems/vcpkg.cmake"
+cmake -S . -B "$BUILD_DIR" -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_TOOLCHAIN_FILE="$VCPKG_DIR/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release
 
 # 2. Build the project
 print_info "Building the project."

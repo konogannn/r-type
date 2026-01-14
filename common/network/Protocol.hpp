@@ -56,6 +56,7 @@ enum OpCode : uint8_t {
     S2C_BOSS_STATE = 17,  ///< Boss state update (HP, phase).
     S2C_BOSS_DEATH = 18,  ///< Boss defeated (trigger victory sequence).
     S2C_HEALTH_UPDATE = 19,  ///< Entity health update (player or boss).
+    S2C_SHIELD_STATUS = 20,  ///< Shield status update (gained/lost).
 };
 
 /**
@@ -213,6 +214,16 @@ struct HealthUpdatePacket {
     uint32_t entityId;    ///< ID of the entity (player or boss).
     float currentHealth;  ///< Current health.
     float maxHealth;      ///< Maximum health.
+};
+
+/**
+ * @brief Packet to update player shield status.
+ * OpCode: S2C_SHIELD_STATUS
+ */
+struct ShieldStatusPacket {
+    Header header;
+    uint32_t playerId;  ///< ID of the player entity.
+    uint8_t hasShield;  ///< 1 if player has shield, 0 if lost.
 };
 
 #pragma pack(pop)

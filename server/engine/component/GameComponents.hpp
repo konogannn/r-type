@@ -145,6 +145,41 @@ struct MarkedForDestruction : public ComponentBase<MarkedForDestruction> {
 };
 
 /**
+ * @brief Shield component - Player has an active shield
+ */
+struct Shield : public ComponentBase<Shield> {
+    bool active;
+
+    Shield(bool active_ = true) : active(active_) {}
+};
+
+/**
+ * @brief Item component - Tags entity as a collectible item
+ */
+struct Item : public ComponentBase<Item> {
+    enum class Type { SHIELD, GUIDED_MISSILE };
+
+    Type type;
+
+    Item(Type type_ = Type::SHIELD) : type(type_) {}
+};
+
+/**
+ * @brief GuidedMissile component - Bullet that tracks nearest enemy
+ */
+struct GuidedMissile : public ComponentBase<GuidedMissile> {
+    float damage;
+    float speed;
+    float turnRate;  // Turn rate towards target
+
+    GuidedMissile(float damage_ = 50.0f, float speed_ = 500.0f,
+                  float turnRate_ = 20.0f)
+        : damage(damage_), speed(speed_), turnRate(turnRate_)
+    {
+    }
+};
+
+/**
  * @brief BossPart component - Represents a part of a multi-part boss
  *
  * Used for bosses with multiple sprites that can move independently
@@ -202,6 +237,8 @@ struct Boss : public ComponentBase<Boss> {
     float phase2Threshold;
     float enragedThreshold;
 
+    int hitCounter;  // Hit counter for spawning power-ups
+
     Boss(uint32_t players = 1)
         : currentPhase(ENTRY),
           phaseTimer(0.0f),
@@ -217,7 +254,8 @@ struct Boss : public ComponentBase<Boss> {
           deathTimer(-1.0f),
           destructionStarted(false),
           phase2Threshold(0.6f),
-          enragedThreshold(0.3f)
+          enragedThreshold(0.3f),
+          hitCounter(0)
     {
         scaledMaxHealth = maxHealth * (1.0f + 0.5f * (playerCount - 1));
     }

@@ -2,199 +2,47 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "CMake: Configure Debug",
+            "label": "CMake: Configure",
             "type": "shell",
-            "command": "cmake",
-            "args": [
-                "-S",
-                "${workspaceFolder}",
-                "-B",
-                "${workspaceFolder}/build/debug",
-                "-DCMAKE_BUILD_TYPE=Debug",
-                "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            ],
-            "group": "build",
-            "problemMatcher": [],
-            "detail": "Configure CMake in Debug mode"
+            "command": "cmake --preset debug",
+            "group": "build"
         },
         {
-            "label": "CMake: Configure Release",
+            "label": "Build: All",
             "type": "shell",
-            "command": "cmake",
-            "args": [
-                "-S",
-                "${workspaceFolder}",
-                "-B",
-                "${workspaceFolder}/build/release",
-                "-DCMAKE_BUILD_TYPE=Release",
-                "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            ],
-            "group": "build",
-            "problemMatcher": [],
-            "detail": "Configure CMake in Release mode"
-        },
-        {
-            "label": "Build: Client (Debug)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/debug",
-                "--target",
-                "r-type_client",
-                "-j",
-                "8"
-            ],
-            "group": "build",
-            "dependsOn": ["CMake: Configure Debug"],
-            "problemMatcher": ["$gcc"],
-            "detail": "Build client in Debug mode"
-        },
-        {
-            "label": "Build: Server (Debug)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/debug",
-                "--target",
-                "r-type_server",
-                "-j",
-                "8"
-            ],
-            "group": "build",
-            "dependsOn": ["CMake: Configure Debug"],
-            "problemMatcher": ["$gcc"],
-            "detail": "Build server in Debug mode"
-        },
-        {
-            "label": "Build: Client (Release)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/release",
-                "--target",
-                "r-type_client"
-            ],
-            "group": "build",
-            "dependsOn": ["CMake: Configure Release"],
-            "problemMatcher": ["$gcc"],
-            "detail": "Build client in Release mode"
-        },
-        {
-            "label": "Build: Server (Release)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/release",
-                "--target",
-                "r-type_server"
-            ],
-            "group": "build",
-            "dependsOn": ["CMake: Configure Release"],
-            "problemMatcher": ["$gcc"],
-            "detail": "Build server in Release mode"
-        },
-        {
-            "label": "Build: All (Debug)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/debug",
-                "-j",
-                "8"
+            "command": "cmake --build --preset build-debug",
+            "dependsOn": [
+                "CMake: Configure"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "dependsOn": ["CMake: Configure Debug"],
-            "problemMatcher": ["$gcc"],
-            "detail": "Build all targets in Debug mode"
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
-            "label": "Build: All (Release)",
+            "label": "Build: Client",
             "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/release"
+            "command": "cmake --build --preset build-debug --target r-type_client",
+            "dependsOn": [
+                "CMake: Configure"
             ],
-            "group": "build",
-            "dependsOn": ["CMake: Configure Release"],
-            "problemMatcher": ["$gcc"],
-            "detail": "Build all targets in Release mode"
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
-            "label": "Test: Run All",
+            "label": "Build: Server",
             "type": "shell",
-            "command": "ctest",
-            "args": [
-                "--test-dir",
-                "${workspaceFolder}/build/debug",
-                "--output-on-failure",
-                "--verbose"
+            "command": "cmake --build --preset build-debug --target r-type_server",
+            "dependsOn": [
+                "CMake: Configure"
             ],
-            "group": "test",
-            "dependsOn": ["Build: All (Debug)"],
-            "problemMatcher": [],
-            "detail": "Run all tests with CTest"
-        },
-        {
-            "label": "Coverage: Generate Report",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "-S",
-                "${workspaceFolder}",
-                "-B",
-                "${workspaceFolder}/build/coverage",
-                "-DCMAKE_BUILD_TYPE=Debug",
-                "-DENABLE_COVERAGE=ON",
-                "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-                "&&",
-                "cmake",
-                "--build",
-                "${workspaceFolder}/build/coverage",
-                "&&",
-                "cmake",
-                "--build",
-                "${workspaceFolder}/build/coverage",
-                "--target",
-                "coverage"
-            ],
-            "group": "test",
-            "problemMatcher": [],
-            "detail": "Generate code coverage report"
-        },
-        {
-            "label": "Clean: Debug",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/debug",
-                "--target",
-                "clean"
-            ],
-            "problemMatcher": [],
-            "detail": "Clean debug build directory"
-        },
-        {
-            "label": "Clean: Release",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build/release",
-                "--target",
-                "clean"
-            ],
-            "problemMatcher": [],
-            "detail": "Clean release build directory"
-        },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
     ]
 }

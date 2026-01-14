@@ -43,6 +43,7 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ConnectionDialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ReplayBrowser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ReplayControls.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GameOverScreen.cpp
 )
 
 add_executable(r-type_client
