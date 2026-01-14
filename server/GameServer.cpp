@@ -31,6 +31,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
 {
     _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::WaveMovementSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BossPartSystem>());
     _gameLoop.addSystem(
         std::make_unique<engine::BossSystem>(_gameLoop.getSpawnEvents()));

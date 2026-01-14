@@ -326,4 +326,17 @@ class LaserShipSystem : public System<LaserShip, Position, Enemy> {
     int getPriority() const override;
 };
 
+/**
+ * @brief Wave movement system - Adds sine wave pattern to entities
+ */
+class WaveMovementSystem : public System<WaveMovement, Position> {
+   protected:
+    void processEntity(float deltaTime, Entity& entity,
+                       WaveMovement* wave, Position* pos) override;
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+};
+
 }  // namespace engine

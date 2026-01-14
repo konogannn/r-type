@@ -57,6 +57,7 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
         default:
             speed = -100.0f;
             health = 30.0f;
+            _entityManager.addComponent(enemy, WaveMovement(50.0f, 2.0f, y));
             break;
     }
 

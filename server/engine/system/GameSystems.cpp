@@ -893,4 +893,19 @@ void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
     }
 }
 
+std::string WaveMovementSystem::getName() const
+{
+    return "WaveMovementSystem";
+}
+
+int WaveMovementSystem::getPriority() const { return 15; }
+
+void WaveMovementSystem::processEntity(float deltaTime, Entity& entity,
+                                       WaveMovement* wave, Position* pos)
+{
+    wave->phase += deltaTime * wave->frequency;
+
+    pos->y = wave->initialY + wave->amplitude * std::sin(wave->phase);
+}
+
 }  // namespace engine
