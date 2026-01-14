@@ -114,7 +114,6 @@ class ConnectionDialog {
     bool _cancelled;
     bool _confirmed;
     std::string _errorMessage;
-    std::string _fontPath;
 };
 
 }  // namespace rtype
