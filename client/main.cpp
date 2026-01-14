@@ -11,9 +11,11 @@
 #include "Config.hpp"
 #include "GameOverScreen.hpp"
 #include "Menu.hpp"
+#include "ReplayBrowser.hpp"
 #include "Resolution.hpp"
 #include "SettingsMenu.hpp"
 #include "src/Game.hpp"
+#include "src/ReplayViewer.hpp"
 #include "src/SoundManager.hpp"
 #include "wrapper/audio/AudioSFML.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
@@ -24,7 +26,14 @@
 
 using namespace rtype;
 
-enum class GameState { Menu, Settings, Playing, GameOver };
+enum class GameState {
+    Menu,
+    Settings,
+    Playing,
+    ReplayBrowser,
+    WatchingReplay,
+    GameOver
+};
 
 int main()
 {
@@ -56,6 +65,11 @@ int main()
     auto menu = std::make_unique<Menu>(*window, *graphics, *input);
     auto settingsMenu =
         std::make_unique<SettingsMenu>(*window, *graphics, *input);
+
+    auto replayBrowser =
+        std::make_unique<ReplayBrowser>(*window, *graphics, *input);
+    std::string selectedReplayPath;
+
     auto gameOverScreen =
         std::make_unique<GameOverScreen>(*window, *graphics, *input);
 
@@ -89,6 +103,11 @@ int main()
                     break;
                 case MenuAction::Settings:
                     state = GameState::Settings;
+                    break;
+                case MenuAction::Replays:
+                    state = GameState::ReplayBrowser;
+                    replayBrowser->reset();
+                    replayBrowser->refreshReplayList();
                     break;
                 case MenuAction::Quit:
                     window->close();
@@ -198,6 +217,56 @@ int main()
             if (returnToMenu) {
                 state = GameState::Menu;
                 menu->updateLayout();
+            }
+        } else if (state == GameState::ReplayBrowser) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                    return 0;
+                }
+            }
+
+            replayBrowser->update(deltaTime);
+
+            window->clear(0, 0, 0);
+            replayBrowser->render();
+            window->display();
+
+            if (replayBrowser->wantsBack()) {
+                state = GameState::Menu;
+                menu->updateLayout();
+                replayBrowser->reset();
+            } else if (replayBrowser->hasSelection()) {
+                selectedReplayPath = replayBrowser->getSelectedReplay();
+                std::cout << "Selected replay: " << selectedReplayPath
+                          << std::endl;
+                replayBrowser->clearSelection();
+                state = GameState::WatchingReplay;
+                SoundManager::getInstance().stopMusic();
+            }
+        } else if (state == GameState::WatchingReplay) {
+            try {
+                ReplayViewer viewer(*window, *graphics, *input,
+                                    selectedReplayPath);
+                bool returnToMenu = viewer.run();
+
+                if (returnToMenu) {
+                    state = GameState::Menu;
+                    config.load();
+                    menu->updateLayout();
+                    menu->resetFade();
+                    SoundManager::getInstance().playMusic();
+                    clock->restart();
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error in replay viewer: " << e.what()
+                          << std::endl;
+                state = GameState::Menu;
+                menu->resetFade();
+                SoundManager::getInstance().playMusic();
+                clock->restart();
             }
         }
     }

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <resources/EmbeddedResources.hpp>
 #include <string>
@@ -18,6 +19,7 @@
 #include "../wrapper/graphics/SpriteSFML.hpp"
 #include "../wrapper/resources/EmbeddedResources.hpp"
 #include "NetworkClientAsio.hpp"
+#include "common/replay/ReplayRecorder.hpp"
 
 namespace rtype {
 
@@ -87,6 +89,13 @@ class ClientGameState {
     // Connection status
     std::string _lastError;
     float _connectionTimeout = 0.0f;
+
+    // Replay recording
+    std::unique_ptr<rtype::ReplayRecorder> _recorder;
+
+    // Replay seeking flag (prevents explosion creation during fast-forward)
+    bool _isSeeking = false;
+
     static constexpr float MAX_CONNECTION_TIMEOUT = 5.0f;
 
    public:
@@ -107,12 +116,23 @@ class ClientGameState {
     void sendInput(uint8_t inputMask);
 
     // State getters
-    uint32_t getPlayerId() const { return _playerId; }
-    uint16_t getMapWidth() const { return _mapWidth; }
-    uint16_t getMapHeight() const { return _mapHeight; }
-    uint32_t getScore() const { return _score; }
-    const std::string& getLastError() const { return _lastError; }
-    size_t getEntityCount() const { return _entities.size(); }
+    uint32_t getPlayerId() const;
+    uint16_t getMapWidth() const;
+    uint16_t getMapHeight() const;
+    uint32_t getScore() const;
+    const std::string& getLastError() const;
+    size_t getEntityCount() const;
+
+    // Replay recording
+    void startRecording(const std::string& filename);
+    void stopRecording();
+    bool isRecording() const;
+
+    // Replay playback - reset state for seek
+    void resetForReplay();
+    void setSeekingMode(bool seeking);
+    void clearExplosions();
+    void setIsSeeking(bool seeking);
 
     float getPlayerHealth() const;
     float getPlayerMaxHealth() const;
@@ -124,10 +144,17 @@ class ClientGameState {
     ClientEntity* getEntity(uint32_t entityId);
     ClientEntity* getLocalPlayer();
     const std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>>&
-    getAllEntities() const
-    {
-        return _entities;
-    }
+    getAllEntities() const;
+
+    // Public methods for replay processing
+    void processLoginResponse(uint32_t playerId, uint16_t mapWidth,
+                              uint16_t mapHeight);
+    void processEntitySpawn(uint32_t entityId, uint8_t type, float x, float y);
+    void processEntityPosition(uint32_t entityId, float x, float y);
+    void processEntityDead(uint32_t entityId);
+    void processHealthUpdate(uint32_t entityId, float currentHealth,
+                             float maxHealth);
+    void processShieldStatus(uint32_t playerId, bool hasShield);
 
    private:
     // Network callbacks
