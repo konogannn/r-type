@@ -24,6 +24,7 @@ Button::Button(float x, float y, float width, float height,
       _isHovered(false),
       _wasPressed(false),
       _wasHovered(false),
+      _isFocused(false),
       _currentScale(1.0f),
       _targetScale(1.0f)
 {
@@ -48,7 +49,7 @@ bool Button::isClicked(int mouseX, int mouseY, bool isMousePressed)
                                                       HOVER_SOUND_VOLUME);
     }
     _wasHovered = _isHovered;
-    _targetScale = _isHovered ? HOVER_SCALE : NORMAL_SCALE;
+    _targetScale = (_isHovered || _isFocused) ? HOVER_SCALE : NORMAL_SCALE;
 
     bool clicked = false;
     if (_isHovered && isMousePressed) {
