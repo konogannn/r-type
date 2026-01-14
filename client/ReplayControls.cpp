@@ -18,7 +18,12 @@ ReplayControls::ReplayControls(WindowSFML& window, GraphicsSFML& graphics,
       _graphics(graphics),
       _input(input),
       _player(player),
-      _wantsExit(false)
+      _wantsExit(false),
+      _focusedButtonIndex(0),
+      _wasLeftPressed(false),
+      _wasRightPressed(false),
+      _wasEnterPressed(true),
+      _wasEscapePressed(false)
 {
     setupButtons();
 }
@@ -29,6 +34,75 @@ void ReplayControls::update(float deltaTime)
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
+
+    bool isLeftPressed = _input.isKeyPressed(Key::Left);
+    bool isRightPressed = _input.isKeyPressed(Key::Right);
+    bool isEnterPressed = _input.isKeyPressed(Key::Enter);
+    bool isEscapePressed = _input.isKeyPressed(Key::Escape);
+    bool isSpacePressed = _input.isKeyPressed(Key::Space);
+
+    if (isLeftPressed && !_wasLeftPressed) {
+        _focusedButtonIndex--;
+        if (_focusedButtonIndex < 0) {
+            _focusedButtonIndex = static_cast<int>(_buttons.size()) - 1;
+        }
+    }
+    if (isRightPressed && !_wasRightPressed) {
+        _focusedButtonIndex++;
+        if (_focusedButtonIndex >= static_cast<int>(_buttons.size())) {
+            _focusedButtonIndex = 0;
+        }
+    }
+
+    if (isEscapePressed && !_wasEscapePressed) {
+        _wantsExit = true;
+        _wasEscapePressed = isEscapePressed;
+        return;
+    }
+
+    if (isSpacePressed && !_wasEnterPressed) {
+        _player.togglePause();
+        updateLayout();
+    }
+
+    if (isEnterPressed && !_wasEnterPressed) {
+        switch (_focusedButtonIndex) {
+            case PAUSE:
+                _player.togglePause();
+                updateLayout();
+                break;
+            case REWIND:
+                _player.seek(-10.0f);
+                break;
+            case FORWARD:
+                _player.seek(10.0f);
+                break;
+            case SPEED:
+                if (_player.getSpeedMultiplier() == 0.5f) {
+                    _player.setSpeed(PlaybackSpeed::Normal);
+                } else if (_player.getSpeedMultiplier() == 1.0f) {
+                    _player.setSpeed(PlaybackSpeed::Double);
+                } else {
+                    _player.setSpeed(PlaybackSpeed::Half);
+                }
+                updateLayout();
+                break;
+            case EXIT:
+                _wantsExit = true;
+                break;
+        }
+    }
+
+    _wasLeftPressed = isLeftPressed;
+    _wasRightPressed = isRightPressed;
+    _wasEnterPressed = isEnterPressed || isSpacePressed;
+    _wasEscapePressed = isEscapePressed;
+
+    for (size_t i = 0; i < _buttons.size(); ++i) {
+        if (_buttons[i].isHovered(mouseX, mouseY)) {
+            _focusedButtonIndex = static_cast<int>(i);
+        }
+    }
 
     for (size_t i = 0; i < _buttons.size(); ++i) {
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
@@ -82,12 +156,14 @@ void ReplayControls::render()
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
 
-    for (auto& button : _buttons) {
+    for (size_t i = 0; i < _buttons.size(); ++i) {
+        auto& button = _buttons[i];
         bool isHovered = button.isHovered(mouseX, mouseY);
+        bool isFocused = (_focusedButtonIndex == static_cast<int>(i));
 
-        unsigned char r = isHovered ? 0 : 30;
-        unsigned char g = isHovered ? 200 : 30;
-        unsigned char b = isHovered ? 255 : 100;
+        unsigned char r = (isHovered || isFocused) ? 0 : 30;
+        unsigned char g = (isHovered || isFocused) ? 200 : 30;
+        unsigned char b = (isHovered || isFocused) ? 255 : 100;
 
         _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
                                 button.getHeight(), r, g, b, 255);
