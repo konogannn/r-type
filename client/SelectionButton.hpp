@@ -59,6 +59,16 @@ class SelectionButton {
     void setSelectedIndex(int index);
 
     /**
+     * @brief Cycle to next option (keyboard navigation)
+     */
+    void cycleNext();
+
+    /**
+     * @brief Cycle to previous option (keyboard navigation)
+     */
+    void cyclePrevious();
+
+    /**
      * @brief Get current selected option text
      */
     std::string getSelectedOption() const;

@@ -15,12 +15,12 @@ namespace engine {
 
 template <typename T>
 void ComponentManager::addComponent(ArchetypeId archetypeId, uint32_t index,
-                                    T &&component)
+                                    T&& component)
 {
     static_assert(std::is_base_of<Component, T>::value,
                   "T must derive from Component");
 
-    Archetype *archetype = getArchetype(archetypeId);
+    Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         throw std::runtime_error("Invalid archetype ID");
     }
@@ -35,22 +35,22 @@ void ComponentManager::addComponent(ArchetypeId archetypeId, uint32_t index,
 }
 
 template <typename T>
-T *ComponentManager::getComponent(ArchetypeId archetypeId, uint32_t index)
+T* ComponentManager::getComponent(ArchetypeId archetypeId, uint32_t index)
 {
-    Archetype *archetype = getArchetype(archetypeId);
+    Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         return nullptr;
     }
 
-    Component *comp =
+    Component* comp =
         archetype->getComponent(std::type_index(typeid(T)), index);
-    return comp ? static_cast<T *>(comp) : nullptr;
+    return comp ? static_cast<T*>(comp) : nullptr;
 }
 
 template <typename T>
 bool ComponentManager::hasComponent(ArchetypeId archetypeId)
 {
-    Archetype *archetype = getArchetype(archetypeId);
+    Archetype* archetype = getArchetype(archetypeId);
     if (!archetype) {
         return false;
     }
@@ -61,7 +61,7 @@ template <typename T>
 ArchetypeId ComponentManager::getArchetypeWithAddedComponent(
     ArchetypeId currentArchetypeId)
 {
-    Archetype *currentArchetype = getArchetype(currentArchetypeId);
+    Archetype* currentArchetype = getArchetype(currentArchetypeId);
     if (!currentArchetype) {
         return NULL_ARCHETYPE;
     }
@@ -75,7 +75,7 @@ template <typename T>
 ArchetypeId ComponentManager::getArchetypeWithRemovedComponent(
     ArchetypeId currentArchetypeId)
 {
-    Archetype *currentArchetype = getArchetype(currentArchetypeId);
+    Archetype* currentArchetype = getArchetype(currentArchetypeId);
     if (!currentArchetype) {
         return NULL_ARCHETYPE;
     }

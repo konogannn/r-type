@@ -7,11 +7,15 @@
 
 #include <iostream>
 
+#include "../common/utils/Logger.hpp"
 #include "Config.hpp"
+#include "GameOverScreen.hpp"
 #include "Menu.hpp"
+#include "ReplayBrowser.hpp"
 #include "Resolution.hpp"
 #include "SettingsMenu.hpp"
 #include "src/Game.hpp"
+#include "src/ReplayViewer.hpp"
 #include "src/SoundManager.hpp"
 #include "wrapper/audio/AudioSFML.hpp"
 #include "wrapper/graphics/GraphicsSFML.hpp"
@@ -22,7 +26,14 @@
 
 using namespace rtype;
 
-enum class GameState { Menu, Settings, Playing };
+enum class GameState {
+    Menu,
+    Settings,
+    Playing,
+    ReplayBrowser,
+    WatchingReplay,
+    GameOver
+};
 
 int main()
 {
@@ -55,6 +66,13 @@ int main()
     auto settingsMenu =
         std::make_unique<SettingsMenu>(*window, *graphics, *input);
 
+    auto replayBrowser =
+        std::make_unique<ReplayBrowser>(*window, *graphics, *input);
+    std::string selectedReplayPath;
+
+    auto gameOverScreen =
+        std::make_unique<GameOverScreen>(*window, *graphics, *input);
+
     GameState state = GameState::Menu;
 
     auto clock = std::make_unique<ClockSFML>();
@@ -85,6 +103,12 @@ int main()
                     break;
                 case MenuAction::Settings:
                     state = GameState::Settings;
+                    settingsMenu->reset();
+                    break;
+                case MenuAction::Replays:
+                    state = GameState::ReplayBrowser;
+                    replayBrowser->reset();
+                    replayBrowser->refreshReplayList();
                     break;
                 case MenuAction::Quit:
                     window->close();
@@ -109,7 +133,22 @@ int main()
                           static_cast<uint16_t>(serverPort));
                 bool returnToMenu = game.run();
 
-                if (returnToMenu) {
+                Logger::getInstance().log(
+                    "Game ended. isPlayerDead: " +
+                        std::to_string(game.isPlayerDead()) +
+                        ", returnToMenu: " + std::to_string(returnToMenu),
+                    LogLevel::INFO_L, "Main");
+
+                if (game.isPlayerDead()) {
+                    Logger::getInstance().log("Switching to GameOver state",
+                                              LogLevel::INFO_L, "Main");
+                    state = GameState::GameOver;
+                    gameOverScreen->reset();
+                    SoundManager::getInstance().stopMusic();
+                    clock->restart();
+                } else {
+                    Logger::getInstance().log("Switching to Menu state",
+                                              LogLevel::INFO_L, "Main");
                     state = GameState::Menu;
                     config.load();
                     menu->updateLayout();
@@ -120,6 +159,30 @@ int main()
             } catch (const std::exception& e) {
                 std::cerr << "Error in game: " << e.what() << std::endl;
                 state = GameState::Menu;
+                menu->resetFade();
+                SoundManager::getInstance().playMusic();
+                clock->restart();
+            }
+        } else if (state == GameState::GameOver) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                    return 0;
+                }
+            }
+
+            bool returnToMenu = gameOverScreen->update(deltaTime);
+
+            window->clear(0, 0, 0);
+            gameOverScreen->render();
+            window->display();
+
+            if (returnToMenu) {
+                state = GameState::Menu;
+                config.load();
+                menu->updateLayout();
                 menu->resetFade();
                 SoundManager::getInstance().playMusic();
                 clock->restart();
@@ -155,6 +218,56 @@ int main()
             if (returnToMenu) {
                 state = GameState::Menu;
                 menu->updateLayout();
+            }
+        } else if (state == GameState::ReplayBrowser) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                    return 0;
+                }
+            }
+
+            replayBrowser->update(deltaTime);
+
+            window->clear(0, 0, 0);
+            replayBrowser->render();
+            window->display();
+
+            if (replayBrowser->wantsBack()) {
+                state = GameState::Menu;
+                menu->updateLayout();
+                replayBrowser->reset();
+            } else if (replayBrowser->hasSelection()) {
+                selectedReplayPath = replayBrowser->getSelectedReplay();
+                std::cout << "Selected replay: " << selectedReplayPath
+                          << std::endl;
+                replayBrowser->clearSelection();
+                state = GameState::WatchingReplay;
+                SoundManager::getInstance().stopMusic();
+            }
+        } else if (state == GameState::WatchingReplay) {
+            try {
+                ReplayViewer viewer(*window, *graphics, *input,
+                                    selectedReplayPath);
+                bool returnToMenu = viewer.run();
+
+                if (returnToMenu) {
+                    state = GameState::Menu;
+                    config.load();
+                    menu->updateLayout();
+                    menu->resetFade();
+                    SoundManager::getInstance().playMusic();
+                    clock->restart();
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error in replay viewer: " << e.what()
+                          << std::endl;
+                state = GameState::Menu;
+                menu->resetFade();
+                SoundManager::getInstance().playMusic();
+                clock->restart();
             }
         }
     }

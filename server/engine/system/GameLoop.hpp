@@ -10,6 +10,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 #include <variant>
@@ -25,10 +26,11 @@
 
 namespace engine {
 
-// Unified spawn event type - can hold any entity spawn request
 using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent,
-                 SpawnBossEvent, SpawnGuidedMissileEvent, SpawnItemEvent>;
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
+                 SpawnItemEvent>;
 
 /**
  * @brief Network input command from clients
@@ -47,8 +49,8 @@ struct EntityStateUpdate {
     uint8_t entityType;
     float x;
     float y;
-    bool spawned;    // true if new spawn, false if position update
-    bool destroyed;  // true if entity destroyed
+    bool spawned;
+    bool destroyed;
 };
 
 /**
@@ -67,6 +69,8 @@ class GameLoop {
     // Threading
     std::thread _gameThread;
     std::atomic<bool> _running;
+    std::mutex
+        _stateMutex;  // Protects _entityManager, _clientToEntity, _spawnEvents
 
     // Input/Output queues for inter-thread communication
     ThreadSafeQueue<NetworkInputCommand> _inputQueue;
@@ -76,13 +80,15 @@ class GameLoop {
     std::vector<SpawnEvent> _spawnEvents;
 
     // Timing
-    float _targetFPS;
     std::chrono::milliseconds _targetFrameTime;
 
     // Player tracking
     std::unordered_map<uint32_t, EntityId> _clientToEntity;
 
-    // Player death callback
+    ThreadSafeQueue<uint32_t> _pendingRemovals;
+
+    std::vector<EntityId> _pendingDestructions;
+
     std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
 
     // Power-up spawning state
@@ -103,9 +109,12 @@ class GameLoop {
      */
     void processDeathTimers(float deltaTime);
 
-    /**
-     * @brief Generate network state updates
-     */
+    void processPendingRemovals();
+
+    void processPendingDestructions();
+
+    void processDestroyedEntitiesFromSystems();
+
     void generateNetworkUpdates();
 
     /**
@@ -124,11 +133,15 @@ class GameLoop {
      * @brief Overloaded spawn event handlers (compile-time dispatch)
      */
     void processSpawnEvent(const SpawnEnemyEvent& event);
+    void processSpawnEvent(const SpawnTurretEvent& event);
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
     void processSpawnEvent(const SpawnBossEvent& event);
     void processSpawnEvent(const SpawnGuidedMissileEvent& event);
     void processSpawnEvent(const SpawnItemEvent& event);
+    void processSpawnEvent(const SpawnOrbitersEvent& event);
+    void processSpawnEvent(const SpawnLaserShipEvent& event);
+    void processSpawnEvent(const SpawnLaserEvent& event);
 
    public:
     /**
@@ -201,8 +214,10 @@ class GameLoop {
      * @param playerId The player ID
      * @param x Initial X position
      * @param y Initial Y position
+     * @return The entity ID of the spawned player (0 if already exists)
      */
-    void spawnPlayer(uint32_t clientId, uint32_t playerId, float x, float y);
+    uint32_t spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
+                         float y);
 
     /**
      * @brief Remove a player entity when client disconnects
@@ -217,10 +232,22 @@ class GameLoop {
     void getAllPlayers(std::vector<EntityStateUpdate>& updates);
 
     /**
+     * @brief Get all existing entities (players, enemies, projectiles, etc.)
+     * @param updates Vector to receive all entity states
+     */
+    void getAllEntities(std::vector<EntityStateUpdate>& updates);
+
+    /**
      * @brief Set callback for when a player dies
      * @param callback Function to call with clientId when player dies
      */
     void setOnPlayerDeath(std::function<void(uint32_t)> callback);
+
+    /**
+     * @brief Clear all entities and reset game state
+     * Should be called between game sessions
+     */
+    void clearAllEntities();
 
     /**
      * @brief Get unified spawn event queue (for systems to write to)

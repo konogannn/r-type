@@ -153,18 +153,20 @@ void EntityManager::forEach(Func&& func)
         const auto& entityIds =
             _componentManager.getEntitiesInArchetype(archetype->id);
 
-        for (size_t i = 0; i < entityIds.size(); ++i) {
-            EntityId id = entityIds[i];
+        std::vector<EntityId> idsCopy(entityIds.begin(), entityIds.end());
+
+        for (size_t i = 0; i < idsCopy.size(); ++i) {
+            EntityId id = idsCopy[i];
             auto it = _entities.find(id);
 
             if (it == _entities.end() || !it->second.isActive()) {
                 continue;
             }
 
-            Entity& entity = it->second;
+            Entity entity = it->second;
             auto components =
                 std::make_tuple(_componentManager.getComponent<Components>(
-                    archetype->id, static_cast<uint32_t>(i))...);
+                    entity.getArchetypeId(), entity.getIndexInArchetype())...);
             func(entity, std::get<Components*>(components)...);
         }
     }

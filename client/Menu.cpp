@@ -19,8 +19,11 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     : _window(window),
       _graphics(graphics),
       _input(input),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
+      _selectedButtonIndex(0),
+      _wasUpPressed(false),
+      _wasDownPressed(false),
+      _wasEnterPressed(false),
       _isFadingOut(false),
       _uiAlpha(1.0f)
 {
@@ -28,6 +31,10 @@ Menu::Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input)
     setupLogo();
     setupButtons();
     updateLayout();
+
+    if (!_buttons.empty()) {
+        _buttons[_selectedButtonIndex].setFocused(true);
+    }
 
     Config& config = Config::getInstance();
     config.load();
@@ -60,6 +67,7 @@ void Menu::setupButtons()
 {
     _buttons.clear();
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "PLAY");
+    _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "REPLAYS");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "SETTINGS");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "QUIT");
 }
@@ -79,10 +87,17 @@ void Menu::updateLayout()
     float buttonHeight = BUTTON_HEIGHT * scaleH;
 
     _buttons[0] = Button(centerX, startY, buttonWidth, buttonHeight, "PLAY");
-    _buttons[1] = Button(centerX, startY + spacing, buttonWidth, buttonHeight,
-                         "SETTINGS");
+    _buttons[1] =
+        Button(centerX, startY + spacing, buttonWidth, buttonHeight, "REPLAYS");
     _buttons[2] = Button(centerX, startY + 2 * spacing, buttonWidth,
+                         buttonHeight, "SETTINGS");
+    _buttons[3] = Button(centerX, startY + 3 * spacing, buttonWidth,
                          buttonHeight, "QUIT");
+
+    if (_selectedButtonIndex >= 0 &&
+        _selectedButtonIndex < static_cast<int>(_buttons.size())) {
+        _buttons[_selectedButtonIndex].setFocused(true);
+    }
 }
 
 MenuAction Menu::update(float deltaTime)
@@ -106,8 +121,62 @@ MenuAction Menu::update(float deltaTime)
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
 
+    bool isUpPressed = _input.isKeyPressed(Key::Up);
+    bool isDownPressed = _input.isKeyPressed(Key::Down);
+    bool isEnterPressed = _input.isKeyPressed(Key::Enter);
+
+    if (isUpPressed && !_wasUpPressed) {
+        _buttons[_selectedButtonIndex].setFocused(false);
+        _selectedButtonIndex--;
+        if (_selectedButtonIndex < 0) {
+            _selectedButtonIndex = static_cast<int>(_buttons.size()) - 1;
+        }
+        _buttons[_selectedButtonIndex].setFocused(true);
+        SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+    }
+    if (isDownPressed && !_wasDownPressed) {
+        _buttons[_selectedButtonIndex].setFocused(false);
+        _selectedButtonIndex++;
+        if (_selectedButtonIndex >= static_cast<int>(_buttons.size())) {
+            _selectedButtonIndex = 0;
+        }
+        _buttons[_selectedButtonIndex].setFocused(true);
+        SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+    }
+
+    _wasUpPressed = isUpPressed;
+    _wasDownPressed = isDownPressed;
+
+    if (isEnterPressed && !_wasEnterPressed) {
+        SoundManager::getInstance().playSound("click");
+        switch (_selectedButtonIndex) {
+            case 0:
+                startFadeOut();
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::None;
+            case 1:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Replays;
+            case 2:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Settings;
+            case 3:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Quit;
+        }
+    }
+    _wasEnterPressed = isEnterPressed;
+
     for (size_t i = 0; i < _buttons.size(); ++i) {
         _buttons[i].updateAnimation(deltaTime);
+
+        if (_buttons[i].isHovered(mouseX, mouseY)) {
+            if (static_cast<int>(i) != _selectedButtonIndex) {
+                _buttons[_selectedButtonIndex].setFocused(false);
+                _selectedButtonIndex = static_cast<int>(i);
+                _buttons[_selectedButtonIndex].setFocused(true);
+            }
+        }
 
         if (_buttons[i].isClicked(mouseX, mouseY, isMousePressed)) {
             SoundManager::getInstance().playSound("click");
@@ -116,8 +185,10 @@ MenuAction Menu::update(float deltaTime)
                     startFadeOut();
                     return MenuAction::None;
                 case 1:
-                    return MenuAction::Settings;
+                    return MenuAction::Replays;
                 case 2:
+                    return MenuAction::Settings;
+                case 3:
                     return MenuAction::Quit;
             }
         }
@@ -156,7 +227,7 @@ void Menu::render()
             float scaledY = button.getY() - offsetY;
 
             unsigned char r, g, b;
-            if (button.getIsHovered()) {
+            if (button.getIsHovered() || button.getIsFocused()) {
                 r = 0;
                 g = 200;
                 b = 255;
@@ -186,8 +257,8 @@ void Menu::render()
 
             unsigned int scaledFontSize =
                 static_cast<unsigned int>(FONT_SIZE * scale);
-            float textWidth = _graphics.getTextWidth(button.getText(),
-                                                     scaledFontSize, _fontPath);
+            float textWidth =
+                _graphics.getTextWidth(button.getText(), scaledFontSize, "");
             float textX = scaledX + (scaledWidth / 2.0f) - (textWidth / 2.0f);
             float textY =
                 scaledY + (scaledHeight / 2.0f) - (scaledFontSize / 2.0f);
@@ -195,7 +266,7 @@ void Menu::render()
             unsigned char textAlpha =
                 static_cast<unsigned char>(255 * _uiAlpha);
             _graphics.drawText(button.getText(), textX, textY, scaledFontSize,
-                               255, 255, 255, textAlpha, _fontPath);
+                               255, 255, 255, textAlpha, "");
         }
 
         if (_logoSprite) {

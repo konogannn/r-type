@@ -19,6 +19,12 @@ Write-Host "=========================================="
 
 # 1. Pull/update the submodule
 Write-Info "Updating/Initializing Vcpkg submodule"
+if(-not (Test-Path ".\$VCPKG_DIR")) {
+    Write-Host ""
+    Write-Info "Vcpkg submodule not found. Cloning..."
+      git submodule add -f https://github.com/Microsoft/vcpkg.git vcpkg
+}
+
 git submodule update --init --recursive
 
 # 2. Bootstrap Vcpkg (builds the vcpkg.exe executable)

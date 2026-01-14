@@ -25,11 +25,11 @@ void SoundManager::loadAll()
 
     if (!_music) {
         _music = std::make_unique<rtype::MusicSFML>();
-    }
-    if (_music->openFromMemory(rtype::embedded::music_data,
-                               sizeof(rtype::embedded::music_data))) {
-        _music->setLoop(true);
-        _music->setVolume(_musicVolume);
+        if (_music->openFromMemory(rtype::embedded::music_data,
+                                   sizeof(rtype::embedded::music_data))) {
+            _music->setLoop(true);
+            _music->setVolume(_musicVolume);
+        }
     }
 }
 

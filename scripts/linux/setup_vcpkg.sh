@@ -24,6 +24,11 @@ print_header "Vcpkg Setup"
 print_info "Managing Vcpkg submodule..."
 
 # 1. Pull/update the submodule (requires Git, installed in the previous step)
+if [ ! -d "$VCPKG_DIR" ]; then
+    print_info "Vcpkg submodule not found. Adding it now..."
+    git submodule add -f https://github.com/Microsoft/vcpkg.git vcpkg
+fi
+
 git submodule update --init --recursive
 print_ok "Vcpkg submodule updated/initialized."
 

@@ -29,6 +29,7 @@ class Game {
          uint16_t serverPort = 8080);
     ~Game();
     bool run();
+    bool isPlayerDead() const { return _playerDead; }
 
    private:
     void handleEvents();
@@ -62,4 +63,5 @@ class Game {
     float _screenShakeTimer;
 
     bool _showHitboxes = false;
+    bool _playerDead = false;
 };

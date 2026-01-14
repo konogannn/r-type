@@ -157,14 +157,111 @@ R-Type Approach (USED):
      Clean separation
 ```
 
-### Common Module is coming
+### Common Module
 
-The `common/` module stands for shared files:
+The `common/` module contains shared code between client and server:
 ```
 common/
-├── protocol/      # Network message definitions
-└── utils/         # Shared utilities
+├── network/           # Network protocol definitions
+├── utils/             # Shared utilities
+└── replay/            # Replay recording and playback
+    ├── ReplayRecorder.hpp/cpp  # Records game packets
+    └── ReplayPlayer.hpp/cpp    # Plays back replays
 ```
+
+**Key Features:**
+- Network protocol definitions shared between client/server
+- Replay system for recording and playback
+- Utility functions used across modules
+
+---
+
+## 📹 Replay System
+
+The replay system allows recording and playback of game sessions by capturing network packets.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Replay System                         │
+└─────────────────────────────────────────────────────────┘
+                           │
+           ┌───────────────┴───────────────┐
+           │                               │
+    ┌──────▼──────┐                ┌──────▼──────┐
+    │  Recording  │                │  Playback   │
+    │  (Client)   │                │  (Client)   │
+    └─────────────┘                └─────────────┘
+           │                               │
+           │                               │
+    ┌──────▼──────┐                ┌──────▼──────┐
+    │   .rtr      │───────────────►│   Viewer    │
+    │ Binary File │   Load & Play  │     UI      │
+    └─────────────┘                └─────────────┘
+```
+
+### Components
+
+**ReplayRecorder** (`common/replay/`):
+- Records all server→client packets during gameplay
+- Saves to binary `.rtr` format with timestamps
+- Automatically creates `replays/` directory
+
+**ReplayPlayer** (`common/replay/`):
+- Reads `.rtr` files and replays packets
+- Supports pause, seek (±10s), speed control (0.5x/1x/2x)
+- Thread-safe packet processing
+
+**ReplayBrowser** (`client/`):
+- UI for browsing available replays
+- Displays replay list sorted by date
+- File metadata (size, date)
+
+**ReplayControls** (`client/`):
+- Playback controls: pause, seek, speed
+- Progress bar with time display
+- Exit to menu
+
+**ReplayViewer** (`client/src/`):
+- Complete replay viewing interface
+- Uses same rendering as live game
+- Integrates with ClientGameState
+
+### File Format (.rtr)
+
+```
+Header (17 bytes):
+  - Magic: "RTYPE_REPLAY\0" (13 bytes)
+  - Version: uint32_t (4 bytes)
+
+Entry (repeated):
+  - Timestamp: uint64_t (8 bytes) - milliseconds from start
+  - PacketSize: uint16_t (2 bytes)
+  - PacketData: uint8_t[] (PacketSize bytes)
+```
+
+### Recording Flow
+
+1. Game starts → Create ReplayRecorder
+2. Server sends packet → Client receives
+3. ReplayRecorder.recordPacket() → Write to file
+4. Game ends → Stop recording
+
+### Playback Flow
+
+1. User selects replay → Load .rtr file
+2. ReplayPlayer reads packets
+3. For each packet at timestamp:
+   - Process packet through ClientGameState
+   - Render entities/explosions
+4. User controls: pause/seek/speed
+
+**Benefits:**
+- ✅ Exact replay of game sessions
+- ✅ No impact on server performance
+- ✅ Small file sizes (binary format)
+- ✅ Seeking without state corruption
 
 ---
 

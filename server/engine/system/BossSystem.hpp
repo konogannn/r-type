@@ -19,17 +19,16 @@
 
 namespace engine {
 
-constexpr float PI = 3.14159265358979323846f;
-constexpr float TWO_PI = 6.28318530717958647692f;
-
 constexpr float SPREAD_ANGLE = 0.6f;
 constexpr int SPREAD_BULLET_COUNT = 3;
 constexpr float BULLET_SPEED = 300.0f;
 constexpr float TURRET_BULLET_SPEED = 350.0f;
 
 using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent,
-                 SpawnBossEvent, SpawnGuidedMissileEvent, SpawnItemEvent>;
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
+                 SpawnItemEvent>;
 
 /**
  * @brief Boss AI System - Manages boss behavior, phases, and attacks

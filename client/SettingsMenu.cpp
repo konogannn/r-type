@@ -28,11 +28,20 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
                            {"None", "Protanopia", "Deuteranopia", "Tritanopia",
                             "Protanomaly", "Deuteranomaly", "Tritanomaly"},
                            0),
-      _fontPath("assets/fonts/Retro_Gaming.ttf"),
       _config(Config::getInstance()),
       _keyBinding(KeyBinding::getInstance()),
       _colorBlindFilter(ColorBlindFilter::getInstance()),
-      _currentResolution(Resolution::R1920x1080)
+      _currentResolution(Resolution::R1920x1080),
+      _focusedElementIndex(0),
+      _totalFocusableElements(0),
+      _wasTabPressed(false),
+      _wasShiftPressed(false),
+      _wasEnterPressed(false),
+      _wasEscapePressed(false),
+      _wasLeftPressed(false),
+      _wasRightPressed(false),
+      _wasUpPressed(false),
+      _wasDownPressed(false)
 {
     setupBackground();
     setupSliders();
@@ -67,6 +76,9 @@ SettingsMenu::SettingsMenu(WindowSFML& window, GraphicsSFML& graphics,
         std::to_string(serverPort));
 
     updateLayout();
+    _totalFocusableElements =
+        static_cast<int>(_resolutionButtons.size() + _sliders.size() +
+                         _keyBindingButtons.size() + _inputFields.size() + 2);
 }
 
 void SettingsMenu::setupBackground()
@@ -235,7 +247,6 @@ void SettingsMenu::updateLayout()
     for (size_t i = 0; i < _inputFields.size(); i++) {
         std::string label = _inputFields[i].getLabel();
         std::string value = _inputFields[i].getValue();
-        // Preserve the field type when recreating (0=ServerIP, 1=ServerPort)
         InputFieldType type =
             (i == 0) ? InputFieldType::ServerIP : InputFieldType::ServerPort;
         _inputFields[i] =
@@ -261,6 +272,164 @@ bool SettingsMenu::update()
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
     bool anyInEditMode = isWaitingForKeyPress();
+
+    bool isTabPressed = _input.isKeyPressed(Key::Tab);
+    bool isShiftPressed =
+        _input.isKeyPressed(Key::LShift) || _input.isKeyPressed(Key::RShift);
+    bool isEnterPressed = _input.isKeyPressed(Key::Enter);
+    bool isEscapePressed = _input.isKeyPressed(Key::Escape);
+    bool isLeftPressed = _input.isKeyPressed(Key::Left);
+    bool isRightPressed = _input.isKeyPressed(Key::Right);
+    bool isUpPressed = _input.isKeyPressed(Key::Up);
+    bool isDownPressed = _input.isKeyPressed(Key::Down);
+
+    if (isAnyInputFieldActive()) {
+        _wasTabPressed = isTabPressed;
+        _wasShiftPressed = isShiftPressed;
+        _wasEnterPressed = isEnterPressed;
+        _wasEscapePressed = isEscapePressed;
+        _wasLeftPressed = isLeftPressed;
+        _wasRightPressed = isRightPressed;
+        _wasUpPressed = isUpPressed;
+        _wasDownPressed = isDownPressed;
+
+        for (auto& field : _inputFields) {
+            if (field.update(mouseX, mouseY, isMousePressed)) {
+                SoundManager::getInstance().playSound("click");
+            }
+        }
+
+        return false;
+    }
+    if (!anyInEditMode) {
+        if (isUpPressed && !_wasUpPressed) {
+            SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+            _focusedElementIndex--;
+            if (_focusedElementIndex < 0) {
+                _focusedElementIndex = _totalFocusableElements;
+            }
+        }
+        if (isDownPressed && !_wasDownPressed) {
+            SoundManager::getInstance().playSoundAtVolume("click", 30.0f);
+            _focusedElementIndex++;
+            if (_focusedElementIndex > _totalFocusableElements) {
+                _focusedElementIndex = 0;
+            }
+        }
+
+        if ((isEscapePressed && !_wasEscapePressed) ||
+            (isEnterPressed && !_wasEnterPressed &&
+             _focusedElementIndex == _totalFocusableElements)) {
+            SoundManager::getInstance().playSound("click");
+            saveSettings();
+            _wasEscapePressed = isEscapePressed;
+            _wasEnterPressed = isEnterPressed;
+            return true;
+        }
+
+        int currentIndex = 0;
+
+        for (size_t i = 0; i < _resolutionButtons.size(); i++, currentIndex++) {
+            if (currentIndex == _focusedElementIndex && isEnterPressed &&
+                !_wasEnterPressed) {
+                SoundManager::getInstance().playSound("click");
+                _currentResolution = _resolutionButtons[i].getResolution();
+                for (auto& btn : _resolutionButtons) {
+                    btn.setActive(btn.getResolution() == _currentResolution);
+                }
+                int width = getResolutionWidth(_currentResolution);
+                int height = getResolutionHeight(_currentResolution);
+                _window.setResolution(width, height);
+                _config.setInt("resolutionWidth", width);
+                _config.setInt("resolutionHeight", height);
+                _config.save();
+                updateLayout();
+                _totalFocusableElements = static_cast<int>(
+                    _resolutionButtons.size() + _sliders.size() +
+                    _keyBindingButtons.size() + _inputFields.size() + 2);
+            }
+        }
+
+        if (currentIndex == _focusedElementIndex && isEnterPressed &&
+            !_wasEnterPressed) {
+            SoundManager::getInstance().playSound("click");
+            _fullscreenToggle.setOn(!_fullscreenToggle.isOn());
+            _window.setFullscreen(_fullscreenToggle.isOn());
+            _config.setInt("fullscreen", _fullscreenToggle.isOn() ? 1 : 0);
+            _config.save();
+            updateLayout();
+            _totalFocusableElements = static_cast<int>(
+                _resolutionButtons.size() + _sliders.size() +
+                _keyBindingButtons.size() + _inputFields.size() + 2);
+        }
+        currentIndex++;
+
+        if (currentIndex == _focusedElementIndex) {
+            if ((isLeftPressed && !_wasLeftPressed) ||
+                (isRightPressed && !_wasRightPressed)) {
+                SoundManager::getInstance().playSound("click");
+                if (isLeftPressed) {
+                    _colorBlindSelection.cyclePrevious();
+                } else {
+                    _colorBlindSelection.cycleNext();
+                }
+                int selectedMode = _colorBlindSelection.getSelectedIndex();
+                _colorBlindFilter.setMode(
+                    ColorBlindFilter::indexToMode(selectedMode));
+                _config.setInt("colorBlindMode", selectedMode);
+                _config.save();
+            }
+        }
+        currentIndex++;
+
+        for (size_t i = 0; i < _sliders.size(); i++, currentIndex++) {
+            if (currentIndex == _focusedElementIndex) {
+                if (isLeftPressed || isRightPressed) {
+                    float delta = 5.0f;
+                    float newValue = _sliders[i].getValue();
+                    if (isLeftPressed) {
+                        newValue -= delta;
+                    } else {
+                        newValue += delta;
+                    }
+                    newValue = std::max(0.0f, std::min(100.0f, newValue));
+                    _sliders[i].setValue(newValue);
+                    SoundManager::getInstance().playSoundAtVolume("click",
+                                                                  newValue);
+                    if (i == 0) {
+                        SoundManager::getInstance().setMusicVolume(newValue);
+                    } else if (i == 1) {
+                        SoundManager::getInstance().setVolume(newValue);
+                    }
+                }
+            }
+        }
+
+        for (size_t i = 0; i < _inputFields.size(); i++, currentIndex++) {
+            if (currentIndex == _focusedElementIndex && isEnterPressed &&
+                !_wasEnterPressed) {
+                SoundManager::getInstance().playSound("click");
+                _inputFields[i].setActive(true);
+            }
+        }
+
+        for (size_t i = 0; i < _keyBindingButtons.size(); i++, currentIndex++) {
+            if (currentIndex == _focusedElementIndex && isEnterPressed &&
+                !_wasEnterPressed) {
+                SoundManager::getInstance().playSound("click");
+                _keyBindingButtons[i].startEdit();
+            }
+        }
+    }
+
+    _wasTabPressed = isTabPressed;
+    _wasShiftPressed = isShiftPressed;
+    _wasEnterPressed = isEnterPressed;
+    _wasEscapePressed = isEscapePressed;
+    _wasLeftPressed = isLeftPressed;
+    _wasRightPressed = isRightPressed;
+    _wasUpPressed = isUpPressed;
+    _wasDownPressed = isDownPressed;
 
     if (!anyInEditMode) {
         for (size_t i = 0; i < _sliders.size(); ++i) {
@@ -358,6 +527,7 @@ void SettingsMenu::handleKeyPress(Key key)
         for (auto& field : _inputFields) {
             if (field.isActive()) {
                 field.handleEnter();
+                _wasEnterPressed = true;
                 return;
             }
         }
@@ -420,14 +590,12 @@ void SettingsMenu::render()
     }
 
     unsigned int titleSize = static_cast<unsigned int>(48 * scale);
-    float titleWidth = _graphics.getTextWidth("SETTINGS", titleSize, _fontPath);
+    float titleWidth = _graphics.getTextWidth("SETTINGS", titleSize, "");
     float titleX = (windowWidth / 2.0f) - (titleWidth / 2.0f);
     float titleY = 110.0f * scale;
-    _graphics.drawText("SETTINGS", titleX, titleY, titleSize, 255, 100, 0,
-                       _fontPath);
+    _graphics.drawText("SETTINGS", titleX, titleY, titleSize, 255, 100, 0, "");
 
     unsigned int sectionTitleSize = static_cast<unsigned int>(24 * scale);
-    float sliderWidth = _layout.sliderWidth;
     float leftColX = _layout.leftColX;
     float centerColX = _layout.centerColX;
     float resButtonWidth = _layout.resButtonWidth;
@@ -438,12 +606,11 @@ void SettingsMenu::render()
     float rightColX = spacing + columnWidth + spacing + columnWidth + spacing;
 
     std::string resTitle = "RESOLUTION";
-    float resTitleW =
-        _graphics.getTextWidth(resTitle, sectionTitleSize, _fontPath);
+    float resTitleW = _graphics.getTextWidth(resTitle, sectionTitleSize, "");
     float resTitleX = leftColX + (resButtonWidth / 2.0f) - (resTitleW / 2.0f);
     float sectionTitleY = _layout.sectionTitleY;
     _graphics.drawText(resTitle, resTitleX, sectionTitleY, sectionTitleSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     for (const auto& button : _resolutionButtons) {
         renderResolutionButton(button, scale);
@@ -451,12 +618,12 @@ void SettingsMenu::render()
 
     std::string audioTitle = "AUDIO";
     float audioTitleW =
-        _graphics.getTextWidth(audioTitle, sectionTitleSize, _fontPath);
+        _graphics.getTextWidth(audioTitle, sectionTitleSize, "");
     float audioTitleX =
         centerColX + (columnWidth / 2.0f) - (audioTitleW / 2.0f);
     float audioTitleY = sectionTitleY;
     _graphics.drawText(audioTitle, audioTitleX, audioTitleY, sectionTitleSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     for (const auto& slider : _sliders) {
         renderSlider(slider, scale);
@@ -464,40 +631,38 @@ void SettingsMenu::render()
 
     std::string serverTitle = "SERVER";
     float serverTitleW =
-        _graphics.getTextWidth(serverTitle, sectionTitleSize, _fontPath);
+        _graphics.getTextWidth(serverTitle, sectionTitleSize, "");
     float serverTitleX =
         centerColX + (columnWidth / 2.0f) - (serverTitleW / 2.0f);
     float serverTitleY = sectionTitleY + 300.0f * scale;
     _graphics.drawText(serverTitle, serverTitleX, serverTitleY,
-                       sectionTitleSize, 255, 255, 255, _fontPath);
+                       sectionTitleSize, 255, 255, 255, "");
 
     std::string dispTitle = "DISPLAY";
-    float dispTitleW =
-        _graphics.getTextWidth(dispTitle, sectionTitleSize, _fontPath);
+    float dispTitleW = _graphics.getTextWidth(dispTitle, sectionTitleSize, "");
     float toggleYRender = _layout.toggleY;
     float dispTitleX = leftColX + (resButtonWidth / 2.0f) - (dispTitleW / 2.0f);
     float dispTitleY = toggleYRender - 20.0f * scale;
     _graphics.drawText(dispTitle, dispTitleX, dispTitleY, sectionTitleSize, 255,
-                       255, 255, _fontPath);
+                       255, 255, "");
 
     renderToggleButton(scale);
 
     std::string colorBlindTitle = "COLOR-BLINDNESS";
     float colorBlindTitleW =
-        _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, _fontPath);
+        _graphics.getTextWidth(colorBlindTitle, sectionTitleSize, "");
     float colorBlindTitleX =
         leftColX + (resButtonWidth / 2.0f) - (colorBlindTitleW / 2.0f);
     float colorBlindTitleY = _colorBlindSelection.getY() - 50.0f * scale;
     _graphics.drawText(colorBlindTitle, colorBlindTitleX, colorBlindTitleY,
-                       sectionTitleSize, 255, 255, 255, _fontPath);
+                       sectionTitleSize, 255, 255, 255, "");
 
     renderColorBlindSelection(scale);
     std::string ctrlTitle = "CONTROLS";
-    float ctrlTitleW =
-        _graphics.getTextWidth(ctrlTitle, sectionTitleSize, _fontPath);
+    float ctrlTitleW = _graphics.getTextWidth(ctrlTitle, sectionTitleSize, "");
     float ctrlTitleX = rightColX + (columnWidth / 2.0f) - (ctrlTitleW / 2.0f);
     _graphics.drawText(ctrlTitle, ctrlTitleX, sectionTitleY, sectionTitleSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     for (const auto& button : _keyBindingButtons) {
         renderKeyBindingButton(button, scale);
@@ -518,8 +683,10 @@ void SettingsMenu::renderBackButton(float scale)
 {
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
+    bool isFocused = (_focusedElementIndex == _totalFocusableElements);
+
     unsigned char r, g, b;
-    if (_backButton.getIsHovered()) {
+    if (isFocused || _backButton.getIsHovered()) {
         r = 0;
         g = 200;
         b = 255;
@@ -533,30 +700,34 @@ void SettingsMenu::renderBackButton(float scale)
                             _backButton.getWidth(), _backButton.getHeight(), r,
                             g, b);
 
-    float borderThickness = 3.0f * scale;
+    float borderThickness = isFocused ? 5.0f * scale : 3.0f * scale;
+    unsigned char borderR = isFocused ? 255 : 100;
+    unsigned char borderG = isFocused ? 215 : 150;
+    unsigned char borderB = isFocused ? 0 : 255;
+
     _graphics.drawRectangle(_backButton.getX(), _backButton.getY(),
-                            _backButton.getWidth(), borderThickness, 100, 150,
-                            255);
+                            _backButton.getWidth(), borderThickness, borderR,
+                            borderG, borderB);
     _graphics.drawRectangle(
         _backButton.getX(),
         _backButton.getY() + _backButton.getHeight() - borderThickness,
-        _backButton.getWidth(), borderThickness, 100, 150, 255);
+        _backButton.getWidth(), borderThickness, borderR, borderG, borderB);
     _graphics.drawRectangle(_backButton.getX(), _backButton.getY(),
-                            borderThickness, _backButton.getHeight(), 100, 150,
-                            255);
+                            borderThickness, _backButton.getHeight(), borderR,
+                            borderG, borderB);
     _graphics.drawRectangle(
         _backButton.getX() + _backButton.getWidth() - borderThickness,
-        _backButton.getY(), borderThickness, _backButton.getHeight(), 100, 150,
-        255);
+        _backButton.getY(), borderThickness, _backButton.getHeight(), borderR,
+        borderG, borderB);
 
     float textWidth =
-        _graphics.getTextWidth(_backButton.getText(), fontSize, _fontPath);
+        _graphics.getTextWidth(_backButton.getText(), fontSize, "");
     float textX = _backButton.getX() + (_backButton.getWidth() / 2.0f) -
                   (textWidth / 2.0f);
     float textY = _backButton.getY() + (_backButton.getHeight() / 2.0f) -
                   (fontSize / 2.0f);
     _graphics.drawText(_backButton.getText(), textX, textY, fontSize, 255, 255,
-                       255, _fontPath);
+                       255, "");
 }
 
 void SettingsMenu::renderSlider(const Slider& slider, float)
@@ -569,9 +740,24 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     float handleHeight = baseUnit * 0.45f;
     float fontSize = baseUnit * 0.4f;
 
+    int sliderIndex = 0;
+    bool isFocused = false;
+    int currentIndex = static_cast<int>(_resolutionButtons.size()) + 2;
+    for (size_t i = 0; i < _sliders.size(); i++) {
+        if (&slider == &_sliders[i]) {
+            sliderIndex = static_cast<int>(i);
+            isFocused = (_focusedElementIndex == currentIndex + sliderIndex);
+            break;
+        }
+    }
+
+    unsigned char titleR = isFocused ? 255 : 255;
+    unsigned char titleG = isFocused ? 215 : 255;
+    unsigned char titleB = isFocused ? 0 : 255;
+
     _graphics.drawText(
         slider.getLabel(), slider.getX(), slider.getY() - baseUnit * 0.9f,
-        static_cast<unsigned int>(fontSize), 255, 255, 255, _fontPath);
+        static_cast<unsigned int>(fontSize), titleR, titleG, titleB, "");
 
     _graphics.drawRectangle(slider.getX(), slider.getY(), slider.getWidth(),
                             trackHeight, 50, 50, 50);
@@ -586,7 +772,11 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     float handleY = slider.getY() - (handleHeight - trackHeight) / 2.0f;
 
     unsigned char hr, hg, hb;
-    if (slider.isHovered() || slider.isDragging()) {
+    if (isFocused) {
+        hr = 255;
+        hg = 215;
+        hb = 0;
+    } else if (slider.isHovered() || slider.isDragging()) {
         hr = 100;
         hg = 220;
         hb = 255;
@@ -606,7 +796,7 @@ void SettingsMenu::renderSlider(const Slider& slider, float)
     float valueX = slider.getX() + slider.getWidth() + baseUnit * 0.3f;
     unsigned int fontSizeUInt = static_cast<unsigned int>(fontSize);
     _graphics.drawText(valueText, valueX, slider.getY() - fontSize * 0.3f,
-                       fontSizeUInt, 255, 255, 255, _fontPath);
+                       fontSizeUInt, 255, 255, 255, "");
 }
 
 void SettingsMenu::saveSettings()
@@ -644,17 +834,41 @@ void SettingsMenu::saveSettings()
     _config.save();
 }
 
+void SettingsMenu::reset()
+{
+    _focusedElementIndex = 0;
+    _wasTabPressed = false;
+    _wasShiftPressed = false;
+    _wasEnterPressed = true;
+    _wasEscapePressed = false;
+    _wasLeftPressed = false;
+    _wasRightPressed = false;
+    _wasUpPressed = false;
+    _wasDownPressed = false;
+}
+
 void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
                                           float scale)
 {
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
+
+    bool isFocused = false;
+    int currentIndex = static_cast<int>(
+        _resolutionButtons.size() + _sliders.size() + _inputFields.size() + 2);
+    for (size_t i = 0; i < _keyBindingButtons.size(); i++) {
+        if (&button == &_keyBindingButtons[i]) {
+            isFocused =
+                (_focusedElementIndex == currentIndex + static_cast<int>(i));
+            break;
+        }
+    }
 
     unsigned char r, g, b;
     if (button.isInEditMode()) {
         r = 255;
         g = 180;
         b = 0;
-    } else if (button.getIsHovered()) {
+    } else if (isFocused || button.getIsHovered()) {
         r = 0;
         g = 200;
         b = 255;
@@ -667,9 +881,14 @@ void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
     _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
                             button.getHeight(), r, g, b);
 
-    float borderThickness = 3.0f * scale;
+    float borderThickness =
+        (button.isInEditMode() || isFocused ? 4.0f : 3.0f) * scale;
+    unsigned char borderR = isFocused && !button.isInEditMode() ? 255 : 100;
+    unsigned char borderG = isFocused && !button.isInEditMode() ? 215 : 150;
+    unsigned char borderB = isFocused && !button.isInEditMode() ? 0 : 255;
+
     _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
-                            borderThickness, 100, 150, 255);
+                            borderThickness, borderR, borderG, borderB);
     _graphics.drawRectangle(
         button.getX(), button.getY() + button.getHeight() - borderThickness,
         button.getWidth(), borderThickness, 100, 150, 255);
@@ -682,7 +901,7 @@ void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
     float labelX = button.getX() + 20.0f * scale;
     float labelY = button.getY() + 15.0f * scale;
     _graphics.drawText(button.getLabel(), labelX, labelY, fontSize, 255, 255,
-                       255, _fontPath);
+                       255, "");
 
     std::string keyText;
     if (button.isInEditMode()) {
@@ -691,19 +910,21 @@ void SettingsMenu::renderKeyBindingButton(const KeyBindingButton& button,
         keyText = "[" + button.getCurrentKey() + "]";
     }
 
-    float keyTextWidth = _graphics.getTextWidth(keyText, fontSize, _fontPath);
+    float keyTextWidth = _graphics.getTextWidth(keyText, fontSize, "");
     float keyTextX =
         button.getX() + button.getWidth() - keyTextWidth - 20.0f * scale;
-    _graphics.drawText(keyText, keyTextX, labelY, fontSize, 255, 255, 0,
-                       _fontPath);
+    _graphics.drawText(keyText, keyTextX, labelY, fontSize, 255, 255, 0, "");
 }
 
 void SettingsMenu::renderToggleButton(float scale)
 {
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
+    bool isFocused =
+        (_focusedElementIndex == static_cast<int>(_resolutionButtons.size()));
+
     unsigned char r, g, b;
-    if (_fullscreenToggle.getIsHovered()) {
+    if (isFocused || _fullscreenToggle.getIsHovered()) {
         r = 0;
         g = 200;
         b = 255;
@@ -717,40 +938,43 @@ void SettingsMenu::renderToggleButton(float scale)
                             _fullscreenToggle.getWidth(),
                             _fullscreenToggle.getHeight(), r, g, b);
 
-    float borderThickness = 3.0f * scale;
+    float borderThickness = isFocused ? 5.0f * scale : 3.0f * scale;
+    unsigned char borderR = isFocused ? 255 : 100;
+    unsigned char borderG = isFocused ? 215 : 150;
+    unsigned char borderB = isFocused ? 0 : 255;
+
     _graphics.drawRectangle(_fullscreenToggle.getX(), _fullscreenToggle.getY(),
-                            _fullscreenToggle.getWidth(), borderThickness, 100,
-                            150, 255);
+                            _fullscreenToggle.getWidth(), borderThickness,
+                            borderR, borderG, borderB);
     _graphics.drawRectangle(_fullscreenToggle.getX(),
                             _fullscreenToggle.getY() +
                                 _fullscreenToggle.getHeight() - borderThickness,
-                            _fullscreenToggle.getWidth(), borderThickness, 100,
-                            150, 255);
+                            _fullscreenToggle.getWidth(), borderThickness,
+                            borderR, borderG, borderB);
     _graphics.drawRectangle(_fullscreenToggle.getX(), _fullscreenToggle.getY(),
-                            borderThickness, _fullscreenToggle.getHeight(), 100,
-                            150, 255);
+                            borderThickness, _fullscreenToggle.getHeight(),
+                            borderR, borderG, borderB);
     _graphics.drawRectangle(_fullscreenToggle.getX() +
                                 _fullscreenToggle.getWidth() - borderThickness,
                             _fullscreenToggle.getY(), borderThickness,
-                            _fullscreenToggle.getHeight(), 100, 150, 255);
+                            _fullscreenToggle.getHeight(), borderR, borderG,
+                            borderB);
 
-    _graphics.drawText(_fullscreenToggle.getLabel(),
-                       _fullscreenToggle.getX() + 20.0f * scale,
-                       _fullscreenToggle.getY() + 15.0f * scale, fontSize, 255,
-                       255, 255, _fontPath);
+    _graphics.drawText(
+        _fullscreenToggle.getLabel(), _fullscreenToggle.getX() + 20.0f * scale,
+        _fullscreenToggle.getY() + 15.0f * scale, fontSize, 255, 255, 255, "");
 
     std::string stateText = _fullscreenToggle.isOn() ? "[ON]" : "[OFF]";
     unsigned char stateR = _fullscreenToggle.isOn() ? 0 : 255;
     unsigned char stateG = _fullscreenToggle.isOn() ? 255 : 100;
     unsigned char stateB = _fullscreenToggle.isOn() ? 0 : 100;
 
-    float stateTextWidth =
-        _graphics.getTextWidth(stateText, fontSize, _fontPath);
+    float stateTextWidth = _graphics.getTextWidth(stateText, fontSize, "");
     float stateTextX = _fullscreenToggle.getX() + _fullscreenToggle.getWidth() -
                        stateTextWidth - 20.0f * scale;
     _graphics.drawText(stateText, stateTextX,
                        _fullscreenToggle.getY() + 15.0f * scale, fontSize,
-                       stateR, stateG, stateB, _fontPath);
+                       stateR, stateG, stateB, "");
 }
 
 void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
@@ -758,12 +982,20 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
 {
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
+    bool isFocused = false;
+    for (size_t i = 0; i < _resolutionButtons.size(); i++) {
+        if (&button == &_resolutionButtons[i]) {
+            isFocused = (_focusedElementIndex == static_cast<int>(i));
+            break;
+        }
+    }
+
     unsigned char r, g, b;
     if (button.isActive()) {
         r = 0;
         g = 200;
         b = 50;
-    } else if (button.getIsHovered()) {
+    } else if (isFocused || button.getIsHovered()) {
         r = 0;
         g = 200;
         b = 255;
@@ -775,10 +1007,11 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
 
     _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
                             button.getHeight(), r, g, b);
-    float borderThickness = (button.isActive() ? 4.0f : 3.0f) * scale;
-    unsigned char borderR = button.isActive() ? 0 : 100;
-    unsigned char borderG = button.isActive() ? 255 : 150;
-    unsigned char borderB = button.isActive() ? 100 : 255;
+    float borderThickness =
+        (button.isActive() || isFocused ? 4.0f : 3.0f) * scale;
+    unsigned char borderR = isFocused ? 255 : (button.isActive() ? 0 : 100);
+    unsigned char borderG = isFocused ? 215 : (button.isActive() ? 255 : 150);
+    unsigned char borderB = isFocused ? 0 : (button.isActive() ? 100 : 255);
 
     _graphics.drawRectangle(button.getX(), button.getY(), button.getWidth(),
                             borderThickness, borderR, borderG, borderB);
@@ -791,24 +1024,26 @@ void SettingsMenu::renderResolutionButton(const ResolutionButton& button,
                             button.getY(), borderThickness, button.getHeight(),
                             borderR, borderG, borderB);
 
-    float textWidth =
-        _graphics.getTextWidth(button.getLabel(), fontSize, _fontPath);
+    float textWidth = _graphics.getTextWidth(button.getLabel(), fontSize, "");
     float textX =
         button.getX() + (button.getWidth() / 2.0f) - (textWidth / 2.0f);
     float textY = button.getY() + 15.0f * scale;
     _graphics.drawText(button.getLabel(), textX, textY, fontSize, 255, 255, 255,
-                       _fontPath);
+                       "");
 }
 
 void SettingsMenu::renderColorBlindSelection(float scale)
 {
     unsigned int fontSize = static_cast<unsigned int>(24 * scale);
 
-    unsigned char r, g, b;
     int mouseX = _input.getMouseX();
     int mouseY = _input.getMouseY();
 
-    if (_colorBlindSelection.isHovered(mouseX, mouseY)) {
+    bool isFocused = (_focusedElementIndex ==
+                      static_cast<int>(_resolutionButtons.size()) + 1);
+
+    unsigned char r, g, b;
+    if (isFocused || _colorBlindSelection.isHovered(mouseX, mouseY)) {
         r = 0;
         g = 200;
         b = 255;
@@ -823,43 +1058,60 @@ void SettingsMenu::renderColorBlindSelection(float scale)
                             _colorBlindSelection.getWidth(),
                             _colorBlindSelection.getHeight(), r, g, b);
 
-    float borderThickness = 3.0f * scale;
-    _graphics.drawRectangle(
-        _colorBlindSelection.getX(), _colorBlindSelection.getY(),
-        _colorBlindSelection.getWidth(), borderThickness, 100, 150, 255);
-    _graphics.drawRectangle(
-        _colorBlindSelection.getX(),
-        _colorBlindSelection.getY() + _colorBlindSelection.getHeight() -
-            borderThickness,
-        _colorBlindSelection.getWidth(), borderThickness, 100, 150, 255);
+    float borderThickness = isFocused ? 5.0f * scale : 3.0f * scale;
+    unsigned char borderR = isFocused ? 255 : 100;
+    unsigned char borderG = isFocused ? 215 : 150;
+    unsigned char borderB = isFocused ? 0 : 255;
+
+    _graphics.drawRectangle(_colorBlindSelection.getX(),
+                            _colorBlindSelection.getY(),
+                            _colorBlindSelection.getWidth(), borderThickness,
+                            borderR, borderG, borderB);
+    _graphics.drawRectangle(_colorBlindSelection.getX(),
+                            _colorBlindSelection.getY() +
+                                _colorBlindSelection.getHeight() -
+                                borderThickness,
+                            _colorBlindSelection.getWidth(), borderThickness,
+                            borderR, borderG, borderB);
     _graphics.drawRectangle(_colorBlindSelection.getX(),
                             _colorBlindSelection.getY(), borderThickness,
-                            _colorBlindSelection.getHeight(), 100, 150, 255);
-    _graphics.drawRectangle(_colorBlindSelection.getX() +
-                                _colorBlindSelection.getWidth() -
-                                borderThickness,
-                            _colorBlindSelection.getY(), borderThickness,
-                            _colorBlindSelection.getHeight(), 100, 150, 255);
+                            _colorBlindSelection.getHeight(), borderR, borderG,
+                            borderB);
+    _graphics.drawRectangle(
+        _colorBlindSelection.getX() + _colorBlindSelection.getWidth() -
+            borderThickness,
+        _colorBlindSelection.getY(), borderThickness,
+        _colorBlindSelection.getHeight(), borderR, borderG, borderB);
 
     std::string displayText = _colorBlindSelection.getSelectedOption();
-    float textWidth = _graphics.getTextWidth(displayText, fontSize, _fontPath);
+    float textWidth = _graphics.getTextWidth(displayText, fontSize, "");
     float textX = _colorBlindSelection.getX() +
                   (_colorBlindSelection.getWidth() / 2.0f) - (textWidth / 2.0f);
     float textY = _colorBlindSelection.getY() + 15.0f * scale;
-    _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255,
-                       _fontPath);
+    _graphics.drawText(displayText, textX, textY, fontSize, 255, 255, 255, "");
 }
 
 void SettingsMenu::renderInputField(const InputField& field, float scale)
 {
     unsigned int fontSize = static_cast<unsigned int>(20 * scale);
 
+    bool isFocused = false;
+    int currentIndex =
+        static_cast<int>(_resolutionButtons.size() + _sliders.size() + 2);
+    for (size_t i = 0; i < _inputFields.size(); i++) {
+        if (&field == &_inputFields[i]) {
+            isFocused =
+                (_focusedElementIndex == currentIndex + static_cast<int>(i));
+            break;
+        }
+    }
+
     unsigned char r, g, b;
     if (field.isActive()) {
         r = 255;
         g = 180;
         b = 0;
-    } else if (field.getIsHovered()) {
+    } else if (isFocused || field.getIsHovered()) {
         r = 0;
         g = 200;
         b = 255;
@@ -872,10 +1124,14 @@ void SettingsMenu::renderInputField(const InputField& field, float scale)
     _graphics.drawRectangle(field.getX(), field.getY(), field.getWidth(),
                             field.getHeight(), r, g, b);
 
-    float borderThickness = 3.0f * scale;
-    unsigned char borderR = field.isActive() ? 255 : 100;
-    unsigned char borderG = field.isActive() ? 180 : 150;
-    unsigned char borderB = field.isActive() ? 0 : 255;
+    float borderThickness =
+        (field.isActive() || isFocused ? 4.0f : 3.0f) * scale;
+    unsigned char borderR =
+        isFocused && !field.isActive() ? 255 : (field.isActive() ? 255 : 100);
+    unsigned char borderG =
+        isFocused && !field.isActive() ? 215 : (field.isActive() ? 180 : 150);
+    unsigned char borderB =
+        isFocused && !field.isActive() ? 0 : (field.isActive() ? 0 : 255);
 
     _graphics.drawRectangle(field.getX(), field.getY(), field.getWidth(),
                             borderThickness, borderR, borderG, borderB);
@@ -891,17 +1147,15 @@ void SettingsMenu::renderInputField(const InputField& field, float scale)
     std::string label = field.getLabel() + ":";
     float labelY = field.getY() + 15.0f * scale;
     _graphics.drawText(label, field.getX() + 20.0f * scale, labelY, fontSize,
-                       255, 255, 255, _fontPath);
+                       255, 255, 255, "");
 
     std::string displayValue = field.getValue();
     if (field.isActive()) {
         displayValue += "_";
     }
-    float valueWidth =
-        _graphics.getTextWidth(displayValue, fontSize, _fontPath);
+    float valueWidth = _graphics.getTextWidth(displayValue, fontSize, "");
     float valueX = field.getX() + field.getWidth() - valueWidth - 20.0f * scale;
-    _graphics.drawText(displayValue, valueX, labelY, fontSize, 255, 255, 0,
-                       _fontPath);
+    _graphics.drawText(displayValue, valueX, labelY, fontSize, 255, 255, 0, "");
 }
 
 }  // namespace rtype

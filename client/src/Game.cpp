@@ -8,6 +8,7 @@
 #include "Game.hpp"
 
 #include <algorithm>
+#include <ctime>
 #include <iostream>
 #include <unordered_map>
 
@@ -37,8 +38,11 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _lastShootTime(std::chrono::steady_clock::now()),
       _lastInputTime(std::chrono::steady_clock::now()),
       _screenShakeIntensity(0.0f),
-      _screenShakeTimer(0.0f)
+      _screenShakeTimer(0.0f),
+      _playerDead(false)
 {
+    std::cout << "[Game] Constructor called, _playerDead initialized to: "
+              << _playerDead << std::endl;
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
@@ -71,7 +75,7 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 
     if (!tryConnect(serverAddress, serverPort)) {
         _connectionDialog = std::make_unique<rtype::ConnectionDialog>(
-            _graphics, _input, static_cast<float>(actualWidth),
+            _graphics, static_cast<float>(actualWidth),
             static_cast<float>(actualHeight));
         _connectionDialog->setErrorMessage("Could not connect to server");
         _showConnectionDialog = true;
@@ -81,6 +85,8 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
 Game::~Game()
 {
     if (_gameState && _gameState->isConnected()) {
+        std::cout << "[Game] Disconnecting from server..." << std::endl;
+        _gameState->stopRecording();
         _gameState->disconnect();
     }
 }
@@ -89,6 +95,13 @@ bool Game::tryConnect(const std::string& address, uint16_t port)
 {
     if (_gameState->connectToServer(address, port)) {
         _gameState->sendLogin("Player1");
+
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        char buffer[80];
+        strftime(buffer, sizeof(buffer), "game_%Y%m%d_%H%M%S.rtr", timeinfo);
+        _gameState->startRecording(buffer);
+
         return true;
     } else {
         return false;
@@ -142,6 +155,9 @@ void Game::handleEvents()
 
         if (eventType == rtype::EventType::KeyPressed) {
             if (_input.isKeyPressed(rtype::Key::Escape)) {
+                if (_gameState) {
+                    _gameState->stopRecording();  // Stop recording when exiting
+                }
                 _running = false;
                 _returnToMenu = true;
             }
@@ -160,6 +176,10 @@ void Game::update(float deltaTime)
         if (_connectionDialog->update(mouseX, mouseY, isMousePressed,
                                       deltaTime)) {
             if (_connectionDialog->wasCancelled()) {
+                if (_gameState) {
+                    _gameState
+                        ->stopRecording();  // Stop recording when cancelling
+                }
                 _running = false;
                 _returnToMenu = true;
                 _showConnectionDialog = false;
@@ -220,6 +240,25 @@ void Game::update(float deltaTime)
                 _lastInputTime = currentTime;
             }
         }
+
+        auto* localPlayer = _gameState->getLocalPlayer();
+        if (localPlayer) {
+            float health = _gameState->getPlayerHealth();
+            if (health <= 0.0f && !_playerDead) {
+                std::cout << "[Game] Player died! Health: " << health
+                          << ", EntityID: " << localPlayer->id << std::endl;
+                _playerDead = true;
+                _running = false;
+            }
+        } else if (_gameState->isGameStarted()) {
+            static bool s_noLocalPlayerWarningPrinted = false;
+            if (!s_noLocalPlayerWarningPrinted) {
+                std::cout
+                    << "[Game] WARNING: Game started but no local player found!"
+                    << std::endl;
+                s_noLocalPlayerWarningPrinted = true;
+            }
+        }
     }
 
     if (_background) {
@@ -236,9 +275,10 @@ void Game::update(float deltaTime)
     if (_gameState) {
         const auto& entities = _gameState->getAllEntities();
         for (const auto& [id, entity] : entities) {
-            if (entity->type == 7) {
+            if (entity->type == 7 && !entity->hasTriggeredEffect) {
                 _screenShakeIntensity = 8.0f;
                 _screenShakeTimer = 0.1f;
+                entity->hasTriggeredEffect = true;
             }
         }
     }
@@ -382,6 +422,11 @@ void Game::render()
         for (const auto& [id, entity] : entities) {
             if (!entity || entity->type != 7) continue;
 
+            if (entity->animFrameCount > 0 &&
+                entity->animCurrentFrame >= entity->animFrameCount) {
+                continue;
+            }
+
             rtype::ISprite* spriteToRender = entity->sprite.get();
             if (!spriteToRender) continue;
 
@@ -476,25 +521,25 @@ void Game::render()
     std::string fpsStr = "FPS: " + std::to_string(_currentFps);
     _graphics.drawText(fpsStr, 10 * _scale, 10 * _scale,
                        static_cast<unsigned int>(20 * _scale), 0, 255, 0,
-                       "assets/fonts/Retro_Gaming.ttf");
+                       "assets/fonts/default.ttf");
 
     if (_gameState) {
         std::string scoreStr =
             "Score: " + std::to_string(_gameState->getScore());
         _graphics.drawText(scoreStr, 10 * _scale, 40 * _scale,
                            static_cast<unsigned int>(20 * _scale), 255, 255, 0,
-                           "assets/fonts/Retro_Gaming.ttf");
+                           "assets/fonts/default.ttf");
 
         if (_gameState->isConnected()) {
             std::string entityCount =
                 "Entities: " + std::to_string(_gameState->getEntityCount());
             _graphics.drawText(entityCount, 10 * _scale, 70 * _scale,
                                static_cast<unsigned int>(16 * _scale), 255, 255,
-                               255, "assets/fonts/Retro_Gaming.ttf");
+                               255, "assets/fonts/default.ttf");
         } else {
             _graphics.drawText("Disconnected", 10 * _scale, 70 * _scale,
                                static_cast<unsigned int>(20 * _scale), 255, 0,
-                               0, "assets/fonts/Retro_Gaming.ttf");
+                               0, "assets/fonts/default.ttf");
         }
     }
 
@@ -504,7 +549,7 @@ void Game::render()
         _colorBlindFilter.endCaptureAndApply(_window);
     }
     if (_showConnectionDialog && _connectionDialog) {
-        _connectionDialog->render(_scale, "assets/fonts/Retro_Gaming.ttf");
+        _connectionDialog->render(_scale, "assets/fonts/default.ttf");
     }
 
     _window.display();

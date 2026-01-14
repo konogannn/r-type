@@ -16,9 +16,10 @@ namespace rtype {
  * @brief Input field type for validation rules
  */
 enum class InputFieldType {
-    Default,    // Alphanumeric + dots + colons
-    ServerIP,   // Digits and dots only (IP address)
-    ServerPort  // Digits only (port number)
+    Default,     // Alphanumeric + dots + colons
+    ServerIP,    // Digits and dots only (IP address)
+    ServerPort,  // Digits only (port number)
+    Filename     // Alphanumeric + common filename characters
 };
 
 /**

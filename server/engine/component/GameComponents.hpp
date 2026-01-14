@@ -55,21 +55,27 @@ struct Enemy : public ComponentBase<Enemy> {
         BASIC = EntityType::BASIC,
         FAST = EntityType::FAST,
         TANK = EntityType::TANK,
+        TURRET = EntityType::TURRET,
+        ORBITER = EntityType::ORBITER,
+        LASER_SHIP = EntityType::LASER_SHIP,
+        GLANDUS = EntityType::GLANDUS,
+        GLANDUS_MINI = EntityType::GLANDUS_MINI,
         BOSS
     };
 
     Type type;
     float shootCooldown;
+    bool isTopTurret;  // For turrets: true if mounted on top edge
 
-    Enemy(Type type_ = Type::BASIC);
+    Enemy(Type type_ = Type::BASIC, bool isTopTurret_ = false);
 };
 
 /**
  * @brief Bullet component - Projectile information
  */
 struct Bullet : public ComponentBase<Bullet> {
-    uint32_t ownerId;  // Entity ID of who fired it (player or enemy)
-    bool fromPlayer;   // true if player bullet, false if enemy bullet
+    uint32_t ownerId;
+    bool fromPlayer;
     float damage;
     bool isExplosion;  // true if this is an explosion effect, not a real bullet
     uint8_t explosionType;  // Type of explosion (1 or 2) if isExplosion is true
@@ -136,9 +142,6 @@ struct Lifetime : public ComponentBase<Lifetime> {
 
 /**
  * @brief MarkedForDestruction component - Tags entity for deferred destruction
- *
- * Entities with this component will be destroyed after network notification
- * is sent in the next frame.
  */
 struct MarkedForDestruction : public ComponentBase<MarkedForDestruction> {
     MarkedForDestruction() = default;
@@ -302,4 +305,87 @@ struct Animation : public ComponentBase<Animation> {
     }
 };
 
+/**
+ * @brief Following component - Makes entity follow nearest target
+ */
+struct Following : public ComponentBase<Following> {
+    enum class TargetType { PLAYER, ENEMY };
+
+    TargetType targetType;
+
+    Following(TargetType targetType_ = TargetType::PLAYER);
+};
+
+struct Orbiter : public ComponentBase<Orbiter> {
+    float centerX;
+    float centerY;
+    float radius;
+    float angle;
+    float angularVelocity;
+
+    Orbiter(float cx = 0.0f, float cy = 0.0f, float r = 100.0f, float a = 0.0f,
+            float av = 1.0f)
+        : centerX(cx), centerY(cy), radius(r), angle(a), angularVelocity(av)
+    {
+    }
+};
+
+struct LaserShip : public ComponentBase<LaserShip> {
+    float laserDuration;
+    float laserCooldown;
+    float laserActiveTime;
+    bool isLaserActive;
+    float chargingTime;
+    bool isCharging;
+
+    LaserShip(float duration = 3.0f)
+        : laserDuration(duration),
+          laserCooldown(duration * 2.0f),
+          laserActiveTime(0.0f),
+          isLaserActive(false),
+          chargingTime(0.0f),
+          isCharging(false)
+    {
+    }
+};
+
+struct WaveMovement : public ComponentBase<WaveMovement> {
+    float amplitude;  // Wave height
+    float frequency;  // Wave speed
+    float phase;      // Current phase in the wave
+    float initialY;   // Starting Y position
+
+    WaveMovement(float amp = 50.0f, float freq = 2.0f, float startY = 0.0f)
+        : amplitude(amp), frequency(freq), phase(0.0f), initialY(startY)
+    {
+    }
+};
+struct ZigzagMovement : public ComponentBase<ZigzagMovement> {
+    float amplitude;  // Zigzag height
+    float frequency;  // Zigzag speed
+    float phase;      // Current phase
+    float lastY;      // Last Y position for zigzag
+    bool movingDown;  // Direction flag
+
+    ZigzagMovement(float amp = 80.0f, float freq = 3.0f)
+        : amplitude(amp),
+          frequency(freq),
+          phase(0.0f),
+          lastY(0.0f),
+          movingDown(true)
+    {
+    }
+};
+
+struct SplitOnDeath : public ComponentBase<SplitOnDeath> {
+    uint8_t splitType;  // Entity type to spawn when split
+    int splitCount;     // Number of entities to spawn
+    float offsetY;      // Vertical offset for splits
+
+    SplitOnDeath(uint8_t type = EntityType::GLANDUS_MINI, int count = 2,
+                 float offset = 30.0f)
+        : splitType(type), splitCount(count), offsetY(offset)
+    {
+    }
+};
 }  // namespace engine

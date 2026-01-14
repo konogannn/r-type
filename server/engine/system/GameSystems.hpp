@@ -19,10 +19,11 @@
 
 namespace engine {
 
-// Import SpawnEvent type from events
 using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent,
-                 SpawnBossEvent, SpawnGuidedMissileEvent, SpawnItemEvent>;
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
+                 SpawnItemEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -112,10 +113,16 @@ class BulletCleanupSystem : public ISystem {
         float y;
     };
     std::vector<DestroyInfo> _entitiesToDestroy;
+    // Player bullet boundaries
     const float MIN_X = -200.0f;
     const float MAX_X = 2000.0f;
     const float MIN_Y = -200.0f;
     const float MAX_Y = 1100.0f;
+    // Enemy projectile boundaries
+    const float ENEMY_MIN_X = -1000.0f;
+    const float ENEMY_MAX_X = 3000.0f;
+    const float ENEMY_MIN_Y = -1000.0f;
+    const float ENEMY_MAX_Y = 2000.0f;
 
    public:
     std::string getName() const override;
@@ -165,6 +172,11 @@ class CollisionSystem : public ISystem {
         uint8_t entityType;
         float x;
         float y;
+        // SplitOnDeath component data (if applicable)
+        bool hasSplit;
+        uint8_t splitType;
+        int splitCount;
+        float splitOffsetY;
     };
     std::vector<DestroyInfo> _entitiesToDestroy;
     std::unordered_set<EntityId> _markedForDestruction;
@@ -177,7 +189,8 @@ class CollisionSystem : public ISystem {
 
     bool isMarkedForDestruction(EntityId id) const;
     void markForDestruction(EntityId entityId, uint32_t networkId, uint8_t type,
-                            float x = 0.0f, float y = 0.0f);
+                            float x = 0.0f, float y = 0.0f,
+                            const SplitOnDeath* splitData = nullptr);
 
     // Collision handlers for different entity pairs
     void handlePlayerBulletVsEnemy(EntityManager& entityManager,
@@ -312,6 +325,119 @@ class ItemSpawnerSystem : public ISystem {
 
     void update(float deltaTime, EntityManager& entityManager) override;
     void spawnItem();
+};
+
+/**
+ * @brief Following system - Makes entities follow nearest target
+ */
+class FollowingSystem : public ISystem {
+   private:
+    float calculateDistance(const Position& pos1, const Position& pos2);
+
+    const Position* findNearestPlayer(const Position& entityPos,
+                                      const std::vector<Entity>& players,
+                                      EntityManager& entityManager);
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+
+    void update(float deltaTime, EntityManager& entityManager) override;
+};
+
+/**
+ * @brief Turret shooting system - Makes turrets shoot at nearest player
+ */
+class TurretShootingSystem : public System<Enemy, Position> {
+   private:
+    std::vector<SpawnEvent>& _spawnQueue;
+    EntityManager& _entityManager;
+    const float SHOOT_INTERVAL = 1.5f;  // Turrets shoot every 1.5 seconds
+
+    /**
+     * @brief Find nearest player to turret
+     */
+    const Position* findNearestPlayer(const Position& turretPos,
+                                      const std::vector<Entity>& entities);
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, Enemy* enemy,
+                       Position* pos) override;
+
+   public:
+    TurretShootingSystem(std::vector<SpawnEvent>& spawnQueue,
+                         EntityManager& entityManager)
+        : _spawnQueue(spawnQueue), _entityManager(entityManager)
+    {
+    }
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+};
+
+class OrbiterSystem : public System<Orbiter, Position, Enemy> {
+   private:
+    std::vector<SpawnEvent>& _spawnQueue;
+    const float SHOOT_INTERVAL = 3.0f;
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, Orbiter* orbiter,
+                       Position* pos, Enemy* enemy) override;
+
+   public:
+    OrbiterSystem(std::vector<SpawnEvent>& spawnQueue) : _spawnQueue(spawnQueue)
+    {
+    }
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+};
+
+class LaserShipSystem : public System<LaserShip, Position, Enemy> {
+   private:
+    std::vector<SpawnEvent>& _spawnQueue;
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, LaserShip* laserShip,
+                       Position* pos, Enemy* enemy) override;
+
+   public:
+    LaserShipSystem(std::vector<SpawnEvent>& spawnQueue)
+        : _spawnQueue(spawnQueue)
+    {
+    }
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+};
+
+/**
+ * @brief Wave movement system - Adds sine wave pattern to entities
+ */
+class WaveMovementSystem : public System<WaveMovement, Position> {
+   protected:
+    void processEntity(float deltaTime, Entity& entity, WaveMovement* wave,
+                       Position* pos) override;
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+};
+
+/**
+ * @brief Zigzag movement system - Adds zigzag pattern to entities
+ */
+class ZigzagMovementSystem : public System<ZigzagMovement, Position, Velocity> {
+   protected:
+    void processEntity(float deltaTime, Entity& entity, ZigzagMovement* zigzag,
+                       Position* pos, Velocity* vel) override;
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
 };
 
 /**

@@ -14,6 +14,9 @@
 
 namespace engine {
 
+constexpr float PI = 3.14159265358979323846f;
+constexpr float TWO_PI = 6.28318530717958647692f;
+
 using EntityId = uint32_t;
 
 /**

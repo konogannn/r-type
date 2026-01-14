@@ -19,27 +19,59 @@ ClientGameState::ClientGameState()
     _networkClient->setOnDisconnectedCallback([this]() { onDisconnected(); });
     _networkClient->setOnLoginResponseCallback(
         [this](const LoginResponsePacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onLoginResponse(packet.playerId, packet.mapWidth, packet.mapHeight);
         });
     _networkClient->setOnEntitySpawnCallback(
         [this](const EntitySpawnPacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onEntitySpawn(packet.entityId, packet.type, packet.x, packet.y);
         });
     _networkClient->setOnEntityPositionCallback(
         [this](const EntityPositionPacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onEntityPosition(packet.entityId, packet.x, packet.y);
         });
-    _networkClient->setOnEntityDeadCallback(
-        [this](uint32_t entityId) { onEntityDead(entityId); });
-    _networkClient->setOnScoreUpdateCallback(
-        [this](uint32_t score) { _score = score; });
+    _networkClient->setOnEntityDeadCallback([this](uint32_t entityId) {
+        if (_recorder) {
+            EntityDeadPacket packet;
+            packet.header.opCode = static_cast<uint8_t>(S2C_ENTITY_DEAD);
+            packet.header.sequenceId = 0;
+            packet.entityId = entityId;
+            _recorder->recordPacket(&packet, sizeof(packet));
+        }
+        onEntityDead(entityId);
+    });
+    _networkClient->setOnScoreUpdateCallback([this](uint32_t score) {
+        if (_recorder) {
+            ScoreUpdatePacket packet;
+            packet.header.opCode = static_cast<uint8_t>(S2C_SCORE_UPDATE);
+            packet.header.sequenceId = 0;
+            packet.score = score;
+            _recorder->recordPacket(&packet, sizeof(packet));
+        }
+        _score = score;
+        std::cout << "[INFO] Score updated: " << score << std::endl;
+    });
     _networkClient->setOnHealthUpdateCallback(
         [this](const HealthUpdatePacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onHealthUpdate(packet.entityId, packet.currentHealth,
                            packet.maxHealth);
         });
     _networkClient->setOnShieldStatusCallback(
         [this](const ShieldStatusPacket& packet) {
+            if (_recorder) {
+                _recorder->recordPacket(&packet, sizeof(packet));
+            }
             onShieldStatus(packet.playerId, packet.hasShield != 0);
         });
     _networkClient->setOnErrorCallback(
@@ -147,8 +179,8 @@ void ClientGameState::update(float deltaTime)
             }
         }
 
-        // Update animations for items (guided missile, speed)
-        if ((entity->type == 9 || entity->type == 17) &&
+        // Update animations for items (guided missile=9, pink bullets=17, speed=25)
+        if ((entity->type == 9 || entity->type == 17 || entity->type == 25) &&
             entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
@@ -163,25 +195,44 @@ void ClientGameState::update(float deltaTime)
             }
         }
 
+        // Type 7: Explosion animation (plays once, then marks for removal)
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
                 entity->animFrameTime = 0.0f;
                 entity->animCurrentFrame++;
                 if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = entity->animFrameCount - 1;
+                    entity->hasTriggeredEffect = true;
+                } else {
+                    int frameX =
+                        entity->animCurrentFrame * entity->animFrameWidth;
+                    entity->sprite->setTextureRect(frameX, 0,
+                                                   entity->animFrameWidth,
+                                                   entity->animFrameHeight);
                 }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
+        if ((entity->type == 17 || entity->type == 18 || entity->type == 19 ||
+             entity->type == 23 || entity->type == 24) &&
+            entity->animFrameCount > 0) {
+            updateSimpleAnimation(*entity, deltaTime);
+        }
+    }
+
+    std::vector<uint32_t> entitiesToRemove;
+    for (const auto& [id, entity] : _entities) {
+        if (entity && entity->type == 7 && entity->hasTriggeredEffect &&
+            entity->animCurrentFrame >= entity->animFrameCount) {
+            entitiesToRemove.push_back(id);
+        }
+    }
+    for (uint32_t id : entitiesToRemove) {
+        removeEntity(id);
     }
 
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
     }
-
     _explosions.erase(std::remove_if(_explosions.begin(), _explosions.end(),
                                      [](const std::unique_ptr<Explosion>& exp) {
                                          return exp->isFinished();
@@ -242,14 +293,22 @@ void ClientGameState::onDisconnected()
 void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                                       uint16_t mapHeight)
 {
+    std::cout << "[ClientGameState] onLoginResponse - Old playerId: "
+              << _playerId << ", New playerId: " << playerId
+              << ", Entities count: " << _entities.size() << std::endl;
+
     _playerId = playerId;
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
     _gameStarted = true;
 
     for (auto& [id, entity] : _entities) {
-        if (entity) {
-            entity->isLocalPlayer = (id == _playerId);
+        if (entity && entity->type == 1) {
+            bool wasLocalPlayer = entity->isLocalPlayer;
+            if (entity->isLocalPlayer && !wasLocalPlayer) {
+                std::cout << "[INFO] Marked entity " << id << " as local player"
+                          << std::endl;
+            }
         }
     }
 }
@@ -262,11 +321,26 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
     }
 
     auto entity = std::make_unique<ClientEntity>(entityId, type, x, y);
-    entity->isLocalPlayer = (entityId == _playerId);
+
+    if (type == 1) {
+        entity->isLocalPlayer = (entityId == _playerId);
+        if (entity->isLocalPlayer) {
+            std::cout << "[INFO] Marked entity " << entityId
+                      << " as LOCAL PLAYER (matches playerId " << _playerId
+                      << ")" << std::endl;
+        }
+        // Ensure speed boost is properly initialized
+        entity->hasSpeedBoost = false;
+        entity->speedBoostTimer = 0.0f;
+        entity->speedArrowSprites.clear();
+    } else {
+        entity->isLocalPlayer = false;
+    }
+
     createEntitySprite(*entity);
 
-    // If it's a speed item, track it
-    if (type == 17) {
+    // If it's a speed item (type 25), track it
+    if (type == 25) {
         // Speed items are handled by onEntityDead (picked up)
     }
 
@@ -279,6 +353,7 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (!entity) {
         return;
     }
+
     if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
         if (deltaY < -0.5f) {
@@ -296,9 +371,14 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
                                        entity->animFrameHeight);
     }
 
+    bool isEnemyProjectile =
+        (entity->type == 11 || entity->type == 13 || entity->type == 15 ||
+         entity->type == 17 || entity->type == 19);
+
     float clampedX = x;
     float clampedY = y;
-    if (_mapWidth > 0 && _mapHeight > 0) {
+
+    if (!isEnemyProjectile && _mapWidth > 0 && _mapHeight > 0) {
         if (clampedX < 0.0f) clampedX = 0.0f;
         if (clampedY < 0.0f) clampedY = 0.0f;
         float spriteHeight = 0.0f;
@@ -330,8 +410,8 @@ void ClientGameState::onEntityDead(uint32_t entityId)
 {
     auto* entity = getEntity(entityId);
     if (entity) {
-        // Check if it's a speed item being picked up
-        if (entity->type == 17) {
+        // Check if it's a speed item being picked up (type 25)
+        if (entity->type == 25) {
             // Activate speed boost on local player
             auto* localPlayer = getLocalPlayer();
             if (localPlayer) {
@@ -350,14 +430,22 @@ void ClientGameState::onEntityDead(uint32_t entityId)
                     }
                 }
             }
-        } else {
+        } else if (!_isSeeking) {
             // Normal entity death with explosions
             switch (entity->type) {
                 case 4:
                 case 2:
+                case 11:
+                case 13:
+                case 15:
+                case 17:
+                case 25:
+
+                case 19:
                     _explosions.push_back(std::make_unique<Explosion>(
                         ASSET_SPAN(embedded::blowup_1_data),
-                        (entity->type == 4) ? entity->x - 16 : entity->x + 16,
+                        (entity->type == 4) ? entity->x - 16
+                                            : entity->x + 16,
                         entity->y, 1.0f, 32, 32, 6));
                     break;
                 default:
@@ -543,19 +631,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.animFrameCount = 0;
             break;
         }
-        case 17: {
-            // Speed Item power-up
-            scale = 0.8f;
-            if (!entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::speed_item_data))) {
-                scale = 0.5f;
-                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
-            }
-            entity.sprite->setScale(scale, scale);
-            entity.spriteScale = scale;
-            entity.animFrameCount = 0;
-            break;
-        }
         case 10: {
             scale = 2.0f;
             // TODO load basic enemy sprite instead of reusing existing asset
@@ -566,36 +641,36 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 11: {
-            scale = 4.0f;
+            scale = 5.0f;
             // TODO load basic enemy projectile instead of reusing existing
             // asset
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
-            entity.sprite->setScale(scale, scale);
-            entity.spriteScale = scale;
-            break;
-        }
-        case 12: {
-            scale = 1.5f;
-            // TODO load tank enemy sprite instead of reusing existing asset
-            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
-            entity.sprite->setScale(scale, scale);
-            entity.spriteScale = scale;
-            entity.animFrameCount = 0;
-            break;
-        }
-        case 13: {
-            scale = 3.0f;
-            // TODO load tank enemy projectile instead of reusing existing asset
-            entity.sprite->loadTexture(
-                ASSET_SPAN(embedded::projectile_enemy_1_data));
-            entity.sprite->setScale(scale, scale);
-            entity.spriteScale = scale;
-            break;
-        }
-        case 14: {
-            // scale = 2.5f;
-            // TODO load fast enemy sprite instead of reusing existing asset
+                entity.sprite->setScale(scale, scale);
+                entity.spriteScale = scale;
+                break;
+            }
+            case 12: {
+                scale = 1.5f;
+                // TODO load tank enemy sprite instead of reusing existing asset
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+                entity.sprite->setScale(scale, scale);
+                entity.spriteScale = scale;
+                entity.animFrameCount = 0;
+                break;
+            }
+            case 13: {
+                scale = 3.0f;
+                // TODO load tank enemy projectile instead of reusing existing asset
+                entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_enemy_1_data));
+                    entity.sprite->setScale(scale, scale);
+                    entity.spriteScale = scale;
+                    break;
+                }
+                case 14: {
+                    // scale = 2.5f;
+                    // TODO load fast enemy sprite instead of reusing existing asset
             scale = 0.8f;
             entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
@@ -607,21 +682,143 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             scale = 5.0f;
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
+                entity.sprite->setScale(scale, scale);
+                entity.spriteScale = scale;
+                break;
+            }
+            case 16: {
+                scale = 3.0f;
+                if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::enemy_turret_data))) {
+                        bool isTopTurret = entity.y < 540.0f;
+                        int offsetX = isTopTurret ? 16 : 0;
+                        entity.sprite->setTextureRect(offsetX, 0, 16, 27);
+                        entity.sprite->setScale(scale, scale);
+                    }
+                    entity.spriteScale = scale;
+                    break;
+                }
+                case 17: {
+                    scale = 3.0f;
+                    if (entity.sprite->loadTexture(
+                        ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                            entity.animFrameCount = 4;
+                            entity.animCurrentFrame = 0;
+                            entity.animFrameTime = 0.0f;
+                            entity.animFrameDuration = 0.1f;
+                            entity.animFrameWidth = 14;
+                            entity.animFrameHeight = 10;
+                            entity.sprite->setTextureRect(0, 0, 14, 10);
+                            entity.sprite->setScale(scale, scale);
+                        }
+                        entity.spriteScale = scale;
+                        break;
+                    }
+                    case 18: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::orbiter_data))) {
+                    entity.animFrameCount = 2;
+                    entity.animCurrentFrame = 0;
+                    entity.animFrameTime = 0.0f;
+                    entity.animFrameDuration = 0.15f;
+                    entity.animFrameWidth = 24;
+                    entity.animFrameHeight = 26;
+                    entity.sprite->setTextureRect(0, 0, 24, 26);
+                    entity.sprite->setScale(scale, scale);
+                }
+                entity.spriteScale = scale;
+                break;
+            }
+            case 19: {
+                scale = 2.5f;
+                if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                        entity.animFrameCount = 4;
+                        entity.animCurrentFrame = 0;
+                        entity.animFrameTime = 0.0f;
+                        entity.animFrameDuration = 0.1f;
+                        entity.animFrameWidth = 14;
+                        entity.animFrameHeight = 10;
+                        entity.sprite->setTextureRect(0, 0, 14, 10);
+                        entity.sprite->setScale(scale, scale);
+                    }
+                    entity.spriteScale = scale;
+                    break;
+                }
+                case 20: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::laser_shooter_data))) {
+                    entity.sprite->setScale(scale, scale);
+                }
+                entity.spriteScale = scale;
+                break;
+            }
+            case 21: {
+                if (entity.sprite->loadTexture(ASSET_SPAN(embedded::laser_data))) {
+                    entity.sprite->setOrigin(320.0f, 2.0f);
+                    entity.sprite->setScale(6.0f, 6.0f);
+            }
+            entity.spriteScale = 6.0f;
+            break;
+        }
+        case 22: {
+            // Guided Missile projectile
+            scale = 4.0f;
+            if (!entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::search_missile_data))) {
+                    scale = 5.0f;
+                    entity.sprite->loadTexture(
+                        ASSET_SPAN(embedded::projectile_player_1_data));
+                    }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
         }
-        case 16: {
-            // Guided Missile projectile
-            scale = 4.0f;
+        case 23: {
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::glandus_data))) {
+                    entity.animFrameCount = 2;
+                    entity.animCurrentFrame = 0;
+                    entity.animFrameTime = 0.0f;
+                    entity.animFrameDuration = 0.15f;
+                    entity.animFrameWidth = 27;
+                    entity.animFrameHeight = 22;
+                    entity.sprite->setTextureRect(0, 0, 27, 22);
+                    entity.sprite->setScale(scale, scale);
+                }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 24: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::glandus_mini_data))) {
+                    entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 27;
+                entity.animFrameHeight = 22;
+                entity.sprite->setTextureRect(0, 0, 27, 22);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 25: {
+            // Speed Item power-up
+            scale = 0.8f;
             if (!entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::search_missile_data))) {
-                scale = 5.0f;
-                entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::projectile_player_1_data));
+                    ASSET_SPAN(embedded::speed_item_data))) {
+                scale = 0.5f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
+            entity.animFrameCount = 0;
             break;
         }
         default:
@@ -668,6 +865,18 @@ float ClientGameState::getPlayerMaxHealth() const
     return 100.0f;
 }
 
+uint32_t ClientGameState::getPlayerId() const { return _playerId; }
+
+uint16_t ClientGameState::getMapWidth() const { return _mapWidth; }
+
+uint16_t ClientGameState::getMapHeight() const { return _mapHeight; }
+
+uint32_t ClientGameState::getScore() const { return _score; }
+
+const std::string& ClientGameState::getLastError() const { return _lastError; }
+
+size_t ClientGameState::getEntityCount() const { return _entities.size(); }
+
 float ClientGameState::getBossHealth() const
 {
     for (const auto& [id, entity] : _entities) {
@@ -686,6 +895,105 @@ float ClientGameState::getBossMaxHealth() const
         }
     }
     return 0.0f;
+}
+
+void ClientGameState::startRecording(const std::string& filename)
+{
+    if (_recorder) {
+        std::cout << "[WARN] Already recording, stopping previous recording"
+                  << std::endl;
+        stopRecording();
+    }
+
+    std::string replayPath = "replays/" + filename;
+    _recorder = std::make_unique<rtype::ReplayRecorder>(replayPath);
+
+    if (_recorder->startRecording()) {
+        std::cout << "[INFO] Started recording replay to: " << replayPath
+                  << std::endl;
+    } else {
+        std::cerr << "[ERROR] Failed to start recording" << std::endl;
+        _recorder.reset();
+    }
+}
+
+void ClientGameState::stopRecording()
+{
+    if (_recorder) {
+        _recorder->stopRecording();
+        std::cout << "[INFO] Stopped recording replay" << std::endl;
+        _recorder.reset();
+    }
+}
+
+void ClientGameState::resetForReplay()
+{
+    _entities.clear();
+    _explosions.clear();
+    _score = 0;
+}
+
+const std::unordered_map<uint32_t, std::unique_ptr<ClientEntity>>&
+ClientGameState::getAllEntities() const
+{
+    return _entities;
+}
+
+bool ClientGameState::isRecording() const { return _recorder != nullptr; }
+
+void ClientGameState::setSeekingMode(bool seeking) { _isSeeking = seeking; }
+
+void ClientGameState::clearExplosions() { _explosions.clear(); }
+
+void ClientGameState::setIsSeeking(bool seeking) { _isSeeking = seeking; }
+
+void ClientGameState::processLoginResponse(uint32_t playerId, uint16_t mapWidth,
+                                           uint16_t mapHeight)
+{
+    onLoginResponse(playerId, mapWidth, mapHeight);
+}
+
+void ClientGameState::processEntitySpawn(uint32_t entityId, uint8_t type,
+                                         float x, float y)
+{
+    onEntitySpawn(entityId, type, x, y);
+}
+
+void ClientGameState::processEntityPosition(uint32_t entityId, float x, float y)
+{
+    onEntityPosition(entityId, x, y);
+}
+
+void ClientGameState::processEntityDead(uint32_t entityId)
+{
+    onEntityDead(entityId);
+}
+
+void ClientGameState::processHealthUpdate(uint32_t entityId,
+                                          float currentHealth, float maxHealth)
+{
+    onHealthUpdate(entityId, currentHealth, maxHealth);
+}
+
+void ClientGameState::processShieldStatus(uint32_t playerId, bool hasShield)
+{
+    onShieldStatus(playerId, hasShield);
+}
+
+void ClientGameState::updateSimpleAnimation(ClientEntity& entity,
+                                            float deltaTime)
+{
+    entity.animFrameTime += deltaTime;
+    if (entity.animFrameTime >= entity.animFrameDuration) {
+        entity.animFrameTime = 0.0f;
+        entity.animCurrentFrame++;
+        if (entity.animCurrentFrame >= entity.animFrameCount) {
+            entity.animCurrentFrame = 0;
+        }
+        int frameX = entity.animCurrentFrame * entity.animFrameWidth;
+        entity.sprite->setTextureRect(frameX, 0, entity.animFrameWidth,
+                                      entity.animFrameHeight);
+    }
 }
 
 }  // namespace rtype
