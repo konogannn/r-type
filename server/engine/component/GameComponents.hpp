@@ -154,10 +154,26 @@ struct Shield : public ComponentBase<Shield> {
 };
 
 /**
+ * @brief SpeedBoost component - Player has active speed boost
+ */
+struct SpeedBoost : public ComponentBase<SpeedBoost> {
+    float duration;
+    float originalSpeed;
+    float boostedSpeed;
+
+    SpeedBoost(float dur = 5.0f, float origSpeed = 300.0f)
+        : duration(dur),
+          originalSpeed(origSpeed),
+          boostedSpeed(origSpeed * 1.5f)
+    {
+    }
+};
+
+/**
  * @brief Item component - Tags entity as a collectible item
  */
 struct Item : public ComponentBase<Item> {
-    enum class Type { SHIELD, GUIDED_MISSILE };
+    enum class Type { SHIELD, GUIDED_MISSILE, SPEED };
 
     Type type;
 
