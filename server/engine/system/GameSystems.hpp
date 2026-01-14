@@ -70,37 +70,6 @@ class LifetimeSystem : public System<Lifetime> {
 };
 
 /**
- * @brief Enemy spawner system - Spawns enemies periodically
- */
-class EnemySpawnerSystem : public ISystem {
-   private:
-    float _spawnTimer;
-    float _spawnInterval;
-    std::mt19937 _rng;
-    std::uniform_real_distribution<float> _yDist;
-    std::uniform_int_distribution<int> _typeDist;
-    std::vector<SpawnEvent>& _spawnQueue;
-
-   public:
-    EnemySpawnerSystem(std::vector<SpawnEvent>& spawnQueue,
-                       float spawnInterval = 2.0f)
-        : _spawnTimer(0.0f),
-          _spawnInterval(spawnInterval),
-          _rng(std::random_device{}()),
-          _yDist(50.0f, 1000.0f),
-          _typeDist(0, 2),
-          _spawnQueue(spawnQueue)
-    {
-    }
-
-    std::string getName() const override;
-    int getPriority() const override;
-
-    void update(float deltaTime, EntityManager& entityManager) override;
-    void spawnEnemy();
-};
-
-/**
  * @brief Bullet cleanup system - Removes bullets that leave the screen
  */
 class BulletCleanupSystem : public ISystem {
