@@ -87,6 +87,11 @@ class Menu {
     std::string _fontPath;
     ColorBlindFilter& _colorBlindFilter;
 
+    int _selectedButtonIndex;
+    bool _wasUpPressed;
+    bool _wasDownPressed;
+    bool _wasEnterPressed;
+
     bool _isFadingOut;
     float _uiAlpha;
     static constexpr float FADE_SPEED = 2.0f;
