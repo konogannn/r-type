@@ -81,6 +81,9 @@ class Menu {
     {
         _isFadingOut = false;
         _uiAlpha = 1.0f;
+        _wasUpPressed = true;
+        _wasDownPressed = true;
+        _wasEnterPressed = true;
     }
 
    private:

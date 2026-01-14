@@ -121,12 +121,10 @@ MenuAction Menu::update(float deltaTime)
     int mouseY = _input.getMouseY();
     bool isMousePressed = _input.isMouseButtonPressed(MouseButton::Left);
 
-    // Gestion de la navigation au clavier
     bool isUpPressed = _input.isKeyPressed(Key::Up);
     bool isDownPressed = _input.isKeyPressed(Key::Down);
     bool isEnterPressed = _input.isKeyPressed(Key::Enter);
 
-    // Navigation avec les flèches
     if (isUpPressed && !_wasUpPressed) {
         _buttons[_selectedButtonIndex].setFocused(false);
         _selectedButtonIndex--;
@@ -158,8 +156,11 @@ MenuAction Menu::update(float deltaTime)
                 return MenuAction::None;
             case 1:
                 _wasEnterPressed = isEnterPressed;
-                return MenuAction::Settings;
+                return MenuAction::Replays;
             case 2:
+                _wasEnterPressed = isEnterPressed;
+                return MenuAction::Settings;
+            case 3:
                 _wasEnterPressed = isEnterPressed;
                 return MenuAction::Quit;
         }
