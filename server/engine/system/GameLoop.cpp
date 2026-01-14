@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "../../../common/utils/Logger.hpp"
+#include "../wave/WaveManager.hpp"
 #include "BossSystem.hpp"
 #include "GameSystems.hpp"
 
@@ -34,6 +35,39 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
         update.spawned = false;
         update.destroyed = true;
         _outputQueue.push(update);
+
+        bool isEnemy = (info.entityType == 10 ||  // BASIC
+                        info.entityType == 12 ||  // TANK
+                        info.entityType == 14 ||  // FAST
+                        info.entityType == 16 ||  // TURRET
+                        info.entityType == 18 ||  // ORBITER
+                        info.entityType == 20 ||  // LASER_SHIP
+                        info.entityType == 23 ||  // GLANDUS
+                        info.entityType == 24);   // GLANDUS_MINI
+
+        bool isBoss = (info.entityType == 5);  // BOSS
+
+        if (isEnemy) {
+            for (auto& system : _systems) {
+                WaveManager* waveManager =
+                    dynamic_cast<WaveManager*>(system.get());
+                if (waveManager) {
+                    waveManager->onEnemyDestroyed();
+                    break;
+                }
+            }
+        }
+
+        if (isBoss) {
+            for (auto& system : _systems) {
+                WaveManager* waveManager =
+                    dynamic_cast<WaveManager*>(system.get());
+                if (waveManager) {
+                    waveManager->onBossDestroyed();
+                    break;
+                }
+            }
+        }
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
@@ -72,10 +106,25 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         update.destroyed = true;
         _outputQueue.push(update);
 
-        bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
-                        info.entityType == 14);
+        bool isEnemy = (info.entityType == 10 ||  // BASIC
+                        info.entityType == 12 ||  // TANK
+                        info.entityType == 14 ||  // FAST
+                        info.entityType == 16 ||  // TURRET
+                        info.entityType == 18 ||  // ORBITER
+                        info.entityType == 20 ||  // LASER_SHIP
+                        info.entityType == 23 ||  // GLANDUS
+                        info.entityType == 24);   // GLANDUS_MINI
 
         if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
+            for (auto& system : _systems) {
+                WaveManager* waveManager =
+                    dynamic_cast<WaveManager*>(system.get());
+                if (waveManager) {
+                    waveManager->onEnemyDestroyed();
+                    break;
+                }
+            }
+
             if (rand() % 2 == 0) {
                 Entity powerUpItem;
                 if (_nextEnemyDropIsShield) {

@@ -253,5 +253,22 @@ class GameLoop {
      * @brief Get unified spawn event queue (for systems to write to)
      */
     std::vector<SpawnEvent>& getSpawnEvents() { return _spawnEvents; }
+
+    /**
+     * @brief Get a specific system by type
+     * @tparam T The system type
+     * @return Pointer to the system, or nullptr if not found
+     */
+    template <typename T>
+    T* getSystem()
+    {
+        for (auto& system : _systems) {
+            T* typed = dynamic_cast<T*>(system.get());
+            if (typed) {
+                return typed;
+            }
+        }
+        return nullptr;
+    }
 };
 }  // namespace engine

@@ -117,9 +117,6 @@ Entity GameEntityFactory::createTurret(float x, float y, bool isTopTurret)
     _entityManager.addComponent(turret,
                                 NetworkEntity(turretId, EntityType::TURRET));
 
-    std::cout << "[FACTORY] Created turret ID=" << turretId << " at (" << x
-              << "," << y << "), isTop=" << isTopTurret << std::endl;
-
     return turret;
 }
 
