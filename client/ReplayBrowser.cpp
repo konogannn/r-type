@@ -235,8 +235,7 @@ void ReplayBrowser::update(float deltaTime)
     bool isEnterPressed = _input.isKeyPressed(Key::Enter);
     bool isEscapePressed = _input.isKeyPressed(Key::Escape);
 
-    int totalRows =
-        static_cast<int>(_replayButtons.size()) + 1;
+    int totalRows = static_cast<int>(_replayButtons.size()) + 1;
     int maxColumns = _replayButtons.empty() ? 1 : 3;
 
     if (isUpPressed && !_wasUpPressed) {
