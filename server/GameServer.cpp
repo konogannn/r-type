@@ -28,7 +28,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
       _bossWaveActive(false),
       _bossWaveEnemiesAlive(0),
       _bossSpawned(false),
-      _pendingBossType(0)
+      _pendingBossType(0),
+      _score(0)
 {
     _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
@@ -291,14 +292,39 @@ void GameServer::waitForPlayers()
 
 bool GameServer::isEnemy(uint8_t entityType) const
 {
-    return entityType == static_cast<uint8_t>(EntityType::BASIC) ||
-           entityType == static_cast<uint8_t>(EntityType::FAST) ||
-           entityType == static_cast<uint8_t>(EntityType::TANK) ||
-           entityType == static_cast<uint8_t>(EntityType::TURRET) ||
-           entityType == static_cast<uint8_t>(EntityType::ORBITER) ||
-           entityType == static_cast<uint8_t>(EntityType::LASER_SHIP) ||
-           entityType == static_cast<uint8_t>(EntityType::GLANDUS) ||
-           entityType == static_cast<uint8_t>(EntityType::GLANDUS_MINI);
+    return entityType == EntityType::BOSS || entityType == EntityType::BASIC ||
+           entityType == EntityType::FAST || entityType == EntityType::TANK ||
+           entityType == EntityType::TURRET ||
+           entityType == EntityType::ORBITER ||
+           entityType == EntityType::LASER_SHIP ||
+           entityType == EntityType::GLANDUS ||
+           entityType == EntityType::GLANDUS_MINI;
+}
+
+uint32_t GameServer::getScoreForEnemy(uint8_t entityType) const
+{
+    switch (entityType) {
+        case EntityType::BOSS:
+            return 5000;
+        case EntityType::BASIC:
+            return 100;
+        case EntityType::FAST:
+            return 150;
+        case EntityType::TANK:
+            return 200;
+        case EntityType::TURRET:
+            return 250;
+        case EntityType::ORBITER:
+            return 175;
+        case EntityType::LASER_SHIP:
+            return 300;
+        case EntityType::GLANDUS:
+            return 250;
+        case EntityType::GLANDUS_MINI:
+            return 75;
+        default:
+            return 0;
+    }
 }
 
 void GameServer::processNetworkUpdates()
@@ -325,6 +351,13 @@ void GameServer::processNetworkUpdates()
                                                        update.x, update.y);
                     } else if (update.destroyed) {
                         _networkServer.sendEntityDead(0, update.entityId);
+
+                        if (isEnemy(update.entityType)) {
+                            uint32_t points =
+                                getScoreForEnemy(update.entityType);
+                            _score += points;
+                            _networkServer.sendScoreUpdate(0, _score.load());
+                        }
 
                         if (_bossWaveActive && isEnemy(update.entityType)) {
                             _bossWaveEnemiesAlive--;
@@ -410,6 +443,7 @@ void GameServer::resetGameState()
     _bossSpawned = false;
     _pendingBossType = 0;
     _nextPlayerId = 1;
+    _score = 0;
     _gameLoop.clearAllEntities();
 
     Logger::getInstance().log("Ready for new players", LogLevel::INFO_L,
