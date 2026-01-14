@@ -319,7 +319,7 @@ Entity GameEntityFactory::createSpeedItem(float x, float y)
     _entityManager.addComponent(item, BoundingBox(32.0f, 32.0f, 0.0f, 0.0f));
     _entityManager.addComponent(item, Item(Item::Type::SPEED));
     _entityManager.addComponent(
-        item, NetworkEntity(_nextBulletId++, 17));  // Type 17 = Speed Item
+        item, NetworkEntity(_nextBulletId++, 25));  // Type 25 = Speed Item
 
     return item;
 }
