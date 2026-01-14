@@ -9,6 +9,8 @@
 
 #include <cstdint>
 
+#include "GameRules.hpp"
+
 /**
  * @brief Forces 1-byte alignment for structures.
  *
@@ -39,11 +41,14 @@ struct Header {
  */
 enum OpCode : uint8_t {
     // --- C2S (Client to Server) ---
-    C2S_LOGIN = 1,       ///< Request to join the game with a username.
-    C2S_START_GAME = 2,  ///< Request to start the game session.
+    C2S_LOGIN = 1,       ///< Request to connect to the server with a username.
+    C2S_START_GAME = 2,  ///< Request to start the game session (leader only).
     C2S_DISCONNECT = 3,  ///< Notification that client is leaving.
     C2S_ACK = 4,         ///< Acknowledgment of a reliable packet.
     C2S_INPUT = 5,       ///< Player input state (keys pressed).
+    C2S_UPD_LOBBY = 6,   ///< Join / Leave / Ready in lobby.
+    C2S_UPD_RULES = 7,   ///< Update game rules (leader only in lobby).
+    C2S_RENAME = 8,      ///< Change player username in lobby.
 
     // --- S2C (Server to Client) ---
     S2C_LOGIN_OK = 10,     ///< Login accepted, contains player ID and map info.
@@ -59,6 +64,9 @@ enum OpCode : uint8_t {
     S2C_SHIELD_STATUS = 20,  ///< Shield status update (gained/lost).
     S2C_GAME_EVENT =
         21,  ///< Game event notification (wave start, level complete).
+    S2C_LOBBY_AVAIL =
+        22,  ///< Notify clients of lobby availability (empty/open/full/kicked).
+    S2C_SYNC_LOBBY = 23  ///< Synchronize game rules & ready status to clients.
 };
 
 /**
@@ -116,6 +124,29 @@ struct InputPacket {
      * 1=UP, 2=DOWN, 4=LEFT, 8=RIGHT, 16=SHOOT
      */
     uint8_t inputMask;
+};
+
+/**
+ * @brief Packet to update game rules (leader only in lobby).
+ * OpCode: C2S_UPD_RULES
+ */
+struct GameRulesPacket {
+    Header header;
+    GameRules rules;
+};
+
+/**
+ * @brief Packet to update lobby status (join/leave/ready).
+ * OpCode: C2S_UPD_LOBBY
+ */
+struct LobbyUpdatePacket {
+    Header header;
+    /**
+     * @brief Action to perform.
+     * 0 = Join, 1 = Leave, 2 = Toggle Ready
+     */
+    uint8_t action;
+    char username[8];  ///< Player username (for Join action).
 };
 
 /**
@@ -246,6 +277,33 @@ struct GameEventPacket {
     uint8_t waveNumber;  ///< Current wave number (for WAVE_START).
     uint8_t totalWaves;  ///< Total waves in level.
     uint8_t levelId;     ///< Current level ID.
+};
+
+/**
+ * @brief Packet to notify clients of lobby availability.
+ * OpCode: S2C_LOBBY_AVAIL
+ */
+struct LobbyAvailabilityPacket {
+    Header header;
+    /**
+     * @brief Lobby status.
+     * 0 = Empty, 1 = Open, 2 = Full, 3 = Kicked
+     */
+    uint8_t status;
+};
+
+/**
+ * @brief Packet to synchronize lobby status (rules & ready states).
+ * OpCode: S2C_SYNC_LOBBY
+ */
+struct LobbySyncPacket {
+    Header header;
+    GameRules rules;      ///< Current game rules.
+    uint8_t playerCount;  ///< Number of players in lobby.
+    struct PlayerStatus {
+        char username[8];  ///< Player username.
+        uint8_t isReady;   ///< 1 if player is ready, 0 otherwise.
+    } players[4];          ///< Status of each player (max 4 players).
 };
 
 #pragma pack(pop)
