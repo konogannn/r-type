@@ -36,15 +36,15 @@ struct ClientEntity {
     float health = 100.0f;
     float maxHealth = 100.0f;
     std::unique_ptr<SpriteSFML> sprite;
-    std::unique_ptr<SpriteSFML> shieldSprite;  // Shield overlay sprite
+    std::unique_ptr<SpriteSFML> shieldSprite;
     float spriteScale = 1.0f;
     float verticalIdleTime = 0.0f;
     bool isLocalPlayer = false;
-    bool hasShield = false;        // True if player has active shield
-    bool hasSpeedBoost = false;    // True if player has speed boost
-    float speedBoostTimer = 0.0f;  // Time remaining for speed boost
+    bool hasShield = false;
+    bool hasSpeedBoost = false;
+    float speedBoostTimer = 0.0f;
     std::vector<std::unique_ptr<SpriteSFML>>
-        speedArrowSprites;  // Speed indicators
+        speedArrowSprites;
 
     enum class AnimationState { IDLE, MOVING_DOWN, MOVING_UP };
     AnimationState animState = AnimationState::IDLE;
@@ -55,7 +55,7 @@ struct ClientEntity {
     int animFrameWidth = 0;
     int animFrameHeight = 0;
     bool hasTriggeredEffect =
-        false;  // For type 7 explosions: track if screen shake triggered
+        false;
 
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
         : id(entityId),

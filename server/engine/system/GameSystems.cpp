@@ -409,16 +409,12 @@ void CollisionSystem::handlePlayerBulletVsBoss(
 
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
                 bossHealth->takeDamage(bullet->damage);
-
-                // Increment hit counter and spawn a power-up
-                // every 5 hits
                 auto* boss = entityManager.getComponent<Boss>(bossEntity);
                 if (boss) {
                     boss->hitCounter++;
                     if (boss->hitCounter >= 5) {
                         boss->hitCounter = 0;
 
-                        // Find a player to spawn the item near them
                         auto players =
                             entityManager.getEntitiesWith<Position, Player>();
                         float spawnX = bossPos->x;
@@ -429,12 +425,11 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                     players[0]);
                             if (playerPos) {
                                 spawnX = playerPos->x +
-                                         100.0f;  // Spawn in front of player
+                                         100.0f;
                                 spawnY = playerPos->y;
                             }
                         }
 
-                        // Rotate between shield, guided missile, and speed
                         Item::Type itemType;
                         if (_nextPowerUpIndex == 0) {
                             itemType = Item::Type::SHIELD;
@@ -483,15 +478,10 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                     if (bossHealth && bossPos) {
                         bossHealth->takeDamage(bullet->damage);
 
-                        // Increment hit counter and spawn a
-                        // power-up every 15 hits
                         if (boss) {
                             boss->hitCounter++;
                             if (boss->hitCounter >= 15) {
                                 boss->hitCounter = 0;
-
-                                // Find a player to spawn the item near
-                                // them
                                 auto players =
                                     entityManager
                                         .getEntitiesWith<Position, Player>();
@@ -504,13 +494,10 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                     if (playerPos) {
                                         spawnX =
                                             playerPos->x +
-                                            100.0f;  // Spawn in front of player
+                                            100.0f;
                                         spawnY = playerPos->y;
                                     }
                                 }
-
-                                // Rotate between shield, guided missile, and
-                                // speed
                                 Item::Type itemType;
                                 if (_nextPowerUpIndex == 0) {
                                     itemType = Item::Type::SHIELD;
@@ -562,17 +549,14 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
             if (!enemyPos || !enemyBox) continue;
 
             if (checkCollision(*playerPos, *playerBox, *enemyPos, *enemyBox)) {
-                // Check if player has shield
                 auto* shield = entityManager.getComponent<Shield>(playerEntity);
                 if (shield && shield->active) {
-                    // Shield absorbs the hit
                     Entity* mutablePlayer =
                         entityManager.getEntity(playerEntity.getId());
                     if (mutablePlayer) {
                         entityManager.removeComponent<Shield>(*mutablePlayer);
                     }
                 } else {
-                    // No shield, take damage
                     playerHealth->takeDamage(20.0f);
 
                     if (!playerHealth->isAlive() &&
@@ -734,7 +718,6 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
             .getEntitiesWith<Position, BossPart, Health, BoundingBox>();
 
     handleBulletVsBullet(entityManager, bullets);
-    // Guided missiles ignore enemy bullets by design (no collision handler)
     handlePlayerBulletVsEnemy(entityManager, bullets, enemies);
     handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
     handleGuidedMissileVsEnemy(entityManager, missiles, enemies, bosses);
@@ -836,7 +819,6 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
 
         bool hitSomething = false;
 
-        // Check collision with regular enemies
         for (auto& enemyEntity : enemies) {
             if (isMarkedForDestruction(enemyEntity.getId())) continue;
 
@@ -850,7 +832,6 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
                                *enemyBox)) {
                 enemyHealth->takeDamage(missile->damage);
 
-                // Mark enemy for network sync
                 auto* enemyNet =
                     entityManager.getComponent<NetworkEntity>(enemyEntity);
                 if (enemyNet) {
@@ -883,7 +864,6 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
 
         if (hitSomething) continue;
 
-        // Check collision with bosses
         for (auto& bossEntity : bosses) {
             if (isMarkedForDestruction(bossEntity.getId())) continue;
 
@@ -895,7 +875,6 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
             if (checkCollision(*missilePos, *missileBox, *bossPos, *bossBox)) {
                 bossHealth->takeDamage(missile->damage);
 
-                // Mark boss for network sync
                 auto* bossNet =
                     entityManager.getComponent<NetworkEntity>(bossEntity);
                 if (bossNet) {
@@ -925,7 +904,6 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
 
         if (hitSomething) continue;
 
-        // Check collision with bosses
         for (auto& bossEntity : bosses) {
             if (isMarkedForDestruction(bossEntity.getId())) continue;
 
@@ -937,7 +915,6 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
             if (checkCollision(*missilePos, *missileBox, *bossPos, *bossBox)) {
                 bossHealth->takeDamage(missile->damage);
 
-                // Mark boss for network sync
                 auto* bossNet =
                     entityManager.getComponent<NetworkEntity>(bossEntity);
                 if (bossNet) {
@@ -1002,10 +979,8 @@ void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
                     auto* speedBoost =
                         entityManager.getComponent<SpeedBoost>(playerEntity);
                     if (speedBoost) {
-                        // Refresh duration if already boosted
                         speedBoost->duration = 5.0f;
                     } else {
-                        // Add new speed boost
                         Entity* mutablePlayer =
                             entityManager.getEntity(playerEntity.getId());
                         if (mutablePlayer) {
@@ -1040,7 +1015,7 @@ SystemType GuidedMissileSystem::getType() const
 int GuidedMissileSystem::getPriority() const
 {
     return 8;
-}  // Before MovementSystem (10)
+}
 
 Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
                                               const Position& missilePos)
@@ -1051,7 +1026,6 @@ Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
     Entity* nearestEnemy = nullptr;
     float nearestDistance = std::numeric_limits<float>::max();
 
-    // Check regular enemies
     for (auto& enemy : enemies) {
         auto* enemyPos = entityManager.getComponent<Position>(enemy);
         if (!enemyPos) continue;
@@ -1066,7 +1040,6 @@ Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
         }
     }
 
-    // Check bosses
     for (auto& boss : bosses) {
         auto* bossPos = entityManager.getComponent<Position>(boss);
         if (!bossPos) continue;
