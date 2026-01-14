@@ -179,7 +179,8 @@ void ClientGameState::update(float deltaTime)
             }
         }
 
-        // Update animations for items (guided missile=9, pink bullets=17, speed=25)
+        // Update animations for items (guided missile=9, pink bullets=17,
+        // speed=25)
         if ((entity->type == 9 || entity->type == 17 || entity->type == 25) &&
             entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
@@ -444,8 +445,7 @@ void ClientGameState::onEntityDead(uint32_t entityId)
                 case 19:
                     _explosions.push_back(std::make_unique<Explosion>(
                         ASSET_SPAN(embedded::blowup_1_data),
-                        (entity->type == 4) ? entity->x - 16
-                                            : entity->x + 16,
+                        (entity->type == 4) ? entity->x - 16 : entity->x + 16,
                         entity->y, 1.0f, 32, 32, 6));
                     break;
                 default:
@@ -646,31 +646,31 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             // asset
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
-                entity.sprite->setScale(scale, scale);
-                entity.spriteScale = scale;
-                break;
-            }
-            case 12: {
-                scale = 1.5f;
-                // TODO load tank enemy sprite instead of reusing existing asset
-                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
-                entity.sprite->setScale(scale, scale);
-                entity.spriteScale = scale;
-                entity.animFrameCount = 0;
-                break;
-            }
-            case 13: {
-                scale = 3.0f;
-                // TODO load tank enemy projectile instead of reusing existing asset
-                entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::projectile_enemy_1_data));
-                    entity.sprite->setScale(scale, scale);
-                    entity.spriteScale = scale;
-                    break;
-                }
-                case 14: {
-                    // scale = 2.5f;
-                    // TODO load fast enemy sprite instead of reusing existing asset
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 12: {
+            scale = 1.5f;
+            // TODO load tank enemy sprite instead of reusing existing asset
+            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            entity.animFrameCount = 0;
+            break;
+        }
+        case 13: {
+            scale = 3.0f;
+            // TODO load tank enemy projectile instead of reusing existing asset
+            entity.sprite->loadTexture(
+                ASSET_SPAN(embedded::projectile_enemy_1_data));
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 14: {
+            // scale = 2.5f;
+            // TODO load fast enemy sprite instead of reusing existing asset
             scale = 0.8f;
             entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
             entity.sprite->setScale(scale, scale);
@@ -682,83 +682,83 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             scale = 5.0f;
             entity.sprite->loadTexture(
                 ASSET_SPAN(embedded::projectile_enemy_1_data));
-                entity.sprite->setScale(scale, scale);
-                entity.spriteScale = scale;
-                break;
-            }
-            case 16: {
-                scale = 3.0f;
-                if (entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::enemy_turret_data))) {
-                        bool isTopTurret = entity.y < 540.0f;
-                        int offsetX = isTopTurret ? 16 : 0;
-                        entity.sprite->setTextureRect(offsetX, 0, 16, 27);
-                        entity.sprite->setScale(scale, scale);
-                    }
-                    entity.spriteScale = scale;
-                    break;
-                }
-                case 17: {
-                    scale = 3.0f;
-                    if (entity.sprite->loadTexture(
-                        ASSET_SPAN(embedded::small_pink_bullet_data))) {
-                            entity.animFrameCount = 4;
-                            entity.animCurrentFrame = 0;
-                            entity.animFrameTime = 0.0f;
-                            entity.animFrameDuration = 0.1f;
-                            entity.animFrameWidth = 14;
-                            entity.animFrameHeight = 10;
-                            entity.sprite->setTextureRect(0, 0, 14, 10);
-                            entity.sprite->setScale(scale, scale);
-                        }
-                        entity.spriteScale = scale;
-                        break;
-                    }
-                    case 18: {
-            scale = 2.0f;
-            if (entity.sprite->loadTexture(
-                ASSET_SPAN(embedded::orbiter_data))) {
-                    entity.animFrameCount = 2;
-                    entity.animCurrentFrame = 0;
-                    entity.animFrameTime = 0.0f;
-                    entity.animFrameDuration = 0.15f;
-                    entity.animFrameWidth = 24;
-                    entity.animFrameHeight = 26;
-                    entity.sprite->setTextureRect(0, 0, 24, 26);
-                    entity.sprite->setScale(scale, scale);
-                }
-                entity.spriteScale = scale;
-                break;
-            }
-            case 19: {
-                scale = 2.5f;
-                if (entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
-                        entity.animFrameCount = 4;
-                        entity.animCurrentFrame = 0;
-                        entity.animFrameTime = 0.0f;
-                        entity.animFrameDuration = 0.1f;
-                        entity.animFrameWidth = 14;
-                        entity.animFrameHeight = 10;
-                        entity.sprite->setTextureRect(0, 0, 14, 10);
-                        entity.sprite->setScale(scale, scale);
-                    }
-                    entity.spriteScale = scale;
-                    break;
-                }
-                case 20: {
+            entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 16: {
             scale = 3.0f;
             if (entity.sprite->loadTexture(
-                ASSET_SPAN(embedded::laser_shooter_data))) {
-                    entity.sprite->setScale(scale, scale);
-                }
-                entity.spriteScale = scale;
-                break;
+                    ASSET_SPAN(embedded::enemy_turret_data))) {
+                bool isTopTurret = entity.y < 540.0f;
+                int offsetX = isTopTurret ? 16 : 0;
+                entity.sprite->setTextureRect(offsetX, 0, 16, 27);
+                entity.sprite->setScale(scale, scale);
             }
-            case 21: {
-                if (entity.sprite->loadTexture(ASSET_SPAN(embedded::laser_data))) {
-                    entity.sprite->setOrigin(320.0f, 2.0f);
-                    entity.sprite->setScale(6.0f, 6.0f);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 17: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 18: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::orbiter_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 24;
+                entity.animFrameHeight = 26;
+                entity.sprite->setTextureRect(0, 0, 24, 26);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 19: {
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 20: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::laser_shooter_data))) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 21: {
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::laser_data))) {
+                entity.sprite->setOrigin(320.0f, 2.0f);
+                entity.sprite->setScale(6.0f, 6.0f);
             }
             entity.spriteScale = 6.0f;
             break;
@@ -767,11 +767,11 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             // Guided Missile projectile
             scale = 4.0f;
             if (!entity.sprite->loadTexture(
-                ASSET_SPAN(embedded::search_missile_data))) {
-                    scale = 5.0f;
-                    entity.sprite->loadTexture(
-                        ASSET_SPAN(embedded::projectile_player_1_data));
-                    }
+                    ASSET_SPAN(embedded::search_missile_data))) {
+                scale = 5.0f;
+                entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::projectile_player_1_data));
+            }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
             break;
@@ -779,24 +779,24 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         case 23: {
             scale = 2.5f;
             if (entity.sprite->loadTexture(
-                ASSET_SPAN(embedded::glandus_data))) {
-                    entity.animFrameCount = 2;
-                    entity.animCurrentFrame = 0;
-                    entity.animFrameTime = 0.0f;
-                    entity.animFrameDuration = 0.15f;
-                    entity.animFrameWidth = 27;
-                    entity.animFrameHeight = 22;
-                    entity.sprite->setTextureRect(0, 0, 27, 22);
-                    entity.sprite->setScale(scale, scale);
-                }
+                    ASSET_SPAN(embedded::glandus_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 27;
+                entity.animFrameHeight = 22;
+                entity.sprite->setTextureRect(0, 0, 27, 22);
+                entity.sprite->setScale(scale, scale);
+            }
             entity.spriteScale = scale;
             break;
         }
         case 24: {
             scale = 2.0f;
             if (entity.sprite->loadTexture(
-                ASSET_SPAN(embedded::glandus_mini_data))) {
-                    entity.animFrameCount = 2;
+                    ASSET_SPAN(embedded::glandus_mini_data))) {
+                entity.animFrameCount = 2;
                 entity.animCurrentFrame = 0;
                 entity.animFrameTime = 0.0f;
                 entity.animFrameDuration = 0.15f;
