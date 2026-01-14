@@ -295,7 +295,9 @@ bool GameServer::isEnemy(uint8_t entityType) const
            entityType == static_cast<uint8_t>(EntityType::TANK) ||
            entityType == static_cast<uint8_t>(EntityType::TURRET) ||
            entityType == static_cast<uint8_t>(EntityType::ORBITER) ||
-           entityType == static_cast<uint8_t>(EntityType::LASER_SHIP);
+           entityType == static_cast<uint8_t>(EntityType::LASER_SHIP) ||
+           entityType == static_cast<uint8_t>(EntityType::GLANDUS) ||
+           entityType == static_cast<uint8_t>(EntityType::GLANDUS_MINI);
 }
 
 void GameServer::processNetworkUpdates()
@@ -594,9 +596,7 @@ void GameServer::checkBossWaveCompletion()
         if (_bossWaveEnemiesAlive <= 0) {
             Logger::getInstance().log("Boss wave cleared! Spawning boss...",
                                       LogLevel::INFO_L, "Game");
-            _bossWaveActive = true;
             spawnBoss(_pendingBossType);
-            _bossWaveActive = false;
         }
     }
 }
