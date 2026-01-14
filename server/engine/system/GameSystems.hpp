@@ -310,7 +310,6 @@ class ItemSpawnerSystem : public ISystem {
     void spawnItem();
 };
 
-
 /**
  * @brief Following system - Makes entities follow nearest target
  */
