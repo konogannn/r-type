@@ -22,7 +22,8 @@ namespace engine {
 // Import SpawnEvent type from events
 using SpawnEvent =
     std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
-                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent>;
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent>;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -299,6 +300,27 @@ class OrbiterSystem : public System<Orbiter, Position, Enemy> {
 
    public:
     OrbiterSystem(std::vector<SpawnEvent>& spawnQueue) : _spawnQueue(spawnQueue)
+    {
+    }
+
+    std::string getName() const override;
+    SystemType getType() const override;
+    int getPriority() const override;
+};
+
+class LaserShipSystem : public System<LaserShip, Position, Enemy> {
+   private:
+    std::vector<SpawnEvent>& _spawnQueue;
+    EntityManager& _entityManager;
+
+   protected:
+    void processEntity(float deltaTime, Entity& entity, LaserShip* laserShip,
+                       Position* pos, Enemy* enemy) override;
+
+   public:
+    LaserShipSystem(std::vector<SpawnEvent>& spawnQueue,
+                    EntityManager& entityManager)
+        : _spawnQueue(spawnQueue), _entityManager(entityManager)
     {
     }
 

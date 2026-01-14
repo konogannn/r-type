@@ -30,6 +30,7 @@ enum class SystemType {
     ENEMY_SHOOTING,
     TURRET_SHOOTING,
     ORBITER,
+    LASER_SHIP,
     LIFETIME,
     OTHER
 };

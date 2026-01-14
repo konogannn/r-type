@@ -91,6 +91,10 @@ void LifetimeSystem::update(float deltaTime, EntityManager& entityManager)
             }
         }
     }
+
+    for (const auto& info : _entitiesToDestroy) {
+        entityManager.destroyEntity(info.entityId);
+    }
 }
 
 std::string EnemySpawnerSystem::getName() const { return "EnemySpawnerSystem"; }
@@ -110,7 +114,7 @@ void EnemySpawnerSystem::update(float deltaTime,
 
 void EnemySpawnerSystem::spawnEnemy()
 {
-    int spawnType = _typeDist(_rng) % 6;
+    int spawnType = _typeDist(_rng) % 7;
 
     if (spawnType == 4) {
         bool isTopTurret = (_typeDist(_rng) % 2) == 0;
@@ -128,6 +132,16 @@ void EnemySpawnerSystem::spawnEnemy()
         float radius = 120.0f;
 
         _spawnQueue.push_back(SpawnOrbitersEvent{centerX, centerY, radius, 4});
+    } else if (spawnType == 6) {
+        bool isTop = (_typeDist(_rng) % 2) == 0;
+        std::uniform_real_distribution<float> xDist(1400.0f, 1800.0f);
+        float x = xDist(_rng);
+        float y = isTop ? 270.0f : 810.0f;
+        float laserDuration = 3.0f;
+
+        std::cout << "[SPAWNER] Spawning laser ship at (" << x << "," << y
+                  << "), isTop=" << isTop << std::endl;
+        _spawnQueue.push_back(SpawnLaserShipEvent{x, y, isTop, laserDuration});
     } else {
         float y = _yDist(_rng);
         float x = 1900.0f;
@@ -764,7 +778,6 @@ const Position* TurretShootingSystem::findNearestPlayer(
 void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
                                          Enemy* enemy, Position* pos)
 {
-    // Only process turret enemies
     if (enemy->type != Enemy::Type::TURRET) {
         return;
     }
@@ -774,27 +787,23 @@ void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
         return;
     }
 
-    // Find all entities to search for players
     const auto& entities = _entityManager.getAllEntities();
     const Position* targetPos = findNearestPlayer(*pos, entities);
 
     if (!targetPos) {
-        return;  // No player found
+        return;
     }
 
-    // Calculate direction to player
     float dx = targetPos->x - pos->x;
     float dy = targetPos->y - pos->y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
     if (distance < 0.001f) return;
 
-    // Normalize and set bullet velocity
     float bulletSpeed = 400.0f;
     float vx = (dx / distance) * bulletSpeed;
     float vy = (dy / distance) * bulletSpeed;
 
-    // Offset bullet spawn position slightly in front of turret
     float offsetX = (dx / distance) * 10.0f;
     float offsetY = (dy / distance) * 10.0f;
 
@@ -843,6 +852,63 @@ void OrbiterSystem::processEntity(float deltaTime, Entity& entity,
 
     _spawnQueue.push_back(event);
     enemy->shootCooldown = SHOOT_INTERVAL;
+}
+
+std::string LaserShipSystem::getName() const { return "LaserShipSystem"; }
+
+SystemType LaserShipSystem::getType() const { return SystemType::LASER_SHIP; }
+
+int LaserShipSystem::getPriority() const { return 20; }
+
+void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
+                                    LaserShip* laserShip, Position* pos,
+                                    Enemy* enemy)
+{
+    if (laserShip->isCharging) {
+        laserShip->chargingTime += deltaTime;
+        if (laserShip->chargingTime >= 1.0f) {
+            laserShip->isCharging = false;
+            laserShip->isLaserActive = true;
+            laserShip->laserActiveTime = 0.0f;
+
+            float width = pos->x;
+            Entity laser = _entityManager.createEntity();
+            static uint32_t laserIdCounter = 20000;
+            uint32_t laserId = laserIdCounter++;
+
+            _entityManager.addComponent(laser, Position(pos->x, pos->y));
+            _entityManager.addComponent(laser, Velocity(0.0f, 0.0f));
+            _entityManager.addComponent(laser,
+                                        Bullet(entity.getId(), false, 30.0f));
+            _entityManager.addComponent(
+                laser, BoundingBox(width, 50.0f, -width, 0.0f));
+            _entityManager.addComponent(
+                laser, NetworkEntity(laserId, EntityType::LASER));
+            _entityManager.addComponent(laser,
+                                        Lifetime(laserShip->laserDuration));
+
+            auto* netEntity = _entityManager.getComponent<NetworkEntity>(laser);
+            if (netEntity) {
+                netEntity->needsSync = true;
+                netEntity->isFirstSync = true;
+            }
+
+            laserShip->laserEntityId = laserId;
+        }
+    } else if (laserShip->isLaserActive) {
+        laserShip->laserActiveTime += deltaTime;
+        if (laserShip->laserActiveTime >= laserShip->laserDuration) {
+            laserShip->isLaserActive = false;
+            laserShip->laserCooldown = 2.0f * laserShip->laserDuration;
+            laserShip->laserEntityId = 0;
+        }
+    } else {
+        laserShip->laserCooldown -= deltaTime;
+        if (laserShip->laserCooldown <= 0.0f) {
+            laserShip->isCharging = true;
+            laserShip->chargingTime = 0.0f;
+        }
+    }
 }
 
 }  // namespace engine

@@ -26,4 +26,6 @@ constexpr uint8_t TURRET = 16;  // turret
 constexpr uint8_t TURRET_MISSILE = 17;
 constexpr uint8_t ORBITER = 18;  // orbiter
 constexpr uint8_t ORBITER_MISSILE = 19;
+constexpr uint8_t LASER_SHIP = 20;  // laser ship
+constexpr uint8_t LASER = 21;       // laser beam
 }  // namespace EntityType

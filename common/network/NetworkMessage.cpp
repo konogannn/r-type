@@ -239,6 +239,10 @@ std::string NetworkMessage::entityTypeToString(uint8_t entityType)
             return "ORBITER";
         case EntityType::ORBITER_MISSILE:
             return "ORBITER_MISSILE";
+        case EntityType::LASER_SHIP:
+            return "LASER_SHIP";
+        case EntityType::LASER:
+            return "LASER";
         default:
             return "UNKNOWN";
     }
