@@ -213,10 +213,6 @@ class CollisionSystem : public ISystem {
     void handleBulletVsBullet(EntityManager& entityManager,
                               const std::vector<Entity>& bullets);
 
-    void handleGuidedMissileVsBullet(EntityManager& entityManager,
-                                     const std::vector<Entity>& missiles,
-                                     const std::vector<Entity>& bullets);
-
     void handleGuidedMissileVsEnemy(EntityManager& entityManager,
                                     const std::vector<Entity>& missiles,
                                     const std::vector<Entity>& enemies,
