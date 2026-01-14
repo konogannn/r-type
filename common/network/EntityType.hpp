@@ -29,4 +29,6 @@ constexpr uint8_t ORBITER_MISSILE = 19;
 constexpr uint8_t LASER_SHIP = 20;      // laser ship
 constexpr uint8_t LASER = 21;           // laser beam
 constexpr uint8_t GUIDED_MISSILE = 22;  // guided missile projectile
+constexpr uint8_t GLANDUS = 23;         // splitting enemy
+constexpr uint8_t GLANDUS_MINI = 24;    // small split enemy
 }  // namespace EntityType

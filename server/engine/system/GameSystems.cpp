@@ -114,7 +114,7 @@ void EnemySpawnerSystem::update(float deltaTime,
 
 void EnemySpawnerSystem::spawnEnemy()
 {
-    int spawnType = _typeDist(_rng) % 7;
+    int spawnType = _typeDist(_rng) % 8;
 
     if (spawnType == 4) {
         bool isTopTurret = (_typeDist(_rng) % 2) == 0;
@@ -142,6 +142,13 @@ void EnemySpawnerSystem::spawnEnemy()
         std::cout << "[SPAWNER] Spawning laser ship at (" << x << "," << y
                   << "), isTop=" << isTop << std::endl;
         _spawnQueue.push_back(SpawnLaserShipEvent{x, y, isTop, laserDuration});
+    } else if (spawnType == 7) {
+        float y = _yDist(_rng);
+        float x = 1900.0f;
+
+        std::cout << "[SPAWNER] Spawning glandus at (" << x << "," << y << ")"
+                  << std::endl;
+        _spawnQueue.push_back(SpawnEnemyEvent{Enemy::Type::GLANDUS, x, y});
     } else {
         float y = _yDist(_rng);
         float x = 1900.0f;
@@ -689,12 +696,28 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
     handleGuidedMissileVsEnemy(entityManager, missiles, enemies);
 
-    // Handle item pickup BEFORE damage checks so shield works immediately
     handlePlayerVsItem(entityManager, players, items);
 
-    // Now check damage (shield will already be active if just picked up)
     handlePlayerVsEnemy(entityManager, players, enemies);
     handleEnemyBulletVsPlayer(entityManager, bullets, players);
+
+    for (const auto& info : _entitiesToDestroy) {
+        Entity* entity = entityManager.getEntity(info.entityId);
+        if (entity) {
+            auto* splitComp = entityManager.getComponent<SplitOnDeath>(*entity);
+            if (splitComp) {
+                for (int i = 0; i < splitComp->splitCount; ++i) {
+                    float offsetY =
+                        (i == 0) ? -splitComp->offsetY : splitComp->offsetY;
+                    SpawnEnemyEvent splitEvent;
+                    splitEvent.type = Enemy::Type::GLANDUS_MINI;
+                    splitEvent.x = info.x;
+                    splitEvent.y = info.y + offsetY;
+                    _spawnQueue.push_back(splitEvent);
+                }
+            }
+        }
+    }
 
     for (EntityId id : _markedForDestruction) {
         entityManager.destroyEntity(id);
@@ -1219,6 +1242,34 @@ void WaveMovementSystem::processEntity(float deltaTime, Entity& entity,
     wave->phase += deltaTime * wave->frequency;
 
     pos->y = wave->initialY + wave->amplitude * std::sin(wave->phase);
+}
+
+std::string ZigzagMovementSystem::getName() const
+{
+    return "ZigzagMovementSystem";
+}
+
+int ZigzagMovementSystem::getPriority() const { return 15; }
+
+void ZigzagMovementSystem::processEntity(float deltaTime, Entity& entity,
+                                         ZigzagMovement* zigzag, Position* pos,
+                                         Velocity* vel)
+{
+    if (zigzag->lastY == 0.0f) {
+        zigzag->lastY = pos->y;
+    }
+
+    zigzag->phase += deltaTime * zigzag->frequency;
+
+    float targetOffset = zigzag->amplitude * std::sin(zigzag->phase);
+    float targetY = zigzag->lastY + targetOffset;
+
+    float deltaY = targetY - pos->y;
+    vel->vy = deltaY / deltaTime;
+
+    if (std::abs(vel->vy) > 200.0f) {
+        vel->vy = (vel->vy > 0) ? 200.0f : -200.0f;
+    }
 }
 
 }  // namespace engine

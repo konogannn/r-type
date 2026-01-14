@@ -410,4 +410,17 @@ class WaveMovementSystem : public System<WaveMovement, Position> {
     int getPriority() const override;
 };
 
+/**
+ * @brief Zigzag movement system - Adds zigzag pattern to entities
+ */
+class ZigzagMovementSystem : public System<ZigzagMovement, Position, Velocity> {
+   protected:
+    void processEntity(float deltaTime, Entity& entity, ZigzagMovement* zigzag,
+                       Position* pos, Velocity* vel) override;
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+};
+
 }  // namespace engine

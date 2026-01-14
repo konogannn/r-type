@@ -44,7 +44,7 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
 
     switch (type) {
         case Enemy::Type::FAST:
-            speed = 250.0f;
+            speed = -250.0f;
             health = 15.0f;
             _entityManager.addComponent(
                 enemy, Following(Following::TargetType::PLAYER));
@@ -53,7 +53,33 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
             speed = -50.0f;
             health = 100.0f;
             break;
-        case Enemy::Type::BASIC:
+        case Enemy::Type::GLANDUS:
+            speed = -120.0f;
+            health = 50.0f;
+            _entityManager.addComponent(enemy, ZigzagMovement(150.0f, 5.0f));
+            _entityManager.addComponent(
+                enemy, SplitOnDeath(EntityType::GLANDUS_MINI, 2, 30.0f));
+            _entityManager.addComponent(enemy,
+                                        BoundingBox(54.0f, 44.0f, 0.0f, 0.0f));
+            _entityManager.addComponent(enemy, Position(x, y));
+            _entityManager.addComponent(enemy, Velocity(speed, 0.0f));
+            _entityManager.addComponent(enemy, Enemy(type));
+            _entityManager.addComponent(enemy, Health(health));
+            _entityManager.addComponent(
+                enemy, NetworkEntity(_nextEnemyId++, EntityType::GLANDUS));
+            return enemy;        case Enemy::Type::GLANDUS_MINI:
+            speed = -150.0f;
+            health = 20.0f;
+            _entityManager.addComponent(enemy, ZigzagMovement(100.0f, 6.0f));
+            _entityManager.addComponent(enemy,
+                                        BoundingBox(27.0f, 22.0f, 0.0f, 0.0f));
+            _entityManager.addComponent(enemy, Position(x, y));
+            _entityManager.addComponent(enemy, Velocity(speed, 0.0f));
+            _entityManager.addComponent(enemy, Enemy(type));
+            _entityManager.addComponent(enemy, Health(health));
+            _entityManager.addComponent(
+                enemy, NetworkEntity(_nextEnemyId++, EntityType::GLANDUS_MINI));
+            return enemy;        case Enemy::Type::BASIC:
         default:
             speed = -100.0f;
             health = 30.0f;

@@ -58,6 +58,8 @@ struct Enemy : public ComponentBase<Enemy> {
         TURRET = EntityType::TURRET,
         ORBITER = EntityType::ORBITER,
         LASER_SHIP = EntityType::LASER_SHIP,
+        GLANDUS = EntityType::GLANDUS,
+        GLANDUS_MINI = EntityType::GLANDUS_MINI,
         BOSS
     };
 
@@ -342,5 +344,32 @@ struct WaveMovement : public ComponentBase<WaveMovement> {
     {
     }
 };
+struct ZigzagMovement : public ComponentBase<ZigzagMovement> {
+    float amplitude;  // Zigzag height
+    float frequency;  // Zigzag speed
+    float phase;      // Current phase
+    float lastY;      // Last Y position for zigzag
+    bool movingDown;  // Direction flag
 
+    ZigzagMovement(float amp = 80.0f, float freq = 3.0f)
+        : amplitude(amp),
+          frequency(freq),
+          phase(0.0f),
+          lastY(0.0f),
+          movingDown(true)
+    {
+    }
+};
+
+struct SplitOnDeath : public ComponentBase<SplitOnDeath> {
+    uint8_t splitType;  // Entity type to spawn when split
+    int splitCount;     // Number of entities to spawn
+    float offsetY;      // Vertical offset for splits
+
+    SplitOnDeath(uint8_t type = EntityType::GLANDUS_MINI, int count = 2,
+                 float offset = 30.0f)
+        : splitType(type), splitCount(count), offsetY(offset)
+    {
+    }
+};
 }  // namespace engine

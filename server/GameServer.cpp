@@ -33,6 +33,7 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
     _gameLoop.addSystem(std::make_unique<engine::WaveMovementSystem>());
+    _gameLoop.addSystem(std::make_unique<engine::ZigzagMovementSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BossPartSystem>());
     _gameLoop.addSystem(
         std::make_unique<engine::BossSystem>(_gameLoop.getSpawnEvents()));
@@ -517,12 +518,22 @@ void GameServer::spawnBossWave(uint8_t bossType)
         float x = START_X + (i % 2 == 0 ? 0.0f : 100.0f);
 
         engine::Enemy::Type type;
-        if (i % 3 == 0) {
-            type = engine::Enemy::Type::TANK;
-        } else if (i % 3 == 1) {
-            type = engine::Enemy::Type::FAST;
-        } else {
-            type = engine::Enemy::Type::BASIC;
+        switch (i % 4) {
+            case 0:
+                type = engine::Enemy::Type::BASIC;
+                break;
+            case 1:
+                type = engine::Enemy::Type::FAST;
+                break;
+            case 2:
+                type = engine::Enemy::Type::TANK;
+                break;
+            case 3:
+                type = engine::Enemy::Type::GLANDUS;
+                break;
+            default:
+                type = engine::Enemy::Type::BASIC;
+                break;
         }
 
         SpawnEnemyEvent enemyEvent;
@@ -533,43 +544,43 @@ void GameServer::spawnBossWave(uint8_t bossType)
         _bossWaveEnemiesAlive++;
     }
 
-    SpawnTurretEvent topTurret;
-    topTurret.x = 1200.0f;
-    topTurret.y = 0.0f;
-    topTurret.isTopTurret = true;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topTurret));
-    _bossWaveEnemiesAlive++;
+    // SpawnTurretEvent topTurret;
+    // topTurret.x = 1200.0f;
+    // topTurret.y = 0.0f;
+    // topTurret.isTopTurret = true;
+    // _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topTurret));
+    // _bossWaveEnemiesAlive++;
 
-    SpawnTurretEvent bottomTurret;
-    bottomTurret.x = 1200.0f;
-    bottomTurret.y = 1000.0f;
-    bottomTurret.isTopTurret = false;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomTurret));
-    _bossWaveEnemiesAlive++;
+    // SpawnTurretEvent bottomTurret;
+    // bottomTurret.x = 1200.0f;
+    // bottomTurret.y = 1000.0f;
+    // bottomTurret.isTopTurret = false;
+    // _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomTurret));
+    // _bossWaveEnemiesAlive++;
 
-    SpawnOrbitersEvent orbiters;
-    orbiters.centerX = 1400.0f;
-    orbiters.centerY = 540.0f;
-    orbiters.radius = 150.0f;
-    orbiters.count = 4;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(orbiters));
-    _bossWaveEnemiesAlive += 4;
+    // // SpawnOrbitersEvent orbiters;
+    // // orbiters.centerX = 1400.0f;
+    // // orbiters.centerY = 540.0f;
+    // // orbiters.radius = 150.0f;
+    // // orbiters.count = 4;
+    // // _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(orbiters));
+    // // _bossWaveEnemiesAlive += 4;
 
-    SpawnLaserShipEvent topLaserShip;
-    topLaserShip.x = 1600.0f;
-    topLaserShip.y = 270.0f;
-    topLaserShip.isTop = true;
-    topLaserShip.laserDuration = 3.0f;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topLaserShip));
-    _bossWaveEnemiesAlive++;
+    // SpawnLaserShipEvent topLaserShip;
+    // topLaserShip.x = 1600.0f;
+    // topLaserShip.y = 270.0f;
+    // topLaserShip.isTop = true;
+    // topLaserShip.laserDuration = 3.0f;
+    // _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topLaserShip));
+    // _bossWaveEnemiesAlive++;
 
-    SpawnLaserShipEvent bottomLaserShip;
-    bottomLaserShip.x = 1600.0f;
-    bottomLaserShip.y = 810.0f;
-    bottomLaserShip.isTop = false;
-    bottomLaserShip.laserDuration = 3.0f;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomLaserShip));
-    _bossWaveEnemiesAlive++;
+    // SpawnLaserShipEvent bottomLaserShip;
+    // bottomLaserShip.x = 1600.0f;
+    // bottomLaserShip.y = 810.0f;
+    // bottomLaserShip.isTop = false;
+    // bottomLaserShip.laserDuration = 3.0f;
+    // _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomLaserShip));
+    // _bossWaveEnemiesAlive++;
 
     Logger::getInstance().log(
         "Boss wave spawned: " + std::to_string(WAVE_SIZE + 8) +
