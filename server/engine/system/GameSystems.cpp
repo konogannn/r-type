@@ -424,8 +424,7 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                 entityManager.getComponent<Position>(
                                     players[0]);
                             if (playerPos) {
-                                spawnX = playerPos->x +
-                                         100.0f;
+                                spawnX = playerPos->x + 100.0f;
                                 spawnY = playerPos->y;
                             }
                         }
@@ -492,9 +491,7 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                         entityManager.getComponent<Position>(
                                             players[0]);
                                     if (playerPos) {
-                                        spawnX =
-                                            playerPos->x +
-                                            100.0f;
+                                        spawnX = playerPos->x + 100.0f;
                                         spawnY = playerPos->y;
                                     }
                                 }
@@ -1012,10 +1009,7 @@ SystemType GuidedMissileSystem::getType() const
     return SystemType::GUIDED_MISSILE;
 }
 
-int GuidedMissileSystem::getPriority() const
-{
-    return 8;
-}
+int GuidedMissileSystem::getPriority() const { return 8; }
 
 Entity* GuidedMissileSystem::findNearestEnemy(EntityManager& entityManager,
                                               const Position& missilePos)
