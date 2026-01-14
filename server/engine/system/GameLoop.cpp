@@ -275,7 +275,7 @@ void GameLoop::processInputCommands(float deltaTime)
 
         const float BASE_SPEED = 300.0f;
         float moveSpeed = BASE_SPEED;
-        
+
         auto* speedBoost = _entityManager.getComponent<SpeedBoost>(*entity);
         if (speedBoost) {
             moveSpeed = speedBoost->boostedSpeed;
