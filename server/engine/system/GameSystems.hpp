@@ -331,8 +331,8 @@ class LaserShipSystem : public System<LaserShip, Position, Enemy> {
  */
 class WaveMovementSystem : public System<WaveMovement, Position> {
    protected:
-    void processEntity(float deltaTime, Entity& entity,
-                       WaveMovement* wave, Position* pos) override;
+    void processEntity(float deltaTime, Entity& entity, WaveMovement* wave,
+                       Position* pos) override;
 
    public:
     std::string getName() const override;

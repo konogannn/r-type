@@ -893,10 +893,7 @@ void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
     }
 }
 
-std::string WaveMovementSystem::getName() const
-{
-    return "WaveMovementSystem";
-}
+std::string WaveMovementSystem::getName() const { return "WaveMovementSystem"; }
 
 int WaveMovementSystem::getPriority() const { return 15; }
 

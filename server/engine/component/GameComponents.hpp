@@ -294,10 +294,10 @@ struct LaserShip : public ComponentBase<LaserShip> {
 };
 
 struct WaveMovement : public ComponentBase<WaveMovement> {
-    float amplitude;      // Wave height
-    float frequency;      // Wave speed
-    float phase;          // Current phase in the wave
-    float initialY;       // Starting Y position
+    float amplitude;  // Wave height
+    float frequency;  // Wave speed
+    float phase;      // Current phase in the wave
+    float initialY;   // Starting Y position
 
     WaveMovement(float amp = 50.0f, float freq = 2.0f, float startY = 0.0f)
         : amplitude(amp), frequency(freq), phase(0.0f), initialY(startY)
