@@ -44,8 +44,7 @@ bool GameOverScreen::update(float deltaTime)
         }
     }
     _pulseTime += deltaTime * 2.0f;
-    if (_input.isKeyPressed(Key::Escape) || _input.isKeyPressed(Key::Space) ||
-        _input.isKeyPressed(Key::Enter)) {
+    if (_input.isKeyPressed(Key::Escape) || _input.isKeyPressed(Key::Enter)) {
         return true;
     }
 
@@ -81,8 +80,7 @@ void GameOverScreen::render()
 
     if (_fadeAlpha >= 255.0f) {
         unsigned int smallFontSize = static_cast<unsigned int>(24 * _scale);
-        std::string instructionText =
-            "Press ESC, SPACE or ENTER to return to menu";
+        std::string instructionText = "Press ESC or ENTER to return to menu";
 
         float instructionWidth =
             _graphics.getTextWidth(instructionText, smallFontSize, fontPath);
