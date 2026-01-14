@@ -154,6 +154,7 @@ class ClientGameState {
     void processEntityDead(uint32_t entityId);
     void processHealthUpdate(uint32_t entityId, float currentHealth,
                              float maxHealth);
+    void processShieldStatus(uint32_t playerId, bool hasShield);
 
    private:
     // Network callbacks
