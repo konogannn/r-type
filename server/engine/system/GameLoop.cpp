@@ -37,12 +37,15 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
-            for (const auto& pair : _clientToEntity) {
-                if (pair.second == info.entityId) {
-                    _onPlayerDeathCallback(pair.first);
-                    _clientToEntity.erase(pair.first);
-                    break;
-                }
+            auto it =
+                std::find_if(_clientToEntity.begin(), _clientToEntity.end(),
+                             [&info](const auto& pair) {
+                                 return pair.second == info.entityId;
+                             });
+            if (it != _clientToEntity.end()) {
+                uint32_t clientId = it->first;
+                _onPlayerDeathCallback(clientId);
+                _clientToEntity.erase(it);
             }
         }
     }
@@ -106,12 +109,15 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
-            for (const auto& pair : _clientToEntity) {
-                if (pair.second == info.entityId) {
-                    _onPlayerDeathCallback(pair.first);
-                    _clientToEntity.erase(pair.first);
-                    break;
-                }
+            auto it =
+                std::find_if(_clientToEntity.begin(), _clientToEntity.end(),
+                             [&info](const auto& pair) {
+                                 return pair.second == info.entityId;
+                             });
+            if (it != _clientToEntity.end()) {
+                uint32_t clientId = it->first;
+                _onPlayerDeathCallback(clientId);
+                _clientToEntity.erase(it);
             }
         }
     }
@@ -192,38 +198,48 @@ void GameLoop::gameThreadLoop()
 
         for (auto& system : _systems) {
             system->update(deltaTime, _entityManager);
-
-            switch (system->getType()) {
-                case SystemType::COLLISION:
-                    processDestroyedEntities(
-                        dynamic_cast<CollisionSystem*>(system.get()), true);
-                    break;
-                case SystemType::BULLET_CLEANUP:
-                    processDestroyedEntities(
-                        dynamic_cast<BulletCleanupSystem*>(system.get()));
-                    break;
-                case SystemType::ENEMY_CLEANUP:
-                    processDestroyedEntities(
-                        dynamic_cast<EnemyCleanupSystem*>(system.get()));
-                    break;
-                case SystemType::LIFETIME_CLEANUP:
-                    processDestroyedEntities(
-                        dynamic_cast<LifetimeSystem*>(system.get()));
-                    break;
-                default:
-                    break;
-            }
-
-            if (system->getName() == "BossSystem") {
-                processDestroyedEntities(
-                    dynamic_cast<BossSystem*>(system.get()));
-            }
         }
 
+        processDestroyedEntitiesFromSystems();
+
         generateNetworkUpdates();
+
+        processPendingRemovals();
+        processPendingDestructions();
+
         auto frameTime = std::chrono::steady_clock::now() - currentTime;
         if (frameTime < _targetFrameTime) {
             std::this_thread::sleep_for(_targetFrameTime - frameTime);
+        }
+    }
+}
+
+void GameLoop::processDestroyedEntitiesFromSystems()
+{
+    for (auto& system : _systems) {
+        switch (system->getType()) {
+            case SystemType::COLLISION:
+                processDestroyedEntities(
+                    dynamic_cast<CollisionSystem*>(system.get()), true);
+                break;
+            case SystemType::BULLET_CLEANUP:
+                processDestroyedEntities(
+                    dynamic_cast<BulletCleanupSystem*>(system.get()));
+                break;
+            case SystemType::ENEMY_CLEANUP:
+                processDestroyedEntities(
+                    dynamic_cast<EnemyCleanupSystem*>(system.get()));
+                break;
+            case SystemType::LIFETIME_CLEANUP:
+                processDestroyedEntities(
+                    dynamic_cast<LifetimeSystem*>(system.get()));
+                break;
+            default:
+                break;
+        }
+
+        if (system->getName() == "BossSystem") {
+            processDestroyedEntities(dynamic_cast<BossSystem*>(system.get()));
         }
     }
 }
@@ -298,6 +314,63 @@ void GameLoop::processInputCommands(float deltaTime)
     }
 }
 
+void GameLoop::processPendingRemovals()
+{
+    std::vector<uint32_t> clientsToRemove;
+    _pendingRemovals.popAll(clientsToRemove);
+
+    for (uint32_t clientId : clientsToRemove) {
+        auto it = _clientToEntity.find(clientId);
+        if (it == _clientToEntity.end()) {
+            continue;
+        }
+
+        EntityId entityId = it->second;
+
+        try {
+            Entity* entity = _entityManager.getEntity(entityId);
+            if (entity) {
+                auto* netEntity =
+                    _entityManager.getComponent<NetworkEntity>(*entity);
+                if (netEntity) {
+                    EntityStateUpdate update;
+                    update.entityId = netEntity->entityId;
+                    update.entityType = netEntity->entityType;
+                    update.x = 0.0f;
+                    update.y = 0.0f;
+                    update.spawned = false;
+                    update.destroyed = true;
+                    _outputQueue.push(update);
+                }
+
+                _entityManager.destroyEntity(entityId);
+            }
+        } catch (const std::exception& e) {
+            Logger::getInstance().log(
+                "Failed to destroy entity during removal: " +
+                    std::string(e.what()),
+                LogLevel::ERROR_L, "GameLoop");
+        }
+
+        _clientToEntity.erase(it);
+    }
+}
+
+void GameLoop::processPendingDestructions()
+{
+    for (EntityId entityId : _pendingDestructions) {
+        try {
+            _entityManager.destroyEntity(entityId);
+        } catch (const std::exception& e) {
+            Logger::getInstance().log("Failed to destroy pending entity " +
+                                          std::to_string(entityId) + ": " +
+                                          std::string(e.what()),
+                                      LogLevel::ERROR_L, "GameLoop");
+        }
+    }
+    _pendingDestructions.clear();
+}
+
 void GameLoop::processDeathTimers(float deltaTime)
 {
     auto players =
@@ -323,17 +396,20 @@ void GameLoop::processDeathTimers(float deltaTime)
                     _outputQueue.push(update);
 
                     if (_onPlayerDeathCallback) {
-                        for (const auto& pair : _clientToEntity) {
-                            if (pair.second == entity.getId()) {
-                                _onPlayerDeathCallback(pair.first);
-                                _clientToEntity.erase(pair.first);
-                                break;
-                            }
+                        auto it = std::find_if(
+                            _clientToEntity.begin(), _clientToEntity.end(),
+                            [&entity](const auto& pair) {
+                                return pair.second == entity.getId();
+                            });
+                        if (it != _clientToEntity.end()) {
+                            uint32_t clientId = it->first;
+                            _onPlayerDeathCallback(clientId);
+                            _clientToEntity.erase(it);
                         }
                     }
                 }
 
-                _entityManager.destroyEntity(entity.getId());
+                _pendingDestructions.push_back(entity.getId());
             }
         }
     }
@@ -349,7 +425,8 @@ void GameLoop::generateNetworkUpdates()
 
         bool alwaysSync =
             (netEntity->entityType == 2 || netEntity->entityType == 4 ||
-             netEntity->entityType == 5 || netEntity->entityType == 6);
+             netEntity->entityType == 5 || netEntity->entityType == 6 ||
+             netEntity->entityType == 18);
 
         if (netEntity->needsSync || alwaysSync) {
             EntityStateUpdate update;
@@ -409,9 +486,11 @@ void GameLoop::getAllHealthUpdates(
 uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
                                float y)
 {
+    std::lock_guard<std::mutex> lock(_stateMutex);
+
     auto it = _clientToEntity.find(clientId);
     if (it != _clientToEntity.end()) {
-        return 0;  // Player already exists
+        return 0;
     }
 
     Entity player = _entityFactory.createPlayer(clientId, playerId, x, y);
@@ -422,31 +501,7 @@ uint32_t GameLoop::spawnPlayer(uint32_t clientId, uint32_t playerId, float x,
 
 void GameLoop::removePlayer(uint32_t clientId)
 {
-    auto it = _clientToEntity.find(clientId);
-    if (it == _clientToEntity.end()) {
-        return;
-    }
-
-    EntityId entityId = it->second;
-
-    Entity* entity = _entityManager.getEntity(entityId);
-    if (entity) {
-        auto* netEntity = _entityManager.getComponent<NetworkEntity>(*entity);
-        if (netEntity) {
-            EntityStateUpdate update;
-            update.entityId = netEntity->entityId;
-            update.entityType = netEntity->entityType;
-            update.x = 0.0f;
-            update.y = 0.0f;
-            update.spawned = false;
-            update.destroyed = true;
-            _outputQueue.push(update);
-        }
-
-        _entityManager.destroyEntity(entityId);
-    }
-
-    _clientToEntity.erase(it);
+    _pendingRemovals.push(clientId);
 }
 
 void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
@@ -527,6 +582,11 @@ void GameLoop::processSpawnEvent(const SpawnEnemyEvent& event)
     }
 }
 
+void GameLoop::processSpawnEvent(const SpawnTurretEvent& event)
+{
+    _entityFactory.createTurret(event.x, event.y, event.isTopTurret);
+}
+
 void GameLoop::processSpawnEvent(const SpawnPlayerBulletEvent& event)
 {
     _entityFactory.createPlayerBullet(event.ownerId, event.position);
@@ -536,25 +596,12 @@ void GameLoop::processSpawnEvent(const SpawnEnemyBulletEvent& event)
 {
     bool isExplosion = (event.vx == 0.0f && event.vy == 0.0f);
 
-    Entity bullet = _entityManager.createEntity();
-
-    uint32_t bulletId = _entityFactory.getNextBulletId();
-
     if (isExplosion) {
-        int explosionType = event.ownerId;
-        _entityManager.addComponent(bullet, Position(event.x, event.y));
-        _entityManager.addComponent(
-            bullet, Velocity(-static_cast<float>(explosionType), 0.0f));
-        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 7));
-        _entityManager.addComponent(bullet, Lifetime(0.5f));
+        Position pos(event.x, event.y);
+        _entityFactory.createExplosion(event.ownerId, pos);
     } else {
-        _entityManager.addComponent(bullet, Position(event.x, event.y));
-        _entityManager.addComponent(bullet, Velocity(event.vx, event.vy));
-        _entityManager.addComponent(bullet,
-                                    Bullet(event.ownerId, false, 20.0f));
-        _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
-        _entityManager.addComponent(bullet, NetworkEntity(bulletId, 4));
-        _entityManager.addComponent(bullet, Lifetime(15.0f));
+        _entityFactory.createEnemyBullet(event.ownerId, event.x, event.y,
+                                         event.vx, event.vy, event.bulletType);
     }
 }
 
@@ -591,6 +638,24 @@ void GameLoop::processSpawnEvent(const SpawnItemEvent& event)
         itemNet->needsSync = true;
         itemNet->isFirstSync = true;
     }
+}
+
+void GameLoop::processSpawnEvent(const SpawnOrbitersEvent& event)
+{
+    _entityFactory.spawnOrbiters(event.centerX, event.centerY, event.radius,
+                                 event.count);
+}
+
+void GameLoop::processSpawnEvent(const SpawnLaserShipEvent& event)
+{
+    _entityFactory.createLaserShip(event.x, event.y, event.isTop,
+                                   event.laserDuration);
+}
+
+void GameLoop::processSpawnEvent(const SpawnLaserEvent& event)
+{
+    _entityFactory.createLaser(event.ownerId, event.x, event.y, event.width,
+                               event.duration);
 }
 
 }  // namespace engine

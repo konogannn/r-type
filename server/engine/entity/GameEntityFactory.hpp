@@ -46,12 +46,21 @@ class GameEntityFactory {
 
     /**
      * @brief Create an enemy entity
-     * @param type Enemy type (BASIC, FAST, TANK)
+     * @param type Enemy type (BASIC, KAMIKAZE, TANK)
      * @param x Starting X position
      * @param y Starting Y position
      * @return Created enemy entity
      */
     Entity createEnemy(Enemy::Type type, float x, float y);
+
+    /**
+     * @brief Create a turret enemy entity
+     * @param x Starting X position
+     * @param y Starting Y position (should be at top or bottom edge)
+     * @param isTopTurret True if turret is on top edge, false for bottom
+     * @return Created turret entity
+     */
+    Entity createTurret(float x, float y, bool isTopTurret);
 
     /**
      * @brief Create a player bullet entity
@@ -68,6 +77,8 @@ class GameEntityFactory {
      * @return Created bullet entity
      */
     Entity createEnemyBullet(EntityId ownerId, const Position& ownerPos);
+    Entity createEnemyBullet(EntityId ownerId, float x, float y, float vx,
+                             float vy, uint8_t bulletType);
 
     /**
      * @brief Get the next available bullet ID
@@ -130,6 +141,20 @@ class GameEntityFactory {
      * @return The created missile entity
      */
     Entity createGuidedMissile(EntityId ownerId, const Position& ownerPos);
+
+    /**
+     * @brief Spawn multiple orbiter enemies in a circular formation
+     * @param centerX X coordinate of the circle center
+     * @param centerY Y coordinate of the circle center
+     * @param radius Radius of the circle
+     * @param count Number of orbiters to spawn
+     */
+    void spawnOrbiters(float centerX, float centerY, float radius, int count);
+
+    Entity createLaserShip(float x, float y, bool isTop, float laserDuration);
+
+    Entity createLaser(uint32_t ownerId, float x, float y, float width,
+                       float duration);
 };
 
 }  // namespace engine

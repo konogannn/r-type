@@ -83,7 +83,7 @@ class INetworkServer : public INetworkBase {
                                    uint16_t mapWidth, uint16_t mapHeight) = 0;
 
     /**
-     * @brief Send entity spawn command to specific client.
+     * @brief Send entity spawn notification to specific client.
      *
      * @param clientId Target client ID.
      * @param entityId Entity unique ID.

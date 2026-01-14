@@ -313,7 +313,7 @@ Systems are executed in **priority order** each frame. Lower priority number = e
 **Enemy Types**:
 
 - **BASIC**: Standard speed (100 px/s), 30 HP
-- **FAST**: Double speed (200 px/s), 20 HP
+- **KAMIKAZE**: Follows nearest player (250 px/s), 15 HP
 - **TANK**: Half speed (50 px/s), 100 HP
 
 #### 2. MovementSystem

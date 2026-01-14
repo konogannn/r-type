@@ -38,7 +38,7 @@ Entity EntityManager::createEntityInArchetype(ArchetypeId archetypeId)
     return entity;
 }
 
-void EntityManager::destroyEntity(Entity &entity)
+void EntityManager::destroyEntity(Entity& entity)
 {
     if (!entity.isValid()) {
         return;
@@ -75,7 +75,7 @@ void EntityManager::destroyEntity(EntityId entityId)
     }
 }
 
-Entity *EntityManager::getEntity(EntityId entityId)
+Entity* EntityManager::getEntity(EntityId entityId)
 {
     auto it = _entities.find(entityId);
     if (it != _entities.end()) {
@@ -84,7 +84,7 @@ Entity *EntityManager::getEntity(EntityId entityId)
     return nullptr;
 }
 
-bool EntityManager::isEntityValid(const Entity &entity) const
+bool EntityManager::isEntityValid(const Entity& entity) const
 {
     if (!entity.isValid() || !entity.isActive()) {
         return false;
@@ -98,7 +98,7 @@ std::vector<Entity> EntityManager::getAllEntities()
 {
     std::vector<Entity> result;
     result.reserve(_entities.size());
-    for (const auto &[id, entity] : _entities) {
+    for (const auto& [id, entity] : _entities) {
         if (entity.isActive()) {
             result.push_back(entity);
         }
@@ -116,12 +116,12 @@ void EntityManager::clear()
     _componentManager.clear();
 }
 
-ComponentManager &EntityManager::getComponentManager()
+ComponentManager& EntityManager::getComponentManager()
 {
     return _componentManager;
 }
 
-const ComponentManager &EntityManager::getComponentManager() const
+const ComponentManager& EntityManager::getComponentManager() const
 {
     return _componentManager;
 }

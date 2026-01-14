@@ -28,6 +28,9 @@ enum class SystemType {
     LIFETIME_CLEANUP,
     PLAYER_SHOOTING,
     ENEMY_SHOOTING,
+    TURRET_SHOOTING,
+    ORBITER,
+    LASER_SHIP,
     LIFETIME,
     GUIDED_MISSILE,
     OTHER
@@ -83,7 +86,7 @@ class ISystem {
 
 /**
  * @brief Template base class for systems that operate on specific components
- * @tparam Components The component types this system operates on
+ * @tparam Components The component types this system operates on.
  */
 template <typename... Components>
 class System : public ISystem {

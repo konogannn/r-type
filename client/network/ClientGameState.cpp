@@ -167,20 +167,44 @@ void ClientGameState::update(float deltaTime)
                                                entity->animFrameHeight);
             }
         }
+
+        // Type 7: Explosion animation (plays once, then marks for removal)
         if (entity->type == 7 && entity->animFrameCount > 0) {
             entity->animFrameTime += deltaTime;
             if (entity->animFrameTime >= entity->animFrameDuration) {
                 entity->animFrameTime = 0.0f;
                 entity->animCurrentFrame++;
                 if (entity->animCurrentFrame >= entity->animFrameCount) {
-                    entity->animCurrentFrame = entity->animFrameCount - 1;
+                    entity->hasTriggeredEffect = true;
+                } else {
+                    int frameX =
+                        entity->animCurrentFrame * entity->animFrameWidth;
+                    entity->sprite->setTextureRect(frameX, 0,
+                                                   entity->animFrameWidth,
+                                                   entity->animFrameHeight);
                 }
-                int frameX = entity->animCurrentFrame * entity->animFrameWidth;
-                entity->sprite->setTextureRect(
-                    frameX, 0, entity->animFrameWidth, entity->animFrameHeight);
             }
         }
+
+        // Types 17, 18, 19, 23, 24: Looping animations
+        if ((entity->type == 17 || entity->type == 18 || entity->type == 19 ||
+             entity->type == 23 || entity->type == 24) &&
+            entity->animFrameCount > 0) {
+            updateSimpleAnimation(*entity, deltaTime);
+        }
     }
+
+    std::vector<uint32_t> entitiesToRemove;
+    for (const auto& [id, entity] : _entities) {
+        if (entity && entity->type == 7 && entity->hasTriggeredEffect &&
+            entity->animCurrentFrame >= entity->animFrameCount) {
+            entitiesToRemove.push_back(id);
+        }
+    }
+    for (uint32_t id : entitiesToRemove) {
+        removeEntity(id);
+    }
+
     for (auto& explosion : _explosions) {
         explosion->update(deltaTime);
     }
@@ -294,6 +318,7 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
     if (!entity) {
         return;
     }
+
     if (entity->type == 1 && entity->animFrameCount > 0) {
         float deltaY = y - entity->lastY;
         if (deltaY < -0.5f) {
@@ -311,9 +336,14 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
                                        entity->animFrameHeight);
     }
 
+    bool isEnemyProjectile =
+        (entity->type == 11 || entity->type == 13 || entity->type == 15 ||
+         entity->type == 17 || entity->type == 19);
+
     float clampedX = x;
     float clampedY = y;
-    if (_mapWidth > 0 && _mapHeight > 0) {
+
+    if (!isEnemyProjectile && _mapWidth > 0 && _mapHeight > 0) {
         if (clampedX < 0.0f) clampedX = 0.0f;
         if (clampedY < 0.0f) clampedY = 0.0f;
         float spriteHeight = 0.0f;
@@ -347,8 +377,13 @@ void ClientGameState::onEntityDead(uint32_t entityId)
     if (entity) {
         if (!_isSeeking) {
             switch (entity->type) {
-                case 4:
                 case 2:
+                case 4:
+                case 11:
+                case 13:
+                case 15:
+                case 17:
+                case 19:
                     _explosions.push_back(std::make_unique<Explosion>(
                         ASSET_SPAN(embedded::blowup_1_data),
                         (entity->type == 4) ? entity->x - 16 : entity->x + 16,
@@ -547,7 +582,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 11: {
-            scale = 4.0f;
+            scale = 5.0f;
             // TODO load basic enemy projectile instead of reusing existing
             // asset
             entity.sprite->loadTexture(
@@ -593,6 +628,83 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 16: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::enemy_turret_data))) {
+                bool isTopTurret = entity.y < 540.0f;
+                int offsetX = isTopTurret ? 16 : 0;
+                entity.sprite->setTextureRect(offsetX, 0, 16, 27);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 17: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 18: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::orbiter_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 24;
+                entity.animFrameHeight = 26;
+                entity.sprite->setTextureRect(0, 0, 24, 26);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 19: {
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_pink_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 20: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::laser_shooter_data))) {
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 21: {
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::laser_data))) {
+                entity.sprite->setOrigin(320.0f, 2.0f);
+                entity.sprite->setScale(6.0f, 6.0f);
+            }
+            entity.spriteScale = 6.0f;
+            break;
+        }
+        case 22: {
             // Guided Missile projectile
             scale = 4.0f;
             if (!entity.sprite->loadTexture(
@@ -602,6 +714,38 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                     ASSET_SPAN(embedded::projectile_player_1_data));
             }
             entity.sprite->setScale(scale, scale);
+            entity.spriteScale = scale;
+            break;
+        }
+        case 23: {
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::glandus_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 27;
+                entity.animFrameHeight = 22;
+                entity.sprite->setTextureRect(0, 0, 27, 22);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 24: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::glandus_mini_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 27;
+                entity.animFrameHeight = 22;
+                entity.sprite->setTextureRect(0, 0, 27, 22);
+                entity.sprite->setScale(scale, scale);
+            }
             entity.spriteScale = scale;
             break;
         }
@@ -762,6 +906,22 @@ void ClientGameState::processHealthUpdate(uint32_t entityId,
 void ClientGameState::processShieldStatus(uint32_t playerId, bool hasShield)
 {
     onShieldStatus(playerId, hasShield);
+}
+
+void ClientGameState::updateSimpleAnimation(ClientEntity& entity,
+                                            float deltaTime)
+{
+    entity.animFrameTime += deltaTime;
+    if (entity.animFrameTime >= entity.animFrameDuration) {
+        entity.animFrameTime = 0.0f;
+        entity.animCurrentFrame++;
+        if (entity.animCurrentFrame >= entity.animFrameCount) {
+            entity.animCurrentFrame = 0;
+        }
+        int frameX = entity.animCurrentFrame * entity.animFrameWidth;
+        entity.sprite->setTextureRect(frameX, 0, entity.animFrameWidth,
+                                      entity.animFrameHeight);
+    }
 }
 
 }  // namespace rtype

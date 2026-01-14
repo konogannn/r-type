@@ -110,6 +110,18 @@ static const unsigned char turret_data[] = {
 #embed "../../../assets/sprites/turret.png"
 };
 
+static const unsigned char enemy_turret_data[] = {
+#embed "../../../assets/sprites/enemy_turret.png"
+};
+
+static const unsigned char small_green_bullet_data[] = {
+#embed "../../../assets/sprites/small_green_bullet.png"
+};
+
+static const unsigned char small_pink_bullet_data[] = {
+#embed "../../../assets/sprites/small_pink_bullet.png"
+};
+
 static const unsigned char blowup_1_data[] = {
 #embed "../../../assets/sprites/blowup_1.png"
 };
@@ -132,6 +144,26 @@ static const unsigned char search_missile_data[] = {
 
 static const unsigned char search_missile_item_data[] = {
 #embed "../../../assets/sprites/search_missile_item.png"
+};
+
+static const unsigned char orbiter_data[] = {
+#embed "../../../assets/sprites/orbiter.png"
+};
+
+static const unsigned char laser_shooter_data[] = {
+#embed "../../../assets/sprites/laser_shooter.png"
+};
+
+static const unsigned char laser_data[] = {
+#embed "../../../assets/sprites/laser.png"
+};
+
+static const unsigned char glandus_data[] = {
+#embed "../../../assets/sprites/glandus.png"
+};
+
+static const unsigned char glandus_mini_data[] = {
+#embed "../../../assets/sprites/glandus_mini.png"
 };
 
 }  // namespace embedded

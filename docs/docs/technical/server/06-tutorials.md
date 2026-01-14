@@ -408,7 +408,7 @@ Create a system that makes enemies shoot bullets.
 Enemy component already has `shootCooldown`:
 ```cpp
 struct Enemy : public ComponentBase<Enemy> {
-    enum class Type { BASIC, FAST, TANK, BOSS };
+    enum class Type { BASIC, KAMIKAZE, TANK, BOSS };
     
     Type type;
     float shootCooldown;  // ← Already exists
@@ -437,7 +437,7 @@ protected:
         
         // Only certain enemy types shoot
         if (enemy->type == Enemy::Type::FAST) {
-            return;  // Fast enemies don't shoot
+            return;
         }
         
         // Create bullet

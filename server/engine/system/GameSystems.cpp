@@ -7,7 +7,9 @@
 
 #include "GameSystems.hpp"
 
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <unordered_set>
 
 namespace engine {
@@ -89,6 +91,10 @@ void LifetimeSystem::update(float deltaTime, EntityManager& entityManager)
             }
         }
     }
+
+    for (const auto& info : _entitiesToDestroy) {
+        entityManager.destroyEntity(info.entityId);
+    }
 }
 
 std::string EnemySpawnerSystem::getName() const { return "EnemySpawnerSystem"; }
@@ -108,19 +114,56 @@ void EnemySpawnerSystem::update(float deltaTime,
 
 void EnemySpawnerSystem::spawnEnemy()
 {
-    float y = _yDist(_rng);
-    float x = 1900.0f;
+    int spawnType = _typeDist(_rng) % 8;
 
-    int typeRoll = _typeDist(_rng);
-    Enemy::Type type = Enemy::Type::BASIC;
+    if (spawnType == 4) {
+        bool isTopTurret = (_typeDist(_rng) % 2) == 0;
 
-    if (typeRoll == 1) {
-        type = Enemy::Type::FAST;
-    } else if (typeRoll == 2) {
-        type = Enemy::Type::TANK;
+        std::uniform_real_distribution<float> xDist(200.0f, 1700.0f);
+        float x = xDist(_rng);
+        float y = isTopTurret ? 30.0f : 1050.0f;
+
+        std::cout << "[SPAWNER] Spawning turret at (" << x << "," << y
+                  << "), isTop=" << isTopTurret << std::endl;
+        _spawnQueue.push_back(SpawnTurretEvent{x, y, isTopTurret});
+    } else if (spawnType == 5) {
+        float centerY = _yDist(_rng);
+        float centerX = 1600.0f;
+        float radius = 120.0f;
+
+        _spawnQueue.push_back(SpawnOrbitersEvent{centerX, centerY, radius, 4});
+    } else if (spawnType == 6) {
+        bool isTop = (_typeDist(_rng) % 2) == 0;
+        std::uniform_real_distribution<float> xDist(1400.0f, 1800.0f);
+        float x = xDist(_rng);
+        float y = isTop ? 270.0f : 810.0f;
+        float laserDuration = 3.0f;
+
+        std::cout << "[SPAWNER] Spawning laser ship at (" << x << "," << y
+                  << "), isTop=" << isTop << std::endl;
+        _spawnQueue.push_back(SpawnLaserShipEvent{x, y, isTop, laserDuration});
+    } else if (spawnType == 7) {
+        float y = _yDist(_rng);
+        float x = 1900.0f;
+
+        std::cout << "[SPAWNER] Spawning glandus at (" << x << "," << y << ")"
+                  << std::endl;
+        _spawnQueue.push_back(SpawnEnemyEvent{Enemy::Type::GLANDUS, x, y});
+    } else {
+        float y = _yDist(_rng);
+        float x = 1900.0f;
+
+        int typeRoll = spawnType;
+        Enemy::Type type = Enemy::Type::BASIC;
+
+        if (typeRoll == 1) {
+            type = Enemy::Type::FAST;
+        } else if (typeRoll == 2) {
+            type = Enemy::Type::TANK;
+        }
+
+        _spawnQueue.push_back(SpawnEnemyEvent{type, x, y});
     }
-
-    _spawnQueue.push_back(SpawnEnemyEvent{type, x, y});
 }
 
 std::string BulletCleanupSystem::getName() const
@@ -155,10 +198,17 @@ void BulletCleanupSystem::update(float /* deltaTime */,
 
     for (auto& entity : bullets) {
         auto* pos = entityManager.getComponent<Position>(entity);
-        if (!pos) continue;
+        auto* bullet = entityManager.getComponent<Bullet>(entity);
+        if (!pos || !bullet) continue;
 
-        if (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
-            pos->y > MAX_Y) {
+        bool shouldDestroy =
+            bullet->fromPlayer
+                ? (pos->x < MIN_X || pos->x > MAX_X || pos->y < MIN_Y ||
+                   pos->y > MAX_Y)
+                : (pos->x < ENEMY_MIN_X || pos->x > ENEMY_MAX_X ||
+                   pos->y < ENEMY_MIN_Y || pos->y > ENEMY_MAX_Y);
+
+        if (shouldDestroy) {
             auto* netEntity = entityManager.getComponent<NetworkEntity>(entity);
             if (netEntity) {
                 _entitiesToDestroy.push_back(
@@ -258,10 +308,28 @@ bool CollisionSystem::isMarkedForDestruction(EntityId id) const
 }
 
 void CollisionSystem::markForDestruction(EntityId entityId, uint32_t networkId,
-                                         uint8_t type, float x, float y)
+                                         uint8_t type, float x, float y,
+                                         const SplitOnDeath* splitData)
 {
     _markedForDestruction.insert(entityId);
-    _entitiesToDestroy.push_back({entityId, networkId, type, x, y});
+    DestroyInfo info;
+    info.entityId = entityId;
+    info.networkEntityId = networkId;
+    info.entityType = type;
+    info.x = x;
+    info.y = y;
+    if (splitData) {
+        info.hasSplit = true;
+        info.splitType = splitData->splitType;
+        info.splitCount = splitData->splitCount;
+        info.splitOffsetY = splitData->offsetY;
+    } else {
+        info.hasSplit = false;
+        info.splitType = 0;
+        info.splitCount = 0;
+        info.splitOffsetY = 0.0f;
+    }
+    _entitiesToDestroy.push_back(info);
 }
 
 void CollisionSystem::handlePlayerBulletVsEnemy(
@@ -301,10 +369,13 @@ void CollisionSystem::handlePlayerBulletVsEnemy(
                 if (!enemyHealth->isAlive()) {
                     auto* enemyNet =
                         entityManager.getComponent<NetworkEntity>(enemyEntity);
+                    auto* splitComp =
+                        entityManager.getComponent<SplitOnDeath>(enemyEntity);
                     if (enemyNet) {
-                        markForDestruction(
-                            enemyEntity.getId(), enemyNet->entityId,
-                            enemyNet->entityType, enemyPos->x, enemyPos->y);
+                        markForDestruction(enemyEntity.getId(),
+                                           enemyNet->entityId,
+                                           enemyNet->entityType, enemyPos->x,
+                                           enemyPos->y, splitComp);
                     }
                 }
 
@@ -500,10 +571,12 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
 
                 auto* enemyNet =
                     entityManager.getComponent<NetworkEntity>(enemyEntity);
+                auto* splitComp =
+                    entityManager.getComponent<SplitOnDeath>(enemyEntity);
                 if (enemyNet) {
                     markForDestruction(enemyEntity.getId(), enemyNet->entityId,
                                        enemyNet->entityType, enemyPos->x,
-                                       enemyPos->y);
+                                       enemyPos->y, splitComp);
                 }
 
                 break;
@@ -573,47 +646,51 @@ void CollisionSystem::handleBulletVsBullet(EntityManager& entityManager,
                                            const std::vector<Entity>& bullets)
 {
     for (size_t i = 0; i < bullets.size(); ++i) {
-        auto& bullet1Entity = bullets[i];
-        if (isMarkedForDestruction(bullet1Entity.getId())) continue;
+        EntityId id1 = bullets[i].getId();
+        if (isMarkedForDestruction(id1)) continue;
 
-        auto* bullet1 = entityManager.getComponent<Bullet>(bullet1Entity);
+        Entity* bullet1Entity = entityManager.getEntity(id1);
+        if (!bullet1Entity) continue;
+
+        auto* bullet1 = entityManager.getComponent<Bullet>(*bullet1Entity);
         if (!bullet1) continue;
 
-        auto* bullet1Pos = entityManager.getComponent<Position>(bullet1Entity);
+        auto* bullet1Pos = entityManager.getComponent<Position>(*bullet1Entity);
         auto* bullet1Box =
-            entityManager.getComponent<BoundingBox>(bullet1Entity);
+            entityManager.getComponent<BoundingBox>(*bullet1Entity);
         if (!bullet1Pos || !bullet1Box) continue;
 
         for (size_t j = i + 1; j < bullets.size(); ++j) {
-            auto& bullet2Entity = bullets[j];
-            if (isMarkedForDestruction(bullet2Entity.getId())) continue;
+            EntityId id2 = bullets[j].getId();
+            if (isMarkedForDestruction(id2)) continue;
 
-            auto* bullet2 = entityManager.getComponent<Bullet>(bullet2Entity);
+            Entity* bullet2Entity = entityManager.getEntity(id2);
+            if (!bullet2Entity) continue;
+
+            auto* bullet2 = entityManager.getComponent<Bullet>(*bullet2Entity);
             if (!bullet2) continue;
 
             if (bullet1->fromPlayer == bullet2->fromPlayer) continue;
 
             auto* bullet2Pos =
-                entityManager.getComponent<Position>(bullet2Entity);
+                entityManager.getComponent<Position>(*bullet2Entity);
             auto* bullet2Box =
-                entityManager.getComponent<BoundingBox>(bullet2Entity);
+                entityManager.getComponent<BoundingBox>(*bullet2Entity);
             if (!bullet2Pos || !bullet2Box) continue;
 
             if (checkCollision(*bullet1Pos, *bullet1Box, *bullet2Pos,
                                *bullet2Box)) {
                 auto* bullet1Net =
-                    entityManager.getComponent<NetworkEntity>(bullet1Entity);
+                    entityManager.getComponent<NetworkEntity>(*bullet1Entity);
                 if (bullet1Net) {
-                    markForDestruction(bullet1Entity.getId(),
-                                       bullet1Net->entityId,
+                    markForDestruction(id1, bullet1Net->entityId,
                                        bullet1Net->entityType);
                 }
 
                 auto* bullet2Net =
-                    entityManager.getComponent<NetworkEntity>(bullet2Entity);
+                    entityManager.getComponent<NetworkEntity>(*bullet2Entity);
                 if (bullet2Net) {
-                    markForDestruction(bullet2Entity.getId(),
-                                       bullet2Net->entityId,
+                    markForDestruction(id2, bullet2Net->entityId,
                                        bullet2Net->entityType);
                 }
 
@@ -649,12 +726,24 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
     handlePlayerBulletVsBoss(entityManager, bullets, bosses, bossParts);
     handleGuidedMissileVsEnemy(entityManager, missiles, enemies);
 
-    // Handle item pickup BEFORE damage checks so shield works immediately
     handlePlayerVsItem(entityManager, players, items);
 
-    // Now check damage (shield will already be active if just picked up)
     handlePlayerVsEnemy(entityManager, players, enemies);
     handleEnemyBulletVsPlayer(entityManager, bullets, players);
+
+    for (const auto& info : _entitiesToDestroy) {
+        if (info.hasSplit) {
+            for (int i = 0; i < info.splitCount; ++i) {
+                float offsetY =
+                    (i == 0) ? -info.splitOffsetY : info.splitOffsetY;
+                SpawnEnemyEvent splitEvent;
+                splitEvent.type = Enemy::Type::GLANDUS_MINI;
+                splitEvent.x = info.x;
+                splitEvent.y = info.y + offsetY;
+                _spawnQueue.push_back(splitEvent);
+            }
+        }
+    }
 
     for (EntityId id : _markedForDestruction) {
         entityManager.destroyEntity(id);
@@ -761,10 +850,13 @@ void CollisionSystem::handleGuidedMissileVsEnemy(
                 }
 
                 if (!enemyHealth->isAlive()) {
+                    auto* splitComp =
+                        entityManager.getComponent<SplitOnDeath>(enemyEntity);
                     if (enemyNet) {
-                        markForDestruction(
-                            enemyEntity.getId(), enemyNet->entityId,
-                            enemyNet->entityType, enemyPos->x, enemyPos->y);
+                        markForDestruction(enemyEntity.getId(),
+                                           enemyNet->entityId,
+                                           enemyNet->entityType, enemyPos->x,
+                                           enemyPos->y, splitComp);
                     }
                 }
 
@@ -933,6 +1025,279 @@ void ItemSpawnerSystem::spawnItem()
         (typeRoll == 0) ? Item::Type::SHIELD : Item::Type::GUIDED_MISSILE;
 
     _spawnQueue.push_back(SpawnItemEvent{type, x, y});
+}
+
+std::string FollowingSystem::getName() const { return "FollowingSystem"; }
+
+int FollowingSystem::getPriority() const { return 12; }
+
+float FollowingSystem::calculateDistance(const Position& pos1,
+                                         const Position& pos2)
+{
+    float dx = pos2.x - pos1.x;
+    float dy = pos2.y - pos1.y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+const Position* FollowingSystem::findNearestPlayer(
+    const Position& entityPos, const std::vector<Entity>& players,
+    EntityManager& entityManager)
+{
+    const Position* nearestPos = nullptr;
+    float nearestDistance = std::numeric_limits<float>::max();
+
+    for (const auto& playerEntity : players) {
+        auto* playerPos = entityManager.getComponent<Position>(playerEntity);
+        if (!playerPos) continue;
+
+        float distance = calculateDistance(entityPos, *playerPos);
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestPos = playerPos;
+        }
+    }
+
+    return nearestPos;
+}
+
+void FollowingSystem::update(float /* deltaTime */,
+                             EntityManager& entityManager)
+{
+    auto entities =
+        entityManager.getEntitiesWith<Position, Velocity, Following>();
+
+    for (auto& entity : entities) {
+        auto* following = entityManager.getComponent<Following>(entity);
+        if (!following ||
+            following->targetType != Following::TargetType::PLAYER)
+            continue;
+
+        auto* pos = entityManager.getComponent<Position>(entity);
+        auto* vel = entityManager.getComponent<Velocity>(entity);
+        if (!pos || !vel) continue;
+
+        auto players = entityManager.getEntitiesWith<Position, Player>();
+        if (players.empty()) {
+            continue;
+        }
+
+        const Position* targetPos =
+            findNearestPlayer(*pos, players, entityManager);
+        if (!targetPos) continue;
+
+        float targetX = targetPos->x;
+        float targetY = targetPos->y;
+
+        float dx = targetX - pos->x;
+        float dy = targetY - pos->y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance > 0.001f) {
+            float speed = std::sqrt(vel->vx * vel->vx + vel->vy * vel->vy);
+            vel->vx = (dx / distance) * speed;
+            vel->vy = (dy / distance) * speed;
+        }
+    }
+}
+
+std::string TurretShootingSystem::getName() const
+{
+    return "TurretShootingSystem";
+}
+
+SystemType TurretShootingSystem::getType() const
+{
+    return SystemType::TURRET_SHOOTING;
+}
+
+int TurretShootingSystem::getPriority() const { return 21; }
+
+const Position* TurretShootingSystem::findNearestPlayer(
+    const Position& turretPos, const std::vector<Entity>& entities)
+{
+    const Position* nearestPos = nullptr;
+    float minDistance = std::numeric_limits<float>::max();
+
+    for (const auto& entity : entities) {
+        auto* player = _entityManager.getComponent<Player>(entity);
+        if (!player) continue;
+
+        auto* pos = _entityManager.getComponent<Position>(entity);
+        if (!pos) continue;
+
+        float dx = pos->x - turretPos.x;
+        float dy = pos->y - turretPos.y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearestPos = pos;
+        }
+    }
+
+    return nearestPos;
+}
+
+void TurretShootingSystem::processEntity(float deltaTime, Entity& entity,
+                                         Enemy* enemy, Position* pos)
+{
+    if (enemy->type != Enemy::Type::TURRET) {
+        return;
+    }
+
+    if (enemy->shootCooldown > 0.0f) {
+        enemy->shootCooldown -= deltaTime;
+        return;
+    }
+
+    const auto& entities = _entityManager.getAllEntities();
+    const Position* targetPos = findNearestPlayer(*pos, entities);
+
+    if (!targetPos) {
+        return;
+    }
+
+    float targetX = targetPos->x;
+    float targetY = targetPos->y;
+
+    float dx = targetX - pos->x;
+    float dy = targetY - pos->y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+
+    if (distance < 0.001f) return;
+
+    float bulletSpeed = 400.0f;
+    float vx = (dx / distance) * bulletSpeed;
+    float vy = (dy / distance) * bulletSpeed;
+
+    float offsetX = (dx / distance) * 10.0f;
+    float offsetY = (dy / distance) * 10.0f;
+
+    SpawnEnemyBulletEvent event;
+    event.ownerId = entity.getId();
+    event.x = pos->x + offsetX;
+    event.y = pos->y + offsetY;
+    event.vx = vx;
+    event.vy = vy;
+    event.bulletType = EntityType::TURRET_MISSILE;
+
+    _spawnQueue.push_back(event);
+    enemy->shootCooldown = SHOOT_INTERVAL;
+}
+
+std::string OrbiterSystem::getName() const { return "OrbiterSystem"; }
+
+SystemType OrbiterSystem::getType() const { return SystemType::ORBITER; }
+
+int OrbiterSystem::getPriority() const { return 15; }
+
+void OrbiterSystem::processEntity(float deltaTime, Entity& entity,
+                                  Orbiter* orbiter, Position* pos, Enemy* enemy)
+{
+    orbiter->angle += orbiter->angularVelocity * deltaTime;
+
+    if (orbiter->angle > 6.28318530717958647692f) {
+        orbiter->angle -= 6.28318530717958647692f;
+    }
+
+    pos->x = orbiter->centerX + orbiter->radius * std::cos(orbiter->angle);
+    pos->y = orbiter->centerY + orbiter->radius * std::sin(orbiter->angle);
+
+    if (enemy->shootCooldown > 0.0f) {
+        enemy->shootCooldown -= deltaTime;
+        return;
+    }
+
+    SpawnEnemyBulletEvent event;
+    event.ownerId = entity.getId();
+    event.x = pos->x;
+    event.y = pos->y;
+    event.vx = -250.0f;
+    event.vy = 0.0f;
+    event.bulletType = EntityType::ORBITER_MISSILE;
+
+    _spawnQueue.push_back(event);
+    enemy->shootCooldown = SHOOT_INTERVAL;
+}
+
+std::string LaserShipSystem::getName() const { return "LaserShipSystem"; }
+
+SystemType LaserShipSystem::getType() const { return SystemType::LASER_SHIP; }
+
+int LaserShipSystem::getPriority() const { return 20; }
+
+void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
+                                    LaserShip* laserShip, Position* pos,
+                                    Enemy* enemy)
+{
+    if (laserShip->isCharging) {
+        laserShip->chargingTime += deltaTime;
+        if (laserShip->chargingTime >= 1.0f) {
+            laserShip->isCharging = false;
+            laserShip->isLaserActive = true;
+            laserShip->laserActiveTime = 0.0f;
+
+            SpawnLaserEvent laserEvent;
+            laserEvent.ownerId = entity.getId();
+            laserEvent.x = pos->x;
+            laserEvent.y = pos->y + 7.0f;
+            laserEvent.width = pos->x;
+            laserEvent.duration = laserShip->laserDuration;
+            _spawnQueue.push_back(laserEvent);
+        }
+    } else if (laserShip->isLaserActive) {
+        laserShip->laserActiveTime += deltaTime;
+        if (laserShip->laserActiveTime >= laserShip->laserDuration) {
+            laserShip->isLaserActive = false;
+            laserShip->laserCooldown = 2.0f * laserShip->laserDuration;
+        }
+    } else {
+        laserShip->laserCooldown -= deltaTime;
+        if (laserShip->laserCooldown <= 0.0f) {
+            laserShip->isCharging = true;
+            laserShip->chargingTime = 0.0f;
+        }
+    }
+}
+
+std::string WaveMovementSystem::getName() const { return "WaveMovementSystem"; }
+
+int WaveMovementSystem::getPriority() const { return 15; }
+
+void WaveMovementSystem::processEntity(float deltaTime, Entity& entity,
+                                       WaveMovement* wave, Position* pos)
+{
+    wave->phase += deltaTime * wave->frequency;
+
+    pos->y = wave->initialY + wave->amplitude * std::sin(wave->phase);
+}
+
+std::string ZigzagMovementSystem::getName() const
+{
+    return "ZigzagMovementSystem";
+}
+
+int ZigzagMovementSystem::getPriority() const { return 15; }
+
+void ZigzagMovementSystem::processEntity(float deltaTime, Entity& entity,
+                                         ZigzagMovement* zigzag, Position* pos,
+                                         Velocity* vel)
+{
+    if (zigzag->lastY == 0.0f) {
+        zigzag->lastY = pos->y;
+    }
+
+    zigzag->phase += deltaTime * zigzag->frequency;
+
+    float targetOffset = zigzag->amplitude * std::sin(zigzag->phase);
+    float targetY = zigzag->lastY + targetOffset;
+
+    float deltaY = targetY - pos->y;
+    vel->vy = deltaY / deltaTime;
+
+    if (std::abs(vel->vy) > 200.0f) {
+        vel->vy = (vel->vy > 0) ? 200.0f : -200.0f;
+    }
 }
 
 }  // namespace engine

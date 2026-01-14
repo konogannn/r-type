@@ -26,10 +26,11 @@
 
 namespace engine {
 
-// Unified spawn event type - can hold any entity spawn request
 using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnPlayerBulletEvent, SpawnEnemyBulletEvent,
-                 SpawnBossEvent, SpawnGuidedMissileEvent, SpawnItemEvent>;
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
+                 SpawnItemEvent>;
 
 /**
  * @brief Network input command from clients
@@ -48,8 +49,8 @@ struct EntityStateUpdate {
     uint8_t entityType;
     float x;
     float y;
-    bool spawned;    // true if new spawn, false if position update
-    bool destroyed;  // true if entity destroyed
+    bool spawned;
+    bool destroyed;
 };
 
 /**
@@ -84,7 +85,10 @@ class GameLoop {
     // Player tracking
     std::unordered_map<uint32_t, EntityId> _clientToEntity;
 
-    // Player death callback
+    ThreadSafeQueue<uint32_t> _pendingRemovals;
+
+    std::vector<EntityId> _pendingDestructions;
+
     std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
 
     // Power-up spawning state
@@ -105,9 +109,12 @@ class GameLoop {
      */
     void processDeathTimers(float deltaTime);
 
-    /**
-     * @brief Generate network state updates
-     */
+    void processPendingRemovals();
+
+    void processPendingDestructions();
+
+    void processDestroyedEntitiesFromSystems();
+
     void generateNetworkUpdates();
 
     /**
@@ -126,11 +133,15 @@ class GameLoop {
      * @brief Overloaded spawn event handlers (compile-time dispatch)
      */
     void processSpawnEvent(const SpawnEnemyEvent& event);
+    void processSpawnEvent(const SpawnTurretEvent& event);
     void processSpawnEvent(const SpawnPlayerBulletEvent& event);
     void processSpawnEvent(const SpawnEnemyBulletEvent& event);
     void processSpawnEvent(const SpawnBossEvent& event);
     void processSpawnEvent(const SpawnGuidedMissileEvent& event);
     void processSpawnEvent(const SpawnItemEvent& event);
+    void processSpawnEvent(const SpawnOrbitersEvent& event);
+    void processSpawnEvent(const SpawnLaserShipEvent& event);
+    void processSpawnEvent(const SpawnLaserEvent& event);
 
    public:
     /**

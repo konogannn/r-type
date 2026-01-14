@@ -44,7 +44,7 @@ class ComponentManager {
         std::vector<EntityId> entities;  // Entities in this archetype
 
         explicit Archetype(ArchetypeId archetypeId,
-                           const ArchetypeSignature &sig);
+                           const ArchetypeSignature& sig);
 
         /**
          * @brief Add an entity to this archetype
@@ -69,7 +69,7 @@ class ComponentManager {
         /**
          * @brief Get component for entity at index
          */
-        Component *getComponent(std::type_index type, uint32_t index);
+        Component* getComponent(std::type_index type, uint32_t index);
 
         /**
          * @brief Add component data for entity at index
@@ -100,21 +100,21 @@ class ComponentManager {
      * @param signature The archetype signature
      * @return ArchetypeId
      */
-    ArchetypeId getOrCreateArchetype(const ArchetypeSignature &signature);
+    ArchetypeId getOrCreateArchetype(const ArchetypeSignature& signature);
 
     /**
      * @brief Create a new archetype
      * @param signature The archetype signature
      * @return ArchetypeId
      */
-    ArchetypeId createArchetype(const ArchetypeSignature &signature);
+    ArchetypeId createArchetype(const ArchetypeSignature& signature);
 
     /**
      * @brief Get an archetype by ID
      * @param archetypeId The archetype ID
      * @return Pointer to archetype or nullptr
      */
-    Archetype *getArchetype(ArchetypeId archetypeId);
+    Archetype* getArchetype(ArchetypeId archetypeId);
 
     /**
      * @brief Get the empty archetype ID
@@ -150,7 +150,7 @@ class ComponentManager {
      * @param component The component to add
      */
     template <typename T>
-    void addComponent(ArchetypeId archetypeId, uint32_t index, T &&component);
+    void addComponent(ArchetypeId archetypeId, uint32_t index, T&& component);
 
     /**
      * @brief Get a component from an entity
@@ -160,7 +160,7 @@ class ComponentManager {
      * @return Pointer to component or nullptr
      */
     template <typename T>
-    T *getComponent(ArchetypeId archetypeId, uint32_t index);
+    T* getComponent(ArchetypeId archetypeId, uint32_t index);
 
     /**
      * @brief Check if an entity has a specific component
@@ -208,22 +208,22 @@ class ComponentManager {
      * @param archetypeId The archetype ID
      * @return Vector of entity IDs
      */
-    const std::vector<EntityId> &getEntitiesInArchetype(
+    const std::vector<EntityId>& getEntitiesInArchetype(
         ArchetypeId archetypeId);
 
     /**
      * @brief Get all archetypes
      * @return Vector of archetype pointers
      */
-    std::vector<Archetype *> getAllArchetypes();
+    std::vector<Archetype*> getAllArchetypes();
 
     /**
      * @brief Get all archetypes matching a signature pattern
      * @param signature The signature to match (must have all these components)
      * @return Vector of matching archetype pointers
      */
-    std::vector<Archetype *> getArchetypesWithComponents(
-        const ArchetypeSignature &signature);
+    std::vector<Archetype*> getArchetypesWithComponents(
+        const ArchetypeSignature& signature);
 
     /**
      * @brief Clear all archetypes and components
