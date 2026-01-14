@@ -8,6 +8,7 @@
 #include "Game.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <ctime>
 #include <iostream>
 #include <unordered_map>
