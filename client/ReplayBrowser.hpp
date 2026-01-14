@@ -100,7 +100,6 @@ class ReplayBrowser {
     std::vector<Button> _renameButtons;
     std::vector<Button> _deleteButtons;
     Button _backButton;
-    std::string _fontPath;
     std::string _selectedReplay;
     bool _wantsBack;
     int _scrollOffset;
