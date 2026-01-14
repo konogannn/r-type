@@ -291,15 +291,13 @@ void GameServer::waitForPlayers()
 
 bool GameServer::isEnemy(uint8_t entityType) const
 {
-    return entityType == static_cast<uint8_t>(EntityType::BOSS) ||
-           entityType == static_cast<uint8_t>(EntityType::BASIC) ||
-           entityType == static_cast<uint8_t>(EntityType::FAST) ||
-           entityType == static_cast<uint8_t>(EntityType::TANK) ||
-           entityType == static_cast<uint8_t>(EntityType::TURRET) ||
-           entityType == static_cast<uint8_t>(EntityType::ORBITER) ||
-           entityType == static_cast<uint8_t>(EntityType::LASER_SHIP) ||
-           entityType == static_cast<uint8_t>(EntityType::GLANDUS) ||
-           entityType == static_cast<uint8_t>(EntityType::GLANDUS_MINI);
+    return entityType == EntityType::BOSS || entityType == EntityType::BASIC ||
+           entityType == EntityType::FAST || entityType == EntityType::TANK ||
+           entityType == EntityType::TURRET ||
+           entityType == EntityType::ORBITER ||
+           entityType == EntityType::LASER_SHIP ||
+           entityType == EntityType::GLANDUS ||
+           entityType == EntityType::GLANDUS_MINI;
 }
 
 uint32_t GameServer::getScoreForEnemy(uint8_t entityType) const
