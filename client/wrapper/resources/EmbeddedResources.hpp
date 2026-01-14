@@ -134,5 +134,15 @@ static const unsigned char search_missile_item_data[] = {
 #embed "../../../assets/sprites/search_missile_item.png"
 };
 
+// Speed item
+static const unsigned char speed_item_data[] = {
+#embed "../../../assets/sprites/speed_item.png"
+};
+
+// Speed arrow
+static const unsigned char speed_arrow_data[] = {
+#embed "../../../assets/sprites/speed_arrow.png"
+};
+
 }  // namespace embedded
 }  // namespace rtype
