@@ -63,7 +63,6 @@ class ReplayControls {
     ReplayPlayer& _player;
 
     std::vector<Button> _buttons;
-    std::string _fontPath;
     bool _wantsExit;
 
     enum ButtonIndex {
