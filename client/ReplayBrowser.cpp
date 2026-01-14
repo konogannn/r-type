@@ -672,7 +672,7 @@ void ReplayBrowser::showRenameDialog(size_t replayIndex)
 {
     _selectedReplayIndex = replayIndex;
     _showRenameDialog = true;
-    _dialogFocusedButton = 0;  // Focus sur Confirm par défaut
+    _dialogFocusedButton = 0;
     std::string fileName = _replays[replayIndex].fileName;
     if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".rtr") {
         fileName = fileName.substr(0, fileName.size() - 4);
@@ -686,7 +686,7 @@ void ReplayBrowser::showDeleteDialog(size_t replayIndex)
     _selectedReplayIndex = replayIndex;
     _showDeleteDialog = true;
     _dialogFocusedButton =
-        1;  // Focus sur Cancel par défaut (plus sécurisé pour delete)
+        1;
 }
 
 void ReplayBrowser::handleRenameConfirm()
@@ -945,7 +945,7 @@ void ReplayBrowser::reset()
     _wasDownPressed = false;
     _wasLeftPressed = false;
     _wasRightPressed = false;
-    _wasEnterPressed = true;  // Évite l'activation immédiate
+    _wasEnterPressed = true;
     _wasEscapePressed = false;
     refreshReplayList();
 }
