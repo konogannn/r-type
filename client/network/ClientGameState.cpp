@@ -683,7 +683,7 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.spriteScale = 6.0f;
             break;
         }
-        case 16: {
+        case 22: {
             // Guided Missile projectile
             scale = 4.0f;
             if (!entity.sprite->loadTexture(
