@@ -277,6 +277,13 @@ void ReplayViewer::processReplayPacket(const void* data, size_t)
                 packet->entityId, packet->currentHealth, packet->maxHealth);
             break;
         }
+        case S2C_SHIELD_STATUS: {
+            const ShieldStatusPacket* packet =
+                static_cast<const ShieldStatusPacket*>(data);
+            _gameState->processShieldStatus(packet->playerId,
+                                            packet->hasShield != 0);
+            break;
+        }
         default:
             break;
     }
