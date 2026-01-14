@@ -43,8 +43,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
         _gameLoop.getSpawnEvents(), _gameLoop.getEntityManager()));
     _gameLoop.addSystem(
         std::make_unique<engine::OrbiterSystem>(_gameLoop.getSpawnEvents()));
-    _gameLoop.addSystem(std::make_unique<engine::LaserShipSystem>(
-        _gameLoop.getSpawnEvents()));
+    _gameLoop.addSystem(
+        std::make_unique<engine::LaserShipSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::CollisionSystem>());
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
