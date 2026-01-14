@@ -26,7 +26,14 @@
 
 using namespace rtype;
 
-enum class GameState { Menu, Settings, Playing, ReplayBrowser, WatchingReplay, GameOver };
+enum class GameState {
+    Menu,
+    Settings,
+    Playing,
+    ReplayBrowser,
+    WatchingReplay,
+    GameOver
+};
 
 int main()
 {
@@ -65,7 +72,6 @@ int main()
 
     auto gameOverScreen =
         std::make_unique<GameOverScreen>(*window, *graphics, *input);
-
 
     GameState state = GameState::Menu;
 
