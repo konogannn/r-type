@@ -14,7 +14,6 @@ JoinLobbyDialog::JoinLobbyDialog(WindowSFML& window, GraphicsSFML& graphics,
       _cancelClicked(false),
       _wasEnterPressed(false)
 {
-    // Create buttons once
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "JOIN");
     _buttons.emplace_back(0.0f, 0.0f, BUTTON_WIDTH, BUTTON_HEIGHT, "CANCEL");
 
@@ -29,22 +28,19 @@ void JoinLobbyDialog::updateLayout()
     float centerX = windowWidth / 2.0f;
     float centerY = windowHeight / 2.0f;
 
-    // Create input field if not exists
     if (!_inputField) {
         _inputField = std::make_unique<InputField>(
             centerX - (DIALOG_WIDTH / 2.0f) + 100.0f, centerY - 20.0f,
             DIALOG_WIDTH - 200.0f, 60.0f, "Lobby ID", "");
     }
 
-    // Update button positions
     float buttonY = centerY + 100.0f;
     float buttonSpacing = 50.0f;
     float totalButtonWidth = (BUTTON_WIDTH * 2.0f) + buttonSpacing;
     float startX = centerX - (totalButtonWidth / 2.0f);
 
     if (_buttons.size() >= 2) {
-        // Buttons are created in constructor, just update positions via
-        // recreation
+
         _buttons.clear();
         _buttons.emplace_back(startX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT,
                               "JOIN");
@@ -58,7 +54,6 @@ void JoinLobbyDialog::update(int mouseX, int mouseY)
     _joinClicked = false;
     _cancelClicked = false;
 
-    // Update buttons and input field
     bool leftClick = _input.isMouseButtonPressed(MouseButton::Left);
 
     if (_inputField) {
@@ -82,7 +77,7 @@ void JoinLobbyDialog::handleTextInput(char text)
 {
     if (_inputField && _inputField->isActive()) {
         _inputField->handleTextInput(text);
-        _errorMessage.clear();  // Clear error when typing
+        _errorMessage.clear();
     }
 }
 
@@ -100,7 +95,6 @@ void JoinLobbyDialog::handleKeyPress(Key key)
             _inputField->setActive(false);
         }
     } else {
-        // If input not active, ESC cancels dialog
         if (key == Key::Escape) {
             _cancelClicked = true;
         } else if (key == Key::Enter || key == Key::Return) {
@@ -119,7 +113,6 @@ void JoinLobbyDialog::handleKeyboard()
 
     _wasEnterPressed = enterPressed;
 
-    // ESC to cancel
     if (_input.isKeyPressed(Key::Escape)) {
         _cancelClicked = true;
     }
@@ -133,22 +126,18 @@ void JoinLobbyDialog::render()
     float centerX = windowWidth / 2.0f;
     float centerY = windowHeight / 2.0f;
 
-    // Dim background
     _graphics.drawRectangle(0, 0, windowWidth, windowHeight, 0, 0, 0, 180);
 
-    // Draw dialog box
     float dialogX = centerX - (DIALOG_WIDTH / 2.0f);
     float dialogY = centerY - (DIALOG_HEIGHT / 2.0f);
     _graphics.drawRectangle(dialogX, dialogY, DIALOG_WIDTH, DIALOG_HEIGHT, 30,
                             30, 60, 255);
 
-    // Draw border
     _graphics.drawRectangle(dialogX, dialogY, DIALOG_WIDTH, 3.0f, 100, 150, 255,
                             255);
     _graphics.drawRectangle(dialogX, dialogY + DIALOG_HEIGHT - 3.0f,
                             DIALOG_WIDTH, 3.0f, 100, 150, 255, 255);
 
-    // Draw error message if exists (above dialog box)
     if (!_errorMessage.empty()) {
         const int ERROR_FONT_SIZE = 36;
         float errorY = dialogY - 60.0f;
@@ -159,7 +148,6 @@ void JoinLobbyDialog::render()
                            80, 80, 255, "");
     }
 
-    // Draw title
     std::string title = "JOIN LOBBY";
     float titleWidth = _graphics.getTextWidth(title, TITLE_FONT_SIZE, "");
     float titleX = centerX - (titleWidth / 2.0f);
@@ -167,7 +155,6 @@ void JoinLobbyDialog::render()
     _graphics.drawText(title, titleX, titleY, TITLE_FONT_SIZE, 255, 255, 255,
                        255, "");
 
-    // Draw instruction
     std::string instruction = "Enter the lobby ID to join:";
     float instrWidth = _graphics.getTextWidth(instruction, FONT_SIZE, "");
     float instrX = centerX - (instrWidth / 2.0f);
@@ -175,7 +162,6 @@ void JoinLobbyDialog::render()
     _graphics.drawText(instruction, instrX, instrY, FONT_SIZE, 200, 200, 200,
                        255, "");
 
-    // Render input field manually
     if (_inputField) {
         unsigned char r, g, b;
         if (_inputField->isActive()) {
@@ -196,7 +182,6 @@ void JoinLobbyDialog::render()
                                 _inputField->getWidth(),
                                 _inputField->getHeight(), r, g, b, 255);
 
-        // Draw border
         float borderThickness = 3.0f;
         unsigned char borderR = _inputField->isActive() ? 255 : 100;
         unsigned char borderG = _inputField->isActive() ? 180 : 150;
@@ -211,7 +196,6 @@ void JoinLobbyDialog::render()
             _inputField->getWidth(), borderThickness, borderR, borderG, borderB,
             255);
 
-        // Draw value text
         std::string displayValue = _inputField->getValue();
         if (displayValue.empty()) {
             displayValue = "Enter Lobby ID...";
@@ -230,7 +214,6 @@ void JoinLobbyDialog::render()
                            textG, textB, 255, "");
     }
 
-    // Render buttons
     for (const auto& btn : _buttons) {
         unsigned char r, g, b;
         if (btn.getIsHovered()) {
