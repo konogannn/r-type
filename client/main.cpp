@@ -5,13 +5,19 @@
 ** main
 */
 
+#include <iomanip>
 #include <iostream>
+#include <random>
+#include <sstream>
+#include <unordered_map>
 
 #include "../common/utils/Logger.hpp"
 #include "Config.hpp"
 #include "GameOverScreen.hpp"
+#include "JoinLobbyDialog.hpp"
 #include "LobbyConfigMenu.hpp"
 #include "LobbyMenu.hpp"
+#include "LobbyWaitingRoom.hpp"
 #include "Menu.hpp"
 #include "ReplayBrowser.hpp"
 #include "Resolution.hpp"
@@ -32,12 +38,34 @@ enum class GameState {
     Menu,
     Lobby,
     LobbyConfig,
+    LobbyWaiting,
+    JoinLobbyDialog,
     Settings,
     Playing,
     ReplayBrowser,
     WatchingReplay,
     GameOver
 };
+
+// Generate a random lobby ID (4 uppercase letters + 4 digits)
+std::string generateLobbyId()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> letterDist(0, 25);
+    std::uniform_int_distribution<> digitDist(0, 9);
+
+    std::stringstream ss;
+    for (int i = 0; i < 4; ++i) {
+        ss << static_cast<char>('A' + letterDist(gen));
+    }
+    ss << '-';
+    for (int i = 0; i < 4; ++i) {
+        ss << digitDist(gen);
+    }
+
+    return ss.str();
+}
 
 int main()
 {
@@ -71,10 +99,15 @@ int main()
         std::make_unique<SettingsMenu>(*window, *graphics, *input);
     std::unique_ptr<LobbyMenu> lobbyMenu = nullptr;
     std::unique_ptr<LobbyConfigMenu> lobbyConfigMenu = nullptr;
+    std::unique_ptr<LobbyWaitingRoom> lobbyWaitingRoom = nullptr;
+    std::unique_ptr<JoinLobbyDialog> joinLobbyDialog = nullptr;
 
     auto replayBrowser =
         std::make_unique<ReplayBrowser>(*window, *graphics, *input);
     std::string selectedReplayPath;
+
+    // Track created lobbies (lobby ID -> game rules)
+    std::unordered_map<std::string, GameRules> activeLobbyIds;
 
     auto gameOverScreen =
         std::make_unique<GameOverScreen>(*window, *graphics, *input);
@@ -157,11 +190,13 @@ int main()
                     lobbyConfigMenu->reset();
                     break;
                 case LobbyAction::Join:
-                    // TODO: Implement join lobby logic
                     std::cout << "Join Lobby selected" << std::endl;
-                    state = GameState::Playing;
-                    SoundManager::getInstance().stopMusic();
-                    clock->restart();
+                    state = GameState::JoinLobbyDialog;
+                    if (!joinLobbyDialog) {
+                        joinLobbyDialog = std::make_unique<JoinLobbyDialog>(
+                            *window, *graphics, *input, menu->getBackground());
+                    }
+                    joinLobbyDialog->reset();
                     break;
                 case LobbyAction::Back:
                     state = GameState::Menu;
@@ -202,15 +237,146 @@ int main()
                               << (rules.enableFriendlyFire ? "ON" : "OFF")
                               << std::endl;
 
-                    state = GameState::Playing;
-                    SoundManager::getInstance().stopMusic();
-                    clock->restart();
+                    // If only 1 player required, start game immediately
+                    if (rules.requiredPlayers == 1) {
+                        std::cout
+                            << "Single player mode - starting game immediately"
+                            << std::endl;
+                        state = GameState::Playing;
+                        SoundManager::getInstance().stopMusic();
+                        clock->restart();
+                    } else {
+                        // Create waiting room with configured rules
+                        state = GameState::LobbyWaiting;
+                        if (!lobbyWaitingRoom) {
+                            lobbyWaitingRoom =
+                                std::make_unique<LobbyWaitingRoom>(
+                                    *window, *graphics, *input,
+                                    menu->getBackground(), rules);
+                        }
+
+                        // Generate and set lobby ID
+                        std::string lobbyId = generateLobbyId();
+                        std::cout << "Created lobby with ID: " << lobbyId
+                                  << std::endl;
+
+                        // Store lobby in active lobbies
+                        activeLobbyIds[lobbyId] = rules;
+
+                        lobbyWaitingRoom->reset();
+                        lobbyWaitingRoom->setLobbyId(lobbyId);
+                        lobbyWaitingRoom->setIsLeader(true);
+                        lobbyWaitingRoom->setLocalPlayerId(1);
+
+                        // Simulate adding local player to first slot
+                        lobbyWaitingRoom->updatePlayer(1, "Player1", false,
+                                                       true);
+                    }
                 } break;
                 case LobbyConfigAction::Back:
                     state = GameState::Lobby;
                     lobbyMenu->updateLayout();
                     break;
                 case LobbyConfigAction::None:
+                    break;
+            }
+        } else if (state == GameState::JoinLobbyDialog) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                }
+
+                if (eventType == EventType::KeyPressed) {
+                    Key key = window->getEventKey();
+                    joinLobbyDialog->handleKeyPress(key);
+                }
+
+                if (eventType == EventType::TextEntered) {
+                    char textChar = window->getEventText();
+                    if (textChar >= 32 && textChar < 127) {
+                        joinLobbyDialog->handleTextInput(textChar);
+                    }
+                }
+            }
+
+            int mouseX = input->getMouseX();
+            int mouseY = input->getMouseY();
+            joinLobbyDialog->update(mouseX, mouseY);
+
+            window->clear(0, 0, 0);
+            menu->getBackground()->draw(*graphics);
+            joinLobbyDialog->render();
+            window->display();
+
+            if (joinLobbyDialog->isJoinClicked()) {
+                std::string lobbyId = joinLobbyDialog->getLobbyId();
+                if (!lobbyId.empty()) {
+                    std::cout << "Attempting to join lobby: " << lobbyId
+                              << std::endl;
+
+                    // Check if lobby exists
+                    auto lobbyIt = activeLobbyIds.find(lobbyId);
+                    if (lobbyIt != activeLobbyIds.end()) {
+                        // Lobby exists, join it
+                        std::cout << "Lobby found! Joining..." << std::endl;
+                        state = GameState::LobbyWaiting;
+
+                        GameRules lobbyRules = lobbyIt->second;
+                        if (!lobbyWaitingRoom) {
+                            lobbyWaitingRoom =
+                                std::make_unique<LobbyWaitingRoom>(
+                                    *window, *graphics, *input,
+                                    menu->getBackground(), lobbyRules);
+                        }
+                        lobbyWaitingRoom->setLobbyId(lobbyId);
+                        lobbyWaitingRoom->reset();
+                    } else {
+                        // Lobby doesn't exist
+                        std::cout << "ERROR: Lobby '" << lobbyId
+                                  << "' not found!" << std::endl;
+                        joinLobbyDialog->setErrorMessage("Lobby not found!");
+                        // Stay in dialog to show error
+                    }
+                } else {
+                    std::cout << "Please enter a valid lobby ID" << std::endl;
+                }
+            } else if (joinLobbyDialog->isCancelClicked()) {
+                state = GameState::Lobby;
+                lobbyMenu->updateLayout();
+            }
+        } else if (state == GameState::LobbyWaiting) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                }
+            }
+
+            WaitingRoomAction action = lobbyWaitingRoom->update(deltaTime);
+
+            window->clear(0, 0, 0);
+            lobbyWaitingRoom->render();
+            window->display();
+
+            switch (action) {
+                case WaitingRoomAction::StartGame:
+                    std::cout << "Starting game..." << std::endl;
+                    state = GameState::Playing;
+                    SoundManager::getInstance().stopMusic();
+                    clock->restart();
+                    break;
+                case WaitingRoomAction::ToggleReady:
+                    std::cout << "Toggle ready status" << std::endl;
+                    // TODO: Send ready status to server
+                    break;
+                case WaitingRoomAction::Back:
+                    state = GameState::LobbyConfig;
+                    lobbyConfigMenu->updateLayout();
+                    break;
+                case WaitingRoomAction::None:
                     break;
             }
         } else if (state == GameState::Playing) {
