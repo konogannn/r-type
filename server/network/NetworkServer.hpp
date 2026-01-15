@@ -251,6 +251,19 @@ class NetworkServer : public INetworkServer {
     bool sendShieldStatus(uint32_t clientId, uint32_t playerId, bool hasShield);
 
     /**
+     * @brief Send game event to client(s)
+     *
+     * @param clientId Client to send to (0 = broadcast to all)
+     * @param eventType Type of game event (see GameEventType)
+     * @param waveNumber Current wave number
+     * @param totalWaves Total waves in level
+     * @param levelId Current level ID
+     * @return true if sent successfully
+     */
+    bool sendGameEvent(uint32_t clientId, uint8_t eventType, uint8_t waveNumber,
+                       uint8_t totalWaves, uint8_t levelId);
+
+    /**
      * @brief Broadcast raw data to all connected clients
      *
      * Sends arbitrary binary data to all authenticated clients, optionally
