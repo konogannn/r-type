@@ -125,6 +125,9 @@ void WaveManager::startNextWave()
             Logger::getInstance().log("All waves completed!", LogLevel::INFO_L,
                                       "WaveManager");
             _levelCompleted = true;
+            if (_onLevelComplete) {
+                _onLevelComplete(_currentLevelId);
+            }
         }
         return;
     }
@@ -143,6 +146,12 @@ void WaveManager::startNextWave()
     _scheduledSpawns.clear();
     _enemiesSpawnedInWave = 0;
     _enemiesAliveInWave = 0;
+
+    if (_onWaveStart) {
+        _onWaveStart(_currentWaveIndex + 1, 
+                     static_cast<int>(_currentLevel->waves.size()),
+                     _currentLevelId);
+    }
 
     float baseDelay = wave.startDelay;
 
@@ -446,6 +455,16 @@ void WaveManager::onBossDestroyed()
     Logger::getInstance().log("Boss destroyed! Level complete.",
                               LogLevel::INFO_L, "WaveManager");
     _levelCompleted = true;
+    // Notify level complete
+    if (_onLevelComplete) {
+        Logger::getInstance().log("Calling onLevelComplete callback for level " +
+                                      std::to_string(_currentLevelId),
+                                  LogLevel::INFO_L, "WaveManager");
+        _onLevelComplete(_currentLevelId);
+    } else {
+        Logger::getInstance().log("onLevelComplete callback is not set!",
+                                  LogLevel::WARNING_L, "WaveManager");
+    }
 }
 
 int WaveManager::getCurrentWave() const { return _currentWaveIndex + 1; }
@@ -468,6 +487,16 @@ bool WaveManager::shouldSpawnBoss() const
 void WaveManager::setPlayerCount(int count)
 {
     _playerCount = (count > 0) ? count : 1;
+}
+
+void WaveManager::setOnWaveStartCallback(OnWaveStartCallback callback)
+{
+    _onWaveStart = callback;
+}
+
+void WaveManager::setOnLevelCompleteCallback(OnLevelCompleteCallback callback)
+{
+    _onLevelComplete = callback;
 }
 
 }  // namespace engine

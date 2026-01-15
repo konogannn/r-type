@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <queue>
 #include <random>
@@ -23,6 +24,10 @@ using SpawnEvent =
                  SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
                  SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
                  SpawnItemEvent>;
+
+// Callbacks for game events
+using OnWaveStartCallback = std::function<void(int waveNumber, int totalWaves, int levelId)>;
+using OnLevelCompleteCallback = std::function<void(int levelId)>;
 
 /**
  * @brief Manages wave progression and enemy spawning for a level
@@ -66,6 +71,10 @@ class WaveManager : public ISystem {
 
     // Player count for boss difficulty scaling
     int _playerCount;
+
+    // Event callbacks
+    OnWaveStartCallback _onWaveStart;
+    OnLevelCompleteCallback _onLevelComplete;
 
     /**
      * @brief Generate spawns for an enemy group
@@ -190,6 +199,18 @@ class WaveManager : public ISystem {
      * @param count Number of active players
      */
     void setPlayerCount(int count);
+
+    /**
+     * @brief Set callback for wave start events
+     * @param callback Function called when a new wave starts
+     */
+    void setOnWaveStartCallback(OnWaveStartCallback callback);
+
+    /**
+     * @brief Set callback for level complete events
+     * @param callback Function called when a level is completed
+     */
+    void setOnLevelCompleteCallback(OnLevelCompleteCallback callback);
 };
 
 }  // namespace engine
