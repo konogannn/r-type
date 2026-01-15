@@ -59,7 +59,7 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
                         info.entityType == 23 ||  // GLANDUS
                         info.entityType == 24);   // GLANDUS_MINI
 
-        bool isBoss = (info.entityType == 5);  // BOSS
+        bool isBoss = (info.entityType == 5);
 
         if (isEnemy) {
             for (auto& system : _systems) {
