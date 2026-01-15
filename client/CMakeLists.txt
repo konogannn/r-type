@@ -32,6 +32,8 @@ set(MENU_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Menu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LobbyMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LobbyConfigMenu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/LobbyWaitingRoom.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/JoinLobbyDialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Slider.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SettingsMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Config.cpp
