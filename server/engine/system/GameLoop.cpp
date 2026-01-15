@@ -71,7 +71,8 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         update.y = 0.0f;
         update.spawned = false;
         update.destroyed = true;
-        update.killedByPlayer = true;  // Killed by collision with player's projectile
+        update.killedByPlayer =
+            true;  // Killed by collision with player's projectile
         _outputQueue.push(update);
 
         bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
