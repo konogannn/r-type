@@ -26,7 +26,8 @@ enum class MenuAction {
     Settings,
     ConnectServer,
     Replays,
-    Quit
+    Quit,
+    Lobby
 };
 
 /**
