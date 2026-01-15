@@ -92,8 +92,8 @@ class GameLoop {
 
     std::function<void(uint32_t clientId)> _onPlayerDeathCallback;
 
-    // Power-up spawning state
-    bool _nextEnemyDropIsShield = true;
+    // Power-up spawning state (0=Shield, 1=Missile, 2=Speed)
+    int _nextPowerUpIndex = 0;
 
     /**
      * @brief Main game loop (runs in separate thread)

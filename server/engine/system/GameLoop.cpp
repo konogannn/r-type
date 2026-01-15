@@ -10,11 +10,24 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../../../common/network/EntityType.hpp"
 #include "../../../common/utils/Logger.hpp"
 #include "BossSystem.hpp"
 #include "GameSystems.hpp"
 
 namespace engine {
+
+// Helper function to check if an entity type is an enemy
+static bool isEnemyType(uint8_t entityType)
+{
+    return entityType == EntityType::BOSS || entityType == EntityType::BASIC ||
+           entityType == EntityType::FAST || entityType == EntityType::TANK ||
+           entityType == EntityType::TURRET ||
+           entityType == EntityType::ORBITER ||
+           entityType == EntityType::LASER_SHIP ||
+           entityType == EntityType::GLANDUS ||
+           entityType == EntityType::GLANDUS_MINI;
+}
 
 // Generic template for processDestroyedEntities
 template <typename T>
@@ -75,20 +88,28 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
             true;  // Killed by collision with player's projectile
         _outputQueue.push(update);
 
-        bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
-                        info.entityType == 14);
+        bool isEnemy = isEnemyType(info.entityType);
 
         if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
             if (rand() % 2 == 0) {
                 Entity powerUpItem;
-                if (_nextEnemyDropIsShield) {
-                    powerUpItem =
-                        _entityFactory.createShieldItem(info.x, info.y);
-                } else {
-                    powerUpItem =
-                        _entityFactory.createGuidedMissileItem(info.x, info.y);
+                float spawnX = info.x;
+                switch (_nextPowerUpIndex) {
+                    case 0:
+                        powerUpItem =
+                            _entityFactory.createShieldItem(spawnX, info.y);
+                        break;
+                    case 1:
+                        powerUpItem = _entityFactory.createGuidedMissileItem(
+                            spawnX, info.y);
+                        break;
+                    case 2:
+                    default:
+                        powerUpItem =
+                            _entityFactory.createSpeedItem(spawnX, info.y);
+                        break;
                 }
-                _nextEnemyDropIsShield = !_nextEnemyDropIsShield;
+                _nextPowerUpIndex = (_nextPowerUpIndex + 1) % 3;
 
                 // Network sync for power-up
                 auto* powerUpPos =
