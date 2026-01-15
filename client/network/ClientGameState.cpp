@@ -74,6 +74,11 @@ ClientGameState::ClientGameState()
             }
             onShieldStatus(packet.playerId, packet.hasShield != 0);
         });
+    _networkClient->setOnGameEventCallback(
+        [this](const GameEventPacket& packet) {
+            onGameEvent(packet.eventType, packet.waveNumber, packet.totalWaves,
+                        packet.levelId);
+        });
     _networkClient->setOnErrorCallback(
         [this](const std::string& error) { onError(error); });
 }
@@ -145,6 +150,13 @@ void ClientGameState::update(float deltaTime)
 
     if (_networkClient) {
         _networkClient->update();
+    }
+
+    if (_gameEventTimer > 0.0f) {
+        _gameEventTimer -= deltaTime;
+        if (_gameEventTimer <= 0.0f) {
+            _gameEventText.clear();
+        }
     }
 
     for (auto& [entityId, entity] : _entities) {
@@ -461,6 +473,21 @@ void ClientGameState::onShieldStatus(uint32_t playerId, bool hasShield)
     auto* entity = getEntity(playerId);
     if (entity && entity->type == 1) {
         entity->hasShield = hasShield;
+    }
+}
+
+void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
+                                  [[maybe_unused]] uint8_t totalWaves,
+                                  [[maybe_unused]] uint8_t levelId)
+{
+    if (eventType == GameEventType::GAME_EVENT_WAVE_START) {
+        if (_gameEventText != "NIVEAU TERMINE !") {
+            _gameEventText = "VAGUE " + std::to_string(waveNumber);
+            _gameEventTimer = GAME_EVENT_DISPLAY_TIME;
+        }
+    } else if (eventType == GameEventType::GAME_EVENT_LEVEL_COMPLETE) {
+        _gameEventText = "NIVEAU TERMINE !";
+        _gameEventTimer = GAME_EVENT_DISPLAY_TIME * 2.0f;
     }
 }
 
@@ -849,6 +876,13 @@ uint32_t ClientGameState::getScore() const { return _score; }
 const std::string& ClientGameState::getLastError() const { return _lastError; }
 
 size_t ClientGameState::getEntityCount() const { return _entities.size(); }
+
+const std::string& ClientGameState::getGameEventText() const
+{
+    return _gameEventText;
+}
+
+bool ClientGameState::hasGameEvent() const { return _gameEventTimer > 0.0f; }
 
 float ClientGameState::getBossHealth() const
 {
