@@ -545,6 +545,18 @@ void Game::render()
                                static_cast<unsigned int>(20 * _scale), 255, 0,
                                0, "assets/fonts/default.ttf");
         }
+
+        if (_gameState->hasGameEvent()) {
+            const std::string& eventText = _gameState->getGameEventText();
+            unsigned int fontSize = static_cast<unsigned int>(48 * _scale);
+            float textX = _window.getWidth() / 2.0f - (eventText.length() * fontSize * 0.25f);
+            float textY = _window.getHeight() / 2.0f - fontSize / 2.0f;
+            
+            _graphics.drawText(eventText, textX + 3, textY + 3, fontSize, 0, 0, 0,
+                               "assets/fonts/default.ttf");
+            _graphics.drawText(eventText, textX, textY, fontSize, 255, 200, 0,
+                               "assets/fonts/default.ttf");
+        }
     }
 
     if (filterTexture) {
