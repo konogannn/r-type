@@ -55,7 +55,8 @@ void LobbyConfigMenu::setupButtons()
     // Create player count buttons (1-4)
     for (int i = 1; i <= 4; ++i) {
         _playerCountButtons.emplace_back(0.0f, 0.0f, SMALL_BUTTON_WIDTH,
-                                         SMALL_BUTTON_HEIGHT, std::to_string(i));
+                                         SMALL_BUTTON_HEIGHT,
+                                         std::to_string(i));
     }
 
     // Create respawn count buttons (0, 3, 5, unlimited)
@@ -98,40 +99,38 @@ void LobbyConfigMenu::updateLayout()
     // Player count buttons - Left side
     float leftColumnX = windowWidth * 0.25f;  // 25% from left
     float playerCountY = startY + 100.0f * scaleH;
-    
+
     // Center the player buttons in the left column
     float totalPlayerBtnWidth = (smallBtnWidth * 4) + (buttonSpacing * 3);
     float playerBtnStartX = leftColumnX - (totalPlayerBtnWidth / 2.0f);
 
     for (size_t i = 0; i < _playerCountButtons.size(); ++i) {
         float x = playerBtnStartX + (i * (smallBtnWidth + buttonSpacing));
-        _playerCountButtons[i] =
-            Button(x, playerCountY, smallBtnWidth, smallBtnHeight,
-                   std::to_string(i + 1));
+        _playerCountButtons[i] = Button(x, playerCountY, smallBtnWidth,
+                                        smallBtnHeight, std::to_string(i + 1));
     }
 
     // Respawn count buttons - Right side
     float rightColumnX = windowWidth * 0.75f;  // 75% from left
     float respawnCountY = startY + 100.0f * scaleH;
     float respawnBtn3Width = SMALL_BUTTON_WIDTH * 1.5f * scaleW;
-    
+
     // Center the respawn buttons in the right column
-    float totalRespawnBtnWidth = (smallBtnWidth * 3) + respawnBtn3Width +
-                                 (buttonSpacing * 3);
+    float totalRespawnBtnWidth =
+        (smallBtnWidth * 3) + respawnBtn3Width + (buttonSpacing * 3);
     float respawnBtnStartX = rightColumnX - (totalRespawnBtnWidth / 2.0f);
 
-    _respawnCountButtons[0] =
-        Button(respawnBtnStartX, respawnCountY, smallBtnWidth, smallBtnHeight,
-               "0");
-    _respawnCountButtons[1] = Button(
-        respawnBtnStartX + smallBtnWidth + buttonSpacing, respawnCountY,
-        smallBtnWidth, smallBtnHeight, "3");
-    _respawnCountButtons[2] = Button(
-        respawnBtnStartX + (smallBtnWidth * 2) + (buttonSpacing * 2),
-        respawnCountY, smallBtnWidth, smallBtnHeight, "5");
-    _respawnCountButtons[3] = Button(
-        respawnBtnStartX + (smallBtnWidth * 3) + (buttonSpacing * 3),
-        respawnCountY, respawnBtn3Width, smallBtnHeight, "UNL");
+    _respawnCountButtons[0] = Button(respawnBtnStartX, respawnCountY,
+                                     smallBtnWidth, smallBtnHeight, "0");
+    _respawnCountButtons[1] =
+        Button(respawnBtnStartX + smallBtnWidth + buttonSpacing, respawnCountY,
+               smallBtnWidth, smallBtnHeight, "3");
+    _respawnCountButtons[2] =
+        Button(respawnBtnStartX + (smallBtnWidth * 2) + (buttonSpacing * 2),
+               respawnCountY, smallBtnWidth, smallBtnHeight, "5");
+    _respawnCountButtons[3] =
+        Button(respawnBtnStartX + (smallBtnWidth * 3) + (buttonSpacing * 3),
+               respawnCountY, respawnBtn3Width, smallBtnHeight, "UNL");
 
     // Toggle buttons
     float toggleY = startY + 280.0f * scaleH;
@@ -142,10 +141,9 @@ void LobbyConfigMenu::updateLayout()
     _toggleButtons[0] =
         ToggleButton(toggleStartX, toggleY, toggleWidth, toggleHeight,
                      "Power-Ups: ", _gameRules.enablePowerUps);
-    _toggleButtons[1] =
-        ToggleButton(toggleStartX, toggleY + (toggleHeight + 15.0f * scaleH),
-                     toggleWidth, toggleHeight, "Friendly Fire: ",
-                     _gameRules.enableFriendlyFire);
+    _toggleButtons[1] = ToggleButton(
+        toggleStartX, toggleY + (toggleHeight + 15.0f * scaleH), toggleWidth,
+        toggleHeight, "Friendly Fire: ", _gameRules.enableFriendlyFire);
 
     // Action buttons
     float actionY = startY + 450.0f * scaleH;
@@ -153,8 +151,8 @@ void LobbyConfigMenu::updateLayout()
     float btnHeight = BUTTON_HEIGHT * scaleH;
     float actionStartX = centerX - (btnWidth / 2.0f);
 
-    _buttons[0] = Button(actionStartX, actionY, btnWidth, btnHeight,
-                         "CREATE LOBBY");
+    _buttons[0] =
+        Button(actionStartX, actionY, btnWidth, btnHeight, "CREATE LOBBY");
     _buttons[1] = Button(actionStartX, actionY + (btnHeight + 20.0f * scaleH),
                          btnWidth, btnHeight, "BACK");
 
@@ -204,7 +202,7 @@ void LobbyConfigMenu::reset()
     for (auto& btn : _respawnCountButtons) {
         btn.setFocused(false);
     }
-    
+
     // Set initial focus on player count
     _playerCountButtons[0].setFocused(true);
 
@@ -282,7 +280,8 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
         if (_currentFocusSection == FocusSection::PlayerCount) {
             _selectedPlayerCount--;
             if (_selectedPlayerCount < 0) {
-                _selectedPlayerCount = static_cast<int>(_playerCountButtons.size()) - 1;
+                _selectedPlayerCount =
+                    static_cast<int>(_playerCountButtons.size()) - 1;
             }
             for (auto& btn : _playerCountButtons) {
                 btn.setFocused(false);
@@ -293,7 +292,8 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
         } else if (_currentFocusSection == FocusSection::RespawnCount) {
             _selectedRespawnCount--;
             if (_selectedRespawnCount < 0) {
-                _selectedRespawnCount = static_cast<int>(_respawnCountButtons.size()) - 1;
+                _selectedRespawnCount =
+                    static_cast<int>(_respawnCountButtons.size()) - 1;
             }
             for (auto& btn : _respawnCountButtons) {
                 btn.setFocused(false);
@@ -304,7 +304,8 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
         } else if (_currentFocusSection == FocusSection::Toggles) {
             _selectedToggleIndex--;
             if (_selectedToggleIndex < 0) {
-                _selectedToggleIndex = static_cast<int>(_toggleButtons.size()) - 1;
+                _selectedToggleIndex =
+                    static_cast<int>(_toggleButtons.size()) - 1;
             }
             SoundManager::getInstance().playSound("UI_MENU_SELECT");
         }
@@ -313,7 +314,8 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
     if (isRightPressed && !_wasRightPressed) {
         if (_currentFocusSection == FocusSection::PlayerCount) {
             _selectedPlayerCount++;
-            if (_selectedPlayerCount >= static_cast<int>(_playerCountButtons.size())) {
+            if (_selectedPlayerCount >=
+                static_cast<int>(_playerCountButtons.size())) {
                 _selectedPlayerCount = 0;
             }
             for (auto& btn : _playerCountButtons) {
@@ -324,7 +326,8 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
             SoundManager::getInstance().playSound("UI_MENU_SELECT");
         } else if (_currentFocusSection == FocusSection::RespawnCount) {
             _selectedRespawnCount++;
-            if (_selectedRespawnCount >= static_cast<int>(_respawnCountButtons.size())) {
+            if (_selectedRespawnCount >=
+                static_cast<int>(_respawnCountButtons.size())) {
                 _selectedRespawnCount = 0;
             }
             for (auto& btn : _respawnCountButtons) {
@@ -335,7 +338,8 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
             SoundManager::getInstance().playSound("UI_MENU_SELECT");
         } else if (_currentFocusSection == FocusSection::Toggles) {
             _selectedToggleIndex++;
-            if (_selectedToggleIndex >= static_cast<int>(_toggleButtons.size())) {
+            if (_selectedToggleIndex >=
+                static_cast<int>(_toggleButtons.size())) {
                 _selectedToggleIndex = 0;
             }
             SoundManager::getInstance().playSound("UI_MENU_SELECT");
@@ -343,8 +347,10 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
     }
 
     // Handle Enter key for toggles
-    if (isEnterPressed && !_wasEnterPressed && _currentFocusSection == FocusSection::Toggles) {
-        _toggleButtons[_selectedToggleIndex].setState(!_toggleButtons[_selectedToggleIndex].isOn());
+    if (isEnterPressed && !_wasEnterPressed &&
+        _currentFocusSection == FocusSection::Toggles) {
+        _toggleButtons[_selectedToggleIndex].setState(
+            !_toggleButtons[_selectedToggleIndex].isOn());
         updateGameRules();
         SoundManager::getInstance().playSound("UI_MENU_VALIDATE");
     }
@@ -427,8 +433,10 @@ LobbyConfigAction LobbyConfigMenu::update(float deltaTime)
         }
     }
 
-    if ((isEnterPressed && !_wasEnterPressed && _currentFocusSection == FocusSection::ActionButtons) ||
-        (isMousePressed && _currentFocusSection == FocusSection::ActionButtons && 
+    if ((isEnterPressed && !_wasEnterPressed &&
+         _currentFocusSection == FocusSection::ActionButtons) ||
+        (isMousePressed &&
+         _currentFocusSection == FocusSection::ActionButtons &&
          _buttons[_selectedButtonIndex].isHovered(mouseX, mouseY))) {
         SoundManager::getInstance().playSound("UI_MENU_VALIDATE");
 
@@ -462,26 +470,29 @@ void LobbyConfigMenu::render()
     // Render title
     std::string titleText = "LOBBY CONFIGURATION";
     float titleWidth = _graphics.getTextWidth(titleText, TITLE_FONT_SIZE, "");
-    _graphics.drawText(titleText, (windowWidth / 2.0f) - (titleWidth / 2.0f), 
-                       150.0f * scaleH, TITLE_FONT_SIZE, 255, 255, 255, 255, "");
+    _graphics.drawText(titleText, (windowWidth / 2.0f) - (titleWidth / 2.0f),
+                       150.0f * scaleH, TITLE_FONT_SIZE, 255, 255, 255, 255,
+                       "");
 
     // Render labels
     std::string playerLabel = "Players Required:";
-    float playerLabelWidth = _graphics.getTextWidth(playerLabel, LABEL_FONT_SIZE, "");
-    _graphics.drawText(playerLabel, leftColumnX - (playerLabelWidth / 2.0f), 
-                       startY + 50.0f * scaleH,
-                       LABEL_FONT_SIZE, 200, 200, 200, 255, "");
+    float playerLabelWidth =
+        _graphics.getTextWidth(playerLabel, LABEL_FONT_SIZE, "");
+    _graphics.drawText(playerLabel, leftColumnX - (playerLabelWidth / 2.0f),
+                       startY + 50.0f * scaleH, LABEL_FONT_SIZE, 200, 200, 200,
+                       255, "");
 
     std::string respawnLabel = "Max Respawns:";
-    float respawnLabelWidth = _graphics.getTextWidth(respawnLabel, LABEL_FONT_SIZE, "");
-    _graphics.drawText(respawnLabel, rightColumnX - (respawnLabelWidth / 2.0f), 
-                       startY + 50.0f * scaleH,
-                       LABEL_FONT_SIZE, 200, 200, 200, 255, "");
+    float respawnLabelWidth =
+        _graphics.getTextWidth(respawnLabel, LABEL_FONT_SIZE, "");
+    _graphics.drawText(respawnLabel, rightColumnX - (respawnLabelWidth / 2.0f),
+                       startY + 50.0f * scaleH, LABEL_FONT_SIZE, 200, 200, 200,
+                       255, "");
 
     // Render player count buttons
     for (size_t i = 0; i < _playerCountButtons.size(); ++i) {
         const auto& btn = _playerCountButtons[i];
-        
+
         unsigned char r, g, b;
         if (btn.getIsFocused() || btn.getIsHovered()) {
             r = 0;
@@ -498,7 +509,8 @@ void LobbyConfigMenu::render()
 
         float textWidth = _graphics.getTextWidth(btn.getText(), FONT_SIZE, "");
         float textX = btn.getX() + (btn.getWidth() / 2.0f) - (textWidth / 2.0f);
-        float textY = btn.getY() + (btn.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
+        float textY =
+            btn.getY() + (btn.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
 
         _graphics.drawText(btn.getText(), textX, textY, FONT_SIZE, 255, 255,
                            255, 255, "");
@@ -507,7 +519,7 @@ void LobbyConfigMenu::render()
     // Render respawn count buttons
     for (size_t i = 0; i < _respawnCountButtons.size(); ++i) {
         const auto& btn = _respawnCountButtons[i];
-        
+
         unsigned char r, g, b;
         if (btn.getIsFocused() || btn.getIsHovered()) {
             r = 0;
@@ -524,7 +536,8 @@ void LobbyConfigMenu::render()
 
         float textWidth = _graphics.getTextWidth(btn.getText(), FONT_SIZE, "");
         float textX = btn.getX() + (btn.getWidth() / 2.0f) - (textWidth / 2.0f);
-        float textY = btn.getY() + (btn.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
+        float textY =
+            btn.getY() + (btn.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
 
         _graphics.drawText(btn.getText(), textX, textY, FONT_SIZE, 255, 255,
                            255, 255, "");
@@ -533,10 +546,10 @@ void LobbyConfigMenu::render()
     // Render toggle buttons
     for (size_t i = 0; i < _toggleButtons.size(); ++i) {
         const auto& btn = _toggleButtons[i];
-        
+
         unsigned char r, g, b;
-        bool isSelected = (_currentFocusSection == FocusSection::Toggles && 
-                          _selectedToggleIndex == static_cast<int>(i));
+        bool isSelected = (_currentFocusSection == FocusSection::Toggles &&
+                           _selectedToggleIndex == static_cast<int>(i));
         if (isSelected || btn.getIsHovered()) {
             r = 0;
             g = 200;
@@ -582,7 +595,8 @@ void LobbyConfigMenu::render()
 
         float textWidth = _graphics.getTextWidth(btn.getText(), FONT_SIZE, "");
         float textX = btn.getX() + (btn.getWidth() / 2.0f) - (textWidth / 2.0f);
-        float textY = btn.getY() + (btn.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
+        float textY =
+            btn.getY() + (btn.getHeight() / 2.0f) - (FONT_SIZE / 2.0f);
 
         _graphics.drawText(btn.getText(), textX, textY, FONT_SIZE, 255, 255,
                            255, 255, "");
