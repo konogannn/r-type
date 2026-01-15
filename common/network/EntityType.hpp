@@ -15,7 +15,7 @@
 namespace EntityType {
 constexpr uint8_t PLAYER = 1;
 constexpr uint8_t PLAYER_MISSILE = 2;
-constexpr uint8_t BOSS = 5;  // boss entity
+constexpr uint8_t BOSS = 5;
 /* 10 -> 40 enemies */
 constexpr uint8_t BASIC = 10;  // basic enemy
 constexpr uint8_t BASIC_MISSILE = 11;
