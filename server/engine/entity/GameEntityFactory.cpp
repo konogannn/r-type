@@ -53,7 +53,14 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
         case Enemy::Type::TANK:
             speed = -50.0f;
             health = 100.0f;
-            break;
+            _entityManager.addComponent(enemy, BoundingBox(96.0f, 96.0f, 0.0f, 0.0f));
+            _entityManager.addComponent(enemy, Position(x, y));
+            _entityManager.addComponent(enemy, Velocity(speed, 0.0f));
+            _entityManager.addComponent(enemy, Enemy(type));
+            _entityManager.addComponent(enemy, Health(health));
+            _entityManager.addComponent(
+                enemy, NetworkEntity(_nextEnemyId++, EntityType::TANK));
+            return enemy;
         case Enemy::Type::GLANDUS:
             speed = -120.0f;
             health = 50.0f;

@@ -33,6 +33,7 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
         update.y = 0.0f;
         update.spawned = false;
         update.destroyed = true;
+        update.killedByPlayer = false;
         _outputQueue.push(update);
 
         if (checkPlayerDeath && info.entityType == 1 &&
@@ -70,6 +71,7 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         update.y = 0.0f;
         update.spawned = false;
         update.destroyed = true;
+        update.killedByPlayer = true;  // Killed by collision with player's projectile
         _outputQueue.push(update);
 
         bool isEnemy = (info.entityType == 10 || info.entityType == 12 ||
@@ -102,6 +104,7 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
                     powerUpUpdate.y = powerUpPos->y;
                     powerUpUpdate.spawned = true;
                     powerUpUpdate.destroyed = false;
+                    powerUpUpdate.killedByPlayer = false;
                     _outputQueue.push(powerUpUpdate);
                 }
             }
@@ -347,6 +350,7 @@ void GameLoop::processPendingRemovals()
                     update.y = 0.0f;
                     update.spawned = false;
                     update.destroyed = true;
+                    update.killedByPlayer = false;
                     _outputQueue.push(update);
                 }
 
@@ -400,6 +404,7 @@ void GameLoop::processDeathTimers(float deltaTime)
                     update.y = 0.0f;
                     update.spawned = false;
                     update.destroyed = true;
+                    update.killedByPlayer = false;
                     _outputQueue.push(update);
 
                     if (_onPlayerDeathCallback) {
@@ -443,6 +448,7 @@ void GameLoop::generateNetworkUpdates()
             update.y = pos->y;
             update.spawned = netEntity->isFirstSync;
             update.destroyed = false;
+            update.killedByPlayer = false;
 
             _outputQueue.push(update);
             netEntity->needsSync = false;
@@ -528,6 +534,7 @@ void GameLoop::getAllPlayers(std::vector<EntityStateUpdate>& updates)
             update.y = pos->y;
             update.spawned = true;
             update.destroyed = false;
+            update.killedByPlayer = false;
             updates.push_back(update);
         }
     }
@@ -549,6 +556,7 @@ void GameLoop::getAllEntities(std::vector<EntityStateUpdate>& updates)
             update.y = pos->y;
             update.spawned = true;
             update.destroyed = false;
+            update.killedByPlayer = false;
             updates.push_back(update);
         }
     }

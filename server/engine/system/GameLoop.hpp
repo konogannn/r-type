@@ -51,6 +51,7 @@ struct EntityStateUpdate {
     float y;
     bool spawned;
     bool destroyed;
+    bool killedByPlayer;
 };
 
 /**
