@@ -10,6 +10,7 @@
 #include "../common/utils/Logger.hpp"
 #include "Config.hpp"
 #include "GameOverScreen.hpp"
+#include "LobbyConfigMenu.hpp"
 #include "LobbyMenu.hpp"
 #include "Menu.hpp"
 #include "ReplayBrowser.hpp"
@@ -30,6 +31,7 @@ using namespace rtype;
 enum class GameState {
     Menu,
     Lobby,
+    LobbyConfig,
     Settings,
     Playing,
     ReplayBrowser,
@@ -68,6 +70,7 @@ int main()
     auto settingsMenu =
         std::make_unique<SettingsMenu>(*window, *graphics, *input);
     std::unique_ptr<LobbyMenu> lobbyMenu = nullptr;
+    std::unique_ptr<LobbyConfigMenu> lobbyConfigMenu = nullptr;
 
     auto replayBrowser =
         std::make_unique<ReplayBrowser>(*window, *graphics, *input);
@@ -146,9 +149,12 @@ int main()
             switch (action) {
                 case LobbyAction::CreateLobby:
                     std::cout << "Create Lobby selected" << std::endl;
-                    state = GameState::Playing;
-                    SoundManager::getInstance().stopMusic();
-                    clock->restart();
+                    state = GameState::LobbyConfig;
+                    if (!lobbyConfigMenu) {
+                        lobbyConfigMenu = std::make_unique<LobbyConfigMenu>(
+                            *window, *graphics, *input, menu->getBackground());
+                    }
+                    lobbyConfigMenu->reset();
                     break;
                 case LobbyAction::Join:
                     // TODO: Implement join lobby logic
@@ -162,6 +168,49 @@ int main()
                     menu->updateLayout();
                     break;
                 case LobbyAction::None:
+                    break;
+            }
+        } else if (state == GameState::LobbyConfig) {
+            while (window->pollEvent()) {
+                EventType eventType = window->getEventType();
+
+                if (eventType == EventType::Closed) {
+                    window->close();
+                }
+            }
+
+            LobbyConfigAction action = lobbyConfigMenu->update(deltaTime);
+
+            window->clear(0, 0, 0);
+            lobbyConfigMenu->render();
+            window->display();
+
+            switch (action) {
+                case LobbyConfigAction::Create: {
+                    GameRules rules = lobbyConfigMenu->getGameRules();
+                    std::cout << "Creating lobby with:" << std::endl;
+                    std::cout << "  Required players: "
+                              << static_cast<int>(rules.requiredPlayers)
+                              << std::endl;
+                    std::cout << "  Max respawns: "
+                              << static_cast<int>(rules.maxRespawn)
+                              << std::endl;
+                    std::cout << "  Power-ups: "
+                              << (rules.enablePowerUps ? "ON" : "OFF")
+                              << std::endl;
+                    std::cout << "  Friendly fire: "
+                              << (rules.enableFriendlyFire ? "ON" : "OFF")
+                              << std::endl;
+
+                    state = GameState::Playing;
+                    SoundManager::getInstance().stopMusic();
+                    clock->restart();
+                } break;
+                case LobbyConfigAction::Back:
+                    state = GameState::Lobby;
+                    lobbyMenu->updateLayout();
+                    break;
+                case LobbyConfigAction::None:
                     break;
             }
         } else if (state == GameState::Playing) {
