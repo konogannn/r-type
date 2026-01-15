@@ -59,7 +59,6 @@ std::string generateLobbyId()
     for (int i = 0; i < 4; ++i) {
         ss << static_cast<char>('A' + letterDist(gen));
     }
-    ss << '-';
     for (int i = 0; i < 4; ++i) {
         ss << digitDist(gen);
     }
