@@ -102,7 +102,7 @@ Entity GameEntityFactory::createEnemy(Enemy::Type type, float x, float y)
     _entityManager.addComponent(enemy, Velocity(speed, 0.0f));
     _entityManager.addComponent(enemy, Enemy(type));
     _entityManager.addComponent(enemy, Health(health));
-    _entityManager.addComponent(enemy, BoundingBox(56.0f, 56.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(enemy, BoundingBox(80.0f, 80.0f, 0.0f, 0.0f));
     _entityManager.addComponent(
         enemy, NetworkEntity(
                    _nextEnemyId++,
