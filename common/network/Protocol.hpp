@@ -57,6 +57,15 @@ enum OpCode : uint8_t {
     S2C_BOSS_DEATH = 18,  ///< Boss defeated (trigger victory sequence).
     S2C_HEALTH_UPDATE = 19,  ///< Entity health update (player or boss).
     S2C_SHIELD_STATUS = 20,  ///< Shield status update (gained/lost).
+    S2C_GAME_EVENT = 21,     ///< Game event notification (wave start, level complete).
+};
+
+/**
+ * @brief Game event types for S2C_GAME_EVENT packet.
+ */
+enum GameEventType : uint8_t {
+    GAME_EVENT_WAVE_START = 1,     ///< New wave starting.
+    GAME_EVENT_LEVEL_COMPLETE = 2, ///< Level completed (boss defeated).
 };
 
 /**
@@ -224,6 +233,18 @@ struct ShieldStatusPacket {
     Header header;
     uint32_t playerId;  ///< ID of the player entity.
     uint8_t hasShield;  ///< 1 if player has shield, 0 if lost.
+};
+
+/**
+ * @brief Packet to send game events (wave start, level complete).
+ * OpCode: S2C_GAME_EVENT
+ */
+struct GameEventPacket {
+    Header header;
+    uint8_t eventType;   ///< Type of event (see GameEventType enum).
+    uint8_t waveNumber;  ///< Current wave number (for WAVE_START).
+    uint8_t totalWaves;  ///< Total waves in level.
+    uint8_t levelId;     ///< Current level ID.
 };
 
 #pragma pack(pop)
