@@ -57,15 +57,16 @@ enum OpCode : uint8_t {
     S2C_BOSS_DEATH = 18,  ///< Boss defeated (trigger victory sequence).
     S2C_HEALTH_UPDATE = 19,  ///< Entity health update (player or boss).
     S2C_SHIELD_STATUS = 20,  ///< Shield status update (gained/lost).
-    S2C_GAME_EVENT = 21,     ///< Game event notification (wave start, level complete).
+    S2C_GAME_EVENT =
+        21,  ///< Game event notification (wave start, level complete).
 };
 
 /**
  * @brief Game event types for S2C_GAME_EVENT packet.
  */
 enum GameEventType : uint8_t {
-    GAME_EVENT_WAVE_START = 1,     ///< New wave starting.
-    GAME_EVENT_LEVEL_COMPLETE = 2, ///< Level completed (boss defeated).
+    GAME_EVENT_WAVE_START = 1,      ///< New wave starting.
+    GAME_EVENT_LEVEL_COMPLETE = 2,  ///< Level completed (boss defeated).
 };
 
 /**

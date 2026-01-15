@@ -26,7 +26,8 @@ using SpawnEvent =
                  SpawnItemEvent>;
 
 // Callbacks for game events
-using OnWaveStartCallback = std::function<void(int waveNumber, int totalWaves, int levelId)>;
+using OnWaveStartCallback =
+    std::function<void(int waveNumber, int totalWaves, int levelId)>;
 using OnLevelCompleteCallback = std::function<void(int levelId)>;
 
 /**

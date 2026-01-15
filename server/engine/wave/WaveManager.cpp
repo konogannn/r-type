@@ -148,7 +148,7 @@ void WaveManager::startNextWave()
     _enemiesAliveInWave = 0;
 
     if (_onWaveStart) {
-        _onWaveStart(_currentWaveIndex + 1, 
+        _onWaveStart(_currentWaveIndex + 1,
                      static_cast<int>(_currentLevel->waves.size()),
                      _currentLevelId);
     }
@@ -457,9 +457,10 @@ void WaveManager::onBossDestroyed()
     _levelCompleted = true;
     // Notify level complete
     if (_onLevelComplete) {
-        Logger::getInstance().log("Calling onLevelComplete callback for level " +
-                                      std::to_string(_currentLevelId),
-                                  LogLevel::INFO_L, "WaveManager");
+        Logger::getInstance().log(
+            "Calling onLevelComplete callback for level " +
+                std::to_string(_currentLevelId),
+            LogLevel::INFO_L, "WaveManager");
         _onLevelComplete(_currentLevelId);
     } else {
         Logger::getInstance().log("onLevelComplete callback is not set!",
