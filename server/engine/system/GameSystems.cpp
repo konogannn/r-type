@@ -491,7 +491,7 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                                         entityManager.getComponent<Position>(
                                             players[0]);
                                     if (playerPos) {
-                                        spawnX = playerPos->x + 500.0f;
+                                        spawnX = playerPos->x + 150.0f;
                                         spawnY = playerPos->y;
                                     }
                                 }
