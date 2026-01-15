@@ -539,6 +539,31 @@ void GameServer::run()
             auto* waveManager = _gameLoop.getSystem<engine::WaveManager>();
             if (waveManager) {
                 waveManager->setPlayerCount(_playerCount.load());
+                
+                waveManager->setOnWaveStartCallback(
+                    [this](int waveNumber, int totalWaves, int levelId) {
+                        Logger::getInstance().log(
+                            "Broadcasting wave " + std::to_string(waveNumber) +
+                                "/" + std::to_string(totalWaves),
+                            LogLevel::INFO_L, "Game");
+                        _networkServer.sendGameEvent(
+                            0, GameEventType::GAME_EVENT_WAVE_START,
+                            static_cast<uint8_t>(waveNumber),
+                            static_cast<uint8_t>(totalWaves),
+                            static_cast<uint8_t>(levelId));
+                    });
+                
+                waveManager->setOnLevelCompleteCallback(
+                    [this](int levelId) {
+                        Logger::getInstance().log(
+                            "Broadcasting level " + std::to_string(levelId) +
+                                " complete!",
+                            LogLevel::INFO_L, "Game");
+                        _networkServer.sendGameEvent(
+                            0, GameEventType::GAME_EVENT_LEVEL_COMPLETE,
+                            0, 0, static_cast<uint8_t>(levelId));
+                    });
+                
                 if (waveManager->loadLevel(1)) {
                     waveManager->startLevel();
                     Logger::getInstance().log(
