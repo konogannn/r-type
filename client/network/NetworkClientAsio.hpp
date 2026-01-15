@@ -61,6 +61,8 @@ class NetworkClientAsio : public INetworkClient {
         std::function<void(const HealthUpdatePacket&)> callback);
     void setOnShieldStatusCallback(
         std::function<void(const ShieldStatusPacket&)> callback);
+    void setOnGameEventCallback(
+        std::function<void(const GameEventPacket&)> callback);
     void setOnErrorCallback(
         std::function<void(const std::string&)> callback) override;
 
@@ -99,6 +101,7 @@ class NetworkClientAsio : public INetworkClient {
     OnScoreUpdateCallback _onScoreUpdate;
     std::function<void(const HealthUpdatePacket&)> _onHealthUpdate;
     std::function<void(const ShieldStatusPacket&)> _onShieldStatus;
+    std::function<void(const GameEventPacket&)> _onGameEvent;
     std::function<void(const std::string&)> _onError;
 
     // Private methods
@@ -122,6 +125,7 @@ class NetworkClientAsio : public INetworkClient {
     void processScoreUpdate(const uint8_t* data, size_t size);
     void processHealthUpdate(const uint8_t* data, size_t size);
     void processShieldStatus(const uint8_t* data, size_t size);
+    void processGameEvent(const uint8_t* data, size_t size);
 
     // Utility
     uint32_t getNextSequenceId();
