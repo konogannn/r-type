@@ -89,7 +89,12 @@ class LobbyConfigMenu {
 
     int _selectedToggleIndex;
 
-    enum class FocusSection { PlayerCount, RespawnCount, Toggles, ActionButtons };
+    enum class FocusSection {
+        PlayerCount,
+        RespawnCount,
+        Toggles,
+        ActionButtons
+    };
     FocusSection _currentFocusSection;
 
     int _selectedButtonIndex;
