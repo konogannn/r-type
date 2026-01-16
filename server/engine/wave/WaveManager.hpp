@@ -20,11 +20,7 @@
 
 namespace engine {
 
-using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
-                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
-                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
-                 SpawnItemEvent>;
+using ::SpawnEvent;
 
 // Callbacks for game events
 using OnWaveStartCallback =
