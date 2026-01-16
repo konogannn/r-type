@@ -12,6 +12,7 @@
 
 #include "../../../common/network/EntityType.hpp"
 #include "../../../common/utils/Logger.hpp"
+#include "../wave/WaveManager.hpp"
 #include "BossSystem.hpp"
 #include "GameSystems.hpp"
 
@@ -20,9 +21,8 @@ namespace engine {
 // Helper function to check if an entity type is an enemy
 static bool isEnemyType(uint8_t entityType)
 {
-    return entityType == EntityType::BOSS || entityType == EntityType::BASIC ||
-           entityType == EntityType::FAST || entityType == EntityType::TANK ||
-           entityType == EntityType::TURRET ||
+    return entityType == EntityType::BASIC || entityType == EntityType::TANK ||
+           entityType == EntityType::FAST || entityType == EntityType::TURRET ||
            entityType == EntityType::ORBITER ||
            entityType == EntityType::LASER_SHIP ||
            entityType == EntityType::GLANDUS ||
@@ -48,6 +48,24 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
         update.destroyed = true;
         update.killedByPlayer = false;
         _outputQueue.push(update);
+
+        bool isEnemy = isEnemyType(info.entityType);
+
+        bool isBoss = (info.entityType == 5);
+
+        if (isEnemy) {
+            WaveManager* waveManager = getSystem<WaveManager>();
+            if (waveManager) {
+                waveManager->onEnemyDestroyed();
+            }
+        }
+
+        if (isBoss) {
+            WaveManager* waveManager = getSystem<WaveManager>();
+            if (waveManager) {
+                waveManager->onBossDestroyed();
+            }
+        }
 
         if (checkPlayerDeath && info.entityType == 1 &&
             _onPlayerDeathCallback) {
@@ -91,6 +109,11 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
         bool isEnemy = isEnemyType(info.entityType);
 
         if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
+            WaveManager* waveManager = getSystem<WaveManager>();
+            if (waveManager) {
+                waveManager->onEnemyDestroyed();
+            }
+
             if (rand() % 2 == 0) {
                 Entity powerUpItem;
                 float spawnX = info.x;

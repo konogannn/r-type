@@ -6,7 +6,8 @@
     "gtest",
     "boost-asio",
     "boost-thread",
-    "fmt"
+    "fmt",
+    "nlohmann-json"
   ],
   "builtin-baseline": "5bf0c55239da398b8c6f450818c9e28d36bf9966",
   "overrides": [

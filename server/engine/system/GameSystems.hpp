@@ -19,11 +19,7 @@
 
 namespace engine {
 
-using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
-                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
-                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
-                 SpawnItemEvent>;
+using ::SpawnEvent;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity
@@ -67,37 +63,6 @@ class LifetimeSystem : public System<Lifetime> {
     void clearDestroyedEntities();
 
     void update(float deltaTime, EntityManager& entityManager) override;
-};
-
-/**
- * @brief Enemy spawner system - Spawns enemies periodically
- */
-class EnemySpawnerSystem : public ISystem {
-   private:
-    float _spawnTimer;
-    float _spawnInterval;
-    std::mt19937 _rng;
-    std::uniform_real_distribution<float> _yDist;
-    std::uniform_int_distribution<int> _typeDist;
-    std::vector<SpawnEvent>& _spawnQueue;
-
-   public:
-    EnemySpawnerSystem(std::vector<SpawnEvent>& spawnQueue,
-                       float spawnInterval = 2.0f)
-        : _spawnTimer(0.0f),
-          _spawnInterval(spawnInterval),
-          _rng(std::random_device{}()),
-          _yDist(50.0f, 1000.0f),
-          _typeDist(0, 2),
-          _spawnQueue(spawnQueue)
-    {
-    }
-
-    std::string getName() const override;
-    int getPriority() const override;
-
-    void update(float deltaTime, EntityManager& entityManager) override;
-    void spawnEnemy();
 };
 
 /**

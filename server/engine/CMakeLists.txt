@@ -4,12 +4,14 @@ add_subdirectory(entity)
 add_subdirectory(events)
 add_subdirectory(system)
 add_subdirectory(threading)
+add_subdirectory(wave)
 
 set(ENGINE_SOURCES
     ${COMPONENT_MODULE_SOURCES}
     ${ENTITY_MODULE_SOURCES}
     ${EVENTS_MODULE_SOURCES}
     ${SYSTEM_MODULE_SOURCES}
+    ${WAVE_MODULE_SOURCES}
 )
 
 set(ENGINE_MODULE_SOURCES ${ENGINE_SOURCES} PARENT_SCOPE)
@@ -21,6 +23,7 @@ set(ENGINE_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/events
     ${CMAKE_CURRENT_SOURCE_DIR}/system
     ${CMAKE_CURRENT_SOURCE_DIR}/threading
+    ${CMAKE_CURRENT_SOURCE_DIR}/wave
     PARENT_SCOPE
 )
 

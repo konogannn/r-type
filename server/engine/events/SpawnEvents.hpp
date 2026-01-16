@@ -88,3 +88,9 @@ struct SpawnLaserEvent {
     float width;
     float duration;
 };
+
+using SpawnEvent =
+    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
+                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
+                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
+                 SpawnItemEvent>;

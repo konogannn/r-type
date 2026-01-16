@@ -100,6 +100,12 @@ class ClientGameState {
     // Replay seeking flag (prevents explosion creation during fast-forward)
     bool _isSeeking = false;
 
+    // Game event display
+    std::string _gameEventText;
+    float _gameEventTimer = 0.0f;
+    bool _levelCompleted = false;
+    static constexpr float GAME_EVENT_DISPLAY_TIME = 3.0f;
+
     static constexpr float MAX_CONNECTION_TIMEOUT = 5.0f;
 
    public:
@@ -126,6 +132,8 @@ class ClientGameState {
     uint32_t getScore() const;
     const std::string& getLastError() const;
     size_t getEntityCount() const;
+    const std::string& getGameEventText() const;
+    bool hasGameEvent() const;
 
     // Replay recording
     void startRecording(const std::string& filename);
@@ -172,6 +180,8 @@ class ClientGameState {
     void onHealthUpdate(uint32_t entityId, float currentHealth,
                         float maxHealth);
     void onShieldStatus(uint32_t playerId, bool hasShield);
+    void onGameEvent(uint8_t eventType, uint8_t waveNumber, uint8_t totalWaves,
+                     uint8_t levelId);
     void onError(const std::string& error);
 
     // Entity helpers

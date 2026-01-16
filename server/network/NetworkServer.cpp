@@ -510,6 +510,27 @@ bool NetworkServer::sendShieldStatus(uint32_t clientId, uint32_t playerId,
     return true;
 }
 
+bool NetworkServer::sendGameEvent(uint32_t clientId, uint8_t eventType,
+                                  uint8_t waveNumber, uint8_t totalWaves,
+                                  uint8_t levelId)
+{
+    GameEventPacket packet;
+    packet.header.opCode = OpCode::S2C_GAME_EVENT;
+    packet.header.packetSize = sizeof(GameEventPacket);
+    packet.header.sequenceId = 0;
+    packet.eventType = eventType;
+    packet.waveNumber = waveNumber;
+    packet.totalWaves = totalWaves;
+    packet.levelId = levelId;
+
+    if (clientId == 0) {
+        broadcast(&packet, sizeof(packet), 0, false);
+    } else {
+        sendToClient(&packet, sizeof(packet), clientId);
+    }
+    return true;
+}
+
 size_t NetworkServer::broadcast(const void* data, size_t size,
                                 uint32_t excludeClient, bool reliable)
 {

@@ -15,6 +15,7 @@
 #include "engine/events/SpawnEvents.hpp"
 #include "engine/system/BossSystem.hpp"
 #include "engine/system/GameSystems.hpp"
+#include "engine/wave/WaveManager.hpp"
 
 namespace rtype {
 
@@ -25,10 +26,6 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
       _needsReset(false),
       _playerCount(0),
       _nextPlayerId(1),
-      _bossWaveActive(false),
-      _bossWaveEnemiesAlive(0),
-      _bossSpawned(false),
-      _pendingBossType(0),
       _score(0)
 {
     _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
@@ -42,10 +39,8 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(std::make_unique<engine::FollowingSystem>());
     _gameLoop.addSystem(std::make_unique<engine::PlayerCooldownSystem>());
     _gameLoop.addSystem(std::make_unique<engine::SpeedBoostSystem>());
-    // EnemySpawnerSystem disabled - only boss is spawned
-    // _gameLoop.addSystem(std::make_unique<engine::EnemySpawnerSystem>(
-    //     _gameLoop.getSpawnEvents(),
-    //     2.0f));
+    _gameLoop.addSystem(std::make_unique<engine::WaveManager>(
+        _gameLoop.getSpawnEvents(), "levels"));
     _gameLoop.addSystem(std::make_unique<engine::EnemyShootingSystem>(
         _gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::TurretShootingSystem>(
@@ -359,15 +354,6 @@ void GameServer::processNetworkUpdates()
                             _score += points;
                             _networkServer.sendScoreUpdate(0, _score.load());
                         }
-
-                        if (_bossWaveActive && isEnemy(update.entityType)) {
-                            _bossWaveEnemiesAlive--;
-                            Logger::getInstance().log(
-                                "Boss wave enemy destroyed. Remaining: " +
-                                    std::to_string(
-                                        _bossWaveEnemiesAlive.load()),
-                                LogLevel::DEBUG_L, "Game");
-                        }
                     } else {
                         _networkServer.sendEntityPosition(0, update.entityId,
                                                           update.x, update.y);
@@ -384,7 +370,10 @@ void GameServer::processNetworkUpdates()
             if (frameCounter % 10 == 0) {
                 sendHealthUpdates();
                 sendShieldUpdates();
-                checkBossWaveCompletion();
+            }
+
+            if (frameCounter % 60 == 0) {
+                checkLevelProgression();
             }
 
         } catch (const std::exception& e) {
@@ -438,16 +427,94 @@ void GameServer::resetGameState()
     _playersReady.clear();
     _playerCount = 0;
     _gameStarted = false;
-    _bossWaveActive = false;
-    _bossWaveEnemiesAlive = 0;
-    _bossSpawned = false;
-    _pendingBossType = 0;
     _nextPlayerId = 1;
     _score = 0;
     _gameLoop.clearAllEntities();
 
     Logger::getInstance().log("Ready for new players", LogLevel::INFO_L,
                               "Lobby");
+}
+
+void GameServer::resetPlayers()
+{
+    Logger::getInstance().log("Resetting all players for next level...",
+                              LogLevel::INFO_L, "Game");
+
+    auto& entityManager = _gameLoop.getEntityManager();
+    auto players =
+        entityManager.getEntitiesWith<engine::Position, engine::Player,
+                                      engine::NetworkEntity, engine::Health>();
+
+    int playerIndex = 0;
+    for (const auto& playerEntity : players) {
+        auto* position =
+            entityManager.getComponent<engine::Position>(playerEntity);
+        auto* health = entityManager.getComponent<engine::Health>(playerEntity);
+        auto* netEntity =
+            entityManager.getComponent<engine::NetworkEntity>(playerEntity);
+
+        if (position && health && netEntity) {
+            position->x = 100.0f;
+            position->y = 200.0f + (playerIndex * 200.0f);
+
+            health->heal(health->max);
+
+            // Remove shield if present
+            if (entityManager.hasComponent<engine::Shield>(playerEntity)) {
+                engine::Entity* mutablePlayer =
+                    entityManager.getEntity(playerEntity.getId());
+                if (mutablePlayer) {
+                    entityManager.removeComponent<engine::Shield>(
+                        *mutablePlayer);
+                }
+            }
+
+            _networkServer.sendEntityPosition(0, netEntity->entityId,
+                                              position->x, position->y);
+            _networkServer.sendHealthUpdate(0, netEntity->entityId,
+                                            health->current, health->max);
+            _networkServer.sendShieldStatus(0, netEntity->entityId, false);
+
+            Logger::getInstance().log(
+                "Reset player entity " + std::to_string(netEntity->entityId) +
+                    " to position (" + std::to_string(position->x) + ", " +
+                    std::to_string(position->y) + ")",
+                LogLevel::INFO_L, "Game");
+
+            playerIndex++;
+        }
+    }
+
+    Logger::getInstance().log(
+        "Reset " + std::to_string(playerIndex) + " player(s)", LogLevel::INFO_L,
+        "Game");
+}
+
+void GameServer::checkLevelProgression()
+{
+    auto* waveManager = _gameLoop.getSystem<engine::WaveManager>();
+    if (!waveManager) return;
+
+    if (waveManager->isLevelCompleted()) {
+        int completedLevel = waveManager->getCurrentLevelId();
+        Logger::getInstance().log(
+            "Level " + std::to_string(completedLevel) + " completed!",
+            LogLevel::INFO_L, "Game");
+
+        if (waveManager->loadNextLevel()) {
+            resetPlayers();
+            waveManager->setPlayerCount(_playerCount.load());
+            waveManager->startLevel();
+            Logger::getInstance().log(
+                "Started level " +
+                    std::to_string(waveManager->getCurrentLevelId()),
+                LogLevel::INFO_L, "Game");
+        } else {
+            Logger::getInstance().log(
+                "No more levels available. Game complete!", LogLevel::INFO_L,
+                "Game");
+        }
+    }
 }
 
 void GameServer::run()
@@ -470,9 +537,49 @@ void GameServer::run()
                                       LogLevel::INFO_L, "Game");
 
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            spawnBoss(0);
-            Logger::getInstance().log("Boss battle mode activated!",
-                                      LogLevel::INFO_L, "Game");
+            auto* waveManager = _gameLoop.getSystem<engine::WaveManager>();
+            if (waveManager) {
+                waveManager->setPlayerCount(_playerCount.load());
+
+                waveManager->setOnWaveStartCallback(
+                    [this](int waveNumber, int totalWaves, int levelId) {
+                        Logger::getInstance().log(
+                            "Broadcasting wave " + std::to_string(waveNumber) +
+                                "/" + std::to_string(totalWaves),
+                            LogLevel::INFO_L, "Game");
+                        _networkServer.sendGameEvent(
+                            0, GameEventType::GAME_EVENT_WAVE_START,
+                            static_cast<uint8_t>(waveNumber),
+                            static_cast<uint8_t>(totalWaves),
+                            static_cast<uint8_t>(levelId));
+                    });
+
+                waveManager->setOnLevelCompleteCallback([this](int levelId) {
+                    Logger::getInstance().log("Broadcasting level " +
+                                                  std::to_string(levelId) +
+                                                  " complete!",
+                                              LogLevel::INFO_L, "Game");
+                    _networkServer.sendGameEvent(
+                        0, GameEventType::GAME_EVENT_LEVEL_COMPLETE, 0, 0,
+                        static_cast<uint8_t>(levelId));
+                });
+
+                if (waveManager->loadLevel(1)) {
+                    waveManager->startLevel();
+                    Logger::getInstance().log(
+                        "Wave-based level system started!", LogLevel::INFO_L,
+                        "Game");
+                } else {
+                    Logger::getInstance().log("Failed to load level 1",
+                                              LogLevel::ERROR_L, "Game");
+                }
+            } else {
+                Logger::getInstance().log(
+                    "WaveManager not found - game cannot start!",
+                    LogLevel::CRITICAL_L, "Game");
+            }
+            Logger::getInstance().log("Game started!", LogLevel::INFO_L,
+                                      "Game");
 
             processNetworkUpdates();
 
@@ -506,134 +613,6 @@ void GameServer::stop()
 bool GameServer::isRunning() const
 {
     return _networkServer.isRunning() && _gameLoop.isRunning();
-}
-
-void GameServer::spawnBoss(uint8_t bossType)
-{
-    if (!_bossWaveActive) {
-        Logger::getInstance().log("Initiating boss wave before boss spawn",
-                                  LogLevel::INFO_L, "Game");
-        _pendingBossType = bossType;
-        spawnBossWave(bossType);
-        return;
-    }
-
-    Logger::getInstance().log(
-        "Spawning boss of type " + std::to_string(bossType), LogLevel::INFO_L,
-        "Game");
-
-    SpawnBossEvent bossEvent;
-    bossEvent.bossType = bossType;
-    bossEvent.x = 2100.0f;
-    bossEvent.y = 400.0f;
-    bossEvent.playerCount = _playerCount.load();
-
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bossEvent));
-
-    Logger::getInstance().log("Boss spawned successfully", LogLevel::INFO_L,
-                              "Game");
-    _bossSpawned = true;
-}
-
-void GameServer::spawnBossWave(uint8_t bossType)
-{
-    _bossWaveActive = true;
-    _bossWaveEnemiesAlive = 0;
-    _bossSpawned = false;
-
-    Logger::getInstance().log("Spawning boss wave with multiple enemies",
-                              LogLevel::INFO_L, "Game");
-
-    const int WAVE_SIZE = 5;
-    const float START_X = 1800.0f;
-    const float MIN_Y = 150.0f;
-    const float MAX_Y = 950.0f;
-    const float Y_SPACING = (MAX_Y - MIN_Y) / (WAVE_SIZE - 1);
-
-    for (int i = 0; i < WAVE_SIZE; ++i) {
-        float y = MIN_Y + (i * Y_SPACING);
-        float x = START_X + (i % 2 == 0 ? 0.0f : 100.0f);
-
-        engine::Enemy::Type type;
-        switch (i % 4) {
-            case 0:
-                type = engine::Enemy::Type::BASIC;
-                break;
-            case 1:
-                type = engine::Enemy::Type::FAST;
-                break;
-            case 2:
-                type = engine::Enemy::Type::TANK;
-                break;
-            case 3:
-                type = engine::Enemy::Type::GLANDUS;
-                break;
-            default:
-                type = engine::Enemy::Type::BASIC;
-                break;
-        }
-
-        SpawnEnemyEvent enemyEvent;
-        enemyEvent.type = type;
-        enemyEvent.x = x;
-        enemyEvent.y = y;
-        _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(enemyEvent));
-        _bossWaveEnemiesAlive++;
-    }
-
-    SpawnTurretEvent topTurret;
-    topTurret.x = 1200.0f;
-    topTurret.y = 0.0f;
-    topTurret.isTopTurret = true;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topTurret));
-    _bossWaveEnemiesAlive++;
-
-    SpawnTurretEvent bottomTurret;
-    bottomTurret.x = 1200.0f;
-    bottomTurret.y = 1000.0f;
-    bottomTurret.isTopTurret = false;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomTurret));
-    _bossWaveEnemiesAlive++;
-
-    SpawnOrbitersEvent orbiters;
-    orbiters.centerX = 1400.0f;
-    orbiters.centerY = 540.0f;
-    orbiters.radius = 150.0f;
-    orbiters.count = 4;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(orbiters));
-    _bossWaveEnemiesAlive += 4;
-
-    SpawnLaserShipEvent topLaserShip;
-    topLaserShip.x = 1600.0f;
-    topLaserShip.y = 270.0f;
-    topLaserShip.isTop = true;
-    topLaserShip.laserDuration = 3.0f;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(topLaserShip));
-    _bossWaveEnemiesAlive++;
-
-    SpawnLaserShipEvent bottomLaserShip;
-    bottomLaserShip.x = 1600.0f;
-    bottomLaserShip.y = 810.0f;
-    bottomLaserShip.isTop = false;
-    bottomLaserShip.laserDuration = 3.0f;
-    _gameLoop.getSpawnEvents().push_back(engine::SpawnEvent(bottomLaserShip));
-    _bossWaveEnemiesAlive++;
-
-    Logger::getInstance().log(
-        "Boss wave spawned: " + std::to_string(WAVE_SIZE + 8) +
-            " enemies (including 2 turrets, 4 orbiters, and 2 laser ships)",
-        LogLevel::INFO_L, "Game");
-}
-
-void GameServer::checkBossWaveCompletion()
-{
-    if (_bossWaveActive && !_bossSpawned) {
-        if (_bossWaveEnemiesAlive <= 0) {
-            Logger::getInstance().log("Boss wave cleared! Spawning boss...",
-                                      LogLevel::INFO_L, "Game");
-            spawnBoss(_pendingBossType);
-        }
-    }
 }
 
 }  // namespace rtype
