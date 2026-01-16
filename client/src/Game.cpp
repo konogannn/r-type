@@ -97,6 +97,7 @@ Game::~Game()
     }
 
     SoundManager::getInstance().stopAllMusic();
+    SoundManager::getInstance().playMusic();
 }
 
 bool Game::tryConnect(const std::string& address, uint16_t port)
@@ -109,6 +110,8 @@ bool Game::tryConnect(const std::string& address, uint16_t port)
         char buffer[80];
         strftime(buffer, sizeof(buffer), "game_%Y%m%d_%H%M%S.rtr", timeinfo);
         _gameState->startRecording(buffer);
+        
+        SoundManager::getInstance().playSoundAtVolume("space_rumble", 20.0f);
 
         return true;
     } else {
@@ -240,7 +243,6 @@ void Game::update(float deltaTime)
             if (currentTime - _lastShootTime >= shootCooldown) {
                 inputMask |= 16;
                 _lastShootTime = currentTime;
-                SoundManager::getInstance().playSound("shot");
             }
         }
 
@@ -261,6 +263,7 @@ void Game::update(float deltaTime)
                           << ", EntityID: " << localPlayer->id << std::endl;
                 _playerDead = true;
                 _running = false;
+                SoundManager::getInstance().playSound("game_over");
             }
         } else if (_gameState->isGameStarted()) {
             static bool s_noLocalPlayerWarningPrinted = false;

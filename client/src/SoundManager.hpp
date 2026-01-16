@@ -45,6 +45,11 @@ class SoundManager {
     void playSound(const std::string& name);
 
     /**
+     * @brief Plays a random shot sound (shot or shot_2)
+     */
+    void playRandomShot();
+
+    /**
      * @brief Plays a sound with a specific volume
      * @param name Name of the sound
      * @param volume Volume between 0.0f and 100.0f

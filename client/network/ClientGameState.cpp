@@ -10,6 +10,8 @@
 #include <iostream>
 #include <span>
 
+#include "../src/SoundManager.hpp"
+
 namespace rtype {
 
 ClientGameState::ClientGameState()
@@ -344,6 +346,10 @@ void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,
         entity->isLocalPlayer = false;
     }
 
+    if (type == 2) {
+        SoundManager::getInstance().playRandomShot();
+    }
+
     createEntitySprite(*entity);
 
     _entities[entityId] = std::move(entity);
@@ -428,7 +434,10 @@ void ClientGameState::onEntityDead(uint32_t entityId)
                             std::move(arrow));
                     }
                 }
+                SoundManager::getInstance().playSound("powerup");
             }
+        } else if (entity->type == 8 || entity->type == 9) {
+            SoundManager::getInstance().playSound("powerup");
         } else if (!_isSeeking) {
             switch (entity->type) {
                 case 4:
@@ -488,6 +497,7 @@ void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
     } else if (eventType == GameEventType::GAME_EVENT_LEVEL_COMPLETE) {
         _gameEventText = "NIVEAU TERMINE !";
         _gameEventTimer = GAME_EVENT_DISPLAY_TIME * 2.0f;
+        SoundManager::getInstance().playSound("level_win");
     }
 }
 

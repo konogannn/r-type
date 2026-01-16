@@ -8,6 +8,7 @@
 #include "SoundManager.hpp"
 
 #include <iostream>
+#include <random>
 #include <span>
 
 SoundManager& SoundManager::getInstance()
@@ -19,9 +20,15 @@ SoundManager& SoundManager::getInstance()
 void SoundManager::loadAll()
 {
     loadSound("shot", ASSET_SPAN(rtype::embedded::shot_sound_data));
+    loadSound("shot_2", ASSET_SPAN(rtype::embedded::shot_2_sound_data));
     loadSound("hit", ASSET_SPAN(rtype::embedded::hit_sound_data));
     loadSound("explosion", ASSET_SPAN(rtype::embedded::explosion_sound_data));
     loadSound("click", ASSET_SPAN(rtype::embedded::click_sound_data));
+    loadSound("game_over", ASSET_SPAN(rtype::embedded::game_over_sound_data));
+    loadSound("level_win", ASSET_SPAN(rtype::embedded::level_win_sound_data));
+    loadSound("powerup", ASSET_SPAN(rtype::embedded::powerup_sound_data));
+    loadSound("space_rumble",
+              ASSET_SPAN(rtype::embedded::space_rumble_sound_data));
 
     if (!_music) {
         _music = std::make_unique<rtype::MusicSFML>();
@@ -61,6 +68,19 @@ void SoundManager::playSound(const std::string& name)
     }
 }
 
+void SoundManager::playRandomShot()
+{
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<> dis(0, 1);
+
+    if (dis(gen) == 0) {
+        playSound("shot");
+    } else {
+        playSound("shot_2");
+    }
+}
+
 void SoundManager::playSoundAtVolume(const std::string& name, float volume)
 {
     auto bufferIt = _buffers.find(name);
@@ -92,8 +112,11 @@ void SoundManager::setVolume(float volume)
 
 void SoundManager::playMusic()
 {
-    if (_music && !_music->isPlaying()) {
-        _music->play();
+    if (_music) {
+        _music->setVolume(_musicVolume);
+        if (!_music->isPlaying()) {
+            _music->play();
+        }
     }
 }
 
@@ -254,4 +277,5 @@ void SoundManager::stopAllMusic()
     if (_waveMusic) _waveMusic->stop();
     if (_bossMusic) _bossMusic->stop();
     _isFading = false;
+    _currentTrack = MusicTrack::MENU;
 }

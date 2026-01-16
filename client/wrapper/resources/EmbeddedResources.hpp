@@ -36,6 +36,10 @@ static const unsigned char shot_sound_data[] = {
 #embed "../../../assets/sound/shot_1.wav"
 };
 
+static const unsigned char shot_2_sound_data[] = {
+#embed "../../../assets/sound/shot_2.wav"
+};
+
 static const unsigned char hit_sound_data[] = {
 #embed "../../../assets/sound/hit.wav"
 };
@@ -46,6 +50,22 @@ static const unsigned char explosion_sound_data[] = {
 
 static const unsigned char click_sound_data[] = {
 #embed "../../../assets/sound/clique_sound.wav"
+};
+
+static const unsigned char game_over_sound_data[] = {
+#embed "../../../assets/sound/game_over.wav"
+};
+
+static const unsigned char level_win_sound_data[] = {
+#embed "../../../assets/sound/level_win.wav"
+};
+
+static const unsigned char powerup_sound_data[] = {
+#embed "../../../assets/sound/powerup.wav"
+};
+
+static const unsigned char space_rumble_sound_data[] = {
+#embed "../../../assets/sound/space_rumble.wav"
 };
 
 static const unsigned char music_data[] = {
