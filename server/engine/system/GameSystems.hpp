@@ -19,11 +19,7 @@
 
 namespace engine {
 
-using SpawnEvent =
-    std::variant<SpawnEnemyEvent, SpawnTurretEvent, SpawnPlayerBulletEvent,
-                 SpawnEnemyBulletEvent, SpawnBossEvent, SpawnOrbitersEvent,
-                 SpawnLaserShipEvent, SpawnLaserEvent, SpawnGuidedMissileEvent,
-                 SpawnItemEvent>;
+using ::SpawnEvent;
 
 /**
  * @brief Movement system - Updates entity positions based on velocity

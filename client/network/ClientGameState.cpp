@@ -132,6 +132,7 @@ void ClientGameState::disconnect()
     _mapHeight = 0;
     _gameStarted = false;
     _connectionAttempting = false;
+    _levelCompleted = false;
     _entities.clear();
 }
 
@@ -297,6 +298,7 @@ void ClientGameState::onDisconnected()
 {
     _playerId = 0;
     _gameStarted = false;
+    _levelCompleted = false;
     _entities.clear();
 }
 
@@ -311,6 +313,7 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
     _mapWidth = mapWidth;
     _mapHeight = mapHeight;
     _gameStarted = true;
+    _levelCompleted = false;
 
     for (auto& [id, entity] : _entities) {
         if (entity && entity->type == 1) {
@@ -490,13 +493,14 @@ void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
                                   [[maybe_unused]] uint8_t levelId)
 {
     if (eventType == GameEventType::GAME_EVENT_WAVE_START) {
-        if (_gameEventText != "NIVEAU TERMINE !") {
+        if (!_levelCompleted) {
             _gameEventText = "VAGUE " + std::to_string(waveNumber);
             _gameEventTimer = GAME_EVENT_DISPLAY_TIME;
         }
     } else if (eventType == GameEventType::GAME_EVENT_LEVEL_COMPLETE) {
         _gameEventText = "NIVEAU TERMINE !";
         _gameEventTimer = GAME_EVENT_DISPLAY_TIME * 2.0f;
+        _levelCompleted = true;
         SoundManager::getInstance().playSound("level_win");
     }
 }

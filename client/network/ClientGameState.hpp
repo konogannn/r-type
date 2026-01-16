@@ -103,6 +103,7 @@ class ClientGameState {
     // Game event display
     std::string _gameEventText;
     float _gameEventTimer = 0.0f;
+    bool _levelCompleted = false;
     static constexpr float GAME_EVENT_DISPLAY_TIME = 3.0f;
 
     static constexpr float MAX_CONNECTION_TIMEOUT = 5.0f;
