@@ -11,6 +11,7 @@
 #include <memory>
 #include <queue>
 #include <random>
+#include <variant>
 
 #include "../events/SpawnEvents.hpp"
 #include "../system/System.hpp"
