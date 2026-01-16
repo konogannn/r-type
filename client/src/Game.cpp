@@ -110,7 +110,7 @@ bool Game::tryConnect(const std::string& address, uint16_t port)
         char buffer[80];
         strftime(buffer, sizeof(buffer), "game_%Y%m%d_%H%M%S.rtr", timeinfo);
         _gameState->startRecording(buffer);
-        
+
         SoundManager::getInstance().playSoundAtVolume("space_rumble", 20.0f);
 
         return true;
@@ -188,8 +188,7 @@ void Game::update(float deltaTime)
                                       deltaTime)) {
             if (_connectionDialog->wasCancelled()) {
                 if (_gameState) {
-                    _gameState
-                        ->stopRecording();
+                    _gameState->stopRecording();
                 }
                 _running = false;
                 _returnToMenu = true;
@@ -623,8 +622,7 @@ void Game::updateMusicBasedOnGameState()
     if (bossFound && !_hasBossActive) {
         SoundManager::getInstance().transitionToTrack(MusicTrack::BOSS, 2.5f);
         _hasBossActive = true;
-    }
-    else if (!bossFound && _hasBossActive) {
+    } else if (!bossFound && _hasBossActive) {
         SoundManager::getInstance().transitionToTrack(MusicTrack::WAVE, 2.0f);
         _hasBossActive = false;
     }
