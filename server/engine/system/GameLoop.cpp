@@ -21,9 +21,8 @@ namespace engine {
 // Helper function to check if an entity type is an enemy
 static bool isEnemyType(uint8_t entityType)
 {
-    return entityType == EntityType::BOSS || entityType == EntityType::BASIC ||
-           entityType == EntityType::FAST || entityType == EntityType::TANK ||
-           entityType == EntityType::TURRET ||
+    return entityType == EntityType::BASIC || entityType == EntityType::TANK ||
+           entityType == EntityType::FAST || entityType == EntityType::TURRET ||
            entityType == EntityType::ORBITER ||
            entityType == EntityType::LASER_SHIP ||
            entityType == EntityType::GLANDUS ||
@@ -50,36 +49,21 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
         update.killedByPlayer = false;
         _outputQueue.push(update);
 
-        bool isEnemy = (info.entityType == 10 ||  // BASIC
-                        info.entityType == 12 ||  // TANK
-                        info.entityType == 14 ||  // FAST
-                        info.entityType == 16 ||  // TURRET
-                        info.entityType == 18 ||  // ORBITER
-                        info.entityType == 20 ||  // LASER_SHIP
-                        info.entityType == 23 ||  // GLANDUS
-                        info.entityType == 24);   // GLANDUS_MINI
+        bool isEnemy = isEnemyType(info.entityType);
 
         bool isBoss = (info.entityType == 5);
 
         if (isEnemy) {
-            for (auto& system : _systems) {
-                WaveManager* waveManager =
-                    dynamic_cast<WaveManager*>(system.get());
-                if (waveManager) {
-                    waveManager->onEnemyDestroyed();
-                    break;
-                }
+            WaveManager* waveManager = getSystem<WaveManager>();
+            if (waveManager) {
+                waveManager->onEnemyDestroyed();
             }
         }
 
         if (isBoss) {
-            for (auto& system : _systems) {
-                WaveManager* waveManager =
-                    dynamic_cast<WaveManager*>(system.get());
-                if (waveManager) {
-                    waveManager->onBossDestroyed();
-                    break;
-                }
+            WaveManager* waveManager = getSystem<WaveManager>();
+            if (waveManager) {
+                waveManager->onBossDestroyed();
             }
         }
 
@@ -122,23 +106,12 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
             true;  // Killed by collision with player's projectile
         _outputQueue.push(update);
 
-        bool isEnemy = (info.entityType == 10 ||  // BASIC
-                        info.entityType == 12 ||  // TANK
-                        info.entityType == 14 ||  // FAST
-                        info.entityType == 16 ||  // TURRET
-                        info.entityType == 18 ||  // ORBITER
-                        info.entityType == 20 ||  // LASER_SHIP
-                        info.entityType == 23 ||  // GLANDUS
-                        info.entityType == 24);   // GLANDUS_MINI
+        bool isEnemy = isEnemyType(info.entityType);
 
         if (isEnemy && info.x != 0.0f && info.y != 0.0f) {
-            for (auto& system : _systems) {
-                WaveManager* waveManager =
-                    dynamic_cast<WaveManager*>(system.get());
-                if (waveManager) {
-                    waveManager->onEnemyDestroyed();
-                    break;
-                }
+            WaveManager* waveManager = getSystem<WaveManager>();
+            if (waveManager) {
+                waveManager->onEnemyDestroyed();
             }
 
             if (rand() % 2 == 0) {
