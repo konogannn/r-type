@@ -110,4 +110,148 @@ void SoundManager::setMusicVolume(float volume)
     if (_music) {
         _music->setVolume(volume);
     }
+    if (_waveMusic && _currentTrack == MusicTrack::WAVE && !_isFading) {
+        _waveMusic->setVolume(volume);
+    }
+    if (_bossMusic && _currentTrack == MusicTrack::BOSS && !_isFading) {
+        _bossMusic->setVolume(volume);
+    }
+}
+
+void SoundManager::loadMusicTrack(MusicTrack track)
+{
+    switch (track) {
+        case MusicTrack::WAVE:
+            if (!_waveMusic) {
+                _waveMusic = std::make_unique<rtype::MusicSFML>();
+                if (_waveMusic->openFromMemory(
+                        rtype::embedded::level_1_music_data,
+                        sizeof(rtype::embedded::level_1_music_data))) {
+                    _waveMusic->setLoop(true);
+                } else {
+                    std::cerr << "Failed to load wave music" << std::endl;
+                    _waveMusic.reset();
+                }
+            }
+            break;
+
+        case MusicTrack::BOSS:
+            if (!_bossMusic) {
+                _bossMusic = std::make_unique<rtype::MusicSFML>();
+                if (_bossMusic->openFromMemory(
+                        rtype::embedded::boss_1_music_data,
+                        sizeof(rtype::embedded::boss_1_music_data))) {
+                    _bossMusic->setLoop(true);
+                } else {
+                    std::cerr << "Failed to load boss music" << std::endl;
+                    _bossMusic.reset();
+                }
+            }
+            break;
+
+        case MusicTrack::MENU:
+            break;
+    }
+}
+
+void SoundManager::transitionToTrack(MusicTrack track, float fadeDuration)
+{
+    if (_currentTrack == track && !_isFading) {
+        return;
+    }
+
+    loadMusicTrack(track);
+
+    _targetTrack = track;
+    _fadeDuration = fadeDuration;
+    _fadeTimer = 0.0f;
+    _isFading = true;
+    _fadeOutVolume = _musicVolume;
+    _fadeInVolume = 0.0f;
+
+    rtype::MusicSFML* newMusic = nullptr;
+    switch (_targetTrack) {
+        case MusicTrack::WAVE:
+            newMusic = _waveMusic.get();
+            break;
+        case MusicTrack::BOSS:
+            newMusic = _bossMusic.get();
+            break;
+        case MusicTrack::MENU:
+            newMusic = _music.get();
+            break;
+    }
+
+    if (newMusic) {
+        newMusic->setVolume(0.0f);
+        if (!newMusic->isPlaying()) {
+            newMusic->play();
+        }
+    }
+}
+
+void SoundManager::updateMusic(float deltaTime)
+{
+    if (!_isFading) {
+        return;
+    }
+
+    _fadeTimer += deltaTime;
+    float fadeProgress = std::min(_fadeTimer / _fadeDuration, 1.0f);
+
+    _fadeOutVolume = _musicVolume * (1.0f - fadeProgress);
+    _fadeInVolume = _musicVolume * fadeProgress;
+
+    rtype::MusicSFML* oldMusic = nullptr;
+    rtype::MusicSFML* newMusic = nullptr;
+
+    switch (_currentTrack) {
+        case MusicTrack::WAVE:
+            oldMusic = _waveMusic.get();
+            break;
+        case MusicTrack::BOSS:
+            oldMusic = _bossMusic.get();
+            break;
+        case MusicTrack::MENU:
+            oldMusic = _music.get();
+            break;
+    }
+
+    switch (_targetTrack) {
+        case MusicTrack::WAVE:
+            newMusic = _waveMusic.get();
+            break;
+        case MusicTrack::BOSS:
+            newMusic = _bossMusic.get();
+            break;
+        case MusicTrack::MENU:
+            newMusic = _music.get();
+            break;
+    }
+
+    if (oldMusic && oldMusic->isPlaying()) {
+        oldMusic->setVolume(_fadeOutVolume);
+    }
+    if (newMusic && newMusic->isPlaying()) {
+        newMusic->setVolume(_fadeInVolume);
+    }
+
+    if (fadeProgress >= 1.0f) {
+        _isFading = false;
+        if (oldMusic && oldMusic->isPlaying()) {
+            oldMusic->stop();
+        }
+        _currentTrack = _targetTrack;
+        if (newMusic) {
+            newMusic->setVolume(_musicVolume);
+        }
+    }
+}
+
+void SoundManager::stopAllMusic()
+{
+    if (_music) _music->stop();
+    if (_waveMusic) _waveMusic->stop();
+    if (_bossMusic) _bossMusic->stop();
+    _isFading = false;
 }

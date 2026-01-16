@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <span>
 #include <string>
@@ -16,6 +17,11 @@
 #include "../wrapper/MusicSFML.hpp"
 #include "../wrapper/SoundSFML.hpp"
 #include "../wrapper/resources/EmbeddedResources.hpp"
+
+/**
+ * @brief Music tracks available in the game
+ */
+enum class MusicTrack { MENU, WAVE, BOSS };
 
 /**
  * @brief Singleton to manage game sounds and music
@@ -67,6 +73,24 @@ class SoundManager {
      */
     void setMusicVolume(float volume);
 
+    /**
+     * @brief Transition to a specific music track with cross-fade
+     * @param track The music track to transition to
+     * @param fadeDuration Duration of the cross-fade in seconds (default: 2.0s)
+     */
+    void transitionToTrack(MusicTrack track, float fadeDuration = 2.0f);
+
+    /**
+     * @brief Update music fading (call this every frame during gameplay)
+     * @param deltaTime Time elapsed since last frame in seconds
+     */
+    void updateMusic(float deltaTime);
+
+    /**
+     * @brief Stop all music immediately
+     */
+    void stopAllMusic();
+
    private:
     SoundManager() = default;
     ~SoundManager() = default;
@@ -75,12 +99,29 @@ class SoundManager {
 
     void loadSound(const std::string& name, std::span<const std::byte> data);
     void cleanupFinishedSounds();
+    void loadMusicTrack(MusicTrack track);
 
     std::unordered_map<std::string, std::unique_ptr<rtype::SoundBufferSFML>>
         _buffers;
     std::unordered_map<std::string, std::unique_ptr<rtype::SoundSFML>> _sounds;
     std::vector<std::unique_ptr<rtype::SoundSFML>> _tempSounds;
+
+    // Menu music (legacy - kept for menu)
     std::unique_ptr<rtype::MusicSFML> _music;
+
+    // In-game music tracks
+    std::unique_ptr<rtype::MusicSFML> _waveMusic;
+    std::unique_ptr<rtype::MusicSFML> _bossMusic;
+
+    // Music transition state
+    MusicTrack _currentTrack = MusicTrack::MENU;
+    MusicTrack _targetTrack = MusicTrack::MENU;
+    bool _isFading = false;
+    float _fadeTimer = 0.0f;
+    float _fadeDuration = 2.0f;
+    float _fadeOutVolume = 0.0f;
+    float _fadeInVolume = 0.0f;
+
     float _volume = 50.0f;
     float _musicVolume = 50.0f;
 };

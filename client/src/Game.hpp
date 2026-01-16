@@ -37,6 +37,7 @@ class Game {
     void render();
     void updateFps(float deltaTime);
     bool tryConnect(const std::string& address, uint16_t port);
+    void updateMusicBasedOnGameState();
 
    private:
     rtype::WindowSFML& _window;
@@ -64,4 +65,8 @@ class Game {
 
     bool _showHitboxes = false;
     bool _playerDead = false;
+
+    // Music state tracking
+    bool _hasBossActive = false;
+    bool _musicInitialized = false;
 };

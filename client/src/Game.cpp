@@ -40,10 +40,15 @@ Game::Game(rtype::WindowSFML& window, rtype::GraphicsSFML& graphics,
       _lastInputTime(std::chrono::steady_clock::now()),
       _screenShakeIntensity(0.0f),
       _screenShakeTimer(0.0f),
-      _playerDead(false)
+      _playerDead(false),
+      _hasBossActive(false),
+      _musicInitialized(false)
 {
     std::cout << "[Game] Constructor called, _playerDead initialized to: "
               << _playerDead << std::endl;
+
+    SoundManager::getInstance().stopMusic();
+
     rtype::Config& config = rtype::Config::getInstance();
     config.load();
 
@@ -90,6 +95,8 @@ Game::~Game()
         _gameState->stopRecording();
         _gameState->disconnect();
     }
+
+    SoundManager::getInstance().stopAllMusic();
 }
 
 bool Game::tryConnect(const std::string& address, uint16_t port)
@@ -157,7 +164,7 @@ void Game::handleEvents()
         if (eventType == rtype::EventType::KeyPressed) {
             if (_input.isKeyPressed(rtype::Key::Escape)) {
                 if (_gameState) {
-                    _gameState->stopRecording();  // Stop recording when exiting
+                    _gameState->stopRecording();
                 }
                 _running = false;
                 _returnToMenu = true;
@@ -179,7 +186,7 @@ void Game::update(float deltaTime)
             if (_connectionDialog->wasCancelled()) {
                 if (_gameState) {
                     _gameState
-                        ->stopRecording();  // Stop recording when cancelling
+                        ->stopRecording();
                 }
                 _running = false;
                 _returnToMenu = true;
@@ -202,6 +209,10 @@ void Game::update(float deltaTime)
 
     if (_gameState) {
         _gameState->update(deltaTime);
+
+        SoundManager::getInstance().updateMusic(deltaTime);
+
+        updateMusicBasedOnGameState();
 
         uint8_t inputMask = 0;
         rtype::KeyBinding& keyBindings = rtype::KeyBinding::getInstance();
@@ -581,5 +592,37 @@ void Game::updateFps(float deltaTime)
         _currentFps = _fpsCounter;
         _fpsCounter = 0;
         _fpsUpdateTime = 0.0f;
+    }
+}
+
+void Game::updateMusicBasedOnGameState()
+{
+    if (!_gameState || !_gameState->isGameStarted()) {
+        return;
+    }
+
+    if (!_musicInitialized) {
+        SoundManager::getInstance().transitionToTrack(MusicTrack::WAVE, 1.5f);
+        _musicInitialized = true;
+        _hasBossActive = false;
+        return;
+    }
+
+    bool bossFound = false;
+    const auto& entities = _gameState->getAllEntities();
+    for (const auto& [id, entity] : entities) {
+        if (entity->type == 5) {
+            bossFound = true;
+            break;
+        }
+    }
+
+    if (bossFound && !_hasBossActive) {
+        SoundManager::getInstance().transitionToTrack(MusicTrack::BOSS, 2.5f);
+        _hasBossActive = true;
+    }
+    else if (!bossFound && _hasBossActive) {
+        SoundManager::getInstance().transitionToTrack(MusicTrack::WAVE, 2.0f);
+        _hasBossActive = false;
     }
 }

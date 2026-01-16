@@ -52,6 +52,14 @@ static const unsigned char music_data[] = {
 #embed "../../../assets/sound/menu_sound.wav"
 };
 
+static const unsigned char level_1_music_data[] = {
+#embed "../../../assets/sound/level_1.ogg"
+};
+
+static const unsigned char boss_1_music_data[] = {
+#embed "../../../assets/sound/boss_1.ogg"
+};
+
 // Background
 static const unsigned char background_base_data[] = {
 #embed "../../../assets/background/bg-back.png"
