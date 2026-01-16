@@ -501,9 +501,8 @@ void GameServer::checkLevelProgression()
             "Level " + std::to_string(completedLevel) + " completed!",
             LogLevel::INFO_L, "Game");
 
-        resetPlayers();
-
         if (waveManager->loadNextLevel()) {
+            resetPlayers();
             waveManager->setPlayerCount(_playerCount.load());
             waveManager->startLevel();
             Logger::getInstance().log(
