@@ -104,6 +104,18 @@ class GameEntityFactory {
                       uint32_t playerCount = 1);
 
     /**
+     * @brief Create a standard boss (type 0)
+     * @return Created boss entity
+     */
+    Entity createStandardBoss(float x, float y, uint32_t playerCount = 1);
+
+    /**
+     * @brief Create an orbital boss (type 1) - static with rotating orbiters
+     * @return Created boss entity
+     */
+    Entity createOrbitalBoss(float x, float y, uint32_t playerCount = 1);
+
+    /**
      * @brief Create a boss part entity
      * @param bossEntityId ID of the main boss entity
      * @param partType Type of part (TURRET, TENTACLE, etc.)
