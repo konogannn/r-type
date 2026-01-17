@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** Menu
+** LobbyMenu
 */
 
 #pragma once
@@ -20,72 +20,42 @@
 
 namespace rtype {
 
-enum class MenuAction {
-    None,
-    StartGame,
-    Settings,
-    ConnectServer,
-    Replays,
-    Quit,
-    Lobby
-};
+enum class LobbyAction { None, CreateLobby, Join, Back };
 
 /**
- * @brief Main menu system for R-Type
+ * @brief Lobby selection menu for R-Type
  */
-class Menu {
+class LobbyMenu {
    public:
     /**
-     * @brief Construct a new Menu
+     * @brief Construct a new LobbyMenu
      * @param window Window reference
      * @param graphics Graphics renderer reference
      * @param input Input handler reference
+     * @param background Shared background from main menu
      */
-    Menu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input);
+    LobbyMenu(WindowSFML& window, GraphicsSFML& graphics, InputSFML& input,
+              std::shared_ptr<Background> background);
 
     /**
      * @brief Update menu state (handle input, hover effects)
      */
-    MenuAction update(float deltaTime);
+    LobbyAction update(float deltaTime);
 
     /**
      * @brief Render the menu
      */
     void render();
 
+    /**
+     * @brief Update layout when window is resized
+     */
     void updateLayout();
 
     /**
-     * @brief Get the background (shared with game)
+     * @brief Reset menu state when entering
      */
-    std::shared_ptr<Background> getBackground() { return _background; }
-
-    /**
-     * @brief Get menu UI alpha for fade transition
-     */
-    float getUIAlpha() const { return _uiAlpha; }
-
-    /**
-     * @brief Start fade out transition
-     */
-    void startFadeOut() { _isFadingOut = true; }
-
-    /**
-     * @brief Check if fade out is complete
-     */
-    bool isFadeOutComplete() const { return _uiAlpha <= 0.0f && _isFadingOut; }
-
-    /**
-     * @brief Reset fade state (when returning to menu)
-     */
-    void resetFade()
-    {
-        _isFadingOut = false;
-        _uiAlpha = 1.0f;
-        _wasUpPressed = true;
-        _wasDownPressed = true;
-        _wasEnterPressed = true;
-    }
+    void reset();
 
    private:
     WindowSFML& _window;
@@ -93,7 +63,6 @@ class Menu {
     InputSFML& _input;
 
     std::shared_ptr<Background> _background;
-    std::unique_ptr<rtype::ISprite> _logoSprite;
     std::vector<Button> _buttons;
     ColorBlindFilter& _colorBlindFilter;
 
@@ -102,18 +71,13 @@ class Menu {
     bool _wasDownPressed;
     bool _wasEnterPressed;
 
-    bool _isFadingOut;
-    float _uiAlpha;
-    static constexpr float FADE_SPEED = 2.0f;
-
     static constexpr float BUTTON_WIDTH = 300.0f;
     static constexpr float BUTTON_HEIGHT = 60.0f;
     static constexpr float BUTTON_SPACING = 20.0f;
     static constexpr unsigned int FONT_SIZE = 24;
+    static constexpr unsigned int TITLE_FONT_SIZE = 48;
 
     void setupButtons();
-    void setupBackground();
-    void setupLogo();
 };
 
 }  // namespace rtype

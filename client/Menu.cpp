@@ -151,9 +151,8 @@ MenuAction Menu::update(float deltaTime)
         SoundManager::getInstance().playSound("click");
         switch (_selectedButtonIndex) {
             case 0:
-                startFadeOut();
                 _wasEnterPressed = isEnterPressed;
-                return MenuAction::None;
+                return MenuAction::Lobby;
             case 1:
                 _wasEnterPressed = isEnterPressed;
                 return MenuAction::Replays;
@@ -182,8 +181,7 @@ MenuAction Menu::update(float deltaTime)
             SoundManager::getInstance().playSound("click");
             switch (i) {
                 case 0:
-                    startFadeOut();
-                    return MenuAction::None;
+                    return MenuAction::Lobby;
                 case 1:
                     return MenuAction::Replays;
                 case 2:

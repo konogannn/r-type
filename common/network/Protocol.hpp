@@ -66,7 +66,7 @@ enum OpCode : uint8_t {
         21,  ///< Game event notification (wave start, level complete).
     S2C_LOBBY_AVAIL =
         22,  ///< Notify clients of lobby availability (empty/open/full/kicked).
-    S2C_SYNC_LOBBY = 23  ///< Synchronize game rules & ready status to clients.
+    S2C_SYNC_LOBBY = 23,  ///< Synchronize game rules & ready status to clients.
 };
 
 /**
