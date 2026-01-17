@@ -55,6 +55,13 @@ struct ClientEntity {
     int animFrameHeight = 0;
     bool hasTriggeredEffect = false;
 
+    // Laser growth animation
+    bool isLaser = false;
+    float laserTargetWidth = 400.0f;
+    float laserCurrentWidth = 1.0f;
+    float laserGrowthRate = 800.0f;
+    bool laserFullyGrown = false;
+
     ClientEntity(uint32_t entityId, uint8_t entityType, float posX, float posY)
         : id(entityId),
           type(entityType),
