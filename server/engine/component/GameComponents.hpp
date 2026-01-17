@@ -181,6 +181,24 @@ struct Item : public ComponentBase<Item> {
 };
 
 /**
+ * @brief LaserGrowth component - Manages laser growth animation
+ */
+struct LaserGrowth : public ComponentBase<LaserGrowth> {
+    float targetWidth;   // Final width of the laser
+    float growthRate;    // Width increase per second
+    float currentWidth;  // Current width (starts at 1.0f)
+    bool fullyGrown;     // True when laser reached target width
+
+    LaserGrowth(float targetWidth_ = 400.0f, float growthRate_ = 800.0f)
+        : targetWidth(targetWidth_),
+          growthRate(growthRate_),
+          currentWidth(1.0f),
+          fullyGrown(false)
+    {
+    }
+};
+
+/**
  * @brief GuidedMissile component - Bullet that tracks nearest enemy
  */
 struct GuidedMissile : public ComponentBase<GuidedMissile> {
@@ -211,6 +229,15 @@ struct BossPart : public ComponentBase<BossPart> {
     float currentRotation;
     bool canTakeDamage;
 
+    // Dynamic movement parameters
+    float oscillationTimer;       // Timer for oscillation
+    float oscillationSpeed;       // Speed of oscillation (radians per second)
+    float oscillationAmplitudeX;  // Horizontal amplitude
+    float oscillationAmplitudeY;  // Vertical amplitude
+    float phaseOffset;            // Phase offset for different parts
+    float orbitRadius;            // Radius for circular orbit (ARMOR_PLATE)
+    float orbitAngle;             // Current angle in circular orbit
+
     BossPart(uint32_t bossId = 0, PartType type = MAIN_BODY, float relX = 0.0f,
              float relY = 0.0f, bool vulnerable = true)
         : bossEntityId(bossId),
@@ -219,9 +246,24 @@ struct BossPart : public ComponentBase<BossPart> {
           relativeY(relY),
           rotationSpeed(0.0f),
           currentRotation(0.0f),
-          canTakeDamage(vulnerable)
+          canTakeDamage(vulnerable),
+          oscillationTimer(0.0f),
+          oscillationSpeed(2.0f),
+          oscillationAmplitudeX(0.0f),
+          oscillationAmplitudeY(0.0f),
+          phaseOffset(0.0f),
+          orbitRadius(0.0f),
+          orbitAngle(0.0f)
     {
     }
+};
+
+/**
+ * @brief Boss types - Different boss variants with unique behaviors
+ */
+enum class BossType : uint8_t {
+    STANDARD = 0,  // Original boss (boss_1.png with turrets)
+    ORBITAL = 1    // Static boss with rotating orbiters (boss_4.png)
 };
 
 /**
@@ -230,6 +272,7 @@ struct BossPart : public ComponentBase<BossPart> {
 struct Boss : public ComponentBase<Boss> {
     enum Phase { ENTRY, PHASE_1, PHASE_2, ENRAGED, DEATH };
 
+    BossType bossType;
     Phase currentPhase;
     float phaseTimer;
     float maxHealth;
@@ -255,8 +298,25 @@ struct Boss : public ComponentBase<Boss> {
 
     int hitCounter;  // Hit counter for spawning power-ups
 
-    Boss(uint32_t players = 1)
-        : currentPhase(ENTRY),
+    uint32_t groupId;  // Group ID for bosses that share health (0 = no group)
+
+    // Oscillation parameters for dynamic movement
+    float oscillationTimer = 0.0f;
+    float oscillationSpeed = 1.0f;
+    float oscillationAmplitudeX = 0.0f;
+    float oscillationAmplitudeY = 0.0f;
+    float phaseOffset = 0.0f;
+
+    // Wave shooting parameters for ORBITAL boss
+    int waveProjectileCount = 20;
+    int currentWaveIndex = 0;
+    float waveShootTimer = 0.0f;
+    float waveShootInterval = 0.15f;  // Time between each projectile in wave
+    bool waveDirection = true;  // true = top to bottom, false = bottom to top
+
+    Boss(uint32_t players = 1, BossType type = BossType::STANDARD)
+        : bossType(type),
+          currentPhase(ENTRY),
           phaseTimer(0.0f),
           maxHealth(1000.0f),
           playerCount(players),
@@ -271,9 +331,124 @@ struct Boss : public ComponentBase<Boss> {
           destructionStarted(false),
           phase2Threshold(0.6f),
           enragedThreshold(0.3f),
-          hitCounter(0)
+          hitCounter(0),
+          groupId(0)
     {
         scaledMaxHealth = maxHealth * (1.0f + 0.5f * (playerCount - 1));
+    }
+};
+
+/**
+ * @brief BossChoreography component - For triple boss with synchronized
+ * movement Used for boss_1.png sprites moving in choreographed patterns
+ */
+struct BossChoreography : public ComponentBase<BossChoreography> {
+    uint32_t groupId;         // Identifies which group this boss belongs to
+    int positionInGroup;      // 0, 1, or 2 (left, center, right)
+    uint32_t leaderEntityId;  // Entity ID of the leader (center boss)
+
+    // Formation offsets relative to leader
+    float formationOffsetX;
+    float formationOffsetY;
+
+    // Choreography state
+    float choreographyTimer;
+    int choreographyPattern;  // Current movement pattern
+
+    // Laser state
+    bool laserCharging;
+    float laserChargeTime;
+    float laserActiveTime;
+    uint32_t laserEntityId;
+
+    BossChoreography(uint32_t group = 0, int position = 0)
+        : groupId(group),
+          positionInGroup(position),
+          leaderEntityId(0),
+          formationOffsetX(0.0f),
+          formationOffsetY(0.0f),
+          choreographyTimer(0.0f),
+          choreographyPattern(0),
+          laserCharging(false),
+          laserChargeTime(0.0f),
+          laserActiveTime(0.0f),
+          laserEntityId(0)
+    {
+        // Set formation offsets based on position
+        if (position == 0) {  // Left
+            formationOffsetX = -150.0f;
+            formationOffsetY = -100.0f;
+        } else if (position == 2) {  // Right
+            formationOffsetX = -150.0f;
+            formationOffsetY = 100.0f;
+        }
+        // Center (position 1) stays at 0, 0
+    }
+};
+
+/**
+ * @brief BossCube component - For quad boss in rotating cube formation
+ * Used for boss_4.png sprites forming a cube shape
+ */
+struct BossCube : public ComponentBase<BossCube> {
+    uint32_t groupId;    // Identifies which cube formation this boss belongs to
+    int positionInCube;  // 0-3 (top-left, top-right, bottom-left, bottom-right)
+    bool facingRight;    // true for sprites 0-2, false for sprites 3-5
+
+    // Cube formation
+    float cubeRotation;
+    float cubeRotationSpeed;
+    float cubeRadius;
+
+    // Center of cube formation
+    float cubeCenterX;
+    float cubeCenterY;
+
+    // Attack state
+    float burstTimer;
+    float nextBurstDelay;
+    int projectileCount;
+
+    BossCube(uint32_t group = 0, int position = 0)
+        : groupId(group),
+          positionInCube(position),
+          facingRight(position <
+                      2),  // Top two face right, bottom two face left
+          cubeRotation(0.0f),
+          cubeRotationSpeed(0.5f),
+          cubeRadius(150.0f),
+          cubeCenterX(1300.0f),
+          cubeCenterY(400.0f),
+          burstTimer(0.0f),
+          nextBurstDelay(1.0f),
+          projectileCount(0)
+    {
+    }
+};
+
+/**
+ * @brief ExtendingLaser component - For laser that grows progressively
+ * Used to create the extending laser beam effect
+ */
+struct ExtendingLaser : public ComponentBase<ExtendingLaser> {
+    uint32_t ownerId;
+    float maxLength;
+    float currentLength;
+    float extensionSpeed;  // Units per second
+    float duration;
+    float activeTime;
+    bool fullyExtended;
+
+    ExtendingLaser(uint32_t owner = 0, float maxLen = 800.0f,
+                   float speed = 400.0f, float dur = 3.0f)
+        : ownerId(owner),
+          maxLength(maxLen),
+          currentLength(0.0f),
+          extensionSpeed(speed),
+          duration(dur),
+          activeTime(0.0f),
+          fullyExtended(false)
+    {
     }
 };
 
