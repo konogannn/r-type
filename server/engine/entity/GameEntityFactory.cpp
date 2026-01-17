@@ -181,8 +181,10 @@ Entity GameEntityFactory::createEnemyBullet(EntityId ownerId, float x, float y,
 
     if (bulletType == EntityType::TURRET_MISSILE) {
         _entityManager.addComponent(bullet, BoundingBox(14.0f, 10.0f));
+    } else if (bulletType == EntityType::GREEN_BULLET) {
+        _entityManager.addComponent(bullet, BoundingBox(14.0f, 10.0f));
     } else {
-        _entityManager.addComponent(bullet, BoundingBox(114.0f, 36.0f));
+        _entityManager.addComponent(bullet, BoundingBox(16.0f, 16.0f));
     }
 
     _entityManager.addComponent(bullet, NetworkEntity(bulletId, bulletType));
@@ -200,7 +202,20 @@ Entity GameEntityFactory::createEnemyBullet(EntityId ownerId, float x, float y,
 Entity GameEntityFactory::createBoss(uint8_t bossType, float x, float y,
                                      uint32_t playerCount)
 {
-    (void)bossType;
+    BossType type = static_cast<BossType>(bossType);
+
+    switch (type) {
+        case BossType::ORBITAL:
+            return createOrbitalBoss(x, y, playerCount);
+        case BossType::STANDARD:
+        default:
+            return createStandardBoss(x, y, playerCount);
+    }
+}
+
+Entity GameEntityFactory::createStandardBoss(float x, float y,
+                                             uint32_t playerCount)
+{
     Entity boss = _entityManager.createEntity();
 
     float baseHealth = 1000.0f;
@@ -209,39 +224,126 @@ Entity GameEntityFactory::createBoss(uint8_t bossType, float x, float y,
     _entityManager.addComponent(boss, Position(x, y));
     _entityManager.addComponent(boss, Velocity(0.0f, 0.0f));
 
-    Boss bossComponent(playerCount);
+    Boss bossComponent(playerCount, BossType::STANDARD);
     bossComponent.maxHealth = baseHealth;
     bossComponent.scaledMaxHealth = scaledHealth;
+
+    // Main body: slow figure-eight pattern
+    bossComponent.oscillationSpeed = 0.5f;  // Slower (was 0.8f)
+    bossComponent.oscillationAmplitudeX = 50.0f;
+    bossComponent.oscillationAmplitudeY = 80.0f;
+    bossComponent.phaseOffset = 0.0f;
+
     _entityManager.addComponent(boss, std::move(bossComponent));
 
     _entityManager.addComponent(boss, Health(scaledHealth));
     _entityManager.addComponent(boss, BoundingBox(260.0f, 100.0f, 0.0f, 0.0f));
     _entityManager.addComponent(boss, NetworkEntity(_nextEnemyId++, 5));
 
-    _entityManager.addComponent(boss, Animation(0, 4, 0.15f, true));
+    _entityManager.addComponent(boss, Animation(0, 5, 0.15f, true));
 
     uint32_t bossId = boss.getId();
 
     Entity topTurret =
-        createBossPart(bossId, BossPart::TURRET, -80.0f, -60.0f, true);
+        createBossPart(bossId, BossPart::TURRET, -80.0f, -300.0f, true);
     auto* topPos = _entityManager.getComponent<Position>(topTurret);
+    auto* topPart = _entityManager.getComponent<BossPart>(topTurret);
     if (topPos) {
         topPos->x = x - 80.0f;
-        topPos->y = y - 60.0f;
+        topPos->y = y - 300.0f;
+    }
+    if (topPart) {
+        // Top turret: fast vertical oscillation
+        topPart->oscillationSpeed = 2.5f;
+        topPart->oscillationAmplitudeX = 10.0f;
+        topPart->oscillationAmplitudeY = 40.0f;
+        topPart->phaseOffset = 0.0f;
     }
 
     Entity bottomTurret =
-        createBossPart(bossId, BossPart::TURRET, -80.0f, 60.0f, true);
+        createBossPart(bossId, BossPart::TURRET, -80.0f, 300.0f, true);
     auto* bottomPos = _entityManager.getComponent<Position>(bottomTurret);
+    auto* bottomPart = _entityManager.getComponent<BossPart>(bottomTurret);
     if (bottomPos) {
         bottomPos->x = x - 80.0f;
-        bottomPos->y = y + 60.0f;
+        bottomPos->y = y + 300.0f;
+    }
+    if (bottomPart) {
+        // Bottom turret: fast horizontal oscillation (opposite phase)
+        bottomPart->oscillationSpeed = 2.0f;
+        bottomPart->oscillationAmplitudeX = 35.0f;
+        bottomPart->oscillationAmplitudeY = 20.0f;
+        bottomPart->phaseOffset = 3.14159f;
     }
 
     auto* bossComp = _entityManager.getComponent<Boss>(boss);
     if (bossComp) {
         bossComp->partEntityIds.push_back(topTurret.getId());
         bossComp->partEntityIds.push_back(bottomTurret.getId());
+    }
+
+    return boss;
+}
+
+Entity GameEntityFactory::createOrbitalBoss(float x, float y,
+                                            uint32_t playerCount)
+{
+    Entity boss = _entityManager.createEntity();
+
+    float baseHealth = 1200.0f;
+    float scaledHealth = baseHealth * (1.0f + 0.5f * (playerCount - 1));
+
+    _entityManager.addComponent(boss, Position(x, y));
+    _entityManager.addComponent(boss, Velocity(0.0f, 0.0f));
+
+    Boss bossComponent(playerCount, BossType::ORBITAL);
+    bossComponent.maxHealth = baseHealth;
+    bossComponent.scaledMaxHealth = scaledHealth;
+    bossComponent.attackInterval = 1.5f;  // Time between wave starts
+
+    _entityManager.addComponent(boss, std::move(bossComponent));
+    _entityManager.addComponent(boss, Health(scaledHealth));
+    _entityManager.addComponent(boss, BoundingBox(96.0f, 96.0f, 0.0f, 0.0f));
+    _entityManager.addComponent(
+        boss, NetworkEntity(_nextEnemyId++, 30));  // Type 30 for boss_4
+
+    // boss_4.png is a spritesheet (4 frames of 48x48)
+    _entityManager.addComponent(boss, Animation(0, 4, 0.15f, true));
+
+    uint32_t bossId = boss.getId();
+
+    // Create 8 orbiters rotating around the boss
+    const int orbiterCount = 8;
+    const float orbiterRadius = 150.0f;
+    const float angleStep = 6.28318f / orbiterCount;  // 2*PI / 8
+
+    for (int i = 0; i < orbiterCount; i++) {
+        float angle = i * angleStep;
+        float offsetX = std::cos(angle) * orbiterRadius;
+        float offsetY = std::sin(angle) * orbiterRadius;
+
+        Entity orbiter = createBossPart(bossId, BossPart::ARMOR_PLATE, offsetX,
+                                        offsetY, true);
+        auto* orbiterPos = _entityManager.getComponent<Position>(orbiter);
+        auto* orbiterPart = _entityManager.getComponent<BossPart>(orbiter);
+
+        if (orbiterPos) {
+            orbiterPos->x = x + offsetX;
+            orbiterPos->y = y + offsetY;
+        }
+
+        if (orbiterPart) {
+            // Circular orbit around boss
+            orbiterPart->orbitRadius = orbiterRadius;
+            orbiterPart->orbitAngle = angle;  // Start at different angles
+            orbiterPart->oscillationSpeed =
+                1.5f;  // Speed of orbit (radians/sec)
+        }
+
+        auto* bossComp = _entityManager.getComponent<Boss>(boss);
+        if (bossComp) {
+            bossComp->partEntityIds.push_back(orbiter.getId());
+        }
     }
 
     return boss;
@@ -258,7 +360,15 @@ Entity GameEntityFactory::createBossPart(uint32_t bossEntityId,
         part,
         BossPart(bossEntityId, partType, relativeX, relativeY, vulnerable));
     _entityManager.addComponent(part, Position(0.0f, 0.0f));
-    _entityManager.addComponent(part, NetworkEntity(_nextEnemyId++, 6));
+
+    // Choose entity type based on part type
+    uint8_t entityType = 6;  // Default: turret/boss part (boss_1.png)
+    if (partType == BossPart::ARMOR_PLATE) {
+        entityType = 31;  // Orbiter sprite
+    }
+
+    _entityManager.addComponent(part,
+                                NetworkEntity(_nextEnemyId++, entityType));
 
     if (vulnerable) {
         _entityManager.addComponent(part, Health(100.0f));
