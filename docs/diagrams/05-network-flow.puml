@@ -1,0 +1,207 @@
+@startuml Network Communication Flow
+!theme blueprint
+title R-Type Network Communication Flow
+
+actor Player1 as "Player 1"
+participant Client1 as "Client 1"
+participant NetworkClient1 as "Network\nClient 1"
+participant Server as "Game Server"
+participant GameLoop as "Game Loop\n(Server)"
+participant NetworkServer as "Network\nServer"
+participant NetworkClient2 as "Network\nClient 2"
+participant Client2 as "Client 2"
+actor Player2 as "Player 2"
+
+== Connection Phase ==
+Player1 -> Client1 : Enter IP, Port, Username
+Client1 -> NetworkClient1 : connect("127.0.0.1", 8080)
+activate NetworkClient1
+NetworkClient1 -> Server : UDP: C2S_LOGIN\n"Player1"
+activate Server
+
+Server -> Server : Validate username
+Server -> Server : Assign playerId = 1
+Server -> GameLoop : createPlayerEntity(playerId=1)
+activate GameLoop
+GameLoop -> GameLoop : createEntity("player_1")
+GameLoop -> GameLoop : addComponent<Player>(clientId=1)
+GameLoop -> GameLoop : addComponent<Position>(800, 540)
+GameLoop -> GameLoop : addComponent<Health>(100, 100)
+deactivate GameLoop
+
+Server -> NetworkClient1 : S2C_LOGIN_OK\nplayerId=1
+NetworkClient1 -> Client1 : onLoginSuccess(playerId=1)
+Client1 -> Client1 : GameState = LobbyWaitingRoom
+deactivate NetworkClient1
+
+note right: Player 2 connects similarly
+
+== Game Start ==
+Player1 -> Client1 : Click "Ready"
+Client1 -> NetworkClient1 : sendPacket(C2S_START_GAME)
+NetworkClient1 -> Server : C2S_START_GAME
+
+Server -> Server : Check all players ready
+Server -> GameLoop : startGame()
+activate GameLoop
+GameLoop -> GameLoop : loadLevel(1)
+GameLoop -> GameLoop : Start wave spawning
+deactivate GameLoop
+
+Server -> NetworkServer : broadcastPacket(S2C_GAME_EVENT)\nGAME_START
+NetworkServer -> NetworkClient1 : S2C_GAME_EVENT
+NetworkServer -> NetworkClient2 : S2C_GAME_EVENT
+
+NetworkClient1 -> Client1 : onGameStart()
+NetworkClient2 -> Client2 : onGameStart()
+Client1 -> Client1 : GameState = InGame
+Client2 -> Client2 : GameState = InGame
+
+== Gameplay Loop (Every Frame) ==
+loop 60 FPS Client, 60 FPS Server, 30 Hz Network Sync
+
+    == Client Input (Player 1) ==
+    Player1 -> Client1 : Press UP + SPACE
+    Client1 -> Client1 : inputMask = 0x01 | 0x10 = 0x11
+    Client1 -> NetworkClient1 : sendPacket(C2S_INPUT, 0x11)
+    NetworkClient1 -> Server : C2S_INPUT\ninputMask=0x11
+    
+    Server -> GameLoop : enqueueInput(clientId=1, mask=0x11)
+    
+    == Server Processing ==
+    GameLoop -> GameLoop : processInputQueue()
+    GameLoop -> GameLoop : updatePlayerVelocity(player1)
+    note right: vy = -300 (UP pressed)
+    
+    GameLoop -> GameLoop : update all systems (deltaTime)
+    
+    group MovementSystem
+        GameLoop -> GameLoop : position.y += velocity.y * dt
+        GameLoop -> GameLoop : player1.y = 520
+    end
+    
+    group PlayerCooldownSystem
+        GameLoop -> GameLoop : shootCooldown -= dt
+        alt Cooldown Ready and SHOOT pressed
+            GameLoop -> GameLoop : createProjectile()
+            GameLoop -> GameLoop : emit SpawnEvent(projectile)
+        end
+    end
+    
+    group CollisionSystem
+        GameLoop -> GameLoop : checkAllCollisions()
+        alt Projectile hits Enemy
+            GameLoop -> GameLoop : damage(enemy)
+            GameLoop -> GameLoop : destroy(projectile)
+            GameLoop -> GameLoop : emit DeadEvent(projectile)
+            GameLoop -> GameLoop : emit DeadEvent(enemy)
+        end
+    end
+    
+    group WaveManager
+        GameLoop -> GameLoop : checkWaveComplete()
+        alt Wave Complete
+            GameLoop -> GameLoop : spawnNextWave()
+            loop For Each Enemy
+                GameLoop -> GameLoop : createEnemy()
+                GameLoop -> GameLoop : emit SpawnEvent(enemy)
+            end
+        end
+    end
+    
+    == Network Sync (30 Hz - every 2 frames) ==
+    alt Sync Frame
+        GameLoop -> GameLoop : collectStateUpdates()
+        
+        loop For Each Spawned Entity
+            GameLoop -> Server : EntitySpawnPacket
+            Server -> NetworkServer : broadcastPacket(S2C_ENTITY_NEW)
+            NetworkServer -> NetworkClient1 : S2C_ENTITY_NEW\nentityId=42, type=ENEMY
+            NetworkServer -> NetworkClient2 : S2C_ENTITY_NEW\nentityId=42, type=ENEMY
+            
+            NetworkClient1 -> Client1 : onEntitySpawn(42, ENEMY, x, y)
+            Client1 -> Client1 : enemies[42] = new Enemy()
+            
+            NetworkClient2 -> Client2 : onEntitySpawn(42, ENEMY, x, y)
+            Client2 -> Client2 : enemies[42] = new Enemy()
+        end
+        
+        loop For Each Entity with needsSync
+            GameLoop -> Server : EntityPositionPacket
+            Server -> NetworkServer : broadcastPacket(S2C_ENTITY_POS)
+            NetworkServer -> NetworkClient1 : S2C_ENTITY_POS\nentityId=1, x=800, y=520
+            NetworkServer -> NetworkClient2 : S2C_ENTITY_POS\nentityId=1, x=800, y=520
+            
+            NetworkClient1 -> Client1 : onEntityPosition(1, 800, 520)
+            Client1 -> Client1 : localPlayer.setPosition(800, 520)
+            
+            NetworkClient2 -> Client2 : onEntityPosition(1, 800, 520)
+            Client2 -> Client2 : otherPlayers[1].setPosition(800, 520)
+        end
+        
+        loop For Each Destroyed Entity
+            GameLoop -> Server : EntityDeadPacket
+            Server -> NetworkServer : broadcastPacket(S2C_ENTITY_DEAD)
+            NetworkServer -> NetworkClient1 : S2C_ENTITY_DEAD\nentityId=42
+            NetworkServer -> NetworkClient2 : S2C_ENTITY_DEAD\nentityId=42
+            
+            NetworkClient1 -> Client1 : onEntityDead(42)
+            Client1 -> Client1 : delete enemies[42]
+            
+            NetworkClient2 -> Client2 : onEntityDead(42)
+            Client2 -> Client2 : delete enemies[42]
+        end
+    end
+    
+    == Client Rendering ==
+    Client1 -> Client1 : render()
+    Client1 -> Client1 : Draw background
+    Client1 -> Client1 : Draw local player
+    Client1 -> Client1 : Draw other players
+    Client1 -> Client1 : Draw enemies
+    Client1 -> Client1 : Draw projectiles
+    Client1 -> Client1 : Draw UI (health, score)
+    Client1 -> Player1 : Display frame
+
+end
+
+== Boss Spawn Event ==
+GameLoop -> GameLoop : WaveManager detects boss wave
+GameLoop -> GameLoop : createBossEntity()
+GameLoop -> GameLoop : emit BossSpawnEvent
+
+GameLoop -> Server : BossSpawnPacket
+Server -> NetworkServer : broadcastPacket(S2C_BOSS_SPAWN)
+NetworkServer -> NetworkClient1 : S2C_BOSS_SPAWN\nbossId=100, type=1
+NetworkServer -> NetworkClient2 : S2C_BOSS_SPAWN\nbossId=100, type=1
+
+NetworkClient1 -> Client1 : onBossSpawn(100, TANK_BOSS)
+Client1 -> Client1 : bosses[100] = new Boss()
+Client1 -> Client1 : playSound("boss_warning")
+Client1 -> Client1 : playMusic("boss_theme")
+
+NetworkClient2 -> Client2 : onBossSpawn(100, TANK_BOSS)
+Client2 -> Client2 : bosses[100] = new Boss()
+Client2 -> Client2 : playSound("boss_warning")
+Client2 -> Client2 : playMusic("boss_theme")
+
+== Game Over ==
+GameLoop -> GameLoop : Boss defeated
+GameLoop -> GameLoop : emit GameEvent(LEVEL_COMPLETE)
+
+GameLoop -> Server : GameEventPacket(LEVEL_COMPLETE)
+Server -> NetworkServer : broadcastPacket(S2C_GAME_EVENT)
+NetworkServer -> NetworkClient1 : S2C_GAME_EVENT\nLEVEL_COMPLETE
+NetworkServer -> NetworkClient2 : S2C_GAME_EVENT\nLEVEL_COMPLETE
+
+NetworkClient1 -> Client1 : onGameEvent(LEVEL_COMPLETE)
+Client1 -> Client1 : GameState = GameOver
+Client1 -> Client1 : showVictoryScreen()
+
+NetworkClient2 -> Client2 : onGameEvent(LEVEL_COMPLETE)
+Client2 -> Client2 : GameState = GameOver
+Client2 -> Client2 : showVictoryScreen()
+
+deactivate Server
+
+@enduml
