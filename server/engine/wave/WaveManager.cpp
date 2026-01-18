@@ -376,6 +376,7 @@ void WaveManager::spawnSpecialEnemy(const SpecialEnemyDef& spawn)
 
 void WaveManager::checkWaveCompletion(EntityManager& entityManager)
 {
+    (void)entityManager;
     if (!_waveActive || _waveCompleted) return;
     if (!_currentLevel) return;
     if (_currentWaveIndex < 0 ||

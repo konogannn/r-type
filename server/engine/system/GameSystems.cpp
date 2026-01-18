@@ -1277,6 +1277,7 @@ void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
                                     LaserShip* laserShip, Position* pos,
                                     Enemy* enemy)
 {
+    (void)enemy;
     if (laserShip->isCharging) {
         laserShip->chargingTime += deltaTime;
         if (laserShip->chargingTime >= 1.0f) {
@@ -1314,6 +1315,7 @@ int WaveMovementSystem::getPriority() const { return 15; }
 void WaveMovementSystem::processEntity(float deltaTime, Entity& entity,
                                        WaveMovement* wave, Position* pos)
 {
+    (void)entity;
     wave->phase += deltaTime * wave->frequency;
 
     pos->y = wave->initialY + wave->amplitude * std::sin(wave->phase);
@@ -1330,6 +1332,7 @@ void ZigzagMovementSystem::processEntity(float deltaTime, Entity& entity,
                                          ZigzagMovement* zigzag, Position* pos,
                                          Velocity* vel)
 {
+    (void)entity;
     if (zigzag->lastY == 0.0f) {
         zigzag->lastY = pos->y;
     }

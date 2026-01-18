@@ -535,6 +535,7 @@ Entity GameEntityFactory::createSpeedItem(float x, float y)
 Entity GameEntityFactory::createGuidedMissile(EntityId ownerId,
                                               const Position& ownerPos)
 {
+    (void)ownerId;
     Entity missile = _entityManager.createEntity();
 
     _entityManager.addComponent(missile,
