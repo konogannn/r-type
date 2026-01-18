@@ -671,7 +671,8 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 10: {
             scale = 2.2f;
-            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::regular_data))) {
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::regular_data))) {
                 entity.animFrameCount = 3;
                 entity.animCurrentFrame = 0;
                 entity.animFrameTime = 0.0f;
