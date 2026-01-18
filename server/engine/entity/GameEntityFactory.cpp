@@ -231,7 +231,6 @@ Entity GameEntityFactory::createStandardBoss(float x, float y,
     bossComponent.maxHealth = baseHealth;
     bossComponent.scaledMaxHealth = scaledHealth;
 
-    // Main body: slow figure-eight pattern
     bossComponent.oscillationSpeed = 0.5f;  // Slower (was 0.8f)
     bossComponent.oscillationAmplitudeX = 50.0f;
     bossComponent.oscillationAmplitudeY = 80.0f;
@@ -256,7 +255,6 @@ Entity GameEntityFactory::createStandardBoss(float x, float y,
         topPos->y = y - 300.0f;
     }
     if (topPart) {
-        // Top turret: fast vertical oscillation
         topPart->oscillationSpeed = 2.5f;
         topPart->oscillationAmplitudeX = 10.0f;
         topPart->oscillationAmplitudeY = 40.0f;
@@ -272,7 +270,6 @@ Entity GameEntityFactory::createStandardBoss(float x, float y,
         bottomPos->y = y + 300.0f;
     }
     if (bottomPart) {
-        // Bottom turret: fast horizontal oscillation (opposite phase)
         bottomPart->oscillationSpeed = 2.0f;
         bottomPart->oscillationAmplitudeX = 35.0f;
         bottomPart->oscillationAmplitudeY = 20.0f;
@@ -316,15 +313,13 @@ Entity GameEntityFactory::createOrbitalBoss(float x, float y,
     _entityManager.addComponent(
         boss, NetworkEntity(_nextEnemyId++, 30));  // Type 30 for boss_4
 
-    // boss_4.png is a spritesheet (4 frames of 48x48)
     _entityManager.addComponent(boss, Animation(0, 4, 0.15f, true));
 
     uint32_t bossId = boss.getId();
 
-    // Create 8 orbiters rotating around the boss
     const int orbiterCount = 8;
     const float orbiterRadius = 150.0f;
-    const float angleStep = 6.28318f / orbiterCount;  // 2*PI / 8
+    const float angleStep = 6.28318f / orbiterCount;
 
     for (int i = 0; i < orbiterCount; i++) {
         float angle = i * angleStep;
@@ -342,7 +337,6 @@ Entity GameEntityFactory::createOrbitalBoss(float x, float y,
         }
 
         if (orbiterPart) {
-            // Circular orbit around boss
             orbiterPart->orbitRadius = orbiterRadius;
             orbiterPart->orbitAngle = angle;  // Start at different angles
             orbiterPart->oscillationSpeed =
@@ -385,13 +379,9 @@ Entity GameEntityFactory::createClassicBoss(float x, float y,
 
     uint32_t bossId = boss.getId();
 
-    // Create 2 turrets with turret.png sprite (type 35)
-    // Turrets positioned in front of boss body
-    // Boss sprite is 130x50, boss faces LEFT so negative X is FRONT
-    // turret.png is 32x23, position turrets at front corners
     float turretOffsetX =
-        -80.0f;  // 80px in front of boss center (towards player)
-    float turretOffsetY = 30.0f;  // Vertical spacing from center
+        -80.0f;
+    float turretOffsetY = 30.0f;
 
     Logger::getInstance().log("=== CREATING CLASSIC BOSS ===", LogLevel::INFO_L,
                               "GameEntityFactory");
@@ -467,10 +457,9 @@ Entity GameEntityFactory::createBossPart(uint32_t bossEntityId,
         BossPart(bossEntityId, partType, relativeX, relativeY, vulnerable));
     _entityManager.addComponent(part, Position(0.0f, 0.0f));
 
-    // Choose entity type based on part type
-    uint8_t entityType = 6;  // Default: turret/boss part (boss_1.png)
+    uint8_t entityType = 6;
     if (partType == BossPart::ARMOR_PLATE) {
-        entityType = 31;  // Orbiter sprite
+        entityType = 31;
     }
 
     _entityManager.addComponent(part,
@@ -527,7 +516,7 @@ Entity GameEntityFactory::createGuidedMissileItem(float x, float y)
     _entityManager.addComponent(item, Item(Item::Type::GUIDED_MISSILE));
     _entityManager.addComponent(
         item,
-        NetworkEntity(_nextBulletId++, 9));  // Type 9 = Guided Missile Item
+        NetworkEntity(_nextBulletId++, 9));
 
     return item;
 }
