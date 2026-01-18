@@ -134,11 +134,11 @@ void BossSystem::handlePhase1(float deltaTime, Entity& entity, Boss* boss,
 
     boss->oscillationTimer += deltaTime;
 
-    float oscillationTime = boss->oscillationTimer * boss->oscillationSpeed +
-                            boss->phaseOffset;
+    float oscillationTime =
+        boss->oscillationTimer * boss->oscillationSpeed + boss->phaseOffset;
     float offsetX = std::sin(oscillationTime) * boss->oscillationAmplitudeX;
-    float offsetY = std::cos(oscillationTime * 2.0f) *
-                    boss->oscillationAmplitudeY;
+    float offsetY =
+        std::cos(oscillationTime * 2.0f) * boss->oscillationAmplitudeY;
 
     pos->x = 1400.0f + offsetX;
     pos->y = 400.0f + offsetY;
