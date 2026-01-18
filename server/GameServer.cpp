@@ -569,7 +569,6 @@ void GameServer::run()
                         0, GameEventType::GAME_EVENT_LEVEL_COMPLETE, 0, 0,
                         static_cast<uint8_t>(levelId));
 
-                    // Load and start next level after a short delay
                     std::thread([waveManager]() {
                         std::this_thread::sleep_for(std::chrono::seconds(3));
                         if (waveManager->loadNextLevel()) {
