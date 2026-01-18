@@ -260,11 +260,7 @@ struct BossPart : public ComponentBase<BossPart> {
 /**
  * @brief Boss types - Different boss variants with unique behaviors
  */
-enum class BossType : uint8_t {
-    STANDARD = 0,
-    ORBITAL  = 1,
-    CLASSIC  = 2
-};
+enum class BossType : uint8_t { STANDARD = 0, ORBITAL = 1, CLASSIC = 2 };
 
 /**
  * @brief Boss component - Main boss entity with phases and complex behavior
