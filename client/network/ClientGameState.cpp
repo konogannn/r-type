@@ -493,7 +493,6 @@ void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
                                   [[maybe_unused]] uint8_t totalWaves,
                                   [[maybe_unused]] uint8_t levelId)
 {
-
     if (eventType == GameEventType::GAME_EVENT_WAVE_START) {
         if (_levelCompleted) {
             _levelCompleted = false;
