@@ -134,8 +134,8 @@ void BossSystem::handlePhase1(float deltaTime, Entity& entity, Boss* boss,
 
     boss->oscillationTimer += deltaTime;
 
-    float oscillationTime =
-        boss->oscillationTimer * boss->oscillationSpeed + boss->phaseOffset;
+    float oscillationTime = boss->oscillationTimer * boss->oscillationSpeed +
+                            boss->phaseOffset;
     float offsetX = std::sin(oscillationTime) * boss->oscillationAmplitudeX;
     float offsetY = std::cos(oscillationTime * 2.0f) *
                     boss->oscillationAmplitudeY;
@@ -174,8 +174,7 @@ void BossSystem::handlePhase2(float deltaTime, Entity& entity, Boss* boss,
     pos->y = 400.0f + std::sin(waveTime) * 150.0f;
 
     if (boss->attackTimer >= boss->attackInterval) {
-        shootSpreadPattern(
-            pos, boss->phaseTimer);
+        shootSpreadPattern(pos, boss->phaseTimer);
         boss->attackTimer = 0.0f;
         boss->attackPatternIndex++;
     }
@@ -203,8 +202,7 @@ void BossSystem::handleEnragedPhase(float deltaTime, Entity& entity, Boss* boss,
     float radiusX = 180.0f;
     float radiusY = 140.0f;
     pos->x = 1400.0f + std::cos(aggressiveTime) * radiusX;
-    pos->y = 400.0f +
-             std::sin(aggressiveTime * 2.0f) * radiusY;
+    pos->y = 400.0f + std::sin(aggressiveTime * 2.0f) * radiusY;
 
     if (boss->attackTimer >= boss->attackInterval) {
         shootEnragedSpreadPattern(pos);
@@ -424,9 +422,8 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
                                    : EntityType::TURRET_MISSILE;
 
             _spawnQueue.push_back(event);
-        }
-        else if (boss->currentPhase == Boss::PHASE_2 ||
-                 boss->currentPhase == Boss::ENRAGED) {
+        } else if (boss->currentPhase == Boss::PHASE_2 ||
+                   boss->currentPhase == Boss::ENRAGED) {
             float targetY1 = startY + t * totalHeight;
             float angle1 = std::atan2(targetY1 - pos->y, -800.0f);
 
@@ -608,8 +605,7 @@ void BossSystem::shootSpreadPattern(Position* pos, float angleOffset)
 
 void BossSystem::shootEnragedSpreadPattern(Position* pos)
 {
-    const int bulletCount =
-        6;
+    const int bulletCount = 6;
     const float spreadAngle = 1.0f;
 
     for (int i = 0; i < bulletCount; i++) {
