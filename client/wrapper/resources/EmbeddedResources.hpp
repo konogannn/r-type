@@ -204,5 +204,10 @@ static const unsigned char speed_arrow_data[] = {
 #embed "../../../assets/sprites/speed_arrow.png"
 };
 
+// Regular enemy
+static const unsigned char regular_data[] = {
+#embed "../../../assets/sprites/regular.png"
+};
+
 }  // namespace embedded
 }  // namespace rtype
