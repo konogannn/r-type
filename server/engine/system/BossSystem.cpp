@@ -12,6 +12,7 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "../../common/utils/Logger.hpp"
 #include "../entity/EntityManager.hpp"
 
 namespace engine {
@@ -48,6 +49,17 @@ void BossSystem::processEntity(float deltaTime, Entity& entity, Boss* boss,
     if (!_entityManager) {
     }
 
+    // Debug: Log boss state occasionally
+    static int frameCounter = 0;
+    if (frameCounter++ % 120 == 0) {
+        Logger::getInstance().log(
+            "Boss update: phase=" +
+                std::to_string(static_cast<int>(boss->currentPhase)) +
+                " health=" + std::to_string(health->current) + "/" +
+                std::to_string(boss->scaledMaxHealth),
+            LogLevel::INFO_L, "BossSystem");
+    }
+
     if (boss->damageFlashTimer > 0.0f) {
         boss->damageFlashTimer -= deltaTime;
         if (boss->damageFlashTimer <= 0.0f) {
@@ -74,8 +86,11 @@ void BossSystem::processEntity(float deltaTime, Entity& entity, Boss* boss,
         return;
     }
 
-    // AGGRESSIVE boss uses same phases as STANDARD but with faster parameters
-    // (configured in GameEntityFactory)
+    // CLASSIC boss uses original simple patterns from main
+    if (boss->bossType == BossType::CLASSIC) {
+        handleClassicBoss(deltaTime, entity, boss, health, pos);
+        return;
+    }
 
     switch (boss->currentPhase) {
         case Boss::ENTRY:
@@ -225,6 +240,11 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
                                   Health* health, Position* pos)
 {
     (void)health;
+    Logger::getInstance().log(
+        ">>> HANDLE DEATH PHASE CALLED - destructionStarted=" +
+            std::to_string(boss->destructionStarted),
+        LogLevel::INFO_L, "BossSystem");
+
     if (boss->destructionStarted) {
         return;
     }
@@ -277,21 +297,59 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
     if (boss->deathTimer <= 0.0f || boss->explosionCount == 15) {
         boss->destructionStarted = true;
 
+        Logger::getInstance().log("=== BOSS DEATH - DESTROYING PARTS ===",
+                                  LogLevel::INFO_L, "BossSystem");
+
         if (!_entityManager) {
+            Logger::getInstance().log("ERROR: _entityManager is null!",
+                                      LogLevel::ERROR_L, "BossSystem");
             return;
         }
 
+        Logger::getInstance().log(
+            "Boss has " + std::to_string(boss->partEntityIds.size()) +
+                " parts to destroy",
+            LogLevel::INFO_L, "BossSystem");
+
+        // Log each part ID
+        for (size_t i = 0; i < boss->partEntityIds.size(); i++) {
+            Logger::getInstance().log(
+                "  Part[" + std::to_string(i) +
+                    "] = " + std::to_string(boss->partEntityIds[i]),
+                LogLevel::INFO_L, "BossSystem");
+        }
+
         for (uint32_t partEntityId : boss->partEntityIds) {
+            Logger::getInstance().log("Attempting to destroy part entity ID: " +
+                                          std::to_string(partEntityId),
+                                      LogLevel::INFO_L, "BossSystem");
             Entity* partEntity = _entityManager->getEntity(partEntityId);
             if (partEntity) {
                 auto* netEntity =
                     _entityManager->getComponent<NetworkEntity>(*partEntity);
                 if (netEntity) {
+                    Logger::getInstance().log(
+                        "Marking part for destruction: entityId=" +
+                            std::to_string(netEntity->entityId) +
+                            ", type=" + std::to_string(netEntity->entityType),
+                        LogLevel::INFO_L, "BossSystem");
                     markForDestruction(partEntityId, netEntity->entityId,
                                        netEntity->entityType);
+                } else {
+                    Logger::getInstance().log(
+                        "WARNING: Part entity " + std::to_string(partEntityId) +
+                            " has no NetworkEntity!",
+                        LogLevel::WARNING_L, "BossSystem");
                 }
+            } else {
+                Logger::getInstance().log("WARNING: Part entity " +
+                                              std::to_string(partEntityId) +
+                                              " not found!",
+                                          LogLevel::WARNING_L, "BossSystem");
             }
         }
+        Logger::getInstance().log("Clearing partEntityIds list",
+                                  LogLevel::INFO_L, "BossSystem");
         boss->partEntityIds.clear();
 
         auto* bossNet = _entityManager->getComponent<NetworkEntity>(entity);
@@ -318,6 +376,9 @@ void BossSystem::checkPhaseTransition(Boss* boss, Health* health)
     }
 
     if (health->current <= 0.0f && boss->currentPhase != Boss::DEATH) {
+        Logger::getInstance().log(
+            ">>> BOSS HEALTH REACHED 0 - ENTERING DEATH PHASE <<<",
+            LogLevel::INFO_L, "BossSystem");
         boss->currentPhase = Boss::DEATH;
         boss->phaseTimer = 0.0f;
     } else if (healthPercent <= boss->enragedThreshold &&
@@ -449,6 +510,111 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
                 _spawnQueue.push_back(event);
             }
         }
+    }
+}
+
+void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
+                                   Health* health, Position* pos)
+{
+    (void)health;
+
+    boss->attackTimer += deltaTime;
+
+    // Mark boss for network sync after position changes
+    auto markForSync = [this, &entity]() {
+        if (_entityManager) {
+            auto* netEntity =
+                _entityManager->getComponent<NetworkEntity>(entity);
+            if (netEntity) {
+                netEntity->needsSync = true;
+            }
+        }
+    };
+
+    // Handle phases for CLASSIC boss (original behavior from main)
+    switch (boss->currentPhase) {
+        case Boss::ENTRY:
+            // Entry phase: move into position
+            if (pos->x > 1400.0f) {
+                pos->x -= 50.0f * deltaTime;
+                markForSync();
+            } else {
+                boss->currentPhase = Boss::PHASE_1;
+                boss->phaseTimer = 0.0f;
+                boss->attackTimer = 0.0f;
+            }
+            break;
+
+        case Boss::PHASE_1: {
+            // Phase 1: Simple vertical oscillation + spread pattern
+            float oscillation = std::sin(boss->phaseTimer * 2.0f) * 100.0f;
+            pos->y = 400.0f + oscillation;
+            markForSync();
+
+            if (boss->attackTimer >= boss->attackInterval) {
+                shootSpreadPattern(pos, boss->phaseTimer);
+                boss->attackTimer = 0.0f;
+                boss->attackPatternIndex++;
+            }
+
+            _turretShootTimer += deltaTime;
+            if (_turretShootTimer >= 3.5f) {
+                if (static_cast<int>(_turretShootTimer * 10) % 2 == 0) {
+                    shootTurretBullets(pos, -80.0f, -60.0f);
+                } else {
+                    shootTurretBullets(pos, -80.0f, 60.0f);
+                }
+                _turretShootTimer = 0.0f;
+            }
+            break;
+        }
+
+        case Boss::PHASE_2: {
+            // Phase 2: Circular movement + circular pattern
+            boss->attackInterval = 1.5f;
+
+            float radiusX = 150.0f;
+            float radiusY = 80.0f;
+            float speed = 1.5f;
+            pos->x = 1400.0f + std::cos(boss->phaseTimer * speed) * radiusX;
+            pos->y = 400.0f + std::sin(boss->phaseTimer * speed) * radiusY;
+            markForSync();
+
+            if (boss->attackTimer >= boss->attackInterval) {
+                shootCircularPattern(pos);
+                boss->attackTimer = 0.0f;
+                boss->attackPatternIndex++;
+            }
+            break;
+        }
+
+        case Boss::ENRAGED: {
+            // Enraged: Fast figure-8 + spiral/circular alternating
+            boss->attackInterval = 0.8f;
+
+            float radiusX = 200.0f;
+            float radiusY = 150.0f;
+            float speed = 3.0f;
+            pos->x = 1400.0f + std::cos(boss->phaseTimer * speed) * radiusX;
+            pos->y =
+                400.0f + std::sin(boss->phaseTimer * speed * 1.3f) * radiusY;
+            markForSync();
+
+            if (boss->attackTimer >= boss->attackInterval) {
+                if (boss->attackPatternIndex % 2 == 0) {
+                    shootSpiralPattern(pos, boss->phaseTimer * 5.0f);
+                } else {
+                    shootCircularPattern(pos);
+                }
+                boss->attackTimer = 0.0f;
+                boss->attackPatternIndex++;
+            }
+            break;
+        }
+
+        case Boss::DEATH:
+            // Death handled in main processEntity
+            break;
     }
 }
 
@@ -613,6 +779,16 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
     // Get all bosses first
     auto bosses = entityManager.getEntitiesWith<Boss, Position>();
 
+    // Debug: Log number of bosses and parts
+    static int updateCounter = 0;
+    if (updateCounter++ % 120 == 0) {
+        auto parts = entityManager.getEntitiesWith<BossPart, Position>();
+        Logger::getInstance().log(
+            "BossPartSystem: " + std::to_string(bosses.size()) + " bosses, " +
+                std::to_string(parts.size()) + " parts",
+            LogLevel::INFO_L, "BossPartSystem");
+    }
+
     // Build a map of boss ID -> Position for quick lookup
     std::unordered_map<uint32_t, Position*> bossPositions;
     for (const auto& bossEntity : bosses) {
@@ -733,8 +909,32 @@ void BossPartSystem::updateBossParts(float deltaTime,
                 std::cos(oscillationTime) * part->oscillationAmplitudeY;
 
             // Apply base relative position + dynamic offset
-            partPos->x = bossPosition.x + part->relativeX + dynamicOffsetX;
-            partPos->y = bossPosition.y + part->relativeY + dynamicOffsetY;
+            float newX = bossPosition.x + part->relativeX + dynamicOffsetX;
+            float newY = bossPosition.y + part->relativeY + dynamicOffsetY;
+
+            // Debug turret positions (only log occasionally to avoid spam)
+            static int debugCounter = 0;
+            if (debugCounter++ % 60 == 0) {
+                Logger::getInstance().log(
+                    "TURRET UPDATE: bossPos=(" +
+                        std::to_string(bossPosition.x) + ", " +
+                        std::to_string(bossPosition.y) + ") relativePos=(" +
+                        std::to_string(part->relativeX) + ", " +
+                        std::to_string(part->relativeY) + ") finalPos=(" +
+                        std::to_string(newX) + ", " + std::to_string(newY) +
+                        ")",
+                    LogLevel::INFO_L, "BossPartSystem");
+            }
+
+            partPos->x = newX;
+            partPos->y = newY;
+
+            // Mark for network sync
+            auto* netEntity =
+                entityManager.getComponent<NetworkEntity>(partEntity);
+            if (netEntity) {
+                netEntity->needsSync = true;
+            }
         }
     }
 }
