@@ -71,7 +71,7 @@ On Linux:
 
 On Windows:
 ```powershell
-.\Release\r-type_server.exe
+.\r-type_server.exe
 ```
 
 ### Running the Client
@@ -85,7 +85,7 @@ On Linux:
 
 On Windows:
 ```powershell
-.\Release\r-type_client.exe
+.\r-type_client.exe
 ```
 
 ## 🤝 Contributing
