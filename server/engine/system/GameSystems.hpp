@@ -187,10 +187,23 @@ class CollisionSystem : public ISystem {
                             const std::vector<Entity>& players,
                             const std::vector<Entity>& items);
 
+    void handlePlayerBulletVsPlayer(EntityManager& entityManager,
+                                    const std::vector<Entity>& bullets,
+                                    const std::vector<Entity>& players);
+
+    bool _powerUpsEnabled = true;
+    bool _friendlyFireEnabled = false;
+
    public:
     CollisionSystem(std::vector<SpawnEvent>& spawnQueue)
         : _spawnQueue(spawnQueue)
     {
+    }
+
+    void setPowerUpsEnabled(bool enabled) { _powerUpsEnabled = enabled; }
+    void setFriendlyFireEnabled(bool enabled)
+    {
+        _friendlyFireEnabled = enabled;
     }
 
     std::string getName() const override;

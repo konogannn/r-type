@@ -91,6 +91,9 @@ class GameLoop {
     // Power-up spawning state (0=Shield, 1=Missile, 2=Speed)
     int _nextPowerUpIndex = 0;
 
+    // Configuration flags
+    bool _powerUpsEnabled = true;
+
     /**
      * @brief Main game loop (runs in separate thread)
      */
@@ -245,6 +248,12 @@ class GameLoop {
      * Should be called between game sessions
      */
     void clearAllEntities();
+
+    /**
+     * @brief Set power-ups enabled flag
+     * @param enabled Whether power-ups should spawn
+     */
+    void setPowerUpsEnabled(bool enabled) { _powerUpsEnabled = enabled; }
 
     /**
      * @brief Get unified spawn event queue (for systems to write to)
