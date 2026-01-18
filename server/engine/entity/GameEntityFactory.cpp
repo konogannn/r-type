@@ -379,8 +379,7 @@ Entity GameEntityFactory::createClassicBoss(float x, float y,
 
     uint32_t bossId = boss.getId();
 
-    float turretOffsetX =
-        -80.0f;
+    float turretOffsetX = -80.0f;
     float turretOffsetY = 30.0f;
 
     Logger::getInstance().log("=== CREATING CLASSIC BOSS ===", LogLevel::INFO_L,
@@ -514,9 +513,7 @@ Entity GameEntityFactory::createGuidedMissileItem(float x, float y)
     _entityManager.addComponent(item, Velocity(0.0f, 0.0f));
     _entityManager.addComponent(item, BoundingBox(32.0f, 32.0f, 0.0f, 0.0f));
     _entityManager.addComponent(item, Item(Item::Type::GUIDED_MISSILE));
-    _entityManager.addComponent(
-        item,
-        NetworkEntity(_nextBulletId++, 9));
+    _entityManager.addComponent(item, NetworkEntity(_nextBulletId++, 9));
 
     return item;
 }
