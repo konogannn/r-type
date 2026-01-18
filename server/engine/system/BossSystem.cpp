@@ -49,7 +49,6 @@ void BossSystem::processEntity(float deltaTime, Entity& entity, Boss* boss,
     if (!_entityManager) {
     }
 
-    // Debug: Log boss state occasionally
     static int frameCounter = 0;
     if (frameCounter++ % 120 == 0) {
         Logger::getInstance().log(
@@ -71,7 +70,6 @@ void BossSystem::processEntity(float deltaTime, Entity& entity, Boss* boss,
 
     boss->phaseTimer += deltaTime;
 
-    // Handle DEATH phase for all boss types
     if (boss->currentPhase == Boss::DEATH) {
         handleDeathPhase(deltaTime, entity, boss, health, pos);
         if (!entity.isValid()) {
@@ -80,13 +78,11 @@ void BossSystem::processEntity(float deltaTime, Entity& entity, Boss* boss,
         return;
     }
 
-    // Different behavior for ORBITAL boss
     if (boss->bossType == BossType::ORBITAL) {
         handleOrbitalBoss(deltaTime, entity, boss, health, pos);
         return;
     }
 
-    // CLASSIC boss uses original simple patterns from main
     if (boss->bossType == BossType::CLASSIC) {
         handleClassicBoss(deltaTime, entity, boss, health, pos);
         return;
@@ -136,15 +132,13 @@ void BossSystem::handlePhase1(float deltaTime, Entity& entity, Boss* boss,
     (void)entity;
     (void)health;
 
-    // Update boss oscillation timer
     boss->oscillationTimer += deltaTime;
 
-    // Use boss's custom oscillation parameters for unique movement
     float oscillationTime =
         boss->oscillationTimer * boss->oscillationSpeed + boss->phaseOffset;
     float offsetX = std::sin(oscillationTime) * boss->oscillationAmplitudeX;
     float offsetY = std::cos(oscillationTime * 2.0f) *
-                    boss->oscillationAmplitudeY;  // 2x speed for figure-eight
+                    boss->oscillationAmplitudeY;
 
     pos->x = 1400.0f + offsetX;
     pos->y = 400.0f + offsetY;
@@ -157,9 +151,8 @@ void BossSystem::handlePhase1(float deltaTime, Entity& entity, Boss* boss,
 
     _turretShootTimer += deltaTime;
     if (_turretShootTimer >= 2.5f) {
-        // Both turrets shoot at the same time
-        shootTurretBullets(pos, -80.0f, -300.0f);  // Top turret
-        shootTurretBullets(pos, -80.0f, 300.0f);   // Bottom turret
+        shootTurretBullets(pos, -80.0f, -300.0f);
+        shootTurretBullets(pos, -80.0f, 300.0f);
         _turretShootTimer = 0.0f;
     }
 }
@@ -171,31 +164,26 @@ void BossSystem::handlePhase2(float deltaTime, Entity& entity, Boss* boss,
     (void)health;
     boss->attackInterval = 1.2f;
 
-    // Update boss oscillation timer
     boss->oscillationTimer += deltaTime;
 
-    // Fast wave pattern - quick up and down movement
-    float waveSpeed = 1.5f;  // Slower (was 3.0f)
+    float waveSpeed = 1.5f;
     float waveTime = boss->oscillationTimer * waveSpeed;
 
-    // X stays relatively stable with slight sway
     pos->x = 1350.0f + std::sin(waveTime * 0.3f) * 40.0f;
 
-    // Y moves rapidly up and down in a wave
     pos->y = 400.0f + std::sin(waveTime) * 150.0f;
 
     if (boss->attackTimer >= boss->attackInterval) {
         shootSpreadPattern(
-            pos, boss->phaseTimer);  // Cone pattern instead of circular
+            pos, boss->phaseTimer);
         boss->attackTimer = 0.0f;
         boss->attackPatternIndex++;
     }
 
-    // Turrets shoot faster in phase 2
     _turretShootTimer += deltaTime;
-    if (_turretShootTimer >= 1.5f) {  // Faster than phase 1 (was 2.5f)
-        shootTurretBullets(pos, -80.0f, -300.0f);  // Top turret
-        shootTurretBullets(pos, -80.0f, 300.0f);   // Bottom turret
+    if (_turretShootTimer >= 1.5f) {
+        shootTurretBullets(pos, -80.0f, -300.0f);
+        shootTurretBullets(pos, -80.0f, 300.0f);
         _turretShootTimer = 0.0f;
     }
 }
@@ -207,31 +195,27 @@ void BossSystem::handleEnragedPhase(float deltaTime, Entity& entity, Boss* boss,
     (void)health;
     boss->attackInterval = 0.8f;
 
-    // Update boss oscillation timer
     boss->oscillationTimer += deltaTime;
 
-    // Aggressive figure-eight pattern
-    float aggressiveSpeed = 1.5f;  // Slower (was 2.5f)
+    float aggressiveSpeed = 1.5f;
     float aggressiveTime = boss->oscillationTimer * aggressiveSpeed;
 
     float radiusX = 180.0f;
     float radiusY = 140.0f;
     pos->x = 1400.0f + std::cos(aggressiveTime) * radiusX;
     pos->y = 400.0f +
-             std::sin(aggressiveTime * 2.0f) * radiusY;  // 2x for figure-eight
+             std::sin(aggressiveTime * 2.0f) * radiusY;
 
     if (boss->attackTimer >= boss->attackInterval) {
-        // Shoot 6-bullet spread pattern in enraged phase
         shootEnragedSpreadPattern(pos);
         boss->attackTimer = 0.0f;
         boss->attackPatternIndex++;
     }
 
-    // Turrets shoot LASERS in enraged phase!
     _turretShootTimer += deltaTime;
-    if (_turretShootTimer >= 4.0f) {              // Less frequent (was 2.0f)
-        shootTurretLasers(pos, -80.0f, -300.0f);  // Top turret laser
-        shootTurretLasers(pos, -80.0f, 300.0f);   // Bottom turret laser
+    if (_turretShootTimer >= 4.0f) {
+        shootTurretLasers(pos, -80.0f, -300.0f);
+        shootTurretLasers(pos, -80.0f, 300.0f);
         _turretShootTimer = 0.0f;
     }
 }
@@ -311,7 +295,6 @@ void BossSystem::handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
                 " parts to destroy",
             LogLevel::INFO_L, "BossSystem");
 
-        // Log each part ID
         for (size_t i = 0; i < boss->partEntityIds.size(); i++) {
             Logger::getInstance().log(
                 "  Part[" + std::to_string(i) +
@@ -368,7 +351,6 @@ void BossSystem::checkPhaseTransition(Boss* boss, Health* health)
 
     float healthPercent = health->current / boss->scaledMaxHealth;
 
-    // For ORBITAL boss, skip ENTRY phase immediately
     if (boss->bossType == BossType::ORBITAL &&
         boss->currentPhase == Boss::ENTRY) {
         boss->currentPhase = Boss::PHASE_1;
@@ -387,13 +369,11 @@ void BossSystem::checkPhaseTransition(Boss* boss, Health* health)
     } else if (healthPercent <= boss->enragedThreshold &&
                (boss->currentPhase == Boss::PHASE_1 ||
                 boss->currentPhase == Boss::PHASE_2)) {
-        // ENRAGED at 30% - can transition from PHASE_1 or PHASE_2
         boss->currentPhase = Boss::ENRAGED;
         boss->phaseTimer = 0.0f;
         boss->attackTimer = 0.0f;
     } else if (healthPercent <= boss->phase2Threshold &&
                boss->currentPhase == Boss::PHASE_1) {
-        // PHASE_2 at 60% - only from PHASE_1
         boss->currentPhase = Boss::PHASE_2;
         boss->phaseTimer = 0.0f;
         boss->attackTimer = 0.0f;
@@ -406,7 +386,6 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
     (void)entity;
     (void)health;
 
-    // Static boss - doesn't move
     boss->waveShootTimer += deltaTime;
     boss->attackTimer += deltaTime;
 
@@ -415,14 +394,12 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
     float endY = 750.0f;
     float totalHeight = endY - startY;
 
-    // Shoot one projectile at a time in a wave
     if (boss->waveShootTimer >= boss->waveShootInterval) {
         boss->waveShootTimer = 0.0f;
 
         float t = static_cast<float>(boss->currentWaveIndex) /
                   static_cast<float>(boss->waveProjectileCount - 1);
 
-        // Phase 1: Single wave (top to bottom OR bottom to top)
         if (boss->currentPhase == Boss::PHASE_1 ||
             boss->currentPhase == Boss::ENTRY) {
             float targetY;
@@ -448,11 +425,8 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
 
             _spawnQueue.push_back(event);
         }
-        // Phase 2 & ENRAGED: Two simultaneous waves (top->bottom AND
-        // bottom->top)
         else if (boss->currentPhase == Boss::PHASE_2 ||
                  boss->currentPhase == Boss::ENRAGED) {
-            // Wave 1: Top to bottom
             float targetY1 = startY + t * totalHeight;
             float angle1 = std::atan2(targetY1 - pos->y, -800.0f);
 
@@ -465,7 +439,6 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
             event1.bulletType = EntityType::BASIC_MISSILE;
             _spawnQueue.push_back(event1);
 
-            // Wave 2: Bottom to top
             float targetY2 = endY - t * totalHeight;
             float angle2 = std::atan2(targetY2 - pos->y, -800.0f);
 
@@ -488,14 +461,12 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
         }
     }
 
-    // Phase 3 (ENRAGED): Additional cone pattern with green bullets
     if (boss->currentPhase == Boss::ENRAGED) {
         if (boss->attackTimer >= 3.0f) {
             boss->attackTimer = 0.0f;
 
-            // Shoot cone of 7 green bullets
             const int coneCount = 7;
-            const float coneSpread = 0.8f;  // radians
+            const float coneSpread = 0.8f;
 
             for (int i = 0; i < coneCount; i++) {
                 float angleOffset =
@@ -523,7 +494,6 @@ void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
 
     boss->attackTimer += deltaTime;
 
-    // Mark boss for network sync after position changes
     auto markForSync = [this, &entity]() {
         if (_entityManager) {
             auto* netEntity =
@@ -534,10 +504,8 @@ void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
         }
     };
 
-    // Handle phases for CLASSIC boss (original behavior from main)
     switch (boss->currentPhase) {
         case Boss::ENTRY:
-            // Entry phase: move into position
             if (pos->x > 1400.0f) {
                 pos->x -= 50.0f * deltaTime;
                 markForSync();
@@ -549,7 +517,6 @@ void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
             break;
 
         case Boss::PHASE_1: {
-            // Phase 1: Simple vertical oscillation + spread pattern
             float oscillation = std::sin(boss->phaseTimer * 2.0f) * 100.0f;
             pos->y = 400.0f + oscillation;
             markForSync();
@@ -573,7 +540,6 @@ void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
         }
 
         case Boss::PHASE_2: {
-            // Phase 2: Circular movement + circular pattern
             boss->attackInterval = 1.5f;
 
             float radiusX = 150.0f;
@@ -592,7 +558,6 @@ void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
         }
 
         case Boss::ENRAGED: {
-            // Enraged: Fast figure-8 + spiral/circular alternating
             boss->attackInterval = 0.8f;
 
             float radiusX = 200.0f;
@@ -616,7 +581,6 @@ void BossSystem::handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
         }
 
         case Boss::DEATH:
-            // Death handled in main processEntity
             break;
     }
 }
@@ -645,8 +609,8 @@ void BossSystem::shootSpreadPattern(Position* pos, float angleOffset)
 void BossSystem::shootEnragedSpreadPattern(Position* pos)
 {
     const int bulletCount =
-        6;  // 6 bullets for enraged phase (1 more than normal)
-    const float spreadAngle = 1.0f;  // Wider spread
+        6;
+    const float spreadAngle = 1.0f;
 
     for (int i = 0; i < bulletCount; i++) {
         float angle =
@@ -760,13 +724,12 @@ void BossSystem::shootTurretBullets(Position* bossPos, float relativeX,
 void BossSystem::shootTurretLasers(Position* bossPos, float relativeX,
                                    float relativeY)
 {
-    // Shoot horizontal laser from turret position
     SpawnLaserEvent laserEvent;
     laserEvent.ownerId = 0;
     laserEvent.x = bossPos->x + relativeX;
     laserEvent.y = bossPos->y + relativeY;
-    laserEvent.width = 400.0f;   // Shorter laser (was 800.0f)
-    laserEvent.duration = 1.0f;  // Lasts 1 second
+    laserEvent.width = 400.0f;
+    laserEvent.duration = 1.0f;
 
     _spawnQueue.push_back(laserEvent);
 }
@@ -779,10 +742,8 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
 {
     System<BossPart, Position>::update(deltaTime, entityManager);
 
-    // Get all bosses first
     auto bosses = entityManager.getEntitiesWith<Boss, Position>();
 
-    // Debug: Log number of bosses and parts
     static int updateCounter = 0;
     if (updateCounter++ % 120 == 0) {
         auto parts = entityManager.getEntitiesWith<BossPart, Position>();
@@ -792,7 +753,6 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
             LogLevel::INFO_L, "BossPartSystem");
     }
 
-    // Build a map of boss ID -> Position for quick lookup
     std::unordered_map<uint32_t, Position*> bossPositions;
     for (const auto& bossEntity : bosses) {
         auto* bossPos = entityManager.getComponent<Position>(bossEntity);
@@ -801,7 +761,6 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
         }
     }
 
-    // Update all boss parts
     auto parts = entityManager.getEntitiesWith<BossPart, Position>();
 
     for (const auto& partEntity : parts) {
@@ -810,15 +769,12 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
 
         if (!part || !partPos) continue;
 
-        // Find the boss position
         Position* bossPos = nullptr;
         auto it = bossPositions.find(part->bossEntityId);
         if (it != bossPositions.end()) {
             bossPos = it->second;
         }
 
-        // If no matching boss found, try using first available boss (fallback
-        // for orbiters)
         if (!bossPos && part->partType == BossPart::ARMOR_PLATE &&
             !bossPositions.empty()) {
             bossPos = bossPositions.begin()->second;
@@ -828,21 +784,18 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
 
         if (part->partType == BossPart::ARMOR_PLATE &&
             part->orbitRadius > 0.0f) {
-            // Circular orbit for orbiters
             part->orbitAngle += part->oscillationSpeed * deltaTime;
             partPos->x =
                 bossPos->x + std::cos(part->orbitAngle) * part->orbitRadius;
             partPos->y =
                 bossPos->y + std::sin(part->orbitAngle) * part->orbitRadius;
 
-            // Mark for network sync
             auto* netEntity =
                 entityManager.getComponent<NetworkEntity>(partEntity);
             if (netEntity) {
                 netEntity->needsSync = true;
             }
         } else {
-            // Oscillation for turrets
             float oscillationTime =
                 part->oscillationTimer * part->oscillationSpeed +
                 part->phaseOffset;
@@ -854,7 +807,6 @@ void BossPartSystem::update(float deltaTime, EntityManager& entityManager)
             partPos->x = bossPos->x + part->relativeX + dynamicOffsetX;
             partPos->y = bossPos->y + part->relativeY + dynamicOffsetY;
 
-            // Mark for network sync
             auto* netEntity =
                 entityManager.getComponent<NetworkEntity>(partEntity);
             if (netEntity) {
@@ -870,7 +822,6 @@ void BossPartSystem::processEntity(float deltaTime, Entity& entity,
     (void)entity;
     (void)pos;
 
-    // Update oscillation timer
     part->oscillationTimer += deltaTime;
 
     if (part->partType == BossPart::TURRET) {
@@ -891,18 +842,14 @@ void BossPartSystem::updateBossParts(float deltaTime,
 
         if (!part || !partPos) continue;
 
-        // For orbiters: always update if ARMOR_PLATE with orbit radius
-        // (they orbit the closest boss by design)
         if (part->partType == BossPart::ARMOR_PLATE &&
             part->orbitRadius > 0.0f) {
-            // Circular orbit for orbiters - update regardless of bossEntityId
             part->orbitAngle += part->oscillationSpeed * deltaTime;
             partPos->x =
                 bossPosition.x + std::cos(part->orbitAngle) * part->orbitRadius;
             partPos->y =
                 bossPosition.y + std::sin(part->orbitAngle) * part->orbitRadius;
         } else if (part->bossEntityId == bossEntityId) {
-            // Oscillation for turrets - requires matching boss ID
             float oscillationTime =
                 part->oscillationTimer * part->oscillationSpeed +
                 part->phaseOffset;
@@ -911,11 +858,9 @@ void BossPartSystem::updateBossParts(float deltaTime,
             float dynamicOffsetY =
                 std::cos(oscillationTime) * part->oscillationAmplitudeY;
 
-            // Apply base relative position + dynamic offset
             float newX = bossPosition.x + part->relativeX + dynamicOffsetX;
             float newY = bossPosition.y + part->relativeY + dynamicOffsetY;
 
-            // Debug turret positions (only log occasionally to avoid spam)
             static int debugCounter = 0;
             if (debugCounter++ % 60 == 0) {
                 Logger::getInstance().log(
@@ -932,7 +877,6 @@ void BossPartSystem::updateBossParts(float deltaTime,
             partPos->x = newX;
             partPos->y = newY;
 
-            // Mark for network sync
             auto* netEntity =
                 entityManager.getComponent<NetworkEntity>(partEntity);
             if (netEntity) {
@@ -980,10 +924,9 @@ void LaserGrowthSystem::processEntity(float deltaTime, Entity& entity,
     (void)entity;
 
     if (growth->fullyGrown) {
-        return;  // Laser has reached full size
+        return;
     }
 
-    // Grow the laser
     growth->currentWidth += growth->growthRate * deltaTime;
 
     if (growth->currentWidth >= growth->targetWidth) {
@@ -991,9 +934,8 @@ void LaserGrowthSystem::processEntity(float deltaTime, Entity& entity,
         growth->fullyGrown = true;
     }
 
-    // Update bounding box to match current width
     bbox->width = growth->currentWidth;
-    bbox->offsetX = -growth->currentWidth;  // Extends to the left
+    bbox->offsetX = -growth->currentWidth;
 }
 
 std::string BossDamageSystem::getName() const { return "BossDamageSystem"; }
