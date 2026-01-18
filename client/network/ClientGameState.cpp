@@ -493,43 +493,22 @@ void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
                                   [[maybe_unused]] uint8_t totalWaves,
                                   [[maybe_unused]] uint8_t levelId)
 {
-    std::cout << "[CLIENT] onGameEvent called: eventType=" << (int)eventType
-              << " waveNumber=" << (int)waveNumber
-              << " totalWaves=" << (int)totalWaves
-              << " levelId=" << (int)levelId << std::endl;
 
     if (eventType == GameEventType::GAME_EVENT_WAVE_START) {
-        std::cout << "[CLIENT] WAVE_START event received, _levelCompleted="
-                  << _levelCompleted << std::endl;
-
-        // Reset level completed flag when a new wave starts (indicates new
-        // level)
         if (_levelCompleted) {
-            std::cout << "[CLIENT] Resetting _levelCompleted flag - new level "
-                         "starting!"
-                      << std::endl;
             _levelCompleted = false;
         }
 
         if (!_levelCompleted) {
             if (waveNumber == 0 && totalWaves == 0) {
                 _gameEventText = "=== BOSS ===";
-                std::cout << "[CLIENT] Set text to: === BOSS ===" << std::endl;
             } else {
-                _gameEventText = "VAGUE " + std::to_string(waveNumber);
-                std::cout << "[CLIENT] Set text to: VAGUE " << (int)waveNumber
-                          << std::endl;
+                _gameEventText = "WAVE " + std::to_string(waveNumber);
             }
             _gameEventTimer = GAME_EVENT_DISPLAY_TIME;
-            std::cout << "[CLIENT] Set timer to " << GAME_EVENT_DISPLAY_TIME
-                      << std::endl;
-        } else {
-            std::cout << "[CLIENT] Level completed, ignoring wave start"
-                      << std::endl;
         }
     } else if (eventType == GameEventType::GAME_EVENT_LEVEL_COMPLETE) {
-        std::cout << "[CLIENT] LEVEL_COMPLETE event received" << std::endl;
-        _gameEventText = "NIVEAU TERMINE !";
+        _gameEventText = "LEVEL FINISH !";
         _gameEventTimer = GAME_EVENT_DISPLAY_TIME * 2.0f;
         _levelCompleted = true;
         SoundManager::getInstance().playSound("level_win");
@@ -605,7 +584,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 5: {
-            // Boss principal - boss_1.png (spritesheet 5 frames)
             scale = 2.5f;
             if (!entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::boss_1_data))) {
@@ -615,7 +593,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
 
-            // Configure animation: 5 frames, 48x48 each
             entity.animFrameCount = 5;
             entity.animFrameWidth = 48;
             entity.animFrameHeight = 48;
@@ -627,7 +604,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 6: {
-            // BOSS_DUO - boss_1.png (spritesheet 5 frames)
             scale = 1.8f;
             if (!entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::boss_1_data))) {
@@ -637,7 +613,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
 
-            // Configure animation: 5 frames, 48x48 each
             entity.animFrameCount = 5;
             entity.animFrameWidth = 48;
             entity.animFrameHeight = 48;
@@ -885,7 +860,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 30: {
-            // ORBITAL boss - boss_4.png
             scale = 3.0f;
             if (entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_4_data))) {
                 entity.animFrameCount = 4;
@@ -896,14 +870,12 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 entity.animFrameHeight = 48;
                 entity.sprite->setTextureRect(0, 0, 48, 48);
                 entity.sprite->setScale(scale, scale);
-                // Center the sprite origin
                 entity.sprite->setOrigin(24.0f, 24.0f);
             }
             entity.spriteScale = scale;
             break;
         }
         case 31: {
-            // Orbiters - orbiter.png (2 frames, 24x26 each)
             scale = 1.5f;
             if (entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::orbiter_data))) {
@@ -920,7 +892,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 32: {
-            // Green bullet for orbital boss phase 3
             scale = 3.0f;
             if (entity.sprite->loadTexture(
                     ASSET_SPAN(embedded::small_green_bullet_data))) {
@@ -937,7 +908,6 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 34: {
-            // CLASSIC boss - boss_2.png (single sprite 130x50, no animation)
             scale = 2.5f;
             if (entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_2_data))) {
                 entity.animFrameCount = 1;
@@ -948,14 +918,12 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
                 entity.animFrameHeight = 50;
                 entity.sprite->setTextureRect(0, 0, 130, 50);
                 entity.sprite->setScale(scale, scale);
-                // Center the sprite
                 entity.sprite->setOrigin(65.0f, 25.0f);
             }
             entity.spriteScale = scale;
             break;
         }
         case 35: {
-            // CLASSIC boss turret - turret.png (32x23)
             scale = 2.0f;
             if (entity.sprite->loadTexture(ASSET_SPAN(embedded::turret_data))) {
                 entity.animFrameCount = 1;
@@ -1036,7 +1004,6 @@ bool ClientGameState::hasGameEvent() const { return _gameEventTimer > 0.0f; }
 float ClientGameState::getBossHealth() const
 {
     for (const auto& [id, entity] : _entities) {
-        // Types: 5=STANDARD, 30=ORBITAL, 34=CLASSIC
         if (entity->type == 5 || entity->type == 30 || entity->type == 34) {
             return entity->health;
         }
