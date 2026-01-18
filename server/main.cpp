@@ -11,6 +11,7 @@
 
 #include "../common/utils/Logger.hpp"
 #include "GameServer.hpp"
+#include "ServerConfig.hpp"
 
 static rtype::GameServer* g_serverInstance = nullptr;
 
@@ -31,12 +32,21 @@ int main()
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
 
+    auto& config = rtype::ServerConfig::getInstance();
+    config.load();
+
+    const auto& settings = config.getSettings();
+
     std::cout << "========================================" << std::endl;
     std::cout << "  R-Type Multiplayer Server" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << "  Starting R-Type Server..." << std::endl;
-    std::cout << "  Listening on port 8080" << std::endl;
-    std::cout << "  Nb of Players per game: 1-4" << std::endl;
+    std::cout << "  Listening on port " << settings.serverPort << std::endl;
+    std::cout << "  Max Players: " << settings.maxPlayers << std::endl;
+    std::cout << "  Power-Ups: " << (settings.powerUps ? "Enabled" : "Disabled")
+              << std::endl;
+    std::cout << "  Friendly Fire: "
+              << (settings.friendlyFire ? "Enabled" : "Disabled") << std::endl;
     std::cout << "  Press Ctrl+C to stop the server" << std::endl;
     std::cout << "========================================" << std::endl;
 
@@ -44,9 +54,10 @@ int main()
         rtype::GameServer server(60.0f, 30);
         g_serverInstance = &server;
 
-        Logger::getInstance().log("Starting on port 8080...", LogLevel::INFO_L,
-                                  "Server");
-        if (!server.start(8080)) {
+        Logger::getInstance().log(
+            "Starting on port " + std::to_string(settings.serverPort) + "...",
+            LogLevel::INFO_L, "Server");
+        if (!server.start(settings.serverPort)) {
             Logger::getInstance().log("Failed to start server",
                                       LogLevel::ERROR_L, "Error");
             g_serverInstance = nullptr;

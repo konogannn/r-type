@@ -26,8 +26,19 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
       _needsReset(false),
       _playerCount(0),
       _nextPlayerId(1),
-      _score(0)
+      _score(0),
+      _maxPlayers(ServerConfig::getInstance().getMaxPlayers()),
+      _powerUpsEnabled(ServerConfig::getInstance().isPowerUpsEnabled()),
+      _friendlyFireEnabled(ServerConfig::getInstance().isFriendlyFireEnabled())
 {
+    Logger::getInstance().log(
+        "Server config: maxPlayers=" + std::to_string(_maxPlayers) +
+            ", powerUps=" + (_powerUpsEnabled ? "true" : "false") +
+            ", friendlyFire=" + (_friendlyFireEnabled ? "true" : "false"),
+        LogLevel::INFO_L, "Config");
+
+    _gameLoop.setPowerUpsEnabled(_powerUpsEnabled);
+
     _gameLoop.addSystem(std::make_unique<engine::AnimationSystem>());
     _gameLoop.addSystem(std::make_unique<engine::MovementSystem>());
     _gameLoop.addSystem(std::make_unique<engine::WaveMovementSystem>());
@@ -50,12 +61,12 @@ GameServer::GameServer(float targetFPS, uint32_t timeoutSeconds)
     _gameLoop.addSystem(
         std::make_unique<engine::LaserShipSystem>(_gameLoop.getSpawnEvents()));
     _gameLoop.addSystem(std::make_unique<engine::GuidedMissileSystem>());
-    // ItemSpawnerSystem disabled - items spawn only on enemy kill
-    // _gameLoop.addSystem(std::make_unique<engine::ItemSpawnerSystem>(
-    //     _gameLoop.getSpawnEvents(),
-    //     5.0f));
-    _gameLoop.addSystem(
-        std::make_unique<engine::CollisionSystem>(_gameLoop.getSpawnEvents()));
+
+    auto collisionSystem =
+        std::make_unique<engine::CollisionSystem>(_gameLoop.getSpawnEvents());
+    collisionSystem->setPowerUpsEnabled(_powerUpsEnabled);
+    collisionSystem->setFriendlyFireEnabled(_friendlyFireEnabled);
+    _gameLoop.addSystem(std::move(collisionSystem));
     _gameLoop.addSystem(std::make_unique<engine::BulletCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::EnemyCleanupSystem>());
     _gameLoop.addSystem(std::make_unique<engine::LifetimeSystem>());
@@ -152,10 +163,12 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
     {
         std::lock_guard<std::mutex> lock(_playerMutex);
 
-        if (_playerCount >= MAX_PLAYERS) {
+        if (_playerCount >= _maxPlayers) {
             Logger::getInstance().log(
                 "Lobby is full! Rejecting client " + std::to_string(clientId),
                 LogLevel::WARNING_L, "Lobby");
+            _networkServer.sendLoginRejected(
+                clientId, static_cast<uint8_t>(RejectReason::SERVER_FULL));
             return;
         }
 
@@ -164,7 +177,7 @@ void GameServer::onClientLogin(uint32_t clientId, const LoginPacket& packet)
 
         Logger::getInstance().log("Player joined. Players in lobby: " +
                                       std::to_string(_playerCount.load()) +
-                                      "/" + std::to_string(MAX_PLAYERS),
+                                      "/" + std::to_string(_maxPlayers),
                                   LogLevel::INFO_L, "Lobby");
     }
 
@@ -255,7 +268,7 @@ bool GameServer::start(uint16_t port)
     Logger::getInstance().log("Server started on port " + std::to_string(port),
                               LogLevel::INFO_L, "Network");
     Logger::getInstance().log("Waiting for players to connect (1-" +
-                                  std::to_string(MAX_PLAYERS) + " players)...",
+                                  std::to_string(_maxPlayers) + " players)...",
                               LogLevel::INFO_L, "Lobby");
     Logger::getInstance().log("Game will start when " +
                                   std::to_string(MIN_PLAYERS_TO_START) +
