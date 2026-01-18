@@ -345,8 +345,11 @@ void CollisionSystem::handlePlayerBulletVsBoss(
             if (!bossPos || !bossHealth || !bossBox) continue;
 
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
-                bossHealth->takeDamage(bullet->damage);
                 auto* boss = entityManager.getComponent<Boss>(bossEntity);
+                // Don't damage boss if it's already in death phase
+                if (boss && boss->currentPhase == Boss::DEATH) continue;
+
+                bossHealth->takeDamage(bullet->damage);
                 if (boss) {
                     boss->hitCounter++;
                     if (boss->hitCounter >= 5) {
@@ -412,6 +415,9 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                         entityManager.getComponent<Position>(*bossEntity);
                     auto* boss = entityManager.getComponent<Boss>(*bossEntity);
                     if (bossHealth && bossPos) {
+                        // Don't damage boss if it's already in death phase
+                        if (boss && boss->currentPhase == Boss::DEATH) continue;
+
                         bossHealth->takeDamage(bullet->damage);
 
                         if (boss) {
