@@ -15,7 +15,7 @@
 // ==========================================
 // GOD MODE - Set to true for testing
 // ==========================================
-static constexpr bool GOD_MODE = true;
+static constexpr bool GOD_MODE = false;
 // ==========================================
 
 namespace engine {
@@ -346,7 +346,6 @@ void CollisionSystem::handlePlayerBulletVsBoss(
 
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
                 auto* boss = entityManager.getComponent<Boss>(bossEntity);
-                // Don't damage boss if it's already in death phase
                 if (boss && boss->currentPhase == Boss::DEATH) continue;
 
                 bossHealth->takeDamage(bullet->damage);
@@ -415,7 +414,6 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                         entityManager.getComponent<Position>(*bossEntity);
                     auto* boss = entityManager.getComponent<Boss>(*bossEntity);
                     if (bossHealth && bossPos) {
-                        // Don't damage boss if it's already in death phase
                         if (boss && boss->currentPhase == Boss::DEATH) continue;
 
                         bossHealth->takeDamage(bullet->damage);
