@@ -66,6 +66,9 @@ class BossSystem : public System<Boss, Health, Position> {
     void handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
                            Health* health, Position* pos);
 
+    void handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
+                           Health* health, Position* pos);
+
     void shootSpreadPattern(Position* pos, float angleOffset);
     void shootEnragedSpreadPattern(Position* pos);
     void shootCircularPattern(Position* pos);
