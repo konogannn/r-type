@@ -1,0 +1,310 @@
+{
+    "levelId": 3,
+    "name": "Final Confrontation",
+    "description": "The ultimate challenge awaits in the enemy stronghold",
+    "timeLimit": 0,
+    "scoreThreshold": 10000,
+    "waves": [
+        {
+            "waveNumber": 1,
+            "startDelay": 1.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "TANK",
+                    "pattern": "WAVE",
+                    "count": 6,
+                    "startX": 1920,
+                    "startY": 200,
+                    "spacing": 150,
+                    "delayBetweenSpawns": 0.4,
+                    "waveAmplitude": 100.0,
+                    "waveFrequency": 2.5
+                },
+                {
+                    "type": "GLANDUS",
+                    "pattern": "SIMULTANEOUS",
+                    "count": 4,
+                    "startX": 1920,
+                    "startY": 400,
+                    "spacing": 180
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "TURRET",
+                    "x": 1400,
+                    "y": 1,
+                    "isTopTurret": true
+                },
+                {
+                    "type": "TURRET",
+                    "x": 1400,
+                    "y": 1000,
+                    "isTopTurret": false
+                },
+                {
+                    "type": "ORBITERS",
+                    "x": 1500,
+                    "y": 300,
+                    "delay": 2.0,
+                    "radius": 110,
+                    "orbiterCount": 6
+                }
+            ]
+        },
+        {
+            "waveNumber": 2,
+            "startDelay": 1.5,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "FAST",
+                    "pattern": "RANDOM",
+                    "count": 18,
+                    "startX": 1920,
+                    "minY": 100,
+                    "maxY": 980,
+                    "delayBetweenSpawns": 0.25
+                },
+                {
+                    "type": "TANK",
+                    "pattern": "WAVE",
+                    "count": 5,
+                    "startX": 1920,
+                    "startY": 300,
+                    "spacing": 160,
+                    "delayBetweenSpawns": 0.6,
+                    "waveAmplitude": 90.0,
+                    "waveFrequency": 2.0
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1600,
+                    "y": 150,
+                    "delay": 1.0,
+                    "isTop": true,
+                    "laserDuration": 5.0
+                },
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1600,
+                    "y": 930,
+                    "delay": 1.5,
+                    "isTop": false,
+                    "laserDuration": 5.0
+                },
+                {
+                    "type": "ORBITERS",
+                    "x": 1500,
+                    "y": 540,
+                    "delay": 2.5,
+                    "radius": 130,
+                    "orbiterCount": 10
+                }
+            ]
+        },
+        {
+            "waveNumber": 3,
+            "startDelay": 1.5,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "TANK",
+                    "pattern": "FORMATION",
+                    "positions": [
+                        {
+                            "x": 1920,
+                            "y": 100,
+                            "delay": 0.0
+                        },
+                        {
+                            "x": 1920,
+                            "y": 250,
+                            "delay": 0.2
+                        },
+                        {
+                            "x": 1920,
+                            "y": 400,
+                            "delay": 0.4
+                        },
+                        {
+                            "x": 1920,
+                            "y": 550,
+                            "delay": 0.6
+                        },
+                        {
+                            "x": 1920,
+                            "y": 700,
+                            "delay": 0.8
+                        },
+                        {
+                            "x": 1920,
+                            "y": 850,
+                            "delay": 1.0
+                        },
+                        {
+                            "x": 1920,
+                            "y": 1000,
+                            "delay": 1.2
+                        }
+                    ]
+                },
+                {
+                    "type": "GLANDUS",
+                    "pattern": "WAVE",
+                    "count": 6,
+                    "startX": 1920,
+                    "startY": 300,
+                    "spacing": 140,
+                    "delayBetweenSpawns": 0.5,
+                    "waveAmplitude": 80.0,
+                    "waveFrequency": 2.5
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "TURRET",
+                    "x": 900,
+                    "y": 1,
+                    "delay": 1.0,
+                    "isTopTurret": true
+                },
+                {
+                    "type": "TURRET",
+                    "x": 900,
+                    "y": 1000,
+                    "delay": 1.0,
+                    "isTopTurret": false
+                }
+            ]
+        },
+        {
+            "waveNumber": 4,
+            "startDelay": 2.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "FAST",
+                    "pattern": "WAVE",
+                    "count": 20,
+                    "startX": 1920,
+                    "startY": 150,
+                    "spacing": 50,
+                    "delayBetweenSpawns": 0.2,
+                    "waveAmplitude": 120.0,
+                    "waveFrequency": 3.5
+                },
+                {
+                    "type": "GLANDUS",
+                    "pattern": "RANDOM",
+                    "count": 6,
+                    "startX": 1920,
+                    "minY": 150,
+                    "maxY": 930,
+                    "delayBetweenSpawns": 0.6
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "ORBITERS",
+                    "x": 1400,
+                    "y": 250,
+                    "delay": 1.0,
+                    "radius": 110,
+                    "orbiterCount": 8
+                },
+                {
+                    "type": "ORBITERS",
+                    "x": 1400,
+                    "y": 750,
+                    "delay": 1.5,
+                    "radius": 110,
+                    "orbiterCount": 8
+                },
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1600,
+                    "y": 540,
+                    "delay": 2.5,
+                    "isTop": true,
+                    "laserDuration": 5.5
+                }
+            ]
+        },
+        {
+            "waveNumber": 5,
+            "startDelay": 2.0,
+            "waitForAllDestroyed": true,
+            "enemyGroups": [
+                {
+                    "type": "GLANDUS",
+                    "pattern": "RANDOM",
+                    "count": 12,
+                    "startX": 1920,
+                    "minY": 100,
+                    "maxY": 980,
+                    "delayBetweenSpawns": 0.4
+                },
+                {
+                    "type": "TANK",
+                    "pattern": "WAVE",
+                    "count": 8,
+                    "startX": 1920,
+                    "startY": 300,
+                    "spacing": 110,
+                    "delayBetweenSpawns": 0.5,
+                    "waveAmplitude": 90.0,
+                    "waveFrequency": 2.8
+                }
+            ],
+            "specialEnemies": [
+                {
+                    "type": "TURRET",
+                    "x": 700,
+                    "y": 1,
+                    "delay": 0.5,
+                    "isTopTurret": true
+                },
+                {
+                    "type": "TURRET",
+                    "x": 700,
+                    "y": 1000,
+                    "delay": 0.5,
+                    "isTopTurret": false
+                },
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1600,
+                    "y": 200,
+                    "delay": 1.5,
+                    "isTop": true,
+                    "laserDuration": 5.0
+                },
+                {
+                    "type": "LASER_SHIP",
+                    "x": 1600,
+                    "y": 880,
+                    "delay": 2.0,
+                    "isTop": false,
+                    "laserDuration": 5.0
+                },
+                {
+                    "type": "ORBITERS",
+                    "x": 1500,
+                    "y": 540,
+                    "delay": 3.0,
+                    "radius": 140,
+                    "orbiterCount": 12
+                }
+            ]
+        }
+    ],
+    "boss": {
+        "type": 1,
+        "triggerAfterWave": 5,
+        "spawnDelay": 3.0
+    }
+}
