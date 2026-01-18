@@ -262,8 +262,8 @@ struct BossPart : public ComponentBase<BossPart> {
  */
 enum class BossType : uint8_t {
     STANDARD = 0,
-    ORBITAL = 1,
-    CLASSIC = 2
+    ORBITAL  = 1,
+    CLASSIC  = 2
 };
 
 /**
@@ -402,8 +402,7 @@ struct BossCube : public ComponentBase<BossCube> {
     BossCube(uint32_t group = 0, int position = 0)
         : groupId(group),
           positionInCube(position),
-          facingRight(position <
-                      2),
+          facingRight(position < 2),
           cubeRotation(0.0f),
           cubeRotationSpeed(0.5f),
           cubeRadius(150.0f),
