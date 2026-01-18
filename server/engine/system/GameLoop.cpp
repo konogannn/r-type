@@ -51,7 +51,8 @@ void GameLoop::processDestroyedEntities(T* cleanupSystem, bool checkPlayerDeath)
 
         bool isEnemy = isEnemyType(info.entityType);
 
-        bool isBoss = (info.entityType == 5);
+        bool isBoss = (info.entityType == 5 || info.entityType == 30 ||
+                       info.entityType == 34);
 
         if (isEnemy) {
             WaveManager* waveManager = getSystem<WaveManager>();
