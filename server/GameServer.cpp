@@ -544,17 +544,23 @@ void GameServer::run()
                 waveManager->setOnWaveStartCallback(
                     [this](int waveNumber, int totalWaves, int levelId) {
                         Logger::getInstance().log(
-                            "Broadcasting wave " + std::to_string(waveNumber) +
-                                "/" + std::to_string(totalWaves),
+                            ">>> GameServer callback: Broadcasting wave " +
+                                std::to_string(waveNumber) + "/" +
+                                std::to_string(totalWaves) + " for level " +
+                                std::to_string(levelId),
                             LogLevel::INFO_L, "Game");
                         _networkServer.sendGameEvent(
                             0, GameEventType::GAME_EVENT_WAVE_START,
                             static_cast<uint8_t>(waveNumber),
                             static_cast<uint8_t>(totalWaves),
                             static_cast<uint8_t>(levelId));
+                        Logger::getInstance().log(
+                            ">>> GameServer: WAVE_START event sent to network",
+                            LogLevel::INFO_L, "Game");
                     });
 
-                waveManager->setOnLevelCompleteCallback([this](int levelId) {
+                waveManager->setOnLevelCompleteCallback([this, waveManager](
+                                                            int levelId) {
                     Logger::getInstance().log("Broadcasting level " +
                                                   std::to_string(levelId) +
                                                   " complete!",
@@ -562,6 +568,23 @@ void GameServer::run()
                     _networkServer.sendGameEvent(
                         0, GameEventType::GAME_EVENT_LEVEL_COMPLETE, 0, 0,
                         static_cast<uint8_t>(levelId));
+
+                    // Load and start next level after a short delay
+                    std::thread([waveManager]() {
+                        std::this_thread::sleep_for(std::chrono::seconds(3));
+                        if (waveManager->loadNextLevel()) {
+                            int newLevelId = waveManager->getCurrentLevelId();
+                            waveManager->startLevel();
+                            Logger::getInstance().log(
+                                "Next level " + std::to_string(newLevelId) +
+                                    " started!",
+                                LogLevel::INFO_L, "Game");
+                        } else {
+                            Logger::getInstance().log(
+                                "No more levels - Game complete!",
+                                LogLevel::INFO_L, "Game");
+                        }
+                    }).detach();
                 });
 
                 if (waveManager->loadLevel(1)) {
