@@ -377,7 +377,10 @@ void BossSystem::checkPhaseTransition(Boss* boss, Health* health)
 
     if (health->current <= 0.0f && boss->currentPhase != Boss::DEATH) {
         Logger::getInstance().log(
-            ">>> BOSS HEALTH REACHED 0 - ENTERING DEATH PHASE <<<",
+            ">>> BOSS HEALTH REACHED 0 - ENTERING DEATH PHASE <<< BossType=" +
+                std::to_string(static_cast<int>(boss->bossType)) +
+                ", CurrentPhase=" +
+                std::to_string(static_cast<int>(boss->currentPhase)),
             LogLevel::INFO_L, "BossSystem");
         boss->currentPhase = Boss::DEATH;
         boss->phaseTimer = 0.0f;
