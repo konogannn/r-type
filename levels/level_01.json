@@ -151,7 +151,7 @@
         }
     ],
     "boss": {
-        "type": 0,
+        "type": 2,
         "triggerAfterWave": 5,
         "spawnDelay": 2.0
     }
