@@ -1185,8 +1185,8 @@ gdb ./r-type_client
 
 - Read [Architecture Overview](./01-architecture-overview.md)
 - Explore [UI Systems](./02-ui-systems.md)
-- Study [Network Protocol](../server/03-network-protocol.md)
-- Review [Server Architecture](../server/01-architecture-overview.md)
+- Study [Network Protocol](../server/04-networking.md)
+- Review [Server Architecture](../server/02-architecture-overview.md)
 
 ---
 

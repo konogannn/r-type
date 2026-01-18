@@ -2,7 +2,7 @@
     "label": "Common Systems",
     "position": 3,
     "link": {
-        "type": "doc",
-        "id": "technical/common/00-index"
+        "type": "generated-index",
+        "description": "Comprehensive technical documentation for developers and engineers."
     }
 }

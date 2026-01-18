@@ -115,4 +115,4 @@ Found an issue or want to improve the documentation? Please contribute!
 3. Make your changes
 4. Submit a pull request
 
-See [CONTRIBUTING.md](../../../../CONTRIBUTING.md) for detailed guidelines.
+See [CONTRIBUTING.md](https://github.com/konogannn/r-type/blob/main/CONTRIBUTING.md) for detailed guidelines.
