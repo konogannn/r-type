@@ -212,6 +212,15 @@ void Game::update(float deltaTime)
     if (_gameState) {
         _gameState->update(deltaTime);
 
+        // Check if login was rejected (server full, etc.)
+        if (_gameState->isLoginRejected()) {
+            std::cout << "[Game] Login rejected by server: "
+                      << _gameState->getLastError() << std::endl;
+            _running = false;
+            _returnToMenu = true;
+            return;
+        }
+
         SoundManager::getInstance().updateMusic(deltaTime);
 
         updateMusicBasedOnGameState();

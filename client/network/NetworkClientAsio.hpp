@@ -52,6 +52,7 @@ class NetworkClientAsio : public INetworkClient {
     void setOnConnectedCallback(OnConnectedCallback callback) override;
     void setOnDisconnectedCallback(OnDisconnectedCallback callback) override;
     void setOnLoginResponseCallback(OnLoginResponseCallback callback) override;
+    void setOnLoginRejectedCallback(OnLoginRejectedCallback callback) override;
     void setOnEntitySpawnCallback(OnEntitySpawnCallback callback) override;
     void setOnEntityPositionCallback(
         OnEntityPositionCallback callback) override;
@@ -95,6 +96,7 @@ class NetworkClientAsio : public INetworkClient {
     OnConnectedCallback _onConnected;
     OnDisconnectedCallback _onDisconnected;
     OnLoginResponseCallback _onLoginResponse;
+    OnLoginRejectedCallback _onLoginRejected;
     OnEntitySpawnCallback _onEntitySpawn;
     OnEntityPositionCallback _onEntityPosition;
     OnEntityDeadCallback _onEntityDead;
@@ -119,6 +121,7 @@ class NetworkClientAsio : public INetworkClient {
 
     // Message processing
     void processLoginResponse(const uint8_t* data, size_t size);
+    void processLoginRejected(const uint8_t* data, size_t size);
     void processEntitySpawn(const uint8_t* data, size_t size);
     void processEntityPosition(const uint8_t* data, size_t size);
     void processEntityDead(const uint8_t* data, size_t size);

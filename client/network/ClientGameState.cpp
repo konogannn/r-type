@@ -26,6 +26,8 @@ ClientGameState::ClientGameState()
             }
             onLoginResponse(packet.playerId, packet.mapWidth, packet.mapHeight);
         });
+    _networkClient->setOnLoginRejectedCallback(
+        [this](uint8_t reason) { onLoginRejected(reason); });
     _networkClient->setOnEntitySpawnCallback(
         [this](const EntitySpawnPacket& packet) {
             if (_recorder) {
@@ -314,6 +316,7 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
     _mapHeight = mapHeight;
     _gameStarted = true;
     _levelCompleted = false;
+    _loginRejected = false;
 
     for (auto& [id, entity] : _entities) {
         if (entity && entity->type == 1) {
@@ -324,6 +327,26 @@ void ClientGameState::onLoginResponse(uint32_t playerId, uint16_t mapWidth,
             }
         }
     }
+}
+
+void ClientGameState::onLoginRejected(uint8_t reason)
+{
+    std::cout << "[ClientGameState] Login rejected! Reason: "
+              << static_cast<int>(reason) << std::endl;
+
+    _loginRejected = true;
+    _rejectionReason = reason;
+    _connectionAttempting = false;
+    _gameStarted = false;
+
+    if (reason == static_cast<uint8_t>(RejectReason::SERVER_FULL)) {
+        _lastError = "Server is full";
+    } else {
+        _lastError = "Connection rejected by server";
+    }
+
+    // Disconnect from server
+    disconnect();
 }
 
 void ClientGameState::onEntitySpawn(uint32_t entityId, uint8_t type, float x,

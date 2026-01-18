@@ -183,6 +183,12 @@ void NetworkClientAsio::setOnLoginResponseCallback(
     _onLoginResponse = callback;
 }
 
+void NetworkClientAsio::setOnLoginRejectedCallback(
+    OnLoginRejectedCallback callback)
+{
+    _onLoginRejected = callback;
+}
+
 void NetworkClientAsio::setOnEntitySpawnCallback(OnEntitySpawnCallback callback)
 {
     _onEntitySpawn = callback;
@@ -279,6 +285,9 @@ void NetworkClientAsio::processReceivedData(const uint8_t* data, size_t size)
     switch (static_cast<::OpCode>(header->opCode)) {
         case ::OpCode::S2C_LOGIN_OK:
             processLoginResponse(data, size);
+            break;
+        case ::OpCode::S2C_LOGIN_REJECTED:
+            processLoginRejected(data, size);
             break;
         case ::OpCode::S2C_ENTITY_NEW:
             processEntitySpawn(data, size);
@@ -377,6 +386,20 @@ void NetworkClientAsio::processLoginResponse(const uint8_t* data, size_t size)
 
     if (_onLoginResponse) {
         _onLoginResponse(*packet);
+    }
+}
+
+void NetworkClientAsio::processLoginRejected(const uint8_t* data, size_t size)
+{
+    if (size < sizeof(::LoginRejectPacket)) {
+        return;
+    }
+
+    const ::LoginRejectPacket* packet =
+        reinterpret_cast<const ::LoginRejectPacket*>(data);
+
+    if (_onLoginRejected) {
+        _onLoginRejected(packet->reason);
     }
 }
 
