@@ -493,12 +493,42 @@ void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
                                   [[maybe_unused]] uint8_t totalWaves,
                                   [[maybe_unused]] uint8_t levelId)
 {
+    std::cout << "[CLIENT] onGameEvent called: eventType=" << (int)eventType
+              << " waveNumber=" << (int)waveNumber
+              << " totalWaves=" << (int)totalWaves
+              << " levelId=" << (int)levelId << std::endl;
+
     if (eventType == GameEventType::GAME_EVENT_WAVE_START) {
+        std::cout << "[CLIENT] WAVE_START event received, _levelCompleted="
+                  << _levelCompleted << std::endl;
+
+        // Reset level completed flag when a new wave starts (indicates new
+        // level)
+        if (_levelCompleted) {
+            std::cout << "[CLIENT] Resetting _levelCompleted flag - new level "
+                         "starting!"
+                      << std::endl;
+            _levelCompleted = false;
+        }
+
         if (!_levelCompleted) {
-            _gameEventText = "VAGUE " + std::to_string(waveNumber);
+            if (waveNumber == 0 && totalWaves == 0) {
+                _gameEventText = "=== BOSS ===";
+                std::cout << "[CLIENT] Set text to: === BOSS ===" << std::endl;
+            } else {
+                _gameEventText = "VAGUE " + std::to_string(waveNumber);
+                std::cout << "[CLIENT] Set text to: VAGUE " << (int)waveNumber
+                          << std::endl;
+            }
             _gameEventTimer = GAME_EVENT_DISPLAY_TIME;
+            std::cout << "[CLIENT] Set timer to " << GAME_EVENT_DISPLAY_TIME
+                      << std::endl;
+        } else {
+            std::cout << "[CLIENT] Level completed, ignoring wave start"
+                      << std::endl;
         }
     } else if (eventType == GameEventType::GAME_EVENT_LEVEL_COMPLETE) {
+        std::cout << "[CLIENT] LEVEL_COMPLETE event received" << std::endl;
         _gameEventText = "NIVEAU TERMINE !";
         _gameEventTimer = GAME_EVENT_DISPLAY_TIME * 2.0f;
         _levelCompleted = true;
@@ -906,6 +936,40 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.spriteScale = scale;
             break;
         }
+        case 34: {
+            // CLASSIC boss - boss_2.png (single sprite 130x50, no animation)
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_2_data))) {
+                entity.animFrameCount = 1;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 1.0f;
+                entity.animFrameWidth = 130;
+                entity.animFrameHeight = 50;
+                entity.sprite->setTextureRect(0, 0, 130, 50);
+                entity.sprite->setScale(scale, scale);
+                // Center the sprite
+                entity.sprite->setOrigin(65.0f, 25.0f);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 35: {
+            // CLASSIC boss turret - turret.png (32x23)
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::turret_data))) {
+                entity.animFrameCount = 1;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 1.0f;
+                entity.animFrameWidth = 32;
+                entity.animFrameHeight = 23;
+                entity.sprite->setTextureRect(0, 0, 32, 23);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
         default:
             if (entity.type >= 10) {
                 scale = 1.0f;
@@ -972,7 +1036,8 @@ bool ClientGameState::hasGameEvent() const { return _gameEventTimer > 0.0f; }
 float ClientGameState::getBossHealth() const
 {
     for (const auto& [id, entity] : _entities) {
-        if (entity->type == 5 || entity->type == 30) {
+        // Types: 5=STANDARD, 30=ORBITAL, 34=CLASSIC
+        if (entity->type == 5 || entity->type == 30 || entity->type == 34) {
             return entity->health;
         }
     }
@@ -982,7 +1047,7 @@ float ClientGameState::getBossHealth() const
 float ClientGameState::getBossMaxHealth() const
 {
     for (const auto& [id, entity] : _entities) {
-        if (entity->type == 5 || entity->type == 30) {
+        if (entity->type == 5 || entity->type == 30 || entity->type == 34) {
             return entity->maxHealth;
         }
     }
