@@ -68,7 +68,6 @@ bool WaveManager::loadNextLevel()
 {
     int nextLevelId = _currentLevelId + 1;
 
-    // Loop back to level 1 if we've reached the maximum level (3)
     if (nextLevelId > 3) {
         nextLevelId = 1;
         Logger::getInstance().log(
@@ -425,13 +424,12 @@ void WaveManager::triggerBoss()
     Logger::getInstance().log("=== BOSS WAVE TRIGGERED ===", LogLevel::INFO_L,
                               "WaveManager");
 
-    // Notify client about boss wave BEFORE spawning
     if (_onWaveStart) {
         Logger::getInstance().log(
             "Sending BOSS WAVE notification to client (wave 0 = boss "
             "indicator)",
             LogLevel::INFO_L, "WaveManager");
-        _onWaveStart(0, 0, _currentLevelId);  // Wave 0/0 = boss wave indicator
+        _onWaveStart(0, 0, _currentLevelId);
     } else {
         Logger::getInstance().log(
             "WARNING: _onWaveStart callback not set for boss wave "
