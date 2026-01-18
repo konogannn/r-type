@@ -212,6 +212,15 @@ void Game::update(float deltaTime)
     if (_gameState) {
         _gameState->update(deltaTime);
 
+        // Check if login was rejected (server full, etc.)
+        if (_gameState->isLoginRejected()) {
+            std::cout << "[Game] Login rejected by server: "
+                      << _gameState->getLastError() << std::endl;
+            _running = false;
+            _returnToMenu = true;
+            return;
+        }
+
         SoundManager::getInstance().updateMusic(deltaTime);
 
         updateMusicBasedOnGameState();
@@ -415,10 +424,10 @@ void Game::render()
 
                     auto it = hitboxData.find(entity->type);
                     if (it != hitboxData.end()) {
-                        const auto& [hitboxWidth, hitboxHeight, offsetX,
-                                     offsetY] = it->second;
-                        float hbX = sx + offsetX * windowScale;
-                        float hbY = sy + offsetY * windowScale;
+                        const auto& [hitboxWidth, hitboxHeight, hoffsetX,
+                                     hoffsetY] = it->second;
+                        float hbX = sx + hoffsetX * windowScale;
+                        float hbY = sy + hoffsetY * windowScale;
                         float hbW = hitboxWidth * windowScale;
                         float hbH = hitboxHeight * windowScale;
 

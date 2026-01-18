@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ServerConfig.hpp"
 #include "engine/system/GameLoop.hpp"
 #include "network/NetworkServer.hpp"
 
@@ -32,7 +33,10 @@ class GameServer {
 
     std::atomic<uint32_t> _score;
 
-    static constexpr int MAX_PLAYERS = 4;
+    int _maxPlayers;
+    bool _powerUpsEnabled;
+    bool _friendlyFireEnabled;
+
     static constexpr int MIN_PLAYERS_TO_START = 1;
     static constexpr uint16_t DEFAULT_PORT = 8080;
 

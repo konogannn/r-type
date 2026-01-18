@@ -26,6 +26,7 @@ r-type_server*
 *.out
 *.app
 config.json
+settings.json
 
 # Object files
 *.o

@@ -351,7 +351,7 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                 bossHealth->takeDamage(bullet->damage);
                 if (boss) {
                     boss->hitCounter++;
-                    if (boss->hitCounter >= 5) {
+                    if (_powerUpsEnabled && boss->hitCounter >= 5) {
                         boss->hitCounter = 0;
 
                         auto players =
@@ -420,7 +420,7 @@ void CollisionSystem::handlePlayerBulletVsBoss(
 
                         if (boss) {
                             boss->hitCounter++;
-                            if (boss->hitCounter >= 15) {
+                            if (_powerUpsEnabled && boss->hitCounter >= 15) {
                                 boss->hitCounter = 0;
                                 auto players =
                                     entityManager
@@ -664,6 +664,11 @@ void CollisionSystem::update([[maybe_unused]] float deltaTime,
 
     handlePlayerVsEnemy(entityManager, players, enemies);
     handleEnemyBulletVsPlayer(entityManager, bullets, players);
+
+    // Friendly fire: player bullets can damage other players
+    if (_friendlyFireEnabled) {
+        handlePlayerBulletVsPlayer(entityManager, bullets, players);
+    }
 
     for (const auto& info : _entitiesToDestroy) {
         if (info.hasSplit) {
@@ -934,6 +939,70 @@ void CollisionSystem::handlePlayerVsItem(EntityManager& entityManager,
                     markForDestruction(itemEntity.getId(), itemNet->entityId,
                                        itemNet->entityType);
                 }
+                break;
+            }
+        }
+    }
+}
+
+void CollisionSystem::handlePlayerBulletVsPlayer(
+    EntityManager& entityManager, const std::vector<Entity>& bullets,
+    const std::vector<Entity>& players)
+{
+    for (auto& bulletEntity : bullets) {
+        if (isMarkedForDestruction(bulletEntity.getId())) continue;
+
+        auto* bullet = entityManager.getComponent<Bullet>(bulletEntity);
+        if (!bullet || !bullet->fromPlayer) continue;
+
+        auto* bulletPos = entityManager.getComponent<Position>(bulletEntity);
+        auto* bulletBox = entityManager.getComponent<BoundingBox>(bulletEntity);
+        if (!bulletPos || !bulletBox) continue;
+
+        // Get the owner of this bullet to avoid self-damage
+        auto* bulletNet =
+            entityManager.getComponent<NetworkEntity>(bulletEntity);
+        uint32_t bulletOwnerId = bullet->ownerId;
+
+        for (auto& playerEntity : players) {
+            if (isMarkedForDestruction(playerEntity.getId())) continue;
+
+            // Skip if this is the bullet owner (no self-damage)
+            auto* player = entityManager.getComponent<Player>(playerEntity);
+            if (player && player->playerId == bulletOwnerId) continue;
+
+            auto* playerPos =
+                entityManager.getComponent<Position>(playerEntity);
+            auto* playerHealth =
+                entityManager.getComponent<Health>(playerEntity);
+            auto* playerBox =
+                entityManager.getComponent<BoundingBox>(playerEntity);
+            if (!playerPos || !playerHealth || !playerBox) continue;
+
+            if (checkCollision(*bulletPos, *bulletBox, *playerPos,
+                               *playerBox)) {
+                auto* shield = entityManager.getComponent<Shield>(playerEntity);
+                if (shield && shield->active) {
+                    Entity* mutablePlayer =
+                        entityManager.getEntity(playerEntity.getId());
+                    if (mutablePlayer) {
+                        entityManager.removeComponent<Shield>(*mutablePlayer);
+                    }
+                } else if (!GOD_MODE) {
+                    playerHealth->takeDamage(bullet->damage);
+
+                    if (!playerHealth->isAlive() &&
+                        playerHealth->deathTimer < 0.0f) {
+                        playerHealth->deathTimer = 0.5f;
+                    }
+                }
+
+                if (bulletNet) {
+                    markForDestruction(bulletEntity.getId(),
+                                       bulletNet->entityId,
+                                       bulletNet->entityType);
+                }
+
                 break;
             }
         }
@@ -1277,6 +1346,7 @@ void LaserShipSystem::processEntity(float deltaTime, Entity& entity,
                                     LaserShip* laserShip, Position* pos,
                                     Enemy* enemy)
 {
+    (void)enemy;
     if (laserShip->isCharging) {
         laserShip->chargingTime += deltaTime;
         if (laserShip->chargingTime >= 1.0f) {
@@ -1314,6 +1384,7 @@ int WaveMovementSystem::getPriority() const { return 15; }
 void WaveMovementSystem::processEntity(float deltaTime, Entity& entity,
                                        WaveMovement* wave, Position* pos)
 {
+    (void)entity;
     wave->phase += deltaTime * wave->frequency;
 
     pos->y = wave->initialY + wave->amplitude * std::sin(wave->phase);
@@ -1330,6 +1401,7 @@ void ZigzagMovementSystem::processEntity(float deltaTime, Entity& entity,
                                          ZigzagMovement* zigzag, Position* pos,
                                          Velocity* vel)
 {
+    (void)entity;
     if (zigzag->lastY == 0.0f) {
         zigzag->lastY = pos->y;
     }

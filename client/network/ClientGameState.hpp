@@ -88,6 +88,8 @@ class ClientGameState {
     uint16_t _mapHeight = 0;
     bool _gameStarted = false;
     bool _connectionAttempting = false;
+    bool _loginRejected = false;
+    uint8_t _rejectionReason = 0;
     uint32_t _score = 0;
 
     // Entities
@@ -124,6 +126,8 @@ class ClientGameState {
     void disconnect();
     bool isConnected() const;
     bool isGameStarted() const;
+    bool isLoginRejected() const { return _loginRejected; }
+    uint8_t getRejectionReason() const { return _rejectionReason; }
 
     // Game loop integration
     void update(float deltaTime);
@@ -178,6 +182,7 @@ class ClientGameState {
     // Network callbacks
     void onConnected();
     void onDisconnected();
+    void onLoginRejected(uint8_t reason);
     void onLoginResponse(uint32_t playerId, uint16_t mapWidth,
                          uint16_t mapHeight);
     void onEntitySpawn(uint32_t entityId, uint8_t type, float x, float y);

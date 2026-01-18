@@ -21,6 +21,7 @@ using OnConnectedCallback = std::function<void()>;
 using OnDisconnectedCallback = std::function<void()>;
 using OnLoginResponseCallback =
     std::function<void(const ::LoginResponsePacket&)>;
+using OnLoginRejectedCallback = std::function<void(uint8_t reason)>;
 using OnEntitySpawnCallback = std::function<void(const ::EntitySpawnPacket&)>;
 using OnEntityPositionCallback =
     std::function<void(const ::EntityPositionPacket&)>;
@@ -84,6 +85,8 @@ class INetworkClient : public INetworkBase {
     virtual void setOnDisconnectedCallback(OnDisconnectedCallback callback) = 0;
     virtual void setOnLoginResponseCallback(
         OnLoginResponseCallback callback) = 0;
+    virtual void setOnLoginRejectedCallback(
+        OnLoginRejectedCallback callback) = 0;
     virtual void setOnEntitySpawnCallback(OnEntitySpawnCallback callback) = 0;
     virtual void setOnEntityPositionCallback(
         OnEntityPositionCallback callback) = 0;

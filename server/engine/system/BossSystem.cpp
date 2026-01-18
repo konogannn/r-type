@@ -387,7 +387,6 @@ void BossSystem::handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
     boss->waveShootTimer += deltaTime;
     boss->attackTimer += deltaTime;
 
-    float screenHeight = 800.0f;
     float startY = 50.0f;
     float endY = 750.0f;
     float totalHeight = endY - startY;
@@ -918,6 +917,7 @@ void LaserGrowthSystem::processEntity(float deltaTime, Entity& entity,
                                       Position* pos)
 {
     (void)entity;
+    (void)pos;
 
     if (growth->fullyGrown) {
         return;

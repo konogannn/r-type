@@ -402,6 +402,23 @@ bool NetworkServer::sendLoginResponse(uint32_t clientId, uint32_t playerId,
     return true;
 }
 
+bool NetworkServer::sendLoginRejected(uint32_t clientId, uint8_t reason)
+{
+    std::lock_guard<std::mutex> lock(_clientsMutex);
+    auto it = _sessions.find(clientId);
+    if (it == _sessions.end()) return false;
+
+    LoginRejectPacket packet;
+    packet.header.opCode = OpCode::S2C_LOGIN_REJECTED;
+    packet.header.packetSize = sizeof(LoginRejectPacket);
+    packet.header.sequenceId = 0;
+    packet.reason = reason;
+
+    sendToEndpoint(it->second.endpoint, &packet, sizeof(packet), false,
+                   nullptr);
+    return true;
+}
+
 bool NetworkServer::sendEntitySpawn(uint32_t clientId, uint32_t entityId,
                                     uint8_t type, float x, float y)
 {

@@ -102,7 +102,6 @@ class ReplayBrowser {
     Button _backButton;
     std::string _selectedReplay;
     bool _wantsBack;
-    int _scrollOffset;
 
     bool _showRenameDialog;
     bool _showDeleteDialog;

@@ -115,7 +115,7 @@ void GameLoop::processDestroyedEntities<CollisionSystem>(
                 waveManager->onEnemyDestroyed();
             }
 
-            if (rand() % 2 == 0) {
+            if (_powerUpsEnabled && rand() % 2 == 0) {
                 Entity powerUpItem;
                 float spawnX = info.x;
                 switch (_nextPowerUpIndex) {
