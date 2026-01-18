@@ -12,6 +12,12 @@
 #include <limits>
 #include <unordered_set>
 
+// ==========================================
+// GOD MODE - Set to true for testing
+// ==========================================
+static constexpr bool GOD_MODE = false;
+// ==========================================
+
 namespace engine {
 
 std::string MovementSystem::getName() const { return "MovementSystem"; }
@@ -339,8 +345,10 @@ void CollisionSystem::handlePlayerBulletVsBoss(
             if (!bossPos || !bossHealth || !bossBox) continue;
 
             if (checkCollision(*bulletPos, *bulletBox, *bossPos, *bossBox)) {
-                bossHealth->takeDamage(bullet->damage);
                 auto* boss = entityManager.getComponent<Boss>(bossEntity);
+                if (boss && boss->currentPhase == Boss::DEATH) continue;
+
+                bossHealth->takeDamage(bullet->damage);
                 if (boss) {
                     boss->hitCounter++;
                     if (boss->hitCounter >= 5) {
@@ -406,6 +414,8 @@ void CollisionSystem::handlePlayerBulletVsBoss(
                         entityManager.getComponent<Position>(*bossEntity);
                     auto* boss = entityManager.getComponent<Boss>(*bossEntity);
                     if (bossHealth && bossPos) {
+                        if (boss && boss->currentPhase == Boss::DEATH) continue;
+
                         bossHealth->takeDamage(bullet->damage);
 
                         if (boss) {
@@ -484,7 +494,7 @@ void CollisionSystem::handlePlayerVsEnemy(EntityManager& entityManager,
                     if (mutablePlayer) {
                         entityManager.removeComponent<Shield>(*mutablePlayer);
                     }
-                } else {
+                } else if (!GOD_MODE) {
                     playerHealth->takeDamage(20.0f);
 
                     if (!playerHealth->isAlive() &&
@@ -543,7 +553,7 @@ void CollisionSystem::handleEnemyBulletVsPlayer(
                     if (mutablePlayer) {
                         entityManager.removeComponent<Shield>(*mutablePlayer);
                     }
-                } else {
+                } else if (!GOD_MODE) {
                     playerHealth->takeDamage(bullet->damage);
 
                     if (!playerHealth->isAlive() &&

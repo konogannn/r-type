@@ -16,7 +16,7 @@ namespace EntityType {
 constexpr uint8_t PLAYER = 1;
 constexpr uint8_t PLAYER_MISSILE = 2;
 constexpr uint8_t BOSS = 5;
-/* 10 -> 40 enemies */
+constexpr uint8_t BOSS_DUO = 6;
 constexpr uint8_t BASIC = 10;  // basic enemy
 constexpr uint8_t BASIC_MISSILE = 11;
 constexpr uint8_t TANK = 12;  // tank
@@ -32,4 +32,5 @@ constexpr uint8_t LASER = 21;           // laser beam
 constexpr uint8_t GUIDED_MISSILE = 22;  // guided missile projectile
 constexpr uint8_t GLANDUS = 23;         // splitting enemy
 constexpr uint8_t GLANDUS_MINI = 24;    // small split enemy
+constexpr uint8_t GREEN_BULLET = 32;    // small green bullet
 }  // namespace EntityType

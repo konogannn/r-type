@@ -151,7 +151,7 @@
             "specialEnemies": [
                 {
                     "type": "LASER_SHIP",
-                    "x": 1920,
+                    "x": 1600,
                     "y": 150,
                     "delay": 2.5,
                     "isTop": true,
@@ -198,84 +198,11 @@
                     "isTopTurret": false
                 }
             ]
-        },
-        {
-            "waveNumber": 6,
-            "startDelay": 2.5,
-            "waitForAllDestroyed": true,
-            "enemyGroups": [
-                {
-                    "type": "TANK",
-                    "pattern": "FORMATION",
-                    "positions": [
-                        {
-                            "x": 1920,
-                            "y": 200,
-                            "delay": 0.0
-                        },
-                        {
-                            "x": 1920,
-                            "y": 350,
-                            "delay": 0.3
-                        },
-                        {
-                            "x": 1920,
-                            "y": 500,
-                            "delay": 0.6
-                        },
-                        {
-                            "x": 1920,
-                            "y": 650,
-                            "delay": 0.9
-                        },
-                        {
-                            "x": 1920,
-                            "y": 800,
-                            "delay": 1.2
-                        }
-                    ]
-                },
-                {
-                    "type": "FAST",
-                    "pattern": "RANDOM",
-                    "count": 8,
-                    "startX": 1920,
-                    "minY": 100,
-                    "maxY": 980,
-                    "delayBetweenSpawns": 0.4
-                }
-            ],
-            "specialEnemies": [
-                {
-                    "type": "LASER_SHIP",
-                    "x": 1920,
-                    "y": 150,
-                    "delay": 2.0,
-                    "isTop": true,
-                    "laserDuration": 4.0
-                },
-                {
-                    "type": "LASER_SHIP",
-                    "x": 1920,
-                    "y": 930,
-                    "delay": 2.0,
-                    "isTop": false,
-                    "laserDuration": 4.0
-                },
-                {
-                    "type": "ORBITERS",
-                    "x": 1500,
-                    "y": 540,
-                    "delay": 3.0,
-                    "radius": 120,
-                    "orbiterCount": 8
-                }
-            ]
         }
     ],
     "boss": {
         "type": 0,
-        "triggerAfterWave": 6,
+        "triggerAfterWave": 5,
         "spawnDelay": 3.0
     }
 }

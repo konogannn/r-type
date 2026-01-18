@@ -20,7 +20,7 @@
 namespace engine {
 
 constexpr float SPREAD_ANGLE = 0.6f;
-constexpr int SPREAD_BULLET_COUNT = 3;
+constexpr int SPREAD_BULLET_COUNT = 5;
 constexpr float BULLET_SPEED = 300.0f;
 constexpr float TURRET_BULLET_SPEED = 350.0f;
 
@@ -63,12 +63,20 @@ class BossSystem : public System<Boss, Health, Position> {
     void handleDeathPhase(float deltaTime, Entity& entity, Boss* boss,
                           Health* health, Position* pos);
 
+    void handleOrbitalBoss(float deltaTime, Entity& entity, Boss* boss,
+                           Health* health, Position* pos);
+
+    void handleClassicBoss(float deltaTime, Entity& entity, Boss* boss,
+                           Health* health, Position* pos);
+
     void shootSpreadPattern(Position* pos, float angleOffset);
+    void shootEnragedSpreadPattern(Position* pos);
     void shootCircularPattern(Position* pos);
     void shootTargetedShots(Position* pos, EntityManager& entityManager);
     void shootSpiralPattern(Position* pos, float rotation);
     void shootTurretBullets(Position* bossPos, float relativeX,
                             float relativeY);
+    void shootTurretLasers(Position* bossPos, float relativeX, float relativeY);
 
     void checkPhaseTransition(Boss* boss, Health* health);
 
@@ -130,6 +138,19 @@ class AnimationSystem : public System<Animation> {
    protected:
     void processEntity(float deltaTime, Entity& entity,
                        Animation* animation) override;
+
+   public:
+    std::string getName() const override;
+    int getPriority() const override;
+};
+
+/**
+ * @brief Laser Growth System - Manages laser growth animation
+ */
+class LaserGrowthSystem : public System<LaserGrowth, BoundingBox, Position> {
+   protected:
+    void processEntity(float deltaTime, Entity& entity, LaserGrowth* growth,
+                       BoundingBox* bbox, Position* pos) override;
 
    public:
     std::string getName() const override;

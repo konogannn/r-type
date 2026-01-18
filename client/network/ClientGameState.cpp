@@ -384,7 +384,7 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
 
     bool isEnemyProjectile =
         (entity->type == 11 || entity->type == 13 || entity->type == 15 ||
-         entity->type == 17 || entity->type == 19);
+         entity->type == 17 || entity->type == 19 || entity->type == 32);
 
     float clampedX = x;
     float clampedY = y;
@@ -451,6 +451,7 @@ void ClientGameState::onEntityDead(uint32_t entityId)
                 case 17:
                 case 25:
                 case 19:
+                case 32:
                     _explosions.push_back(std::make_unique<Explosion>(
                         ASSET_SPAN(embedded::blowup_1_data),
                         (entity->type == 4) ? entity->x - 16 : entity->x + 16,
@@ -493,12 +494,20 @@ void ClientGameState::onGameEvent(uint8_t eventType, uint8_t waveNumber,
                                   [[maybe_unused]] uint8_t levelId)
 {
     if (eventType == GameEventType::GAME_EVENT_WAVE_START) {
+        if (_levelCompleted) {
+            _levelCompleted = false;
+        }
+
         if (!_levelCompleted) {
-            _gameEventText = "VAGUE " + std::to_string(waveNumber);
+            if (waveNumber == 0 && totalWaves == 0) {
+                _gameEventText = "=== BOSS ===";
+            } else {
+                _gameEventText = "WAVE " + std::to_string(waveNumber);
+            }
             _gameEventTimer = GAME_EVENT_DISPLAY_TIME;
         }
     } else if (eventType == GameEventType::GAME_EVENT_LEVEL_COMPLETE) {
-        _gameEventText = "NIVEAU TERMINE !";
+        _gameEventText = "LEVEL FINISH !";
         _gameEventTimer = GAME_EVENT_DISPLAY_TIME * 2.0f;
         _levelCompleted = true;
         SoundManager::getInstance().playSound("level_win");
@@ -574,29 +583,43 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 5: {
-            scale = 2.0f;
+            scale = 2.5f;
             if (!entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::boss_2_data))) {
-                if (!entity.sprite->loadTexture(
-                        ASSET_SPAN(embedded::boss_3_data))) {
-                    std::cout
-                        << "[WARN] Could not load boss sprites, using fallback"
-                        << std::endl;
-                }
+                    ASSET_SPAN(embedded::boss_1_data))) {
+                scale = 2.0f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_2_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
+
+            entity.animFrameCount = 5;
+            entity.animFrameWidth = 48;
+            entity.animFrameHeight = 48;
+            entity.animFrameDuration = 0.15f;
+            entity.animCurrentFrame = 0;
+            entity.animFrameTime = 0.0f;
+            entity.sprite->setTextureRect(0, 0, entity.animFrameWidth,
+                                          entity.animFrameHeight);
             break;
         }
         case 6: {
-            scale = 1.5f;
+            scale = 1.8f;
             if (!entity.sprite->loadTexture(
-                    ASSET_SPAN(embedded::turret_data))) {
-                scale = 0.8f;
-                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
+                    ASSET_SPAN(embedded::boss_1_data))) {
+                scale = 1.5f;
+                entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_2_data));
             }
             entity.sprite->setScale(scale, scale);
             entity.spriteScale = scale;
+
+            entity.animFrameCount = 5;
+            entity.animFrameWidth = 48;
+            entity.animFrameHeight = 48;
+            entity.animFrameDuration = 0.12f;
+            entity.animCurrentFrame = 0;
+            entity.animFrameTime = 0.0f;
+            entity.sprite->setTextureRect(0, 0, entity.animFrameWidth,
+                                          entity.animFrameHeight);
             break;
         }
         case 7: {
@@ -835,6 +858,85 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             entity.animFrameCount = 0;
             break;
         }
+        case 30: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_4_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 48;
+                entity.animFrameHeight = 48;
+                entity.sprite->setTextureRect(0, 0, 48, 48);
+                entity.sprite->setScale(scale, scale);
+                entity.sprite->setOrigin(24.0f, 24.0f);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 31: {
+            scale = 1.5f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::orbiter_data))) {
+                entity.animFrameCount = 2;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 24;
+                entity.animFrameHeight = 26;
+                entity.sprite->setTextureRect(0, 0, 24, 26);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 32: {
+            scale = 3.0f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::small_green_bullet_data))) {
+                entity.animFrameCount = 4;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.1f;
+                entity.animFrameWidth = 14;
+                entity.animFrameHeight = 10;
+                entity.sprite->setTextureRect(0, 0, 14, 10);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 34: {
+            scale = 2.5f;
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_2_data))) {
+                entity.animFrameCount = 1;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 1.0f;
+                entity.animFrameWidth = 130;
+                entity.animFrameHeight = 50;
+                entity.sprite->setTextureRect(0, 0, 130, 50);
+                entity.sprite->setScale(scale, scale);
+                entity.sprite->setOrigin(65.0f, 25.0f);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
+        case 35: {
+            scale = 2.0f;
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::turret_data))) {
+                entity.animFrameCount = 1;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 1.0f;
+                entity.animFrameWidth = 32;
+                entity.animFrameHeight = 23;
+                entity.sprite->setTextureRect(0, 0, 32, 23);
+                entity.sprite->setScale(scale, scale);
+            }
+            entity.spriteScale = scale;
+            break;
+        }
         default:
             if (entity.type >= 10) {
                 scale = 1.0f;
@@ -901,7 +1003,7 @@ bool ClientGameState::hasGameEvent() const { return _gameEventTimer > 0.0f; }
 float ClientGameState::getBossHealth() const
 {
     for (const auto& [id, entity] : _entities) {
-        if (entity->type == 5) {
+        if (entity->type == 5 || entity->type == 30 || entity->type == 34) {
             return entity->health;
         }
     }
@@ -911,7 +1013,7 @@ float ClientGameState::getBossHealth() const
 float ClientGameState::getBossMaxHealth() const
 {
     for (const auto& [id, entity] : _entities) {
-        if (entity->type == 5) {
+        if (entity->type == 5 || entity->type == 30 || entity->type == 34) {
             return entity->maxHealth;
         }
     }

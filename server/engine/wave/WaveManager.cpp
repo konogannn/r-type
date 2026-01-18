@@ -67,6 +67,14 @@ bool WaveManager::loadLevel(int levelId)
 bool WaveManager::loadNextLevel()
 {
     int nextLevelId = _currentLevelId + 1;
+
+    if (nextLevelId > 3) {
+        nextLevelId = 1;
+        Logger::getInstance().log(
+            "Reached maximum level, looping back to level 1", LogLevel::INFO_L,
+            "WaveManager");
+    }
+
     Logger::getInstance().log(
         "Attempting to load next level: " + std::to_string(nextLevelId),
         LogLevel::INFO_L, "WaveManager");
@@ -87,7 +95,9 @@ void WaveManager::startLevel()
         return;
     }
 
-    Logger::getInstance().log("Starting level: " + _currentLevel->name,
+    Logger::getInstance().log(">>> STARTING LEVEL: " + _currentLevel->name +
+                                  " (ID: " + std::to_string(_currentLevelId) +
+                                  ")",
                               LogLevel::INFO_L, "WaveManager");
     _currentWaveIndex = -1;
     _levelCompleted = false;
@@ -148,9 +158,22 @@ void WaveManager::startNextWave()
     _enemiesAliveInWave = 0;
 
     if (_onWaveStart) {
+        Logger::getInstance().log(
+            ">>> CALLING _onWaveStart callback for wave " +
+                std::to_string(_currentWaveIndex + 1) + "/" +
+                std::to_string(_currentLevel->waves.size()) + " level " +
+                std::to_string(_currentLevelId),
+            LogLevel::INFO_L, "WaveManager");
         _onWaveStart(_currentWaveIndex + 1,
                      static_cast<int>(_currentLevel->waves.size()),
                      _currentLevelId);
+        Logger::getInstance().log(">>> FINISHED _onWaveStart callback",
+                                  LogLevel::INFO_L, "WaveManager");
+    } else {
+        Logger::getInstance().log(
+            "!!! WARNING: _onWaveStart callback is NULL! Cannot notify client "
+            "of wave start!",
+            LogLevel::ERROR_L, "WaveManager");
     }
 
     float baseDelay = wave.startDelay;
@@ -398,6 +421,22 @@ void WaveManager::triggerBoss()
 {
     if (!_currentLevel) return;
 
+    Logger::getInstance().log("=== BOSS WAVE TRIGGERED ===", LogLevel::INFO_L,
+                              "WaveManager");
+
+    if (_onWaveStart) {
+        Logger::getInstance().log(
+            "Sending BOSS WAVE notification to client (wave 0 = boss "
+            "indicator)",
+            LogLevel::INFO_L, "WaveManager");
+        _onWaveStart(0, 0, _currentLevelId);
+    } else {
+        Logger::getInstance().log(
+            "WARNING: _onWaveStart callback not set for boss wave "
+            "notification!",
+            LogLevel::WARNING_L, "WaveManager");
+    }
+
     SpawnBossEvent event;
     event.bossType = _currentLevel->boss.bossType;
     event.x = 1600.0f;
@@ -408,7 +447,9 @@ void WaveManager::triggerBoss()
 
     Logger::getInstance().log(
         "Boss spawned! Type: " +
-            std::to_string(static_cast<int>(event.bossType)),
+            std::to_string(static_cast<int>(event.bossType)) +
+            " at position (" + std::to_string(event.x) + ", " +
+            std::to_string(event.y) + ")",
         LogLevel::INFO_L, "WaveManager");
     // Note: Level is NOT marked complete here - it completes when boss is
     // destroyed
