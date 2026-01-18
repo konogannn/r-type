@@ -46,11 +46,12 @@ enum OpCode : uint8_t {
     C2S_INPUT = 5,       ///< Player input state (keys pressed).
 
     // --- S2C (Server to Client) ---
-    S2C_LOGIN_OK = 10,     ///< Login accepted, contains player ID and map info.
-    S2C_ENTITY_NEW = 11,   ///< Spawn a new entity (player, enemy, projectile).
-    S2C_ENTITY_POS = 12,   ///< Update position of an existing entity.
-    S2C_ENTITY_DEAD = 13,  ///< Despawn/Destroy an entity.
-    S2C_MAP = 14,          ///< Map information (unused/reserved).
+    S2C_LOGIN_OK = 10,  ///< Login accepted, contains player ID and map info.
+    S2C_LOGIN_REJECTED = 22,  ///< Login rejected (server full, etc.).
+    S2C_ENTITY_NEW = 11,    ///< Spawn a new entity (player, enemy, projectile).
+    S2C_ENTITY_POS = 12,    ///< Update position of an existing entity.
+    S2C_ENTITY_DEAD = 13,   ///< Despawn/Destroy an entity.
+    S2C_MAP = 14,           ///< Map information (unused/reserved).
     S2C_SCORE_UPDATE = 15,  ///< Update current game score.
     S2C_BOSS_SPAWN = 16,  ///< Boss has spawned (trigger warning/music change).
     S2C_BOSS_STATE = 17,  ///< Boss state update (HP, phase).
@@ -127,6 +128,20 @@ struct LoginResponsePacket {
     uint32_t playerId;   ///< Unique ID assigned to the player's entity.
     uint16_t mapWidth;   ///< Width of the game map in pixels.
     uint16_t mapHeight;  ///< Height of the game map in pixels.
+};
+
+/**
+ * @brief Response from server rejecting login.
+ * OpCode: S2C_LOGIN_REJECTED
+ */
+enum class RejectReason : uint8_t {
+    SERVER_FULL = 1,  ///< Server has reached max players.
+    UNKNOWN = 255     ///< Unknown reason.
+};
+
+struct LoginRejectPacket {
+    Header header;
+    uint8_t reason;  ///< Reason for rejection (RejectReason enum).
 };
 
 /**

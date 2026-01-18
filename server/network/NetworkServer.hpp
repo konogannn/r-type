@@ -171,6 +171,18 @@ class NetworkServer : public INetworkServer {
                            uint16_t mapWidth, uint16_t mapHeight) override;
 
     /**
+     * @brief Send login rejection packet to a client
+     *
+     * Responds to a C2S_LOGIN request with rejection reason.
+     *
+     * @param clientId Internal client identifier
+     * @param reason Reason for rejection (RejectReason enum)
+     * @return true if packet was sent successfully
+     * @return false if client not found
+     */
+    bool sendLoginRejected(uint32_t clientId, uint8_t reason);
+
+    /**
      * @brief Notify client of a new entity spawn
      *
      * Sends an S2C_ENTITY_NEW packet containing entity type and initial
