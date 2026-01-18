@@ -18,12 +18,14 @@ Welcome to the **R-Type Server Technical Documentation**. This comprehensive gui
 **Start here** to understand the project:
 
 1. **[Architecture Overview](./02-architecture-overview.md)** ⭐ **Start Here**
+
    - High-level system design
    - Component interaction diagrams
    - Threading model
    - Design patterns used
 
 2. **[Systems & Components](./03-systems-components.md)**
+
    - Entity Component System (ECS) explained
    - Complete component reference
    - System execution order
@@ -82,12 +84,101 @@ cmake --build build/debug --target r-type_server -j 8
 ========================================
   Starting R-Type Server...
   Listening on port 8080
-  Nb of Players per game: 1-4
+  Max Players: 4
+  Power-Ups: Enabled
+  Friendly Fire: Disabled
   Press Ctrl+C to stop the server
 ========================================
 [Server] Starting on port 8080...
 [Server] Server started successfully
 [Server] Press Ctrl+C to shutdown gracefully
+```
+
+### Server Configuration
+
+The server can be configured using a `settings.json` file placed in the same directory as the executable. If the file doesn't exist, default values are used.
+
+#### Configuration File Format
+
+Create a `settings.json` file with the following structure:
+
+```json
+{
+  "serverPort": 8080,
+  "powerUps": 1,
+  "friendlyFire": 0,
+  "maxPlayers": 4
+}
+```
+
+#### Configuration Options
+
+| Option         | Type    | Default | Description                                                        |
+| -------------- | ------- | ------- | ------------------------------------------------------------------ |
+| `serverPort`   | integer | `8080`  | The UDP port the server listens on                                 |
+| `maxPlayers`   | integer | `4`     | Maximum players per game session (1-4)                             |
+| `powerUps`     | integer | `1`     | Enable power-up spawning (`1` = enabled, `0` = disabled)           |
+| `friendlyFire` | integer | `0`     | Allow players to damage each other (`1` = enabled, `0` = disabled) |
+
+#### Configuration Details
+
+**Server Port (`serverPort`)**
+
+- The UDP port number for client connections
+- Ensure the port is open in your firewall
+- Clients must connect to this port
+
+**Max Players (`maxPlayers`)**
+
+- Controls how many players can join a game session
+- Valid range: 1 to 4
+- When the server is full, new connections are rejected with a "Server Full" message
+
+**Power-Ups (`powerUps`)**
+
+- When enabled (`1`), power-up items spawn when enemies are killed
+- Power-ups include: Shield, Guided Missile, Speed Boost
+- Set to `0` for a more challenging experience without power-ups
+
+**Friendly Fire (`friendlyFire`)**
+
+- When enabled (`1`), player bullets can damage other players
+- Players cannot damage themselves (self-damage is disabled)
+- Adds a cooperative challenge element to multiplayer games
+
+#### Example Configurations
+
+**Competitive Mode (Hard)**
+
+```json
+{
+  "serverPort": 8080,
+  "powerUps": 0,
+  "friendlyFire": 1,
+  "maxPlayers": 4
+}
+```
+
+**Solo Practice**
+
+```json
+{
+  "serverPort": 8080,
+  "powerUps": 1,
+  "friendlyFire": 0,
+  "maxPlayers": 1
+}
+```
+
+**Casual Cooperative**
+
+```json
+{
+  "serverPort": 8080,
+  "powerUps": 1,
+  "friendlyFire": 0,
+  "maxPlayers": 4
+}
 ```
 
 ---
@@ -111,31 +202,34 @@ cmake --build build/debug --target r-type_server -j 8
 
 ### Key Technologies
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Language** | C++17 | Performance & control |
-| **Networking** | Boost.Asio + UDP | Low-latency async I/O |
-| **Architecture** | ECS | Cache-friendly game logic |
-| **Build System** | CMake + vcpkg | Cross-platform builds |
-| **Threading** | std::thread | Network/game separation |
+| Component        | Technology       | Purpose                   |
+| ---------------- | ---------------- | ------------------------- |
+| **Language**     | C++17            | Performance & control     |
+| **Networking**   | Boost.Asio + UDP | Low-latency async I/O     |
+| **Architecture** | ECS              | Cache-friendly game logic |
+| **Build System** | CMake + vcpkg    | Cross-platform builds     |
+| **Threading**    | std::thread      | Network/game separation   |
 
 ---
 
 ## 🎮 Core Features
 
 ### Multiplayer Support
+
 - **1-4 players** per game session
 - **UDP-based** networking for low latency
 - **Custom reliability layer** for critical packets
 - **30 Hz** network synchronization
 
 ### Game Simulation
+
 - **60 FPS** server-side game loop
 - **Entity Component System** architecture
 - **Deterministic** physics and collision
 - **Server-authoritative** (anti-cheat)
 
 ### Performance
+
 - **~5ms** per frame (30% of 16.67ms budget)
 - **~10 KB/s** downstream per client
 - **Cache-friendly** ECS data layout
@@ -148,30 +242,35 @@ cmake --build build/debug --target r-type_server -j 8
 Each document follows a consistent format:
 
 ### 1. Architecture Overview
+
 - **Executive summary** of the system
 - **Layer diagrams** showing component relationships
 - **Data flow** visualizations
 - **Design patterns** used and why
 
 ### 2. Systems & Components
+
 - **Component reference** with usage examples
 - **System details** with algorithms
 - **Entity lifecycle** explanation
 - **Performance characteristics**
 
 ### 3. Networking
+
 - **Protocol specification** with packet formats
 - **Reliability mechanism** (ACK/retry)
 - **Thread communication** patterns
 - **Bandwidth optimization** strategies
 
 ### 4. Technical Comparison
+
 - **Technology choices** justified with metrics
 - **Alternative analysis** (what we didn't use)
 - **Performance data** from benchmarks
 - **Security posture** assessment
 
 ### 5. Tutorials
+
 - **Step-by-step guides** with code
 - **Common tasks** (add entity, system, packet)
 - **Debugging techniques**
@@ -186,11 +285,13 @@ Each document follows a consistent format:
 > **Entities** are IDs, **Components** are data, **Systems** are logic.
 
 This separation enables:
+
 - ⚡ **High performance** through cache-friendly data
 - 🔧 **Flexibility** to compose entities from components
 - 📦 **Maintainability** with clear separation of concerns
 
 **Example**:
+
 ```cpp
 // Create player entity
 Entity player = entityManager.createEntity();
@@ -210,12 +311,14 @@ entityManager.addComponent<Health>(player, {100});
 > **Network thread** handles I/O, **game thread** simulates at 60 FPS.
 
 Communication via thread-safe queues:
+
 ```
 Input:  Network Thread → Queue → Game Thread
 Output: Game Thread → Queue → Network Thread
 ```
 
 Benefits:
+
 - Network I/O never blocks game simulation
 - Game logic runs at consistent 60 FPS
 - Simple, predictable concurrency model
@@ -236,22 +339,22 @@ This hybrid approach gives low latency without data loss.
 
 ### Server Performance
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| **Frame time** | `16.67ms` | `~5ms (30%)` |
-| **Network latency** | `<50ms` | `10-50ms (depends on connection)` |
-| **Bandwidth per client** | `<20 KB/s` | `~10 KB/s` |
-| **Max entities** | `1000+` | `Tested up to 200` |
+| Metric                   | Target     | Actual                            |
+| ------------------------ | ---------- | --------------------------------- |
+| **Frame time**           | `16.67ms`  | `~5ms (30%)`                      |
+| **Network latency**      | `<50ms`    | `10-50ms (depends on connection)` |
+| **Bandwidth per client** | `<20 KB/s` | `~10 KB/s`                        |
+| **Max entities**         | `1000+`    | `Tested up to 200`                |
 
 ### System Breakdown
 
-| System | Time per Frame | % of Budget |
-|--------|----------------|-------------|
-| Movement | `~0.5ms` | `3%` |
-| Collision | `~2-3ms` | `15%` |
-| Spawning | `~0.1ms` | `<1%` |
-| Other | `~1ms` | `6%` |
-| **Total** | **~5ms** | **30%** |
+| System    | Time per Frame | % of Budget |
+| --------- | -------------- | ----------- |
+| Movement  | `~0.5ms`       | `3%`        |
+| Collision | `~2-3ms`       | `15%`       |
+| Spawning  | `~0.1ms`       | `<1%`       |
+| Other     | `~1ms`         | `6%`        |
+| **Total** | **~5ms**       | **30%**     |
 
 ---
 
@@ -285,15 +388,19 @@ ctest --test-dir build/debug --output-on-failure
 ## 🚀 Next Steps
 
 ### I'm New to the Project
+
 → Start with **[Architecture Overview](./02-architecture-overview.md)**
 
 ### I Want to Add a Feature
+
 → Read **[Tutorials](./06-tutorials.md)**
 
 ### I Need to Understand Networking
+
 → Deep dive into **[Networking Architecture](./04-networking.md)**
 
 ### I'm Evaluating Technologies
+
 → Read **[Technical Comparison Study](./05-technical-comparison.md)**
 
 ---
@@ -326,8 +433,8 @@ This documentation is **actively maintained** and should be updated when:
 - 📈 Performance characteristics change
 - 🔧 Build process updated
 
-**Last Updated**: December 2025  
-**Version**: 1.0.0  
+**Last Updated**: January 2026  
+**Version**: 3.0.0  
 **Maintainers**: R-Type Development Team
 
 ---
@@ -335,12 +442,14 @@ This documentation is **actively maintained** and should be updated when:
 ## 🎓 Learning Path
 
 ### Beginner Path (1-2 days)
+
 1. Read Architecture Overview
 2. Understand ECS concepts
 3. Run the server locally
 4. Read one tutorial
 
 ### Intermediate Path (3-5 days)
+
 1. Complete Beginner Path
 2. Study Systems & Components
 3. Read Networking Architecture
@@ -348,6 +457,7 @@ This documentation is **actively maintained** and should be updated when:
 5. Write unit tests
 
 ### Advanced Path (1-2 weeks)
+
 1. Complete Intermediate Path
 2. Study Technical Comparison
 3. Implement a complex feature
@@ -360,13 +470,13 @@ This documentation is **actively maintained** and should be updated when:
 
 ### What Makes This Server Special?
 
-✅ **Modern C++17**: Clean, safe code with smart pointers  
-✅ **Cache-Friendly ECS**: 3x faster than traditional OOP  
-✅ **True Multithreading**: Network and game on separate threads  
-✅ **Custom Reliability**: UDP speed + TCP reliability where needed  
-✅ **Well-Documented**: This documentation you're reading  
-✅ **Cross-Platform**: Windows, Linux, macOS  
-✅ **Testable**: Unit tests with Google Test  
+✅ **Modern C++17**: Clean, safe code with smart pointers
+✅ **Cache-Friendly ECS**: 3x faster than traditional OOP
+✅ **True Multithreading**: Network and game on separate threads
+✅ **Custom Reliability**: UDP speed + TCP reliability where needed
+✅ **Well-Documented**: This documentation you're reading
+✅ **Cross-Platform**: Windows, Linux, macOS
+✅ **Testable**: Unit tests with Google Test
 ✅ **Maintainable**: Clear architecture, good practices
 
 ---
@@ -374,12 +484,14 @@ This documentation is **actively maintained** and should be updated when:
 ## 🎯 Project Goals
 
 ### Technical Goals
+
 - ⚡ **Low latency** (`<50ms` typical)
 - 📈 **Scalable** (supports 4 players effortlessly)
 - 🛡️ **Robust** (never crashes from client input)
 - 🔧 **Maintainable** (easy to add features)
 
 ### Educational Goals
+
 - 📚 **Learn ECS** architecture patterns
 - 🌐 **Understand networking** in games
 - 🧵 **Practice multithreading** safely
@@ -390,4 +502,3 @@ This documentation is **actively maintained** and should be updated when:
 Happy coding! 🚀
 
 If you have questions or suggestions for improving this documentation, please open an issue or discussion on GitHub.
-
