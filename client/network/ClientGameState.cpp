@@ -405,39 +405,8 @@ void ClientGameState::onEntityPosition(uint32_t entityId, float x, float y)
                                        entity->animFrameHeight);
     }
 
-    bool isEnemyProjectile =
-        (entity->type == 11 || entity->type == 13 || entity->type == 15 ||
-         entity->type == 17 || entity->type == 19 || entity->type == 32);
-
-    float clampedX = x;
-    float clampedY = y;
-
-    if (!isEnemyProjectile && _mapWidth > 0 && _mapHeight > 0) {
-        if (clampedX < 0.0f) clampedX = 0.0f;
-        if (clampedY < 0.0f) clampedY = 0.0f;
-        float spriteHeight = 0.0f;
-        if (entity->sprite) {
-            if (entity->type == 1 && entity->animFrameHeight > 0) {
-                spriteHeight = entity->animFrameHeight * entity->spriteScale;
-            } else {
-                spriteHeight =
-                    entity->sprite->getTextureHeight() * entity->spriteScale;
-            }
-        } else {
-            spriteHeight = 0.0f;
-        }
-
-        const float bottomPadding = 64.0f;
-        float maxY =
-            static_cast<float>(_mapHeight) - spriteHeight - bottomPadding;
-        if (maxY < 0.0f) maxY = 0.0f;
-        float maxX = static_cast<float>(_mapWidth);
-        if (clampedX > maxX) clampedX = maxX;
-        if (clampedY > maxY) clampedY = maxY;
-    }
-
-    entity->x = clampedX;
-    entity->y = clampedY;
+    entity->x = x;
+    entity->y = y;
 }
 
 void ClientGameState::onEntityDead(uint32_t entityId)
@@ -701,11 +670,19 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
             break;
         }
         case 10: {
-            scale = 2.0f;
-            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
-            entity.sprite->setScale(scale, scale);
+            scale = 2.2f;
+            if (entity.sprite->loadTexture(
+                    ASSET_SPAN(embedded::regular_data))) {
+                entity.animFrameCount = 3;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 37;
+                entity.animFrameHeight = 26;
+                entity.sprite->setTextureRect(0, 0, 37, 26);
+                entity.sprite->setScale(scale, scale);
+            }
             entity.spriteScale = scale;
-            entity.animFrameCount = 0;
             break;
         }
         case 11: {
@@ -718,10 +695,17 @@ void ClientGameState::createEntitySprite(ClientEntity& entity)
         }
         case 12: {
             scale = 1.5f;
-            entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_3_data));
-            entity.sprite->setScale(scale, scale);
+            if (entity.sprite->loadTexture(ASSET_SPAN(embedded::boss_4_data))) {
+                entity.animFrameCount = 3;
+                entity.animCurrentFrame = 0;
+                entity.animFrameTime = 0.0f;
+                entity.animFrameDuration = 0.15f;
+                entity.animFrameWidth = 65;
+                entity.animFrameHeight = 50;
+                entity.sprite->setTextureRect(0, 0, 65, 50);
+                entity.sprite->setScale(scale, scale);
+            }
             entity.spriteScale = scale;
-            entity.animFrameCount = 0;
             break;
         }
         case 13: {
