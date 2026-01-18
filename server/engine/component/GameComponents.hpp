@@ -263,7 +263,8 @@ struct BossPart : public ComponentBase<BossPart> {
  */
 enum class BossType : uint8_t {
     STANDARD = 0,  // Original boss (boss_1.png with turrets)
-    ORBITAL = 1    // Static boss with rotating orbiters (boss_4.png)
+    ORBITAL = 1,   // Static boss with rotating orbiters (boss_4.png)
+    CLASSIC = 2    // Classic boss with circular shooting pattern (boss_2.png)
 };
 
 /**
