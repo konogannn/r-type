@@ -229,7 +229,6 @@ struct BossPart : public ComponentBase<BossPart> {
     float currentRotation;
     bool canTakeDamage;
 
-    // Dynamic movement parameters
     float oscillationTimer;       // Timer for oscillation
     float oscillationSpeed;       // Speed of oscillation (radians per second)
     float oscillationAmplitudeX;  // Horizontal amplitude
@@ -262,9 +261,9 @@ struct BossPart : public ComponentBase<BossPart> {
  * @brief Boss types - Different boss variants with unique behaviors
  */
 enum class BossType : uint8_t {
-    STANDARD = 0,  // Original boss (boss_1.png with turrets)
-    ORBITAL = 1,   // Static boss with rotating orbiters (boss_4.png)
-    CLASSIC = 2    // Classic boss with circular shooting pattern (boss_2.png)
+    STANDARD = 0,
+    ORBITAL = 1,
+    CLASSIC = 2
 };
 
 /**
@@ -301,14 +300,12 @@ struct Boss : public ComponentBase<Boss> {
 
     uint32_t groupId;  // Group ID for bosses that share health (0 = no group)
 
-    // Oscillation parameters for dynamic movement
     float oscillationTimer = 0.0f;
     float oscillationSpeed = 1.0f;
     float oscillationAmplitudeX = 0.0f;
     float oscillationAmplitudeY = 0.0f;
     float phaseOffset = 0.0f;
 
-    // Wave shooting parameters for ORBITAL boss
     int waveProjectileCount = 20;
     int currentWaveIndex = 0;
     float waveShootTimer = 0.0f;
@@ -348,15 +345,12 @@ struct BossChoreography : public ComponentBase<BossChoreography> {
     int positionInGroup;      // 0, 1, or 2 (left, center, right)
     uint32_t leaderEntityId;  // Entity ID of the leader (center boss)
 
-    // Formation offsets relative to leader
     float formationOffsetX;
     float formationOffsetY;
 
-    // Choreography state
     float choreographyTimer;
     int choreographyPattern;  // Current movement pattern
 
-    // Laser state
     bool laserCharging;
     float laserChargeTime;
     float laserActiveTime;
@@ -375,7 +369,6 @@ struct BossChoreography : public ComponentBase<BossChoreography> {
           laserActiveTime(0.0f),
           laserEntityId(0)
     {
-        // Set formation offsets based on position
         if (position == 0) {  // Left
             formationOffsetX = -150.0f;
             formationOffsetY = -100.0f;
@@ -383,7 +376,6 @@ struct BossChoreography : public ComponentBase<BossChoreography> {
             formationOffsetX = -150.0f;
             formationOffsetY = 100.0f;
         }
-        // Center (position 1) stays at 0, 0
     }
 };
 
@@ -396,16 +388,13 @@ struct BossCube : public ComponentBase<BossCube> {
     int positionInCube;  // 0-3 (top-left, top-right, bottom-left, bottom-right)
     bool facingRight;    // true for sprites 0-2, false for sprites 3-5
 
-    // Cube formation
     float cubeRotation;
     float cubeRotationSpeed;
     float cubeRadius;
 
-    // Center of cube formation
     float cubeCenterX;
     float cubeCenterY;
 
-    // Attack state
     float burstTimer;
     float nextBurstDelay;
     int projectileCount;
@@ -414,7 +403,7 @@ struct BossCube : public ComponentBase<BossCube> {
         : groupId(group),
           positionInCube(position),
           facingRight(position <
-                      2),  // Top two face right, bottom two face left
+                      2),
           cubeRotation(0.0f),
           cubeRotationSpeed(0.5f),
           cubeRadius(150.0f),
