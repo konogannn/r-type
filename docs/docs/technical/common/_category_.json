@@ -1,0 +1,8 @@
+{
+    "label": "Common Systems",
+    "position": 3,
+    "link": {
+        "type": "doc",
+        "id": "technical/common/00-index"
+    }
+}

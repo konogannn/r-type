@@ -1,0 +1,145 @@
+@startuml Game Loop Sequence
+!theme blueprint
+title R-Type Game Loop and System Execution Flow
+
+actor Client as "Client\n(Network)"
+participant GameServer
+participant GameLoop
+participant EntityManager
+participant Systems
+participant ComponentManagers
+participant NetworkServer as "Network\nServer"
+
+activate GameServer
+GameServer -> GameLoop : start()
+activate GameLoop
+
+== Initialization ==
+GameLoop -> EntityManager : create()
+activate EntityManager
+GameLoop -> ComponentManagers : create()
+activate ComponentManagers
+GameLoop -> Systems : addSystem(MovementSystem)
+GameLoop -> Systems : addSystem(CollisionSystem)
+GameLoop -> Systems : addSystem(BossSystem)
+GameLoop -> Systems : addSystem(WaveManager)
+note right: Add all game systems
+
+== Game Loop (60 FPS) ==
+loop Every Frame (16.67ms)
+    
+    GameLoop -> GameLoop : calculateDeltaTime()
+    
+    == Process Network Input ==
+    Client -> GameServer : InputPacket
+    GameServer -> GameLoop : enqueueInput(clientId, inputMask)
+    GameLoop -> GameLoop : processInputQueue()
+    GameLoop -> ComponentManagers : updatePlayerVelocity()
+    
+    == System Updates ==
+    loop For Each System
+        GameLoop -> Systems : update(deltaTime, entityMgr, compMgr)
+        activate Systems
+        
+        alt MovementSystem
+            Systems -> EntityManager : getAllEntities()
+            EntityManager --> Systems : entities[]
+            
+            loop For Each Entity
+                Systems -> ComponentManagers : getComponent<Position>(entityId)
+                ComponentManagers --> Systems : position
+                Systems -> ComponentManagers : getComponent<Velocity>(entityId)
+                ComponentManagers --> Systems : velocity
+                
+                Systems -> Systems : position += velocity * deltaTime
+                
+                Systems -> ComponentManagers : updateComponent(entityId, newPos)
+            end
+            
+        else CollisionSystem
+            Systems -> EntityManager : getAllEntities()
+            Systems -> ComponentManagers : getComponents<Collision>()
+            
+            loop Check All Pairs
+                Systems -> Systems : checkCollision(e1, e2)
+                alt Collision Detected
+                    Systems -> ComponentManagers : damage(e1)
+                    Systems -> ComponentManagers : destroy(e2)
+                    Systems -> GameLoop : emitDestroyEvent(e2)
+                end
+            end
+            
+        else BossSystem
+            Systems -> ComponentManagers : getComponents<Boss>()
+            loop For Each Boss
+                Systems -> Systems : updateBossPhase(boss)
+                alt Phase Change
+                    Systems -> GameLoop : emitSpawnEvent(projectile)
+                end
+            end
+            
+        else WaveManager
+            Systems -> Systems : checkWaveComplete()
+            alt Wave Complete
+                Systems -> GameLoop : emitGameEvent(WAVE_START)
+                Systems -> Systems : spawnNextWave()
+                loop For Each Enemy
+                    Systems -> EntityManager : createEntity()
+                    Systems -> ComponentManagers : addComponents()
+                    Systems -> GameLoop : emitSpawnEvent(enemy)
+                end
+            end
+        end
+        
+        deactivate Systems
+    end
+    
+    == Network Sync (30 Hz) ==
+    alt Sync Frame (every 2 frames)
+        GameLoop -> GameLoop : collectStateUpdates()
+        
+        loop For Each Entity with needsSync
+            GameLoop -> ComponentManagers : getComponent<Position>(entityId)
+            ComponentManagers --> GameLoop : position
+            GameLoop -> GameLoop : stateUpdates.add(EntityPositionPacket)
+        end
+        
+        GameLoop -> GameServer : sendStateUpdates(stateUpdates)
+        activate GameServer
+        
+        loop For Each Update
+            alt Entity Spawned
+                GameServer -> NetworkServer : broadcastPacket(EntitySpawnPacket)
+                NetworkServer -> Client : S2C_ENTITY_NEW
+                
+            else Entity Position Changed
+                GameServer -> NetworkServer : broadcastPacket(EntityPositionPacket)
+                NetworkServer -> Client : S2C_ENTITY_POS
+                
+            else Entity Destroyed
+                GameServer -> NetworkServer : broadcastPacket(EntityDeadPacket)
+                NetworkServer -> Client : S2C_ENTITY_DEAD
+                
+            else Boss Event
+                GameServer -> NetworkServer : broadcastPacket(BossSpawnPacket)
+                NetworkServer -> Client : S2C_BOSS_SPAWN
+            end
+        end
+        deactivate GameServer
+    end
+    
+    == Frame Complete ==
+    GameLoop -> GameLoop : sleep until next frame
+    note right
+        Target: 60 FPS (16.67ms)
+        Network: 30 Hz (33.33ms)
+        Physics: 60 Hz
+    end note
+end
+
+deactivate EntityManager
+deactivate ComponentManagers
+deactivate GameLoop
+deactivate GameServer
+
+@enduml

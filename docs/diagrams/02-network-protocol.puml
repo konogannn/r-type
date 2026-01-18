@@ -1,0 +1,243 @@
+@startuml Network Protocol
+!theme blueprint
+title R-Type Network Protocol Architecture
+
+' Protocol packets
+package "Protocol Packets" {
+    class Header <<struct>> {
+        + uint8_t opCode
+        + uint16_t packetSize
+        + uint32_t sequenceId
+    }
+
+    enum OpCode {
+        C2S_LOGIN = 1
+        C2S_START_GAME = 2
+        C2S_DISCONNECT = 3
+        C2S_ACK = 4
+        C2S_INPUT = 5
+        --
+        S2C_LOGIN_OK = 10
+        S2C_ENTITY_NEW = 11
+        S2C_ENTITY_POS = 12
+        S2C_ENTITY_DEAD = 13
+        S2C_SCORE_UPDATE = 15
+        S2C_BOSS_SPAWN = 16
+        S2C_BOSS_STATE = 17
+        S2C_BOSS_DEATH = 18
+        S2C_HEALTH_UPDATE = 19
+        S2C_SHIELD_STATUS = 20
+        S2C_GAME_EVENT = 21
+    }
+
+    class LoginPacket <<struct>> {
+        + Header header
+        + char username[8]
+    }
+
+    class StartGamePacket <<struct>> {
+        + Header header
+    }
+
+    class DisconnectPacket <<struct>> {
+        + Header header
+    }
+
+    class InputPacket <<struct>> {
+        + Header header
+        + uint32_t inputMask
+    }
+
+    class AckPacket <<struct>> {
+        + Header header
+        + uint32_t ackedSequenceId
+    }
+
+    class LoginOkPacket <<struct>> {
+        + Header header
+        + uint32_t playerId
+        + float mapWidth
+        + float mapHeight
+    }
+
+    class EntitySpawnPacket <<struct>> {
+        + Header header
+        + uint32_t entityId
+        + uint8_t type
+        + float x, y
+    }
+
+    class EntityPositionPacket <<struct>> {
+        + Header header
+        + uint32_t entityId
+        + float x, y
+    }
+
+    class EntityDeadPacket <<struct>> {
+        + Header header
+        + uint32_t entityId
+    }
+
+    class ScoreUpdatePacket <<struct>> {
+        + Header header
+        + uint32_t score
+    }
+
+    class BossSpawnPacket <<struct>> {
+        + Header header
+        + uint32_t bossEntityId
+        + float x, y
+        + uint8_t bossType
+    }
+
+    class HealthUpdatePacket <<struct>> {
+        + Header header
+        + uint32_t entityId
+        + int32_t currentHealth
+        + int32_t maxHealth
+    }
+
+    class GameEventPacket <<struct>> {
+        + Header header
+        + uint8_t eventType
+        + uint32_t waveNumber
+    }
+}
+
+' Client-to-Server packets
+package "Client → Server" {
+    LoginPacket -[hidden]down- StartGamePacket
+    StartGamePacket -[hidden]down- InputPacket
+    InputPacket -[hidden]down- DisconnectPacket
+    DisconnectPacket -[hidden]down- AckPacket
+}
+
+' Server-to-Client packets
+package "Server → Client" {
+    LoginOkPacket -[hidden]down- EntitySpawnPacket
+    EntitySpawnPacket -[hidden]down- EntityPositionPacket
+    EntityPositionPacket -[hidden]down- EntityDeadPacket
+    EntityDeadPacket -[hidden]down- ScoreUpdatePacket
+    ScoreUpdatePacket -[hidden]down- BossSpawnPacket
+    BossSpawnPacket -[hidden]down- HealthUpdatePacket
+    HealthUpdatePacket -[hidden]down- GameEventPacket
+}
+
+' Network components
+package "Network Layer" {
+    class NetworkServer {
+        - boost::asio::io_context _ioContext
+        - udp::socket _socket
+        - std::thread _networkThread
+        - std::map<endpoint, ClientConnection> _clients
+        --
+        + start()
+        + stop()
+        + sendPacket(client, data)
+        + broadcastPacket(data)
+        - handleReceive()
+        - processPacket(data, sender)
+    }
+
+    class NetworkClient {
+        - boost::asio::io_context _ioContext
+        - udp::socket _socket
+        - std::thread _networkThread
+        - udp::endpoint _serverEndpoint
+        --
+        + connect(host, port)
+        + disconnect()
+        + sendPacket(data)
+        + setPacketHandler(opCode, handler)
+        - handleReceive()
+        - processPacket(data)
+    }
+
+    class ClientConnection {
+        + uint32_t playerId
+        + udp::endpoint endpoint
+        + std::chrono::steady_clock::time_point lastActivity
+        + bool isInGame
+        --
+        + updateActivity()
+        + isTimeout() : bool
+    }
+
+    class ReliabilityLayer {
+        - std::map<uint32_t, PendingPacket> _pendingAcks
+        - uint32_t _nextSequenceId
+        - std::mutex _mutex
+        --
+        + sendReliable(packet) : uint32_t
+        + onAckReceived(sequenceId)
+        + retransmitTimedOut()
+        - scheduleRetransmit(seqId)
+    }
+}
+
+' Relationships
+Header "1" --* "1" LoginPacket : contains
+Header "1" --* "1" InputPacket : contains
+Header "1" --* "1" EntitySpawnPacket : contains
+Header "1" --* "1" EntityPositionPacket : contains
+
+Header ..> OpCode : uses
+
+NetworkServer "1" o-- "0..*" ClientConnection : manages
+NetworkServer ..> ReliabilityLayer : uses
+NetworkClient ..> ReliabilityLayer : uses
+
+NetworkServer ..> EntitySpawnPacket : sends
+NetworkServer ..> EntityPositionPacket : sends
+NetworkServer ..> LoginOkPacket : sends
+
+NetworkClient ..> LoginPacket : sends
+NetworkClient ..> InputPacket : sends
+
+' Notes
+note right of Header
+    All packets start with this
+    common header for identification
+    and reliability tracking
+end note
+
+note bottom of OpCode
+    OpCodes 1-9: Client to Server
+    OpCodes 10-99: Server to Client
+    
+    Reliable packets (ACK required):
+    - LOGIN, START_GAME
+    - ENTITY_NEW, ENTITY_DEAD
+    - BOSS_SPAWN, GAME_EVENT
+    
+    Unreliable (no ACK):
+    - INPUT, ENTITY_POS
+    - HEALTH_UPDATE
+end note
+
+note right of NetworkServer
+    UDP server using Boost.Asio
+    - Async I/O on dedicated thread
+    - Handles multiple clients
+    - 30Hz tick rate
+    - 30s timeout
+end note
+
+note left of ReliabilityLayer
+    Custom reliability on UDP:
+    - Sequence IDs for ordering
+    - ACK/Retry mechanism
+    - Retransmit after timeout
+    - Selective reliability
+end note
+
+note bottom of InputPacket
+    Input bitmask:
+    0x01 = UP
+    0x02 = DOWN
+    0x04 = LEFT
+    0x08 = RIGHT
+    0x10 = SHOOT
+end note
+
+@enduml

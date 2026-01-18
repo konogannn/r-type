@@ -1,0 +1,155 @@
+@startuml Threading Architecture
+!theme blueprint
+title R-Type Multi-Threading Architecture
+
+' Thread containers
+package "Server Process" {
+    
+    rectangle "Main Thread" as MainThread {
+        component "Main()" as Main
+        component "Server Init" as ServerInit
+        component "Signal Handler" as SignalHandler
+        
+        Main --> ServerInit
+        Main --> SignalHandler
+    }
+    
+    rectangle "Game Thread" as GameThread #LightBlue {
+        component "GameLoop::run()" as GameLoopRun
+        component "Entity Manager" as EntityMgr
+        component "System Updates" as SystemUpdates
+        component "Input Queue" as InputQueue
+        component "State Updates" as StateUpdates
+        
+        GameLoopRun --> EntityMgr
+        GameLoopRun --> SystemUpdates
+        GameLoopRun --> InputQueue : consumes
+        GameLoopRun --> StateUpdates : produces
+        
+        note right of GameLoopRun
+            60 FPS fixed timestep
+            - Process input queue
+            - Update all systems
+            - Generate state updates
+            - Thread-safe queues
+        end note
+    }
+    
+    rectangle "Network Thread" as NetworkThread #LightGreen {
+        component "io_context::run()" as IoRun
+        component "UDP Socket" as Socket
+        component "Packet Handlers" as PacketHandlers
+        component "Send Queue" as SendQueue
+        component "Receive Buffer" as RecvBuffer
+        
+        IoRun --> Socket
+        Socket --> RecvBuffer
+        RecvBuffer --> PacketHandlers
+        PacketHandlers --> SendQueue
+        
+        note right of IoRun
+            Async I/O event loop
+            - Handle incoming UDP
+            - Send outgoing packets
+            - Process async operations
+            - Non-blocking I/O
+        end note
+    }
+    
+    ' Cross-thread communication
+    queue "Input Queue\n(Thread-Safe)" as InputQueueQ #Yellow
+    queue "State Queue\n(Thread-Safe)" as StateQueueQ #Yellow
+    
+    NetworkThread --> InputQueueQ : enqueue inputs
+    GameThread --> InputQueueQ : dequeue inputs
+    
+    GameThread --> StateQueueQ : enqueue updates
+    NetworkThread --> StateQueueQ : dequeue updates
+}
+
+package "Client Process" {
+    
+    rectangle "Client Main Thread" as ClientMainThread {
+        component "main()" as ClientMain
+        component "Game Loop" as ClientGameLoop
+        component "Input Handler" as ClientInput
+        component "Renderer" as Renderer
+        component "State Machine" as StateMachine
+        
+        ClientMain --> ClientGameLoop
+        ClientGameLoop --> ClientInput
+        ClientGameLoop --> Renderer
+        ClientGameLoop --> StateMachine
+        
+        note right of ClientGameLoop
+            60 FPS target
+            - Poll input
+            - Update game state
+            - Render frame
+            - Send input to server
+        end note
+    }
+    
+    rectangle "Client Network Thread" as ClientNetworkThread #LightGreen {
+        component "io_context::run()" as ClientIoRun
+        component "UDP Socket" as ClientSocket
+        component "Packet Queue" as ClientPacketQueue
+        
+        ClientIoRun --> ClientSocket
+        ClientSocket --> ClientPacketQueue
+        
+        note right of ClientIoRun
+            Async receive loop
+            - Receive server packets
+            - Queue for main thread
+            - Send client packets
+        end note
+    }
+    
+    queue "Packet Queue\n(Thread-Safe)" as PacketQueueQ #Yellow
+    
+    ClientNetworkThread --> PacketQueueQ : enqueue packets
+    ClientMainThread --> PacketQueueQ : dequeue packets
+}
+
+' Thread synchronization
+note as SyncNote
+    **Synchronization Mechanisms:**
+    
+    1. **Thread-Safe Queues:**
+       - std::mutex + std::condition_variable
+       - Lock-free for single producer/consumer
+    
+    2. **Component Managers:**
+       - std::mutex per ComponentManager
+       - Read/write locks for concurrent access
+    
+    3. **Network Async I/O:**
+       - Boost.Asio strand for serialization
+       - No explicit locking needed
+    
+    4. **Entity Manager:**
+       - Mutex-protected entity creation/deletion
+       - Systems read entities without locking
+end note
+
+' Performance notes
+note as PerfNote
+    **Performance Characteristics:**
+    
+    **Server:**
+    - Game Thread: 100% CPU (tight loop)
+    - Network Thread: Event-driven (low CPU)
+    - Main Thread: Mostly idle (signal handling)
+    
+    **Client:**
+    - Main Thread: ~80% CPU (rendering heavy)
+    - Network Thread: Event-driven (low CPU)
+    
+    **Bottlenecks:**
+    - Server: System updates (physics, collision)
+    - Client: Rendering (SFML draw calls)
+    - Network: Packet serialization/deserialization
+end note
+
+@enduml

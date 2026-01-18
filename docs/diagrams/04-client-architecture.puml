@@ -1,0 +1,349 @@
+@startuml Client Architecture
+!theme blueprint
+title R-Type Client Architecture
+
+' Main components
+package "Client Application" {
+    
+    ' Core game
+    class main {
+        - GameState currentState
+        - unique_ptr<NetworkClient> network
+        - unique_ptr<WindowSFML> window
+        - unique_ptr<GraphicsSFML> graphics
+        - unique_ptr<InputSFML> input
+        --
+        + main() : int
+        - gameLoop()
+        - handleInput()
+        - update(deltaTime)
+        - render()
+    }
+
+    enum GameState {
+        Menu
+        ConnectionDialog
+        LobbyMenu
+        LobbyConfigMenu
+        LobbyWaitingRoom
+        InGame
+        GameOver
+        Settings
+        ReplayBrowser
+        ReplayViewing
+    }
+
+    ' UI Screens
+    package "UI Screens" {
+        class Menu {
+            - vector<unique_ptr<Button>> _buttons
+            --
+            + update(deltaTime, input)
+            + render(graphics)
+            + isPlayPressed() : bool
+            + isSettingsPressed() : bool
+            + isQuitPressed() : bool
+        }
+
+        class ConnectionDialog {
+            - unique_ptr<InputField> _ipField
+            - unique_ptr<InputField> _portField
+            - unique_ptr<InputField> _usernameField
+            - unique_ptr<Button> _connectButton
+            --
+            + update(deltaTime, input)
+            + render(graphics)
+            + isConnectPressed() : bool
+            + getConnectionInfo() : ConnectionInfo
+        }
+
+        class LobbyWaitingRoom {
+            - vector<PlayerSlot> _playerSlots
+            - unique_ptr<Button> _readyButton
+            - unique_ptr<Button> _backButton
+            --
+            + update(deltaTime, input)
+            + render(graphics)
+            + updatePlayers(players)
+        }
+
+        class GameScreen {
+            - unique_ptr<Game> _game
+            - unique_ptr<Player> _localPlayer
+            - map<uint32_t, Enemy> _enemies
+            - map<uint32_t, Projectile> _projectiles
+            --
+            + update(deltaTime, input)
+            + render(graphics)
+            + onEntitySpawn(packet)
+            + onEntityPosition(packet)
+            + onEntityDead(packet)
+        }
+
+        class SettingsMenu {
+            - vector<KeyBindingButton> _keyBindings
+            - unique_ptr<Slider> _volumeSlider
+            - unique_ptr<SelectionButton> _colorBlindMode
+            --
+            + update(deltaTime, input)
+            + render(graphics)
+            + applySettings()
+        }
+
+        class ReplayBrowser {
+            - vector<ReplayInfo> _replays
+            - size_t _selectedIndex
+            --
+            + update(deltaTime, input)
+            + render(graphics)
+            + getSelectedReplay() : string
+        }
+    }
+
+    ' Game entities (client-side)
+    package "Game Entities" {
+        class Player {
+            - unique_ptr<ISprite> _sprite
+            - float _x, _y
+            - int _health
+            - bool _hasShield
+            --
+            + update(deltaTime)
+            + render(graphics)
+            + setPosition(x, y)
+            + takeDamage(dmg)
+        }
+
+        class Enemy {
+            - unique_ptr<ISprite> _sprite
+            - float _x, _y
+            - uint8_t _type
+            --
+            + update(deltaTime)
+            + render(graphics)
+            + setPosition(x, y)
+        }
+
+        class Boss {
+            - unique_ptr<ISprite> _sprite
+            - float _x, _y
+            - int _health, _maxHealth
+            - uint8_t _phase
+            --
+            + update(deltaTime)
+            + render(graphics)
+            + setHealth(hp, maxHp)
+            + renderHealthBar(graphics)
+        }
+
+        class Projectile {
+            - unique_ptr<ISprite> _sprite
+            - float _x, _y
+            - bool _isPlayerProjectile
+            --
+            + update(deltaTime)
+            + render(graphics)
+        }
+
+        class Background {
+            - vector<ISprite*> _layers
+            - float _scrollSpeed
+            --
+            + update(deltaTime)
+            + render(graphics)
+        }
+    }
+
+    ' Managers
+    package "Managers" {
+        class TextureManager <<Singleton>> {
+            - map<string, unique_ptr<SpriteSFML>> _sprites
+            --
+            + getInstance() : TextureManager&
+            + loadSprite(id, data) : bool
+            + getSprite(id) : ISprite*
+            + loadAll()
+        }
+
+        class SoundManager <<Singleton>> {
+            - map<string, unique_ptr<ISoundBuffer>> _buffers
+            - map<string, unique_ptr<ISound>> _sounds
+            - float _sfxVolume
+            - float _musicVolume
+            --
+            + getInstance() : SoundManager&
+            + loadSound(name, data)
+            + playSound(name)
+            + setVolume(volume)
+        }
+
+        class Config <<Singleton>> {
+            - map<string, variant<int, float, string, bool>> _values
+            - string _configPath
+            --
+            + getInstance() : Config&
+            + load() : bool
+            + save() : bool
+            + getInt(key, default) : int
+            + setInt(key, value)
+            + getString(key, default) : string
+        }
+    }
+
+    ' Networking
+    package "Network" {
+        class NetworkClient {
+            - boost::asio::io_context _ioContext
+            - udp::socket _socket
+            - std::thread _networkThread
+            - map<OpCode, PacketHandler> _handlers
+            --
+            + connect(host, port) : bool
+            + disconnect()
+            + sendPacket(data)
+            + setPacketHandler(opCode, handler)
+            - handleReceive()
+            - processPacket(data)
+        }
+
+        class ReplayRecorder {
+            - ofstream _file
+            - chrono::time_point _startTime
+            - size_t _packetCount
+            --
+            + startRecording() : bool
+            + stopRecording()
+            + recordPacket(data)
+        }
+
+        class ReplayViewer {
+            - vector<ReplayPacket> _packets
+            - size_t _currentIndex
+            - uint64_t _currentTime
+            - float _playbackSpeed
+            --
+            + load() : bool
+            + play()
+            + pause()
+            + seek(time)
+            + getPacketsForCurrentFrame() : vector
+        }
+    }
+
+    ' SFML Wrapper
+    package "SFML Wrapper" {
+        interface IWindow {
+            + isOpen() : bool
+            + pollEvent(event) : bool
+            + clear()
+            + display()
+        }
+
+        interface IGraphics {
+            + draw(sprite)
+            + drawText(text, x, y, size, color)
+            + drawRectangle(x, y, w, h, color)
+        }
+
+        interface IInput {
+            + isKeyPressed(key) : bool
+            + isMouseButtonPressed(button) : bool
+            + getMousePosition() : (int, int)
+        }
+
+        interface ISprite {
+            + loadTexture(data) : bool
+            + setPosition(x, y)
+            + setScale(x, y)
+            + setRotation(angle)
+            + draw(window)
+        }
+
+        class WindowSFML {
+            - sf::RenderWindow _window
+        }
+
+        class GraphicsSFML {
+            - sf::RenderWindow& _window
+        }
+
+        class InputSFML {
+            - sf::RenderWindow& _window
+        }
+
+        class SpriteSFML {
+            - sf::Texture _texture
+            - sf::Sprite _sprite
+        }
+    }
+}
+
+' Relationships
+main --> GameState : uses
+main --> NetworkClient : has
+main --> WindowSFML : has
+main --> GraphicsSFML : has
+main --> InputSFML : has
+
+main ..> Menu : manages
+main ..> ConnectionDialog : manages
+main ..> LobbyWaitingRoom : manages
+main ..> GameScreen : manages
+main ..> SettingsMenu : manages
+main ..> ReplayBrowser : manages
+
+GameScreen --> Player : has
+GameScreen --> Enemy : has
+GameScreen --> Boss : has
+GameScreen --> Projectile : has
+GameScreen --> Background : has
+
+GameScreen ..> TextureManager : uses
+GameScreen ..> SoundManager : uses
+
+Player ..> ISprite : uses
+Enemy ..> ISprite : uses
+Boss ..> ISprite : uses
+
+NetworkClient --> ReplayRecorder : uses
+ReplayViewer ..> NetworkClient : simulates
+
+IWindow <|.. WindowSFML
+IGraphics <|.. GraphicsSFML
+IInput <|.. InputSFML
+ISprite <|.. SpriteSFML
+
+' Notes
+note right of main
+    Main game loop:
+    1. Poll input
+    2. Update game state
+    3. Render frame
+    4. Manage state transitions
+    
+    Target: 60 FPS
+end note
+
+note bottom of NetworkClient
+    UDP networking with:
+    - Async I/O on separate thread
+    - Packet handler callbacks
+    - Automatic reconnection
+    - Replay recording support
+end note
+
+note right of TextureManager
+    Singleton pattern with:
+    - Embedded resource loading
+    - Sprite caching
+    - Lazy loading support
+end note
+
+note left of GameState
+    State machine controlling
+    which screen is active and
+    handling transitions between
+    menu, lobby, and gameplay
+end note
+
+@enduml

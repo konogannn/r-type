@@ -1,0 +1,136 @@
+@startuml Wave System Execution Flow
+!theme blueprint
+title R-Type Wave System - Execution Sequence
+
+participant WaveManager as WM
+participant WaveLoader as WL
+participant GameEntityFactory as Factory
+participant EntityManager as EM
+participant SpawnEvents as SE
+
+== Level Loading ==
+WM -> WL : loadLevel(1)
+activate WL
+WL -> WL : read "levels/level_01.json"
+WL -> WL : parse JSON
+WL -> WL : create LevelDefinition
+WL -> WM : LevelDefinition*
+deactivate WL
+
+WM -> WM : _currentLevel = level
+WM -> WM : _waves = level->waves
+WM -> WM : _currentWaveIndex = 0
+
+== Wave Spawning ==
+loop Every Frame
+    WM -> WM : update(deltaTime)
+    
+    alt Wave Not Started
+        WM -> WM : canStartWave(currentWave)
+        alt startDelay elapsed
+            WM -> WM : startWave(currentWave)
+            
+            loop For Each Enemy Group
+                WM -> WM : spawnEnemyGroup(group)
+                
+                alt Pattern: SEQUENTIAL
+                    loop For Each Position with delay
+                        WM -> WM : scheduleSpawn(position, delay)
+                    end
+                    
+                else Pattern: SIMULTANEOUS
+                    loop For Each Position
+                        WM -> Factory : createEnemy(type, x, y)
+                        Factory -> EM : createEntity()
+                        Factory -> EM : addComponents()
+                        Factory -> WM : entityId
+                        WM -> SE : emit(SpawnEvent{entityId})
+                    end
+                    
+                else Pattern: WAVE
+                    WM -> WM : calculateWaveFormation(count)
+                    loop For Each Wave Position
+                        WM -> Factory : createEnemy(type, x, y)
+                        Factory -> WM : entityId
+                        WM -> SE : emit(SpawnEvent{entityId})
+                    end
+                    
+                else Pattern: RANDOM
+                    loop count times
+                        WM -> WM : randomPosition = random(bounds)
+                        WM -> Factory : createEnemy(type, x, y)
+                        Factory -> WM : entityId
+                        WM -> SE : emit(SpawnEvent{entityId})
+                    end
+                end
+            end
+            
+            loop For Each Special Enemy
+                WM -> WM : scheduleSpecialSpawn(special)
+            end
+        end
+        
+    else Wave Active
+        WM -> WM : updateWave(wave, deltaTime)
+        
+        ' Spawn scheduled enemies
+        alt Time for scheduled spawn
+            WM -> Factory : createEnemy(type, x, y)
+            Factory -> WM : entityId
+            WM -> SE : emit(SpawnEvent{entityId})
+        end
+        
+        ' Spawn special enemies
+        alt Time for special spawn
+            WM -> Factory : createBoss(type, x, y)
+            Factory -> WM : bossEntityId
+            WM -> SE : emit(BossSpawnEvent{bossId})
+        end
+        
+        ' Check wave completion
+        WM -> WM : isWaveComplete(wave)
+        alt waitForAllDestroyed && all enemies dead
+            WM -> WM : _currentWaveIndex++
+            WM -> SE : emit(GameEvent{WAVE_COMPLETE})
+            
+            alt Last Wave
+                WM -> SE : emit(GameEvent{LEVEL_COMPLETE})
+            end
+            
+        else !waitForAllDestroyed && timer expired
+            WM -> WM : _currentWaveIndex++
+        end
+    end
+end
+
+note right of WM
+    The WaveManager orchestrates the
+    entire wave spawning flow:
+    
+    1. Loads level definition
+    2. Tracks wave progression
+    3. Spawns enemies per pattern
+    4. Emits gameplay events
+    5. Manages wave completion
+    
+    Runs at 60 Hz in GameLoop
+end note
+
+note left of Factory
+    Factory creates enemies with:
+    - Correct sprite/texture
+    - Health based on type
+    - Movement patterns
+    - Collision components
+    - AI behavior components
+end note
+
+note right of SE
+    Event system notifies:
+    - Game UI (score, wave #)
+    - Audio system (spawn sounds)
+    - Achievement system
+    - Replay recorder
+end note
+
+@enduml

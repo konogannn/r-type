@@ -1,0 +1,162 @@
+@startuml Component System Interaction
+!theme blueprint
+title ECS Component-System Interaction Patterns
+
+' Define components
+package "Components" {
+    class PositionComp {
+        + float x, y
+    }
+    
+    class VelocityComp {
+        + float vx, vy
+    }
+    
+    class HealthComp {
+        + int current
+        + int max
+    }
+    
+    class CollisionComp {
+        + float radius
+    }
+    
+    class PlayerComp {
+        + uint32_t clientId
+        + float shootCooldown
+    }
+    
+    class EnemyComp {
+        + uint8_t type
+        + int scoreValue
+    }
+    
+    class ProjectileComp {
+        + uint32_t ownerId
+        + int damage
+    }
+}
+
+' Define systems
+package "Systems" {
+    class MovementSystem {
+        --
+        Requires:
+        - Position
+        - Velocity
+        --
+        + update(deltaTime)
+    }
+    
+    class CollisionSystem {
+        --
+        Requires:
+        - Position
+        - Collision
+        Optional:
+        - Health
+        --
+        + update(deltaTime)
+    }
+    
+    class PlayerCooldownSystem {
+        --
+        Requires:
+        - Player
+        --
+        + update(deltaTime)
+    }
+    
+    class EnemyShootingSystem {
+        --
+        Requires:
+        - Enemy
+        - Position
+        --
+        + update(deltaTime)
+    }
+}
+
+' Interaction diagrams
+object "Entity 1\n(Player)" as E1 {
+    id = 1
+    type = PLAYER
+}
+
+object "Entity 2\n(Enemy)" as E2 {
+    id = 2
+    type = ENEMY
+}
+
+object "Entity 3\n(Projectile)" as E3 {
+    id = 3
+    type = PROJECTILE
+}
+
+' Component assignments
+E1 --> PositionComp : has
+E1 --> VelocityComp : has
+E1 --> HealthComp : has
+E1 --> CollisionComp : has
+E1 --> PlayerComp : has
+
+E2 --> PositionComp : has
+E2 --> VelocityComp : has
+E2 --> HealthComp : has
+E2 --> CollisionComp : has
+E2 --> EnemyComp : has
+
+E3 --> PositionComp : has
+E3 --> VelocityComp : has
+E3 --> CollisionComp : has
+E3 --> ProjectileComp : has
+
+' System interactions
+MovementSystem ..> PositionComp : reads/writes
+MovementSystem ..> VelocityComp : reads
+
+CollisionSystem ..> PositionComp : reads
+CollisionSystem ..> CollisionComp : reads
+CollisionSystem ..> HealthComp : writes
+
+PlayerCooldownSystem ..> PlayerComp : reads/writes
+
+EnemyShootingSystem ..> EnemyComp : reads
+EnemyShootingSystem ..> PositionComp : reads
+
+' Notes
+note bottom of MovementSystem
+    **Update Logic:**
+    For each entity with Position + Velocity:
+        position.x += velocity.vx * deltaTime
+        position.y += velocity.vy * deltaTime
+end note
+
+note bottom of CollisionSystem
+    **Update Logic:**
+    For each pair (e1, e2) with Position + Collision:
+        if distance(e1, e2) < (r1 + r2):
+            handleCollision(e1, e2)
+            if e1 has Health: e1.health -= damage
+            if e2 is Projectile: destroy(e2)
+end note
+
+note right of PlayerCooldownSystem
+    **Update Logic:**
+    For each entity with Player:
+        player.shootCooldown -= deltaTime
+        if cooldown <= 0 and INPUT_SHOOT:
+            spawnProjectile()
+            cooldown = SHOOT_DELAY
+end note
+
+note right of EnemyShootingSystem
+    **Update Logic:**
+    For each entity with Enemy + Position:
+        enemy.shootTimer -= deltaTime
+        if timer <= 0:
+            spawnEnemyProjectile(position)
+            timer = getShootInterval(enemy.type)
+end note
+
+@enduml

@@ -1,0 +1,254 @@
+@startuml ECS Architecture
+!theme blueprint
+title R-Type Entity Component System Architecture
+
+' Core ECS Elements
+package "ECS Core" {
+    class Entity {
+        - uint32_t _id
+        - std::string _name
+        - bool _active
+        --
+        + Entity(id, name)
+        + getId() : uint32_t
+        + getName() : string
+        + isActive() : bool
+        + setActive(active : bool)
+    }
+
+    class EntityManager {
+        - std::vector<Entity> _entities
+        - uint32_t _nextId
+        - std::mutex _mutex
+        --
+        + createEntity(name) : uint32_t
+        + destroyEntity(id : uint32_t)
+        + getEntity(id) : Entity*
+        + getAllEntities() : vector<Entity>
+        + clear()
+    }
+
+    abstract class Component {
+        # uint32_t _entityId
+        --
+        + Component(entityId)
+        + getEntityId() : uint32_t
+    }
+
+    class ComponentManager<T> {
+        - std::unordered_map<uint32_t, T> _components
+        - std::mutex _mutex
+        --
+        + addComponent(entityId, component)
+        + removeComponent(entityId)
+        + getComponent(entityId) : T*
+        + hasComponent(entityId) : bool
+        + getAllComponents() : map<uint32_t, T>
+    }
+
+    abstract class System {
+        # float _updateInterval
+        # float _accumulator
+        --
+        + update(deltaTime, entityMgr, compMgr)
+        + getUpdateInterval() : float
+        {abstract} # process(deltaTime, entity, compMgr)
+    }
+
+    class GameLoop {
+        - std::vector<unique_ptr<System>> _systems
+        - EntityManager _entityManager
+        - ComponentManager<PositionComp> _positions
+        - ComponentManager<VelocityComp> _velocities
+        - ... (other component managers)
+        - bool _running
+        - std::thread _gameThread
+        --
+        + addSystem(system)
+        + start()
+        + stop()
+        + update(deltaTime)
+        + getEntityManager() : EntityManager&
+        + enqueueInput(input)
+        + getStateUpdates() : vector<EntityStateUpdate>
+    }
+}
+
+' Components
+package "Components" {
+    class PositionComp {
+        + float x, y
+        --
+        + PositionComp(entityId, x, y)
+    }
+
+    class VelocityComp {
+        + float vx, vy
+        --
+        + VelocityComp(entityId, vx, vy)
+    }
+
+    class HealthComp {
+        + int currentHealth
+        + int maxHealth
+        --
+        + HealthComp(entityId, hp, maxHp)
+        + takeDamage(dmg) : bool
+        + heal(amount)
+        + isDead() : bool
+    }
+
+    class PlayerComp {
+        + uint32_t clientId
+        + float shootCooldown
+        + bool hasShield
+        --
+        + PlayerComp(entityId, clientId)
+    }
+
+    class EnemyComp {
+        + uint8_t enemyType
+        + int scoreValue
+        --
+        + EnemyComp(entityId, type)
+    }
+
+    class BossComp {
+        + uint8_t phase
+        + float stateTimer
+        + std::vector<uint32_t> partIds
+        --
+        + BossComp(entityId)
+    }
+
+    class ProjectileComp {
+        + uint32_t ownerId
+        + int damage
+        + bool isPlayerProjectile
+        --
+        + ProjectileComp(entityId, owner, dmg)
+    }
+
+    class SpriteComp {
+        + std::string spriteId
+        + float width, height
+        --
+        + SpriteComp(entityId, id)
+    }
+
+    class CollisionComp {
+        + float radius
+        + bool isActive
+        --
+        + CollisionComp(entityId, radius)
+    }
+}
+
+' Systems
+package "Systems" {
+    class MovementSystem {
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        - process(deltaTime, entity, compMgr)
+    }
+
+    class CollisionSystem {
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        - process(deltaTime, entity, compMgr)
+        - checkCollision(e1, e2) : bool
+        - handleCollision(e1, e2)
+    }
+
+    class PlayerCooldownSystem {
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        - process(deltaTime, entity, compMgr)
+    }
+
+    class EnemyShootingSystem {
+        - SpawnEvents& _spawnEvents
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        - process(deltaTime, entity, compMgr)
+        - spawnEnemyProjectile(x, y)
+    }
+
+    class BossSystem {
+        - SpawnEvents& _spawnEvents
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        - process(deltaTime, entity, compMgr)
+        - updateBossPhase(boss)
+        - executePhaseAttack(boss)
+    }
+
+    class WaveManager {
+        - WaveLoader _waveLoader
+        - std::vector<WaveDefinition> _waves
+        - size_t _currentWaveIndex
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        + loadLevel(levelId) : bool
+        - spawnWave()
+        - isWaveComplete() : bool
+    }
+
+    class AnimationSystem {
+        + update(deltaTime, entityMgr, compMgr)
+        --
+        - process(deltaTime, entity, compMgr)
+    }
+}
+
+' Relationships
+EntityManager "1" *-- "0..*" Entity : manages
+ComponentManager "1" *-- "0..*" Component : stores
+GameLoop "1" *-- "1" EntityManager : uses
+GameLoop "1" *-- "0..*" ComponentManager : has
+GameLoop "1" *-- "0..*" System : executes
+System ..> EntityManager : queries
+System ..> ComponentManager : queries
+
+Component <|-- PositionComp
+Component <|-- VelocityComp
+Component <|-- HealthComp
+Component <|-- PlayerComp
+Component <|-- EnemyComp
+Component <|-- BossComp
+Component <|-- ProjectileComp
+Component <|-- SpriteComp
+Component <|-- CollisionComp
+
+System <|-- MovementSystem
+System <|-- CollisionSystem
+System <|-- PlayerCooldownSystem
+System <|-- EnemyShootingSystem
+System <|-- BossSystem
+System <|-- WaveManager
+System <|-- AnimationSystem
+
+' Notes
+note right of GameLoop
+    Central orchestrator:
+    - Runs on dedicated thread
+    - Updates all systems
+    - Manages component storage
+    - Processes input queue
+    - Emits state updates
+end note
+
+note right of System
+    Systems process entities
+    with specific component sets.
+    Each system runs at its
+    own update frequency.
+end note
+
+note bottom of ComponentManager
+    Type-safe storage with
+    thread-safe access using
+    std::mutex protection
+end note
+
+@enduml
