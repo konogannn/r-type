@@ -1,0 +1,11 @@
+{
+    "name": "r-type",
+    "version": "1.0.0",
+    "dependencies": [
+        "sdl2",
+        "sdl2-image",
+        "boost-asio",
+        "boost-thread",
+        "nlohmann-json"
+    ]
+}

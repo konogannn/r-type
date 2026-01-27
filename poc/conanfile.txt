@@ -1,0 +1,13 @@
+[requires]
+sdl/2.28.5
+sdl_image/2.8.2
+boost/1.83.0
+nlohmann_json/3.11.3
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[options]
+boost:shared=False
+sdl:shared=False
